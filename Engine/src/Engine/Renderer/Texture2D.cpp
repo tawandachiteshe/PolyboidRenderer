@@ -71,6 +71,7 @@ namespace Polyboid
 
     Texture::~Texture()
     {
+        glDeleteTextures(1, &m_TextureID);
     }
 
     Ref<Texture> Texture::MakeTexture2D(const std::string& textureImagePath)

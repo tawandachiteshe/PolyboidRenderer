@@ -7,11 +7,14 @@ layout (location = 2) in vec2 aUV;
 out vec4 vColor;
 out vec2 vUV;
 
+uniform mat4 uViewProj;
+uniform mat4 uTransform;
+
 void main() {
 
     vColor = aColor;
     vUV = aUV;
     
-    gl_Position = vec4(aPosition, 1.0f);
+    gl_Position =    uViewProj * uTransform * vec4(aPosition, 1.0f) ;
     
 }

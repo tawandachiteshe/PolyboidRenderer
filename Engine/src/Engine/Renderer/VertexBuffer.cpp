@@ -21,6 +21,11 @@ namespace Polyboid
         glBufferData(GL_ARRAY_BUFFER, size, verts, GL_STATIC_DRAW);
     }
 
+    VertexBuffer::~VertexBuffer()
+    {
+        glDeleteBuffers(1, &m_ID);
+    }
+
     void VertexBuffer::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
     {
         m_IndexBuffer = indexBuffer; 

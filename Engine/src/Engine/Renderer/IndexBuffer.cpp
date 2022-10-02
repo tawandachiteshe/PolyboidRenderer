@@ -12,6 +12,11 @@ namespace Polyboid
         glBufferData(GL_ARRAY_BUFFER, sizeof(uint32_t) * count, indices, GL_STATIC_DRAW);
     }
 
+    IndexBuffer::~IndexBuffer()
+    {
+        glDeleteBuffers(1, &m_ID);
+    }
+
     void IndexBuffer::Bind()
     {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);

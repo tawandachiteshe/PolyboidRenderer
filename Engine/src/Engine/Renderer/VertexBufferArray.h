@@ -18,6 +18,7 @@ namespace Polyboid
         
     public:
         VertexBufferArray();
+        ~VertexBufferArray();
         void CreateVertexBufferLayout();
 
         const Ref<VertexBuffer>& GetVertexBuffer() { return m_VertexBuffer; }

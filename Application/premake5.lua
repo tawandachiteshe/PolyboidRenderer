@@ -16,7 +16,8 @@ project "Application"
         "%{wks.location}/Engine/Vendor/spdlog/include",
         "%{wks.location}/Engine/Vendor/glfw/include",
         "%{wks.location}/Engine/Vendor/glm",
-        "%{wks.location}/Engine/Vendor/glad/include"
+        "%{wks.location}/Engine/Vendor/glad/include",
+        "%{wks.location}/Engine/Vendor/imgui/src",
 
     }
 

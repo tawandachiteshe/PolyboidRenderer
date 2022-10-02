@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Base.h"
+#include "Engine/Renderer/Camera3D.h"
 #include "Engine/Renderer/IndexBuffer.h"
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/Texture2D.h"
@@ -24,6 +25,11 @@ namespace Polyboid
         Ref<VertexBuffer> m_VB;
         Ref<IndexBuffer> m_IB;
         Ref<Texture> m_Texture, m_Texture2;
+        Ref<Camera3D> m_Camera = nullptr;
+        bool m_CanUseMouse = false;
+        void OnKeyEvent(KeyCodes codes, KeyAction action) override;
+        void OnWindowResizeEvent(uint32_t width, uint32_t height) override;
+        void OnMouseScrollEvent(double offset) override;
         
         void Update(float deltaTime) override;
     };

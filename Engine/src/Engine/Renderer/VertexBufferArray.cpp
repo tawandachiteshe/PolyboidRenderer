@@ -12,6 +12,11 @@ namespace Polyboid
         glGenVertexArrays(1, &m_ID);
     }
 
+    VertexBufferArray::~VertexBufferArray()
+    {
+        glDeleteVertexArrays(1, &m_ID);
+    }
+
     void VertexBufferArray::CreateVertexBufferLayout()
     {
         

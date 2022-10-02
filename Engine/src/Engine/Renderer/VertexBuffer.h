@@ -62,7 +62,10 @@ namespace Polyboid
     public:
         VertexBuffer(uint32_t size);
         VertexBuffer(const float *verts, uint32_t size);
+        ~VertexBuffer();
+        
         uint32_t GetVertexSizeInBytes() { return m_VertexSizeInBytes; }
+        
 
         void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
         const Ref<IndexBuffer>& GetIndexBuffer() { return m_IndexBuffer; }
