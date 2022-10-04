@@ -28,8 +28,8 @@ namespace Polyboid
     protected:
         
         ApplicationData m_AppData = WindowSpecs(1280, 800, "Polyboid");
-        virtual  void OnKeyEvent(KeyCodes codes, KeyAction action);
-        virtual  void OnMouseEvent(MouseCodes codes, KeyAction action);
+        virtual void OnKeyEvent(KeyCodes codes, KeyAction action);
+        virtual void OnMouseEvent(MouseCodes codes, KeyAction action);
         virtual void OnWindowResizeEvent(uint32_t width, uint32_t height);
         virtual void OnFrameBufferResizeEvent(uint32_t width, uint32_t height);
         virtual void OnWindowsCloseEvent();

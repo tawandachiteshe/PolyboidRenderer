@@ -24,7 +24,7 @@ namespace Polyboid
         Ref<VertexBufferArray> m_VA;
         Ref<VertexBuffer> m_VB;
         Ref<IndexBuffer> m_IB;
-        Ref<Texture> m_Texture, m_Texture2;
+        Ref<Texture> m_Texture, m_Texture2, m_Texture3;
         Ref<Camera3D> m_Camera = nullptr;
         bool m_CanUseMouse = false;
         void OnKeyEvent(KeyCodes codes, KeyAction action) override;

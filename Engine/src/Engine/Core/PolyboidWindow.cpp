@@ -73,7 +73,6 @@ namespace Polyboid
         {
             windowData->OnMouseScrollEvent(yoffset);
         }
-        spdlog::info("mouse scroll x {0} y {1}", xoffset, yoffset);
     }
 
     std::unique_ptr<WindowData> PolyboidWindow::s_WindowData = std::make_unique<WindowData>();

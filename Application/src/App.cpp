@@ -6,6 +6,9 @@
 #include "Engine/Core/EntryPoint.h"
 #include "Engine/Core/ImguiSetup.h"
 #include "Engine/Core/Input.h"
+#include "Engine/Core/ModelLoader.h"
+#include "Engine/Core/ECS/Components.h"
+#include "Engine/Core/ECS/GameObject.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/VertexBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
@@ -16,6 +19,7 @@ namespace Polyboid
 {
     App::App()
     {
+        
         m_VA = VertexBufferArray::MakeVertexBufferArray();
 
         float verts[4 * 9] = {
@@ -29,12 +33,15 @@ namespace Polyboid
             0, 2, 3, 0, 3, 1,
         };
 
-        m_IB = IndexBuffer::MakeIndexBuffer(indices, sizeof(indices) / sizeof(uint32_t));
-        m_VB = VertexBuffer::MakeVertexBuffer(verts, sizeof(verts));
+        auto model = ModelLoader::LoadFile("Assets/Models/tree.glb");
+        
+        m_IB = IndexBuffer::MakeIndexBuffer(model->GetIndices16().data(), model->GetIndices16().size());
+        auto size = model->GetVertices().size() * sizeof(Vertex);
+        m_VB = VertexBuffer::MakeVertexBuffer(model->GetVertices().data() , size);
         m_VB->DescribeBuffer(
             {
                 {BufferComponent::Float3, "aPosition"},
-                {BufferComponent::Float4, "aColor"},
+                {BufferComponent::Float3, "aNormal"},
                 {BufferComponent::Float2, "aUV"}
             }
         );
@@ -43,6 +50,7 @@ namespace Polyboid
         //
         m_Shader = Shader::MakeShader("Assets/Shaders/vert.glsl", "Assets/Shaders/frag.glsl");
         m_Texture = Texture::MakeTexture2D("Assets/Textures/checker.jpg");
+        m_Texture3 = Texture::MakeTexture2D("Assets/Textures/checker.jpg");
         m_Texture2 = Texture::MakeTexture2D(1, 1);
         uint32_t color[4] = {0xFF0000FF, 0xFF00FFFF, 0xFF0000FF, 0xFF00FFFF};
         m_Texture2->SetData(&color, sizeof(color));
@@ -50,14 +58,27 @@ namespace Polyboid
         u_Textures.fill(0);
 
         m_Shader->Bind();
-        m_Texture->Bind(0);
-        m_Texture2->Bind(1);
-
-        m_Shader->SetIntArray("u_Textures", u_Textures.data(), 32);
+        
         m_Shader->SetInt("uTexture", 0);
         m_Shader->SetInt("uTexture2", 1);
+        m_Shader->SetInt("uTexture3", 2);
+        
+        m_Texture->Bind(0);
+        m_Texture2->Bind(1);
+        m_Texture3->Bind(2);
+
+   
 
         m_Camera = std::make_shared<Camera3D>(m_AppData.windowSpecs.Width, m_AppData.windowSpecs.Height);
+        auto object = GameObject::CreateObject();
+        auto object2 = GameObject::CreateObject();
+        auto object3 = GameObject::CreateObject();
+        auto& tag = object->GetComponent<Tag>();
+        auto& tag2 = object2->GetComponent<Tag>();
+        auto& transform = object->GetComponent<Transform>();
+        transform.Position = { 1.0f, 2.0f, 5.0f };
+
+       
     }
 
     App::~App()
@@ -128,9 +149,8 @@ namespace Polyboid
         }
         
         
-        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(.5f, .5f, 1.f));
-        glm::mat4 rotationMat = glm::rotate(glm::mat4(1), rotation, glm::vec3(0.f, 0.f, 1.f));
-        glm::mat4 translate2 = glm::translate(glm::mat4(1.0f), glm::vec3(.5, 1, 2.5f));
+        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.f, 1.f, 1.f));
+        glm::mat4 rotationMat = glm::rotate(glm::mat4(1), 0.0f, glm::vec3(0.f, 0.f, 1.f));
         glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(-.5, 0, 0.f));
 
         ImGui::Begin("Window is lit");
@@ -141,9 +161,12 @@ namespace Polyboid
         Renderer::Clear();
         Renderer::Submit(m_VA, m_Shader);
         Renderer::BeginDraw(m_Camera);
-        
+
+        m_Texture2->Bind(1);
         Renderer::Draw(translate * scale * rotationMat);
-        Renderer::Draw(translate2 * scale * rotationMat);
+        m_Texture->Bind(0);
+        Renderer::Draw(translate * scale * rotationMat);
+        Renderer::EndDraw();
     }
 
 

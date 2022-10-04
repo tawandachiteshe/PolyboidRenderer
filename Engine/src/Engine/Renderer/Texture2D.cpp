@@ -38,6 +38,8 @@ namespace Polyboid
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+
+        glCreateSamplers(1, &m_SamplersID);
         
         
         stbi_image_free(data);
@@ -50,6 +52,7 @@ namespace Polyboid
 
         glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
         glTextureStorage2D(m_TextureID, 1, m_InternalFormat, m_Width, m_Height);
+        glCreateSamplers(1, &m_SamplersID);
 
         glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -67,6 +70,8 @@ namespace Polyboid
     void Texture::Bind(uint32_t slot)
     {
         glBindTextureUnit(slot, m_TextureID);
+        glBindSampler(slot, m_SamplersID);
+        
     }
 
     Texture::~Texture()

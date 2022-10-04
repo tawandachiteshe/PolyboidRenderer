@@ -14,7 +14,7 @@ namespace Polyboid
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
     }
 
-    VertexBuffer::VertexBuffer(const float* verts, uint32_t size)
+    VertexBuffer::VertexBuffer(const void* verts, uint32_t size)
     {
         glGenBuffers(1, &m_ID);
         glBindBuffer(GL_ARRAY_BUFFER, m_ID);
@@ -60,7 +60,7 @@ namespace Polyboid
         glBindBuffer(GL_ARRAY_BUFFER, m_ID);
     }
 
-    std::shared_ptr<VertexBuffer> VertexBuffer::MakeVertexBuffer(const float* verts, uint32_t size)
+    std::shared_ptr<VertexBuffer> VertexBuffer::MakeVertexBuffer(const void* verts, uint32_t size)
     {
         return std::make_shared<VertexBuffer>(verts, size);
     }

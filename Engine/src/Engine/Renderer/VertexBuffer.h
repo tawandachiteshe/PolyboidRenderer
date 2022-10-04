@@ -61,7 +61,7 @@ namespace Polyboid
     
     public:
         VertexBuffer(uint32_t size);
-        VertexBuffer(const float *verts, uint32_t size);
+        VertexBuffer(const void *verts, uint32_t size);
         ~VertexBuffer();
         
         uint32_t GetVertexSizeInBytes() { return m_VertexSizeInBytes; }
@@ -74,7 +74,7 @@ namespace Polyboid
         void DescribeBuffer(std::initializer_list<VertexBufferLayout>  layout);
         void Bind();
 
-        static std::shared_ptr<VertexBuffer> MakeVertexBuffer(const float *verts, uint32_t size);
+        static std::shared_ptr<VertexBuffer> MakeVertexBuffer(const void *verts, uint32_t size);
         static std::shared_ptr<VertexBuffer> MakeVertexBuffer(uint32_t size);
     
     };

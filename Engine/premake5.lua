@@ -16,6 +16,7 @@ project "Engine"
         "Vendor/glfw/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
+        "Vendor/entt",
         "Vendor/imgui/src",
     }
 

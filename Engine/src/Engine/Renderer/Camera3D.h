@@ -25,7 +25,7 @@ namespace Polyboid
      
         
       
-        glm::vec3 m_Position = glm::vec3(0, 0, 3);
+        glm::vec3 m_Position = glm::vec3(0, 0, 10);
         glm::mat4 m_Transform = glm::mat4(1.f);
         glm::mat4 m_View = glm::mat4(1.f);
         glm::vec3 m_Target = glm::vec3(0);

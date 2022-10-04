@@ -25,7 +25,7 @@ namespace Polyboid
 
     void Camera3D::SetZoomAmount(float dir)
     {
-        m_Fov += dir;
+        m_Fov -= dir * 2.f;
 
         if (m_Fov < 1.0f)
         {

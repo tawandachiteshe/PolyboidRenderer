@@ -18,6 +18,8 @@ project "Application"
         "%{wks.location}/Engine/Vendor/glm",
         "%{wks.location}/Engine/Vendor/glad/include",
         "%{wks.location}/Engine/Vendor/imgui/src",
+        "%{wks.location}/Engine/Vendor/entt",
+        "%{wks.location}/Engine/Vendor/stb/include",
 
     }
 

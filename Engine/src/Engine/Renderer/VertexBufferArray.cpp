@@ -36,7 +36,7 @@ namespace Polyboid
         {
             vertexSizeInBytes += layout.CalculateBytes();
             glEnableVertexAttribArray(layoutIndex);
-            glVertexAttribPointer(layoutIndex, (GLint)layout.component, GL_FLOAT, GL_FALSE, buffer->GetVertexSizeInBytes(), (void*)layout.GetStride());
+            glVertexAttribPointer(layoutIndex, (GLint)layout.component, GL_FLOAT, GL_FALSE, buffer->GetVertexSizeInBytes(), reinterpret_cast<void*>(layout.GetStride()));
             layoutIndex++;
         }
       

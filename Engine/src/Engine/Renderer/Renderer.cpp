@@ -55,7 +55,7 @@ namespace Polyboid
         s_RenderStorage->m_Shader->SetMat4("uTransform", transform);
         const auto count = s_RenderStorage->m_VA->GetIndexBuffer()->GetCount();
 
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count), GL_UNSIGNED_SHORT, nullptr);
     }
 
     void Renderer::CreateViewPort(const glm::vec2& viewportSize)

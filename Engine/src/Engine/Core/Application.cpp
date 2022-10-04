@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "ImguiSetup.h"
+#include "ECS/ECSManager.h"
 
 
 namespace Polyboid
@@ -26,9 +27,7 @@ namespace Polyboid
         Renderer::Init();
         m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
         m_Swapchain->SetVsync(true);
-
-     
-
+        
         PolyboidWindow::GetWindowData()->OnKeyEvent = [&] (KeyCodes key_codes, KeyAction action)
         {
             OnKeyEvent(key_codes, action);
@@ -62,6 +61,8 @@ namespace Polyboid
         m_IsRunning = true;
 
         Imgui::Init();
+        ECSManager::Init();
+        
     }
 
     Application::~Application()
