@@ -7,14 +7,14 @@ namespace Polyboid
 {
     IndexBuffer::IndexBuffer(const uint32_t* indices, uint32_t count) : m_Count(count)
     {
-        glGenBuffers(1, &m_ID);
+        glCreateBuffers(1, &m_ID);
         glBindBuffer(GL_ARRAY_BUFFER, m_ID);
         glBufferData(GL_ARRAY_BUFFER, sizeof(uint32_t) * count, indices, GL_STATIC_DRAW);
     }
 
     IndexBuffer::IndexBuffer(const uint16_t* indices, uint16_t count): m_Count(count)
     {
-        glGenBuffers(1, &m_ID);
+        glCreateBuffers(1, &m_ID);
         glBindBuffer(GL_ARRAY_BUFFER, m_ID);
         glBufferData(GL_ARRAY_BUFFER, sizeof(uint16_t) * count, indices, GL_STATIC_DRAW);
     }

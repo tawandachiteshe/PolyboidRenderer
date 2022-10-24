@@ -20,6 +20,9 @@ namespace Polyboid
 
         template <class  Component>
         Component& GetComponent();
+
+        template<class Component>
+        bool HasComponent();
     };
 
     template <class  Component>

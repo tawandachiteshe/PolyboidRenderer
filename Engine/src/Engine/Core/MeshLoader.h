@@ -29,19 +29,38 @@ namespace Polyboid
         f32,
         f64
     };
+
+    enum class PixelType
+    {
+        RGBA8_NORM,
+        RGBA8_UNORM,
+        RGB8_NORM,
+        RGB8_UNORM,
+        RG8_NORM,
+        RG8_UNORM
+    };
+    
+    struct MeshTexture
+    {
+        int32_t width, height, bits;
+        std::vector<uint8_t> data;
+        PixelType pixelType;
+    };
     
     
-    class ModelLoader
+    class MeshLoader
     {
     private:
 
-        std::vector<Vertex> m_Vertices;
-        std::vector<float> m_Positions;
-        std::vector<float> m_Normals;
-        std::vector<float> m_UV;
-        std::vector<float> m_FloatVertices;
-        std::vector<uint32_t> m_Indices32;
-        std::vector<uint16_t> m_Indices16;
+        std::vector<MeshTexture> m_Textures;
+        std::vector<std::vector<Vertex>> m_Vertices;
+        std::vector<std::vector<float>> m_Positions;
+        std::vector<std::vector<float>> m_Normals;
+        std::vector<std::vector<float>> m_UV;
+        std::vector<std::vector<float>> m_FloatVertices;
+        std::vector<std::vector<uint32_t>> m_Indices32;
+        std::vector<std::vector<uint16_t>> m_Indices16;
+        std::vector<uint32_t> m_IndexBufferByteOffset;
 
         static  std::vector<glm::vec2> MakeVec2(const std::vector<float>& floats);
         static  std::vector<glm::vec3> MakeVec3(const std::vector<float>& floats);
@@ -53,21 +72,23 @@ namespace Polyboid
         std::pair<ModelDataType, uint32_t> QueryAccessorComponentType(const tinygltf::Accessor& accessor);
 
     public:
-        ModelLoader(const std::filesystem::path& path);
+        MeshLoader(const std::filesystem::path& path);
 
-        static Ref<ModelLoader> LoadFile(const std::filesystem::path& path);
-        std::vector<float>& GetPositions() { return m_Positions; }
-        std::vector<float>& GetAllFloatVertices() { return m_FloatVertices; }
-        std::vector<float>& GetNormals() { return m_Normals; }
-        std::vector<Vertex>& GetVertices() { return m_Vertices; }
-        std::vector<float>& GetUVs() { return m_UV; }
-        std::vector<uint32_t>& GetIndices32() { return m_Indices32; }
-        std::vector<uint16_t>& GetIndices16() { return m_Indices16; }
+        static Ref<MeshLoader> LoadFile(const std::filesystem::path& path);
+        std::vector<std::vector<float>>& GetPositions() { return m_Positions; }
+        std::vector<std::vector<float>>& GetAllFloatVertices() { return m_FloatVertices; }
+        std::vector<std::vector<float>>& GetNormals() { return m_Normals; }
+        std::vector<std::vector<Vertex>>& GetVertices() { return m_Vertices; }
+        std::vector< std::vector<float>>& GetUVs() { return m_UV; }
+        std::vector<std::vector<uint32_t>>& GetIndices32() { return m_Indices32; }
+        std::vector<uint32_t>& GetIndicesByteOffset() { return m_IndexBufferByteOffset; }
+        std::vector< std::vector<uint16_t>>& GetIndices16() { return m_Indices16; }
+        std::vector<MeshTexture>& GetMeshTexture() { return m_Textures; }
     };
 
 
     template <typename T>
-   std::vector<T>  ModelLoader::GetUsableDataFromBytes(uint32_t accessorIndex, tinygltf::Model& model)
+   std::vector<T>  MeshLoader::GetUsableDataFromBytes(uint32_t accessorIndex, tinygltf::Model& model)
     {
         const auto& accessor = model.accessors.at(accessorIndex);
         const auto bufferIndex = accessor.bufferView;

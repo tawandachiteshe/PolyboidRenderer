@@ -131,10 +131,30 @@ namespace Polyboid
 
         ReCalculateViewMat();
 
-        // spdlog::info("{0}, {1}, {2}", m_Position.x, m_Position.y, m_Position.z);
+        spdlog::info("{0}, {1}, {2}", m_Position.x, m_Position.y, m_Position.z);
 
     }
-    
+
+    void Camera3D::OnKeyEvent(KeyCodes codes, KeyAction action)
+    {
+        if (action == KeyAction::PRESS)
+        {
+            if (codes == KeyCodes::LEFT_ALT)
+            {
+                Input::SetCursorMode(CursorMode::DISABLED);
+                m_FirstClick = true;
+            }
+        }
+        else if (action == KeyAction::RELEASE)
+        {
+            if (codes == KeyCodes::LEFT_ALT)
+            {
+                Input::SetCursorMode(CursorMode::NORMAL);
+                m_FirstClick = false;
+            }
+        }
+    }
+
     void Camera3D::OnWindowResize(uint32_t width, uint32_t height)
     {
         m_Aspect = static_cast<float>(width) / static_cast<float>(height);

@@ -2,6 +2,10 @@
 
 #include "setup.hpp"
 
+#define GLM_CONFIG_ALIGNED_GENTYPES 1
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+
+
 namespace glm
 {
 	/// Qualify GLM types in term of alignment (packed, aligned) and precision in term of ULPs (lowp, mediump, highp)

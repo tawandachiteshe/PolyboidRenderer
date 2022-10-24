@@ -34,6 +34,13 @@ namespace Polyboid
         registry.emplace<Component>(static_cast<const entt::entity>(m_ID), std::forward<Args>(args) ...);
     }
 
+    template <class Component>
+    bool GameObject::HasComponent()
+    {
+        auto& registry = ECSManager::GetRegistry();
+        auto view = registry.view<Component>();
+        return registry.has<Component>(m_ID);
+    }
 
 
     // template <typename Component>

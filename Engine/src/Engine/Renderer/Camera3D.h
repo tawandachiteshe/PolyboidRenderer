@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <cstdint>
 
+#include "Engine/Core/KeyCodes.h"
 #include "glm/matrix.hpp"
 
 namespace Polyboid
@@ -47,6 +48,7 @@ namespace Polyboid
         void Update(float deltaTime);
         void OnWindowResize(uint32_t width, uint32_t height);
         void OnMouseMove();
+        void OnKeyEvent(KeyCodes codes, KeyAction action);
     };
 
 }

@@ -1,4 +1,4 @@
-﻿#include "ModelLoader.h"
+﻿#include "MeshLoader.h"
 
 #include <spdlog/spdlog.h>
 #include <stb/tiny_gltf.h>
@@ -7,7 +7,7 @@
 
 namespace Polyboid
 {
-    std::vector<glm::vec2> ModelLoader::MakeVec2(const std::vector<float>& floats)
+    std::vector<glm::vec2> MeshLoader::MakeVec2(const std::vector<float>& floats)
     {
         std::vector<glm::vec2> vecs;
         for (size_t i = 0; i < floats.size(); i)
@@ -18,7 +18,7 @@ namespace Polyboid
         return vecs;
     }
 
-    std::vector<glm::vec3> ModelLoader::MakeVec3(const std::vector<float>& floats)
+    std::vector<glm::vec3> MeshLoader::MakeVec3(const std::vector<float>& floats)
     {
         std::vector<glm::vec3> vecs;
         for (size_t i = 0; i < floats.size(); i)
@@ -29,7 +29,7 @@ namespace Polyboid
         return vecs;
     }
 
-    std::vector<glm::vec4> ModelLoader::MakeVec4(const std::vector<float>& floats)
+    std::vector<glm::vec4> MeshLoader::MakeVec4(const std::vector<float>& floats)
     {
         std::vector<glm::vec4> vecs;
         for (size_t i = 0; i < floats.size(); i)
@@ -40,11 +40,11 @@ namespace Polyboid
         return vecs;
     }
 
-    std::pair<ModelDataType, uint32_t> ModelLoader::QueryAccessorComponentType(const tinygltf::Accessor& accessor)
+    std::pair<ModelDataType, uint32_t> MeshLoader::QueryAccessorComponentType(const tinygltf::Accessor& accessor)
     {
         const auto componentType = accessor.componentType;
         ModelDataType modelDataType;
-        int32_t componentByteSize = 0;
+        int32_t componentByteSize;
 
         switch (componentType)
         {
@@ -87,27 +87,54 @@ namespace Polyboid
         return std::make_pair(modelDataType, componentByteSize);
     }
 
-    ModelLoader::ModelLoader(const std::filesystem::path& path)
+    MeshLoader::MeshLoader(const std::filesystem::path& path)
     {
         tinygltf::Model model;
         tinygltf::TinyGLTF gltfCtx;
         std::string err;
         std::string warn;
         std::string pathString = path.string();
-        bool isLoaded = gltfCtx.LoadBinaryFromFile(&model, &err, &warn, pathString.c_str());
+
+        bool isLoaded = false;
+
+        const auto ext = path.extension().string();
+
+        if(ext == ".glb")
+        {
+            isLoaded = gltfCtx.LoadBinaryFromFile(&model, &err, &warn, pathString);
+        }
+        else if (ext == ".gltf")
+        {
+            isLoaded = gltfCtx.LoadASCIIFromFile(&model, &err, &warn, pathString);
+        }
+       
+      
 
 
         if (isLoaded)
         {
-            for (int i = 0; i < 2; ++i)
+            for (auto& image : model.images)
             {
-
+                PixelType pixel;
+                if (image.component == 3)
+                {
+                    pixel = PixelType::RGB8_NORM;
+                } else if (image.component == 4)
+                {
+                    pixel = PixelType::RGBA8_NORM;
+                }
+                
+                m_Textures.push_back({ image.width, image.height, image.bits,image.image, pixel });
+            }
+            
+            for (int i = 0; i < model.meshes[0].primitives.size(); ++i)
+            {
                 auto& primitive = model.meshes[0].primitives[i];
-
                 const auto& positionAccIndex = primitive.attributes["POSITION"];
                 const auto& normalAccIndex = primitive.attributes["NORMAL"];
                 const auto& uvsACCIndex = primitive.attributes["TEXCOORD_0"];
                 const auto& indices = primitive.indices;
+
 
 
                 //Positions
@@ -123,37 +150,59 @@ namespace Polyboid
                 //Indices
                 const auto& accessor = model.accessors.at(indices);
                 const auto [dataType, bytes] = QueryAccessorComponentType(accessor);
+
+                m_IndexBufferByteOffset.push_back(accessor.byteOffset);
+
+                std::vector<uint16_t> indices16;
+                std::vector<uint32_t> indices32;
+
                 if (dataType == ModelDataType::uint16)
                 {
-                    auto indices16 = GetUsableDataFromBytes<uint16_t>(indices, model);
-                    m_Indices16.insert(m_Indices16.end(), indices16.begin(), indices16.end());
+                    indices16 = GetUsableDataFromBytes<uint16_t>(indices, model);
                 }
-                else if (dataType == ModelDataType::int32)
+                else if (dataType == ModelDataType::uint32)
                 {
-                    auto indices32 = GetUsableDataFromBytes<uint32_t>(indices, model);
-                    m_Indices32.insert(m_Indices32.end(), indices32.begin(), indices32.end());
+                    indices32 = GetUsableDataFromBytes<uint32_t>(indices, model);
                 }
+
+               
 
                 auto positions = MakeVec3(_positions);
                 auto normals = MakeVec3(_normals);
-                auto uvs = MakeVec2(_UV);
+
+                std::vector<glm::vec2> uvs;
+
+                if (!_UV.empty() && uvsACCIndex != positionAccIndex)
+                {
+                     uvs = MakeVec2(_UV);
+
+                }
+
+
+
+                std::vector<Vertex> vertices;
 
                 for (size_t i = 0; i < positions.size(); ++i)
                 {
-                    m_Vertices.push_back({positions[i], normals[i], uvs[i]});
+                	vertices.push_back({ positions[i], normals[i], uvs[i] });
                 }
 
-                m_Positions.insert(m_Positions.end(), _positions.begin(), _positions.end());
-                m_Normals.insert(m_Normals.end(), _normals.begin(), _normals.end());
-                m_UV.insert(m_UV.end(), _UV.begin(), _UV.end());
+                m_Positions.emplace_back(_positions);
+                m_Normals.emplace_back(_normals);
+            	m_UV.emplace_back(_UV);
                 
+
+                m_Vertices.emplace_back(vertices);
+                m_Indices16.push_back(indices16);
+                m_Indices32.push_back(indices32);
             }
-            
         }
+
+        
     }
 
-    Ref<ModelLoader> ModelLoader::LoadFile(const std::filesystem::path& path)
+    Ref<MeshLoader> MeshLoader::LoadFile(const std::filesystem::path& path)
     {
-        return std::make_shared<ModelLoader>(path);
+        return std::make_shared<MeshLoader>(path);
     }
 }

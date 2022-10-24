@@ -7,7 +7,7 @@ project "Application"
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
-    files { "src/**.h", "src/**.c", "src/**.cpp", "src/**.hpp", "Assets/**"}
+    files { "src/**.h", "src/**.c", "src/**.cpp", "src/**.hpp", "Assets/**" }
 
     includedirs
     {

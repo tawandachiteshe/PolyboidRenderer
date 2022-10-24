@@ -8,6 +8,7 @@
 
 #include "ImguiSetup.h"
 #include "ECS/ECSManager.h"
+#include "Engine/Renderer/Renderer2D.h"
 
 
 namespace Polyboid
@@ -25,6 +26,8 @@ namespace Polyboid
         const auto nativeWindow = m_Window->GetNativeWindow();
 
         Renderer::Init();
+        
+
         m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
         m_Swapchain->SetVsync(true);
         
@@ -98,6 +101,8 @@ namespace Polyboid
     void Application::ShutDown()
     {
         Imgui::ShutDown();
+        Renderer2D::Shutdown();
+       
     }
 
     void Application::Run()

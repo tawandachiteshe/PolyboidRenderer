@@ -57,6 +57,7 @@ namespace Polyboid
         uint32_t m_VertexSizeInBytes = 0;
         std::vector<VertexBufferLayout> m_Layout;
         Ref<IndexBuffer> m_IndexBuffer = nullptr;
+        uint32_t m_BufferSize = 0;
   
     
     public:
@@ -73,6 +74,7 @@ namespace Polyboid
         
         void DescribeBuffer(std::initializer_list<VertexBufferLayout>  layout);
         void Bind();
+        void SetData(const void* Data, uint32_t size = 0);
 
         static std::shared_ptr<VertexBuffer> MakeVertexBuffer(const void *verts, uint32_t size);
         static std::shared_ptr<VertexBuffer> MakeVertexBuffer(uint32_t size);

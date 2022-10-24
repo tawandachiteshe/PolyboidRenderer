@@ -2,6 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "RenderAPI.h"
+#include "Renderer2D.h"
 #include "Engine/Core/Application.h"
 #include "glad/glad.h"
 #include "glm/vec4.hpp"
@@ -10,31 +12,25 @@ namespace Polyboid
 {
 
     Unique<RendererStorage> Renderer::s_RenderStorage = std::make_unique<RendererStorage>();
+    Unique<RenderAPI> Renderer::s_RenderApi = std::make_unique<RenderAPI>();
     
     void Renderer::Init() {
 
-        
-        glEnable(GL_BLEND);
-        glBlendEquation(GL_FUNC_ADD);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_CULL_FACE);
-        glEnable(GL_DEPTH_TEST);
-        glCullFace(GL_BACK);
-        glFrontFace(GL_CW);
-    
-        
+        RenderAPI::Init();
+        Renderer2D::Init();
     }
 
     void Renderer::Clear(const glm::vec4& color )
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(color.x, color.y, color.z, color.w);
+        RenderAPI::Clear(color);
     }
 
-    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader)
+    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform)
     {
+        shader->Bind();
         s_RenderStorage->m_VA = va;
         s_RenderStorage->m_Shader = shader;
+        s_RenderStorage->m_Shader->SetMat4("uTransform", transform);
     }
 
     void Renderer::BeginDraw(const Ref<Camera3D>& camera)
@@ -47,20 +43,22 @@ namespace Polyboid
     }
 
 
-    void Renderer::Draw(const glm::mat4& transform)
+    void Renderer::DrawIndexed(uint32_t _count)
     {
         s_RenderStorage->m_Shader->Bind();
         s_RenderStorage->m_VA->Bind();
 
-        s_RenderStorage->m_Shader->SetMat4("uTransform", transform);
+       
         const auto count = s_RenderStorage->m_VA->GetIndexBuffer()->GetCount();
+        const auto countIf = static_cast<GLsizei>(_count == 0 ? count : _count);
 
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(count), GL_UNSIGNED_SHORT, nullptr);
+        RenderAPI::DrawIndexed(countIf, 4);
+       
     }
 
     void Renderer::CreateViewPort(const glm::vec2& viewportSize)
     {
-        glViewport(0, 0, static_cast<GLsizei>(viewportSize.x), static_cast<GLsizei>(viewportSize.y));
+        RenderAPI::CreateViewport(viewportSize);
     }
 
     

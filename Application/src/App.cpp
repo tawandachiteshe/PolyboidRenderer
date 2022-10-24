@@ -6,10 +6,11 @@
 #include "Engine/Core/EntryPoint.h"
 #include "Engine/Core/ImguiSetup.h"
 #include "Engine/Core/Input.h"
-#include "Engine/Core/ModelLoader.h"
+#include "Engine/Core/MeshLoader.h"
 #include "Engine/Core/ECS/Components.h"
 #include "Engine/Core/ECS/GameObject.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/VertexBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "GLFW/glfw3.h"
@@ -19,66 +20,34 @@ namespace Polyboid
 {
     App::App()
     {
-        
+        m_Camera = std::make_shared<Camera3D>(m_AppData.windowSpecs.Width, m_AppData.windowSpecs.Height);
+
         m_VA = VertexBufferArray::MakeVertexBufferArray();
 
-        float verts[4 * 9] = {
-            -.5f, -.5f, 0.0f, .23f, .45f, .98f, 1.0f, 0.0f, 0.0f,
-            .5f, -.5f, 0.0f, .93f, .45f, .98f, 1.0f, 1.0f, 0.0f,
-            -.5f, .5f, 0.0f, .43f, .75f, .98f, 1.0f, 0.0f, 1.0f,
-            .5f, .5f, 0.0f, .43f, .75f, .98f, 1.0f, 1.0f, 1.0f,
-        };
+        m_MeshLoader = MeshLoader::LoadFile("Assets/Models/moreverts.glb");
+        auto indices = m_MeshLoader->GetIndices32()[0].data();
+    	verts = m_MeshLoader->GetVertices()[0].data();
+        auto vertsSize = m_MeshLoader->GetVertices()[0].size() * sizeof(Vertex);
+        auto count = m_MeshLoader->GetIndices32()[0].size();
 
-        uint32_t indices[6] = {
-            0, 2, 3, 0, 3, 1,
-        };
+        m_Count = vertsSize;
 
-        auto model = ModelLoader::LoadFile("Assets/Models/tree.glb");
-        
-        m_IB = IndexBuffer::MakeIndexBuffer(model->GetIndices16().data(), model->GetIndices16().size());
-        auto size = model->GetVertices().size() * sizeof(Vertex);
-        m_VB = VertexBuffer::MakeVertexBuffer(model->GetVertices().data() , size);
-        m_VB->DescribeBuffer(
-            {
-                {BufferComponent::Float3, "aPosition"},
-                {BufferComponent::Float3, "aNormal"},
-                {BufferComponent::Float2, "aUV"}
-            }
-        );
+        m_Shader = Shader::MakeShader("Assets/Shaders/vert.glsl", "Assets/Shaders/frag.glsl");
+
+        m_IB = IndexBuffer::MakeIndexBuffer(indices, count);
+        m_VB = VertexBuffer::MakeVertexBuffer(vertsSize);
+
+        m_VB->DescribeBuffer({
+            { BufferComponent::Float3, "aPosition" },
+            { BufferComponent::Float3, "aNormal" },
+            { BufferComponent::Float2, "aUV"}
+            });
         m_VA->AddVertexBuffer(m_VB);
         m_VA->SetIndexBuffer(m_IB);
-        //
-        m_Shader = Shader::MakeShader("Assets/Shaders/vert.glsl", "Assets/Shaders/frag.glsl");
+
         m_Texture = Texture::MakeTexture2D("Assets/Textures/checker.jpg");
-        m_Texture3 = Texture::MakeTexture2D("Assets/Textures/checker.jpg");
-        m_Texture2 = Texture::MakeTexture2D(1, 1);
-        uint32_t color[4] = {0xFF0000FF, 0xFF00FFFF, 0xFF0000FF, 0xFF00FFFF};
-        m_Texture2->SetData(&color, sizeof(color));
-        std::array<int, 32> u_Textures = {};
-        u_Textures.fill(0);
-
-        m_Shader->Bind();
+        m_Texture->Bind();
         
-        m_Shader->SetInt("uTexture", 0);
-        m_Shader->SetInt("uTexture2", 1);
-        m_Shader->SetInt("uTexture3", 2);
-        
-        m_Texture->Bind(0);
-        m_Texture2->Bind(1);
-        m_Texture3->Bind(2);
-
-   
-
-        m_Camera = std::make_shared<Camera3D>(m_AppData.windowSpecs.Width, m_AppData.windowSpecs.Height);
-        auto object = GameObject::CreateObject();
-        auto object2 = GameObject::CreateObject();
-        auto object3 = GameObject::CreateObject();
-        auto& tag = object->GetComponent<Tag>();
-        auto& tag2 = object2->GetComponent<Tag>();
-        auto& transform = object->GetComponent<Transform>();
-        transform.Position = { 1.0f, 2.0f, 5.0f };
-
-       
     }
 
     App::~App()
@@ -92,32 +61,13 @@ namespace Polyboid
     void App::OnKeyEvent(KeyCodes codes, KeyAction action)
     {
         Application::OnKeyEvent(codes, action);
-
-        if (action == KeyAction::PRESS)
-        {
-            if (codes == KeyCodes::LEFT_ALT)
-            {
-                Input::SetCursorMode(CursorMode::DISABLED);
-                m_CanUseMouse = true;
-            }
-        }
-        else if (action == KeyAction::RELEASE)
-        {
-            if (codes == KeyCodes::LEFT_ALT)
-            {
-                Input::SetCursorMode(CursorMode::NORMAL);
-                m_CanUseMouse = false;
-                m_Camera->SetFirstClick(true);
-            }
-        }
-        
-        
+        m_Camera->OnKeyEvent(codes, action);
     }
 
     void App::OnWindowResizeEvent(uint32_t width, uint32_t height)
     {
         Application::OnWindowResizeEvent(width, height);
-        Renderer::CreateViewPort({ width, height });
+        Renderer::CreateViewPort({width, height});
         m_Camera->OnWindowResize(width, height);
     }
 
@@ -147,26 +97,44 @@ namespace Polyboid
         {
             m_Camera->OnMouseMove();
         }
-        
-        
-        glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.f, 1.f, 1.f));
-        glm::mat4 rotationMat = glm::rotate(glm::mat4(1), 0.0f, glm::vec3(0.f, 0.f, 1.f));
-        glm::mat4 translate = glm::translate(glm::mat4(1.0f), glm::vec3(-.5, 0, 0.f));
+
+
 
         ImGui::Begin("Window is lit");
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate,
+                    ImGui::GetIO().Framerate);
         ImGui::End();
 
         //Clear first
         Renderer::Clear();
-        Renderer::Submit(m_VA, m_Shader);
-        Renderer::BeginDraw(m_Camera);
 
-        m_Texture2->Bind(1);
-        Renderer::Draw(translate * scale * rotationMat);
-        m_Texture->Bind(0);
-        Renderer::Draw(translate * scale * rotationMat);
+        /*
+       glm::mat4 translate = glm::translate(glm::mat4(1.0f), { 0.0f, 2.0f, 0.0f });
+
+        Renderer::Submit(m_VA, m_Shader, translate);
+     
+
+        Renderer::BeginDraw(m_Camera);
+        Renderer::DrawIndexed();
+        m_VB->SetData(m_MeshLoader->GetVertices()[0].data());
         Renderer::EndDraw();
+        */
+
+        
+        Renderer2D::BeginDraw(m_Camera);
+        for (int x = 0; x < 200; ++x)
+        {
+	        for (int y = 0; y < 200; ++y)
+	        {
+               Renderer2D::DrawQuad({ x , y, 0.0f });
+	        }
+
+        }
+        Renderer2D::DebugWindow();
+        Renderer2D::EndDraw();
+        
+  
+
     }
 
 

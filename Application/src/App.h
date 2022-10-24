@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Base.h"
+#include "Engine/Core/MeshLoader.h"
 #include "Engine/Renderer/Camera3D.h"
 #include "Engine/Renderer/IndexBuffer.h"
 #include "Engine/Renderer/Shader.h"
@@ -24,12 +25,17 @@ namespace Polyboid
         Ref<VertexBufferArray> m_VA;
         Ref<VertexBuffer> m_VB;
         Ref<IndexBuffer> m_IB;
+        std::vector<Ref<VertexBuffer>> m_VBs;
+        std::vector<Ref<IndexBuffer>> m_IBs;
         Ref<Texture> m_Texture, m_Texture2, m_Texture3;
         Ref<Camera3D> m_Camera = nullptr;
         bool m_CanUseMouse = false;
         void OnKeyEvent(KeyCodes codes, KeyAction action) override;
         void OnWindowResizeEvent(uint32_t width, uint32_t height) override;
         void OnMouseScrollEvent(double offset) override;
+        Vertex* verts = nullptr;
+        uint32_t m_Count = 0;
+        Ref<MeshLoader> m_MeshLoader;
         
         void Update(float deltaTime) override;
     };

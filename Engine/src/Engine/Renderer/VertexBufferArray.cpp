@@ -38,8 +38,10 @@ namespace Polyboid
             glEnableVertexAttribArray(layoutIndex);
             glVertexAttribPointer(layoutIndex, (GLint)layout.component, GL_FLOAT, GL_FALSE, buffer->GetVertexSizeInBytes(), reinterpret_cast<void*>(layout.GetStride()));
             layoutIndex++;
+            m_VertexBufferIndex++;
         }
-      
+
+        m_Buffers.emplace_back(buffer);
         
     }
 
