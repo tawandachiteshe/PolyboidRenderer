@@ -43,7 +43,7 @@ namespace Polyboid
     }
 
 
-    void Renderer::DrawIndexed(uint32_t _count)
+    void Renderer::DrawIndexed(uint32_t _count, uint32_t elementCount)
     {
         s_RenderStorage->m_Shader->Bind();
         s_RenderStorage->m_VA->Bind();
@@ -52,7 +52,7 @@ namespace Polyboid
         const auto count = s_RenderStorage->m_VA->GetIndexBuffer()->GetCount();
         const auto countIf = static_cast<GLsizei>(_count == 0 ? count : _count);
 
-        RenderAPI::DrawIndexed(countIf, 4);
+        RenderAPI::DrawIndexed(countIf, 2);
        
     }
 

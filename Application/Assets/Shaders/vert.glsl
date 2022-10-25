@@ -8,8 +8,17 @@ out vec3 vNormal;
 out vec2 vUV;
 out vec3 vFragPos;
 
-uniform mat4 uViewProj;
+
 uniform mat4 uTransform;
+uniform mat4 uViewProj;
+
+layout (std140, binding = 1) uniform CameraData {
+    
+    uniform mat4 camera;
+
+};
+
+
 
 void main() {
 

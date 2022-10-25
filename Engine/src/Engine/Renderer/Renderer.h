@@ -34,7 +34,7 @@ namespace Polyboid
         static void BeginDraw(const Ref<Camera3D>& camera);
         static void EndDraw();
 
-        static void DrawIndexed(uint32_t count = 0);
+        static void DrawIndexed(uint32_t count = 0, uint32_t elementCount = 4);
         static void CreateViewPort(const glm::vec2& viewportSize);
     };
 

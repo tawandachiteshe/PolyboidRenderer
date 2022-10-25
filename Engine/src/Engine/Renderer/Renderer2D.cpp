@@ -9,6 +9,8 @@
 #include <glm/glm.hpp>
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/detail/qualifier.hpp"
+#include <Engine/Renderer/UniformBuffer.h>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace Polyboid
@@ -40,6 +42,8 @@ namespace Polyboid
 
 		glm::vec4 QuadVertexPositions[4];
 		Vertex2D quadVerts[4];
+
+		std::shared_ptr<UniformBuffer> m_CameraUB;
 
 
 	};
@@ -111,14 +115,14 @@ namespace Polyboid
 		s_sData.quadVerts[2] = { { -0.5f, -0.5f, 0.0f, }, {1.0f, 1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f } };
 		s_sData.quadVerts[3] = { { -0.5f, 0.5f, 0.0f }, {1.0f, 1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f } };
 
+		//temp solution
+		s_sData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4), 0);
+
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera3D>& camera)
 	{
-		
-		const auto& shader = s_sData.shader;
-		shader->Bind();
-		shader->SetMat4("uViewProj", camera->GetViewProjectionMatrix());
+		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetViewProjectionMatrix()), sizeof(glm::mat4));
 		s_sData.QuadVertexBufferPtr = s_sData.QuadVertexBufferBase.data();
 
 	}
@@ -192,7 +196,7 @@ namespace Polyboid
 			{
 
 				s_sData.QuadVertexBufferPtr->position = transform * glm::vec4(quadVert.position, 1.0f);
-				s_sData.QuadVertexBufferPtr->color = quadVert.color;
+				s_sData.QuadVertexBufferPtr->color = color;
 				s_sData.QuadVertexBufferPtr->uv = quadVert.uv;
 				s_sData.QuadVertexBufferPtr++;
 

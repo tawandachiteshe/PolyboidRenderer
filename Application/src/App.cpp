@@ -15,6 +15,7 @@
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "GLFW/glfw3.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Polyboid
 {
@@ -24,18 +25,18 @@ namespace Polyboid
 
         m_VA = VertexBufferArray::MakeVertexBufferArray();
 
-        m_MeshLoader = MeshLoader::LoadFile("Assets/Models/moreverts.glb");
-        auto indices = m_MeshLoader->GetIndices32()[0].data();
+    	m_MeshLoader = MeshLoader::LoadFile("Assets/Models/BoxTextured.glb");
+        auto indices = m_MeshLoader->GetIndices16()[0].data();
     	verts = m_MeshLoader->GetVertices()[0].data();
         auto vertsSize = m_MeshLoader->GetVertices()[0].size() * sizeof(Vertex);
-        auto count = m_MeshLoader->GetIndices32()[0].size();
+        auto count = m_MeshLoader->GetIndices16()[0].size();
 
         m_Count = vertsSize;
 
         m_Shader = Shader::MakeShader("Assets/Shaders/vert.glsl", "Assets/Shaders/frag.glsl");
 
         m_IB = IndexBuffer::MakeIndexBuffer(indices, count);
-        m_VB = VertexBuffer::MakeVertexBuffer(vertsSize);
+        m_VB = VertexBuffer::MakeVertexBuffer(verts, vertsSize);
 
         m_VB->DescribeBuffer({
             { BufferComponent::Float3, "aPosition" },
@@ -47,6 +48,9 @@ namespace Polyboid
 
         m_Texture = Texture::MakeTexture2D("Assets/Textures/checker.jpg");
         m_Texture->Bind();
+
+        m_uniformBuffer = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4), 2);
+        m_framebuffer = Framebuffer::MakeFramebuffer({ m_AppData.windowSpecs.Width, m_AppData.windowSpecs.Height });
         
     }
 
@@ -105,35 +109,47 @@ namespace Polyboid
                     ImGui::GetIO().Framerate);
         ImGui::End();
 
+        m_framebuffer->Bind();
         //Clear first
         Renderer::Clear();
 
-        /*
-       glm::mat4 translate = glm::translate(glm::mat4(1.0f), { 0.0f, 2.0f, 0.0f });
-
-        Renderer::Submit(m_VA, m_Shader, translate);
-     
-
-        Renderer::BeginDraw(m_Camera);
-        Renderer::DrawIndexed();
-        m_VB->SetData(m_MeshLoader->GetVertices()[0].data());
-        Renderer::EndDraw();
-        */
-
-        
+      
         Renderer2D::BeginDraw(m_Camera);
-        for (int x = 0; x < 200; ++x)
-        {
-	        for (int y = 0; y < 200; ++y)
-	        {
-               Renderer2D::DrawQuad({ x , y, 0.0f });
-	        }
-
-        }
+        Renderer2D::DrawQuad({ 0.0f , 0.0f, 0.0f }, { .23, 0.23, 0.98, 1.0f });
         Renderer2D::DebugWindow();
         Renderer2D::EndDraw();
+
+        m_framebuffer->UnBind();
+
+        Renderer::Clear();
+
+        ImGui::Begin("GameWindow");
+        {
+            // Using a Child allow to fill all the space of the window.
+            // It also alows customization
+            ImGui::BeginChild("GameRender");
+            // Get the size of the child (i.e. the whole draw size of the windows).
+            ImVec2 wsize = ImGui::GetWindowSize();
+            // Because I use the texture from OpenGL, I need to invert the V from the UV.
+            ImGui::Image((ImTextureID)m_framebuffer->GetColorAttachment0TextureID(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::EndChild();
+        }
+        ImGui::End();
         
+       
   
+        Renderer2D::BeginDraw(m_Camera);
+        Renderer2D::DrawQuad({ 0.0f , 0.0f, 0.0f });
+        Renderer2D::DebugWindow();
+        Renderer2D::EndDraw();
+
+
+        glm::mat4 translate = glm::translate(glm::mat4(1.0f), { 0.0f, 2.0f, 0.0f });
+
+        Renderer::Submit(m_VA, m_Shader, translate);
+        Renderer::BeginDraw(m_Camera);
+        Renderer::DrawIndexed();
+        Renderer::EndDraw();
 
     }
 
