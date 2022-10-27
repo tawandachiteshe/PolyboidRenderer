@@ -4,6 +4,8 @@
 #include <string>
 
 #include "KeyCodes.h"
+#include "Events/Event.h"
+//#include "Events/Event.h"
 
 extern "C" {
     typedef struct GLFWwindow GLFWwindow;
@@ -18,18 +20,13 @@ namespace Polyboid
         WindowSpecs() = default;
         WindowSpecs(uint32_t Width, uint32_t Height, const std::string& Title): Title(Title), Height(Height),Width(Width){}
         
-        std::string Title = "";
+        std::string Title;
         uint32_t Height = 0, Width = 0;
     };
 
     struct WindowData
     {
-        std::function<void(KeyCodes, KeyAction)> OnKeyEvent;
-        std::function<void(MouseCodes, KeyAction)> OnMouseEvent;
-        std::function<void(uint32_t, uint32_t)> OnFrameBufferResizeEvent;
-        std::function<void(uint32_t, uint32_t)> OnWindowResizeEvent;
-        std::function<void()> OnWindowCloseEvent;
-        std::function<void(double)> OnMouseScrollEvent;
+        EventFn eventfn;
     };
     
     class PolyboidWindow

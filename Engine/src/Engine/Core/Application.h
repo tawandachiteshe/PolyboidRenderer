@@ -12,7 +12,7 @@ namespace Polyboid
     {
         ApplicationData() = default;
         WindowSpecs windowSpecs = {};
-        ApplicationData(const WindowSpecs& specs): windowSpecs(specs){}
+        ApplicationData(WindowSpecs specs): windowSpecs(std::move(specs)){}
         
     };
     
@@ -20,31 +20,24 @@ namespace Polyboid
     {
     public:
         Application();
-        virtual ~Application();
+        virtual ~Application() = default;
 
-       std::unique_ptr<PolyboidWindow>& GetWindow() { return m_Window; }
-        static Application* Get() { return s_Instance; }
+		std::unique_ptr<PolyboidWindow>& GetWindow() { return m_Window; }
+    	static Application* Get() { return s_Instance; }
         
     protected:
         
         ApplicationData m_AppData = WindowSpecs(1280, 800, "Polyboid");
-        virtual void OnKeyEvent(KeyCodes codes, KeyAction action);
-        virtual void OnMouseEvent(MouseCodes codes, KeyAction action);
-        virtual void OnWindowResizeEvent(uint32_t width, uint32_t height);
-        virtual void OnFrameBufferResizeEvent(uint32_t width, uint32_t height);
-        virtual void OnWindowsCloseEvent();
-        virtual void OnMouseScrollEvent(double offset);
-        
-        
-        
+    	void OnWindowResizeEvent(const Event& event);
+    	void OnWindowsCloseEvent(const Event& event);
+
     private:
       
         std::unique_ptr<PolyboidWindow> m_Window;
         std::shared_ptr<Swapchain> m_Swapchain;
         void Run();
-        virtual void Update(float deltaTime) = 0;
         bool m_IsRunning = false;
-        void ShutDown();
+        static void ShutDown();
 
         double m_DeltaTime = 0.0;
         double m_LastFrame = 0.0;
@@ -59,10 +52,6 @@ namespace Polyboid
     };
 
 
-
-    inline void Application::OnMouseEvent(MouseCodes codes, KeyAction action)
-    {
-    }
 
     Application* CreateApplication();
 }

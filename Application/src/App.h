@@ -33,9 +33,9 @@ namespace Polyboid
         Ref<Texture> m_Texture, m_Texture2, m_Texture3;
         Ref<Camera3D> m_Camera = nullptr;
         bool m_CanUseMouse = false;
-        void OnKeyEvent(KeyCodes codes, KeyAction action) override;
-        void OnWindowResizeEvent(uint32_t width, uint32_t height) override;
-        void OnMouseScrollEvent(double offset) override;
+        void OnKeyEvent(KeyCodes codes, KeyAction action);
+        void OnWindowResizeEvent(uint32_t width, uint32_t height);
+        void OnMouseScrollEvent(double offset);
         Vertex* verts = nullptr;
         uint32_t m_Count = 0;
         Ref<MeshLoader> m_MeshLoader;

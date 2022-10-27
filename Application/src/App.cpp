@@ -51,6 +51,11 @@ namespace Polyboid
 
         m_uniformBuffer = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4), 2);
         m_framebuffer = Framebuffer::MakeFramebuffer({ m_AppData.windowSpecs.Width, m_AppData.windowSpecs.Height });
+
+
+        bool demoWin = true;
+
+       
         
     }
 
@@ -64,7 +69,6 @@ namespace Polyboid
 
     void App::OnKeyEvent(KeyCodes codes, KeyAction action)
     {
-        Application::OnKeyEvent(codes, action);
         m_Camera->OnKeyEvent(codes, action);
     }
 
@@ -77,7 +81,6 @@ namespace Polyboid
 
     void App::OnMouseScrollEvent(double offset)
     {
-        Application::OnMouseScrollEvent(offset);
         m_Camera->SetZoomAmount(static_cast<float>(offset));
     }
 
@@ -122,6 +125,8 @@ namespace Polyboid
         m_framebuffer->UnBind();
 
         Renderer::Clear();
+
+        //ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
         ImGui::Begin("GameWindow");
         {

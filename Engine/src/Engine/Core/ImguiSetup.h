@@ -2,8 +2,10 @@
 
 namespace Polyboid
 {
+
     class Imgui
     {
+
     public:
         static void Init();
         static void Begin();

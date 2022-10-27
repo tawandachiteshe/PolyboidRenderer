@@ -4,6 +4,8 @@
 
 #include "KeyCodes.h"
 #include "Engine/Renderer/Context.h"
+#include "Events/EventSystem.h"
+#include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
 
 
@@ -16,37 +18,24 @@ namespace Polyboid
 
     static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnKeyEvent(static_cast<KeyCodes>(key), static_cast<KeyAction>(action));
-        }
     }
 
     static void OnFrameBufferResize(GLFWwindow* window, int width, int height)
     {
-        
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnFrameBufferResizeEvent(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        }
+
     }
 
     static void OnWindowResize(GLFWwindow* window, int width, int height)
     {
-        
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnWindowResizeEvent(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-        }
+    	const WindowResizeEvent windowResize(width, height);
+    	EventSystem::GetDispatcher()->Dispatch(windowResize);
     }
 
 
     static void OnWindowShouldClose(GLFWwindow* window)
     {
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnWindowCloseEvent();
-        }
+    	const WindowCloseEvent windowCloseEvent;
+    	EventSystem::GetDispatcher()->Dispatch(windowCloseEvent);
     }
 
     static void OnMouseCursorCallback(GLFWwindow* window, double xpos, double ypos)
@@ -60,19 +49,12 @@ namespace Polyboid
 
     void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
     {
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnMouseEvent(static_cast<MouseCodes>(button),
-                static_cast<KeyAction>(action));
-        }
+    
     }
 
     void MouseScrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
     {
-        if (const auto* windowData = static_cast<WindowData*>(glfwGetWindowUserPointer(window)))
-        {
-            windowData->OnMouseScrollEvent(yoffset);
-        }
+      
     }
 
     std::unique_ptr<WindowData> PolyboidWindow::s_WindowData = std::make_unique<WindowData>();

@@ -9,6 +9,9 @@
 #include "ImguiSetup.h"
 #include "ECS/ECSManager.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "EntryPoint.h"
+#include "Events/EventSystem.h"
+#include "Events/WindowEvent.h"
 
 
 namespace Polyboid
@@ -30,42 +33,18 @@ namespace Polyboid
 
         m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
         m_Swapchain->SetVsync(true);
-        
-        PolyboidWindow::GetWindowData()->OnKeyEvent = [&] (KeyCodes key_codes, KeyAction action)
-        {
-            OnKeyEvent(key_codes, action);
-        };
-
-        PolyboidWindow::GetWindowData()->OnMouseEvent = [&](MouseCodes codes, KeyAction action)
-        {
-            OnMouseEvent(codes, action);
-        };
-
-        PolyboidWindow::GetWindowData()->OnWindowCloseEvent = [&]()
-        {
-            OnWindowsCloseEvent();
-        };
-
-        PolyboidWindow::GetWindowData()->OnFrameBufferResizeEvent = [&](uint32_t width, uint32_t height)
-        {
-            OnFrameBufferResizeEvent(width, height);
-        };
-
-        PolyboidWindow::GetWindowData()->OnWindowResizeEvent = [&](uint32_t width, uint32_t height)
-        {
-            OnWindowResizeEvent(width, height);
-        };
-
-        PolyboidWindow::GetWindowData()->OnMouseScrollEvent = [&](double offset)
-        {
-            OnMouseScrollEvent(offset);
-        };
-
         m_IsRunning = true;
 
         Imgui::Init();
         ECSManager::Init();
+
+        //multiple overides maybe but is it efficieant and maintainable;;
+
+
+        EventSystem::Bind(EventType::WINDOW_CLOSE, BIND_EVENT(OnWindowsCloseEvent));
+        EventSystem::Bind(EventType::WINDOW_RESIZE, BIND_EVENT(OnWindowResizeEvent));
         
+
     }
 
     Application::~Application()
@@ -73,29 +52,19 @@ namespace Polyboid
         ShutDown();
     }
 
-    void Application::OnKeyEvent(KeyCodes codes, KeyAction action)
+
+    void Application::OnWindowResizeEvent(const Event& event)
     {
-        
+        const auto _event = CastEventAs<WindowResizeEvent>(event);
+
+        m_AppData.windowSpecs.Height = _event.GetHeight();
+        m_AppData.windowSpecs.Width = _event.GetWidth();
     }
 
-    void Application::OnWindowResizeEvent(uint32_t width, uint32_t height)
-    {
-        m_AppData.windowSpecs.Height = height;
-        m_AppData.windowSpecs.Width = width;
-    }
-
-    void Application::OnFrameBufferResizeEvent(uint32_t width, uint32_t height)
-    {
-    }
-
-    void Application::OnWindowsCloseEvent()
+    void Application::OnWindowsCloseEvent(const Event& event)
     {
        
         m_IsRunning = false;
-    }
-
-    void Application::OnMouseScrollEvent(double offset)
-    {
     }
 
     void Application::ShutDown()
@@ -112,18 +81,24 @@ namespace Polyboid
         {
 
             m_Window->PollEvents();
-            Imgui::Begin();
+           
 
             const double currentFrame = glfwGetTime();
             m_DeltaTime = currentFrame - m_LastFrame;
 
-            Update(static_cast<float>(m_DeltaTime));
+            // update here.....
             
             m_LastFrame = currentFrame;
 
             //rendering here////
 
-            Imgui::End();
+            Imgui::Begin();
+
+            //imgui here....
+
+        	Imgui::End();
+
+
             m_Swapchain->SwapBuffers();
             
            

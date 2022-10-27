@@ -2,7 +2,7 @@ workspace "PolyboidRenderer"
     architecture "x86_64"
     configurations { "Debug", "Release" }
     
-    startproject "Application"
+    startproject "PolyEditor"
 
     flags
 	{
@@ -19,3 +19,4 @@ group ""
 
 include "Engine"
 include "Application"
+include "PolyEditor"

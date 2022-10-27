@@ -15,6 +15,7 @@ project "imgui"
     {
         "src",
         "%{wks.location}/Engine/Vendor/glfw/include",
+        "%{wks.location}/Engine/Vendor/glad/include"
     }
     
     filter "system:windows"
