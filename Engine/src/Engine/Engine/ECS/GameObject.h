@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include <cstdint>
 
-#include "Engine/Core/Base.h"
-#include "Engine/Core/ECS/ECSManager.h"
+#include "Engine/Engine/Base.h"
+#include "Engine/Engine/ECS/ECSManager.h"
 
 namespace Polyboid
 {

@@ -2,8 +2,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "Engine/Core/Input.h"
-#include "glad/glad.h"
+#include "Engine/Engine/Input.h"
 #include "GLFW/glfw3.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"

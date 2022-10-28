@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "VertexBuffer.h"
-#include "Engine/Core/Base.h"
+#include "Engine/Engine/Base.h"
 
 namespace Polyboid
 {

@@ -67,6 +67,11 @@ namespace Polyboid
         m_IsRunning = false;
     }
 
+    void Application::AddLayer(Layer* layer)
+    {
+        m_Layers.AddLayer(layer);
+    }
+
     void Application::ShutDown()
     {
         Imgui::ShutDown();
@@ -76,7 +81,7 @@ namespace Polyboid
 
     void Application::Run()
     {
-        
+        auto layers = m_Layers.GetLayers();
         while (m_IsRunning)
         {
 
@@ -87,6 +92,11 @@ namespace Polyboid
             m_DeltaTime = currentFrame - m_LastFrame;
 
             // update here.....
+
+            for (auto layer : layers)
+            {
+                layer->OnUpdate(m_DeltaTime);
+            }
             
             m_LastFrame = currentFrame;
 
@@ -95,6 +105,10 @@ namespace Polyboid
             Imgui::Begin();
 
             //imgui here....
+            for (auto layer : layers)
+            {
+                layer->OnImguiRender();
+            }
 
         	Imgui::End();
 

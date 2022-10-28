@@ -2,8 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include "Engine/Core/Base.h"
-#include "Engine/Core/FileReader.h"
+#include "Engine/Engine/Base.h"
+#include "Engine/Engine/FileReader.h"
 #include "glad/glad.h"
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"

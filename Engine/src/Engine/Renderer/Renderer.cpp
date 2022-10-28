@@ -4,7 +4,6 @@
 
 #include "RenderAPI.h"
 #include "Renderer2D.h"
-#include "Engine/Core/Application.h"
 #include "glad/glad.h"
 #include "glm/vec4.hpp"
 

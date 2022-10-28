@@ -18,5 +18,4 @@ include "Engine/Vendor/imgui"
 group ""
 
 include "Engine"
-include "Application"
 include "PolyEditor"

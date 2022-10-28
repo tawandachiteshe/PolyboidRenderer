@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include <spdlog/details/backtracer.h>
 
-#include "Engine/Core/Application.h"
-#include "Engine/Core/Base.h"
-#include "Engine/Core/MeshLoader.h"
+#include "Engine/Engine/Application.h"
+#include "Engine/Engine/Base.h"
+#include "Engine/Engine/MeshLoader.h"
 #include "Engine/Renderer/Camera3D.h"
 #include "Engine/Renderer/IndexBuffer.h"
 #include "Engine/Renderer/Shader.h"
@@ -40,8 +40,6 @@ namespace Polyboid
         uint32_t m_Count = 0;
         Ref<MeshLoader> m_MeshLoader;
         Ref<Framebuffer> m_framebuffer;
-        
-        void Update(float deltaTime) override;
     };
 
 

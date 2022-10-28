@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <cstdint>
 
-#include "Engine/Core/KeyCodes.h"
+#include "Engine/Engine/KeyCodes.h"
 #include "glm/matrix.hpp"
 
 namespace Polyboid

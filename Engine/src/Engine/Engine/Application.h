@@ -3,6 +3,7 @@
 #include "PolyboidWindow.h"
 #include "KeyCodes.h"
 #include "Engine/Renderer/Swapchain.h"
+#include <Engine/Engine/LayerContainer.h>
 
 
 int main(int argc, char** argv);
@@ -20,7 +21,7 @@ namespace Polyboid
     {
     public:
         Application();
-        virtual ~Application() = default;
+        virtual ~Application();
 
 		std::unique_ptr<PolyboidWindow>& GetWindow() { return m_Window; }
     	static Application* Get() { return s_Instance; }
@@ -30,9 +31,11 @@ namespace Polyboid
         ApplicationData m_AppData = WindowSpecs(1280, 800, "Polyboid");
     	void OnWindowResizeEvent(const Event& event);
     	void OnWindowsCloseEvent(const Event& event);
+        void AddLayer(Layer* layer);
 
     private:
       
+        LayerContainer m_Layers;
         std::unique_ptr<PolyboidWindow> m_Window;
         std::shared_ptr<Swapchain> m_Swapchain;
         void Run();

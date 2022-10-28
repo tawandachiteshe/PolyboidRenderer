@@ -3,12 +3,12 @@
 #include <spdlog/spdlog.h>
 
 #include "imgui.h"
-#include "Engine/Core/EntryPoint.h"
-#include "Engine/Core/ImguiSetup.h"
-#include "Engine/Core/Input.h"
-#include "Engine/Core/MeshLoader.h"
-#include "Engine/Core/ECS/Components.h"
-#include "Engine/Core/ECS/GameObject.h"
+#include "Engine/Engine/EntryPoint.h"
+#include "Engine/Engine/ImguiSetup.h"
+#include "Engine/Engine/Input.h"
+#include "Engine/Engine/MeshLoader.h"
+#include "Engine/Engine/ECS/Components.h"
+#include "Engine/Engine/ECS/GameObject.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/VertexBuffer.h"
