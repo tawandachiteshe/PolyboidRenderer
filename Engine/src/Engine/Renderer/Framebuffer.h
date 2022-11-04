@@ -127,6 +127,7 @@ namespace Polyboid
 		//Recreate Buffer attachments
 	public:
 		void ReCreateFramebuffer();
+		void Resize(uint32_t width, uint32_t height);
 		void Bind();
 		void UnBind();
 		static std::shared_ptr<Framebuffer> MakeFramebuffer(const FramebufferSettings& settings);

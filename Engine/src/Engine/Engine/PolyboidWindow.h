@@ -22,6 +22,9 @@ namespace Polyboid
         
         std::string Title;
         uint32_t Height = 0, Width = 0;
+
+        float GetAspectRatio() { return (float)Height / Width; }
+
     };
 
     struct WindowData

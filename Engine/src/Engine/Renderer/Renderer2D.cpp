@@ -11,6 +11,7 @@
 #include "glm/detail/qualifier.hpp"
 #include <Engine/Renderer/UniformBuffer.h>
 #include <glm/gtc/type_ptr.hpp>
+#include "VertexBufferArray.h"
 
 
 namespace Polyboid
@@ -120,9 +121,9 @@ namespace Polyboid
 
 	}
 
-	void Renderer2D::BeginDraw(const Ref<Camera3D>& camera)
+	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
-		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetViewProjectionMatrix()), sizeof(glm::mat4));
+		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetViewProjection()), sizeof(glm::mat4));
 		s_sData.QuadVertexBufferPtr = s_sData.QuadVertexBufferBase.data();
 
 	}

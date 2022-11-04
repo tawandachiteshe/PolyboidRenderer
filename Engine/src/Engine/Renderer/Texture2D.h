@@ -28,6 +28,10 @@ namespace Polyboid
         Texture(uint32_t width, uint32_t height);
         void SetData(void* data, uint32_t size);
         void Bind(uint32_t slot = 0);
+
+        uint32_t GetTextureID() const { return m_TextureID; }
+
+
         ~Texture();
 
         static Ref<Texture> MakeTexture2D(const std::string& textureImagePath);

@@ -20,6 +20,7 @@ project "PolyEditor"
         "%{wks.location}/Engine/Vendor/imgui/src",
         "%{wks.location}/Engine/Vendor/entt",
         "%{wks.location}/Engine/Vendor/stb/include",
+        "%{wks.location}/PolyEditor/src"
 
     }
 

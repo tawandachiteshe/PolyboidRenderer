@@ -13,12 +13,15 @@ namespace Polyboid
     
     class EventDispatcher
     {
-    public:
-
+    private:
         void AddEventHandler(const EventType& type, const std::function<EventHandlerFn>& fun)
         {
             m_Handlers[type].emplace_back(fun);
         }
+
+    public:
+
+        friend class EventSystem;
 
         void Dispatch(const Event& eventName)
         {

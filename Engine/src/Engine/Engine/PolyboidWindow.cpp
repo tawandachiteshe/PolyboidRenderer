@@ -5,6 +5,7 @@
 #include "KeyCodes.h"
 #include "Engine/Renderer/Context.h"
 #include "Events/EventSystem.h"
+#include "Events/MouseEvents.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
 
@@ -54,7 +55,8 @@ namespace Polyboid
 
     void MouseScrollCallBack(GLFWwindow* window, double xoffset, double yoffset)
     {
-      
+        const MouseScrollEvent event(yoffset);
+        EventSystem::GetDispatcher()->Dispatch(event);
     }
 
     std::unique_ptr<WindowData> PolyboidWindow::s_WindowData = std::make_unique<WindowData>();

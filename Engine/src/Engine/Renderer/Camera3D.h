@@ -1,12 +1,13 @@
 ﻿#pragma once
 #include <cstdint>
 
+#include "Camera.h"
 #include "Engine/Engine/KeyCodes.h"
 #include "glm/matrix.hpp"
 
 namespace Polyboid
 {
-    class Camera3D
+    class Camera3D : public Camera
     {
     private:
         uint32_t m_Width, m_Height;

@@ -52,6 +52,14 @@ namespace Polyboid
 
 	}
 
+	void Framebuffer::Resize(uint32_t width, uint32_t height)
+	{
+		m_Settings.width = width;
+		m_Settings.height = height;
+
+		ReCreateFramebuffer();
+	}
+
 	void Framebuffer::Bind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_ID);

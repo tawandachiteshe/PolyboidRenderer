@@ -44,8 +44,11 @@ namespace Polyboid
         m_Aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
         auto center = m_Position + m_Front;
 
+        //idk why i named it this....
         m_View = glm::perspective(glm::radians(m_Fov), m_Aspect, m_Near, m_Far) * glm::lookAt(
             m_Position, center, m_CameraUp);
+
+        m_Projection = m_View;
     }
 
     void Camera3D::Update(float deltaTime)

@@ -9,7 +9,7 @@ layout (location = 2) in vec2 aUV;
 uniform mat4 uViewProj;
 uniform mat4 uTransform;
 
-layout (std140, binding = 0) uniform CameraData {
+layout (std140, binding = 0) uniform CameraBuffer {
     
     uniform mat4 camera;
 
