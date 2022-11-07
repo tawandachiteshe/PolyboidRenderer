@@ -4,6 +4,9 @@ project "Engine"
     cppdialect "C++17"
 	staticruntime "off"
 
+    pchheader "boidpch.h"
+    pchsource "src/boidpch.cpp"
+
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -19,6 +22,12 @@ project "Engine"
         "Vendor/entt",
         "Vendor/imgui/src",
     }
+
+    defines
+	{
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE"
+	}
 
     links
     {

@@ -17,6 +17,8 @@ namespace Polyboid
 
 		m_sData->m_Icons["play"] = Texture::MakeTexture2D(iconsDir.string() + "play.png");
 		m_sData->m_Icons["stop"] = Texture::MakeTexture2D(iconsDir.string() + "stop.png");
+		m_sData->m_Icons["folder"] = Texture::MakeTexture2D(iconsDir.string() + "folder.png");
+		m_sData->m_Icons["file"] = Texture::MakeTexture2D(iconsDir.string() + "file.png");
 
 	}
 

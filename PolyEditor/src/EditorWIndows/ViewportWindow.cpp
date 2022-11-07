@@ -147,7 +147,7 @@ namespace Polyboid
 
 		//ImGuizmo::DrawGrid(glm::value_ptr(view), glm::value_ptr(proj), glm::value_ptr(glm::mat4(1.0f)), 100);
 
-		spdlog::info(" imguizmo is over {0} is using {1} {2}", ImGuizmo::IsOver(), ImGuizmo::IsUsing(), ImGui::IsMouseClicked(0));
+		//spdlog::info(" imguizmo is over {0} is using {1} {2}", ImGuizmo::IsOver(), ImGuizmo::IsUsing(), ImGui::IsMouseClicked(0));
 
 		ImGui::EndChild();
 

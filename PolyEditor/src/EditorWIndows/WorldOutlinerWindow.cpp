@@ -25,13 +25,16 @@ namespace Polyboid
 
 		auto view = registry.view<Tag>();
 
-		for (auto entity : view.each())
+		for (auto entity :  view.each())
 		{
 			auto [_, tag] = entity;
 
 			auto size = ImGui::GetWindowContentRegionWidth();
 
-			ImGui::Button(tag.name.c_str(), { size, 25  });
+			if (ImGui::TreeNode(tag.name.c_str()))
+			{
+				ImGui::TreePop();
+			}
 			
 		}
 

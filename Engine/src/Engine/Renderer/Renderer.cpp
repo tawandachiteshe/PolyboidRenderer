@@ -1,4 +1,6 @@
-﻿#include "Renderer.h"
+﻿#include "boidpch.h"
+
+#include "Renderer.h"
 
 #include <spdlog/spdlog.h>
 

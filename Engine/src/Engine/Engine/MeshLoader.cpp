@@ -1,4 +1,6 @@
-﻿#include "MeshLoader.h"
+﻿#include "boidpch.h"
+
+#include "MeshLoader.h"
 
 #include <spdlog/spdlog.h>
 #include <stb/tiny_gltf.h>

@@ -1,4 +1,5 @@
-﻿#include "Camera3D.h"
+﻿#include "boidpch.h"
+#include "Camera3D.h"
 
 #include <spdlog/spdlog.h>
 

@@ -1,3 +1,5 @@
+#include "boidpch.h"
+
 #include "Framebuffer.h"
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>

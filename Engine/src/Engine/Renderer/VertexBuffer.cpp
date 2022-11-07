@@ -1,4 +1,5 @@
-﻿#include "VertexBuffer.h"
+﻿#include "boidpch.h"
+#include "VertexBuffer.h"
 
 #include "glad/glad.h"
 #include <cstdint>

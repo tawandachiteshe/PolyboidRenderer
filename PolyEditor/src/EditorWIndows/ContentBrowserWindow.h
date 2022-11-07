@@ -3,6 +3,9 @@
 #include "EditorWindow.h"
 #include <string>
 
+
+struct ImGuiInputTextCallbackData;
+
 namespace Polyboid 
 {
 
@@ -14,6 +17,7 @@ namespace Polyboid
 
 	private:
 
+		int OnCreateFolder(ImGuiInputTextCallbackData* data);
 
 		// Inherited via EditorWindow
 		virtual void RenderImgui() override;

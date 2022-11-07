@@ -1,8 +1,5 @@
-﻿#include "GameObject.h"
-
-#include "Components.h"
-#include "ECSManager.h"
-
+﻿#include "boidpch.h"
+#include "GameObject.h"
 
 
 namespace Polyboid

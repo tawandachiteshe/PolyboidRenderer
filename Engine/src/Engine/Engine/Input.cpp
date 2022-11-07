@@ -1,4 +1,6 @@
-﻿#include "Input.h"
+﻿#include "boidpch.h"
+
+#include "Input.h"
 
 #include <spdlog/spdlog.h>
 

@@ -1,4 +1,5 @@
-﻿#include "Texture2D.h"
+﻿#include "boidpch.h"
+#include "Texture2D.h"
 
 #include <stb/stb_image.h>
 

@@ -1,4 +1,6 @@
-﻿#include "FileReader.h"
+﻿#include "boidpch.h"
+
+#include "FileReader.h"
 
 #include <ios>
 #include <fstream>

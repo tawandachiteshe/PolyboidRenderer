@@ -1,3 +1,5 @@
+#include "boidpch.h"
+
 #include "Renderer2D.h"
 #include "RenderAPI.h"
 #include "imgui.h"
@@ -41,8 +43,8 @@ namespace Polyboid
 		uint32_t indexCount = 0;
 		bool submitOnce = false;
 
-		glm::vec4 QuadVertexPositions[4];
-		Vertex2D quadVerts[4];
+		glm::vec4 QuadVertexPositions[4] = {};
+		Vertex2D quadVerts[4] = {};
 
 		std::shared_ptr<UniformBuffer> m_CameraUB;
 

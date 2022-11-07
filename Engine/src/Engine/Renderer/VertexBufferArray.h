@@ -1,6 +1,5 @@
 ﻿#pragma once
-#include <cstdint>
-#include <memory>
+
 
 #include "VertexBuffer.h"
 #include "Engine/Engine/Base.h"

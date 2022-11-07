@@ -1,4 +1,6 @@
-﻿#include "PolyboidWindow.h"
+﻿#include "boidpch.h"
+
+#include "PolyboidWindow.h"
 
 #include <spdlog/spdlog.h>
 

@@ -1,7 +1,7 @@
-﻿#include "VertexBufferArray.h"
-
+﻿
+#include "boidpch.h"
+#include "VertexBufferArray.h"
 #include "glad/glad.h"
-#include "glm/fwd.hpp"
 
 
 namespace Polyboid

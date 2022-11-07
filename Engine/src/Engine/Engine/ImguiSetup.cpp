@@ -1,4 +1,6 @@
-﻿#include "ImguiSetup.h"
+﻿#include "boidpch.h"
+
+#include "ImguiSetup.h"
 
 //#define  IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #include "Application.h"

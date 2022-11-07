@@ -1,3 +1,4 @@
+#include "boidpch.h"
 #include "GameInstance.h"
 
 namespace Polyboid

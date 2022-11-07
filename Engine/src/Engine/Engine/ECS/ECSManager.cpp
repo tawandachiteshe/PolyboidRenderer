@@ -1,4 +1,5 @@
-﻿#include "ECSManager.h"
+﻿#include "boidpch.h"
+#include "ECSManager.h"
 
 namespace Polyboid
 {

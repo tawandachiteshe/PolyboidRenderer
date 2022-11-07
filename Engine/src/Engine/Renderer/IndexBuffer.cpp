@@ -1,4 +1,6 @@
-﻿#include "IndexBuffer.h"
+﻿#include "boidpch.h"
+
+#include "IndexBuffer.h"
 
 #include "glad/glad.h"
 
