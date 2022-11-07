@@ -17,7 +17,8 @@ namespace Polyboid
 
 		//Editor Events
 		ON_EDITOR_PLAY_MODE_ENTER,
-		ON_EDITOR_PLAY_MODE_EXIT
+		ON_EDITOR_PLAY_MODE_EXIT,
+		ON_GAME_OBJECT_SELECTED
 	};
 
 	class Event

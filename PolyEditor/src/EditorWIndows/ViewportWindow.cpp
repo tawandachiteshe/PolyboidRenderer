@@ -4,9 +4,11 @@
 
 #include "Engine/Engine/Application.h"
 #include "Editor/EditorCamera.h"
+#include "Editor/Events/EditorEvents.h"
 #include "Engine/Engine/Input.h"
 #include "Engine/Engine/ECS/ECSManager.h"
 #include "Engine/Engine/ECS/GameObject.h"
+#include "Engine/Engine/Events/EventSystem.h"
 #include "Engine/Engine/Gameplay/GameInstance.h"
 #include "Engine/Engine/Gameplay/World.h"
 #include "Engine/Renderer/Renderer.h"
@@ -34,6 +36,8 @@ namespace Polyboid
 		m_Framebuffer = Framebuffer::MakeFramebuffer({ appdata.windowSpecs.Width, appdata.windowSpecs.Height });
 
 		GameInstance::SetCurrentCamera(m_ViewportCamera);
+
+		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -51,6 +55,16 @@ namespace Polyboid
 	static bool boolIsNotZero(const ImVec2& v)
 	{
 		return (v.x && v.y);
+	}
+
+	void ViewportWindow::OnGameObjectSelected(const Event& event)
+	{
+
+		auto gameEvent = CastEventAs<GameObjectOutlineClick>(event);
+		m_CurrentGameObject = gameEvent.GetGameObjectID();
+
+		spdlog::info("Game Selected event {}", m_CurrentGameObject);
+
 	}
 
 	void ViewportWindow::RenderImgui()
@@ -89,58 +103,65 @@ namespace Polyboid
 		
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, contentSize.x, contentSize.y);
 
-		auto& gameObject = GameInstance::GetCurrentWorld()->GetGameObjects().at(1);
-		auto& transform = gameObject->GetComponent<Transform>();
-		auto mat = glm::mat4(transform.GetTransform());
-		auto& view = m_ViewportCamera->GetViewMatrix();
-		auto& proj = m_ViewportCamera->GetProjection();
-
-		if (Input::KeyPressed(KeyCodes::W))
-		{
-			//translation
-			m_GizmoOperation = ImGuizmo::TRANSLATE;
-		}
-		else if (Input::KeyPressed(KeyCodes::E))
-		{
-			//rot
-			m_GizmoOperation = ImGuizmo::ROTATE;
-		}
-		else if (Input::KeyPressed(KeyCodes::R))
-		{
-			//scale
-			m_GizmoOperation = ImGuizmo::SCALE;
-		}
-
-
-		ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), m_GizmoOperation, m_GizmoMode,
-			glm::value_ptr(mat));
-
-
-		glm::vec3 pos;
-		glm::quat rot;
-		glm::vec3 scale;
-
 		
-		//ImGui::InputFloat3("Sc", matrixScale, 3);
 
-		if (ImGuizmo::IsUsing())
+		if (m_CurrentGameObject != entt::null)
 		{
-			Math::DecomposeMatrix(pos, scale, rot, mat);
-			glm::vec3 rotEuler = glm::eulerAngles(rot);
 
-			ImGui::Begin("Stuff");
-			ImGui::InputFloat3("pos", glm::value_ptr(pos));
-			ImGui::InputFloat3("scale", glm::value_ptr(scale));
-			ImGui::InputFloat3("rot", glm::value_ptr(rotEuler));
+			auto& transform = GameInstance::GetCurrentWorld()->GetComponent<Transform>(m_CurrentGameObject);
+			auto mat = glm::mat4(transform.GetTransform());
+	
+
+			auto& view = m_ViewportCamera->GetViewMatrix();
+			auto& proj = m_ViewportCamera->GetProjection();
+
+			if (Input::KeyPressed(KeyCodes::W))
+			{
+				//translation
+				m_GizmoOperation = ImGuizmo::TRANSLATE;
+			}
+			else if (Input::KeyPressed(KeyCodes::E))
+			{
+				//rot
+				m_GizmoOperation = ImGuizmo::ROTATE;
+			}
+			else if (Input::KeyPressed(KeyCodes::R))
+			{
+				//scale
+				m_GizmoOperation = ImGuizmo::SCALE;
+			}
+
+
+			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), m_GizmoOperation, m_GizmoMode,
+				glm::value_ptr(mat));
+
+
+			glm::vec3 pos;
+			glm::quat rot;
+			glm::vec3 scale;
+
 			
-			ImGui::End();
+			//ImGui::InputFloat3("Sc", matrixScale, 3);
+
+			if (ImGuizmo::IsUsing())
+			{
+				Math::DecomposeMatrix(pos, scale, rot, mat);
+				glm::vec3 rotEuler = glm::eulerAngles(rot);
+
+				ImGui::Begin("Stuff");
+				ImGui::InputFloat3("pos", glm::value_ptr(pos));
+				ImGui::InputFloat3("scale", glm::value_ptr(scale));
+				ImGui::InputFloat3("rot", glm::value_ptr(rotEuler));
+				
+				ImGui::End();
 
 
-			transform.Position = pos;
-			transform.Scale = scale;
-			transform.Rotation = rotEuler;
+				transform.Position = pos;
+				transform.Scale = scale;
+				transform.Rotation = rotEuler;
+			}
+
 		}
-
 		
 
 		

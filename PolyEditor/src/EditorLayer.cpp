@@ -1,7 +1,6 @@
 #include "EditorLayer.h"
 #include <imgui.h>
 
-#include "imgui_internal.h"
 #include "Editor/Resource.h"
 #include "Editor/Events/EditorEvents.h"
 #include "EditorWIndows/ContentBrowserWindow.h"
@@ -201,8 +200,11 @@ namespace Polyboid
 
        
 
-        m_World->CreateGameObject<Square>();
-        m_World->CreateGameObject<Triangle>();
+        m_World->CreateGameObject<Square>("Square");
+        m_World->CreateGameObject<Triangle>("Triangle 1");
+        m_World->CreateGameObject<Triangle>("Triangle 2");
+        m_World->CreateGameObject<Triangle>("Triangle 3");
+        m_World->CreateGameObject<Triangle>("Triangle 4");
         
 	}
 
