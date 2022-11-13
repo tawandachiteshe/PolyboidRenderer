@@ -10,6 +10,7 @@ namespace Polyboid
 	void DetailsWindow::OnGameObjectSelected(const Event& event)
 	{
 		auto gameObjectSelected = CastEventAs<GameObjectOutlineClick>(event);
+		m_CurrentObject = nullptr;
 		m_CurrentObject = gameObjectSelected.GetGameObject();
 	}
 
@@ -109,58 +110,52 @@ namespace Polyboid
 
 		if (m_CurrentObject != nullptr)
 		{
-
+		
 			ImGui::Button("Add Component", { windowContent - 4, 0 });
-
-
+		
+			
 			if (ImGui::BeginPopupContextItem("##item", ImGuiPopupFlags_MouseButtonLeft))
 			{
 				ImGui::SetNextItemWidth(windowContent);
-				if (ImGui::Selectable("Shape"))
+			
+				if (!m_CurrentObject->HasComponent<ShapeComponent>())
 				{
-
+			
+					if (ImGui::Selectable("Shape"))
+					{
+			
+						m_CurrentObject->AddComponent<ShapeComponent>();
+					}
+			
 				}
-
+			
 				ImGui::EndPopup();
 			}
 
-
-			static glm::vec3 position;
-			static glm::vec3 scale;
-			static glm::vec3 rotation;
-
 			ImGui::Spacing();
 			ImGui::Spacing();
 			ImGui::Spacing();
-
+			
 			if (m_CurrentObject->HasComponent<TransformComponent>())
 			{
 				DrawTransformComponent(m_CurrentObject, size);
 			}
 
-
-
-			if (m_CurrentObject->HasComponent<ShapeComponent>());
+			
+			if (m_CurrentObject->HasComponent<ShapeComponent>())
 			{
 				ImGui::Spacing();
 				ImGui::Separator();
-
-
+			
 				if (ImGui::CollapsingHeader("Shape", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					auto& shapeComponent = m_CurrentObject->GetComponent<ShapeComponent>();
+
 					ImGui::ColorEdit3("Color", glm::value_ptr(shapeComponent.color));
 				}
-				
-
-
-
+			
 			}
 		}
-
-
-	
-		ImGui::Separator();
 
 
 

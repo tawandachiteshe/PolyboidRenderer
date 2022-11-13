@@ -70,6 +70,7 @@ namespace Polyboid
 	{
 
 		auto gameEvent = CastEventAs<GameObjectOutlineClick>(event);
+		m_CurrentGameObject = nullptr;
 		m_CurrentGameObject = gameEvent.GetGameObject();
 
 
