@@ -2,7 +2,6 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine/Engine/ECS/GameObject.h"
-#include "Engine/Engine/Gameplay/World.h"
 
 namespace Polyboid
 {
@@ -10,19 +9,19 @@ namespace Polyboid
 	{
 	public:
 
-		void OnGameObjectConstruction() override
+		void OnCreate() override
 		{
-			GameObject::OnGameObjectConstruction();
+			GameObject::OnCreate();
 
 
-			AddOrReplaceComponent<Shape>(glm::vec4{ .76f, .23f, 0.45f, 1.0f });
+			//AddOrReplaceComponent<ShapeComponent>(glm::vec4{ .76f, .23f, 0.45f, 1.0f });
+			//
+			// auto size = GetWorld()->GetGameObjects().size();
+			//
+			// spdlog::info("{0} objects number {1}", m_Name, size);
 
-			auto size = GetWorld()->GetGameObjects().size();
-
-			spdlog::info("{0} objects number {1}", m_Name, size);
-
-			auto& transform = GetComponent<Transform>();
-			transform.Position.y += 2.0f;
+			//auto& transform = GetComponent<TransformComponent>();
+			//transform.Position.y += 2.0f;
 
 		}
 		void OnBeginPlay() override
@@ -35,7 +34,7 @@ namespace Polyboid
 		{
 			GameObject::OnUpdate(dt);
 
-			GetComponent<Transform>().Position.y += dt * 2.0f;
+			//GetComponent<TransformComponent>().Position.y += dt * 2.0f;
 
 		}
 
@@ -51,14 +50,16 @@ namespace Polyboid
 
 	private:
 		std::vector<GameObject*> m_GameObjects;
+		GameObject* m_Red;
 
 	public:
 		Square()
 		{
+			spdlog::info("Square on Contruction");
 			//AddComponent<Square>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
 		}
 
-		void OnGameObjectConstruction() override;
+		void OnCreate() override;
 		void OnBeginPlay() override;
 		void OnUpdate(float dt) override;
 		void OnEndPlay() override;

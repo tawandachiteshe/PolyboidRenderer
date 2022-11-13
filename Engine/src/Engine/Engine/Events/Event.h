@@ -7,7 +7,7 @@ namespace Polyboid
 	enum class EventType
 	{
 		//Window Events
-		NONE,
+		NONE = 0,
 		KEY,
 		MOUSE,
 		WINDOW_CLOSE,
@@ -18,7 +18,8 @@ namespace Polyboid
 		//Editor Events
 		ON_EDITOR_PLAY_MODE_ENTER,
 		ON_EDITOR_PLAY_MODE_EXIT,
-		ON_GAME_OBJECT_SELECTED
+		ON_GAME_OBJECT_SELECTED,
+		ON_GAME_OBJECT_DELETED
 	};
 
 	class Event

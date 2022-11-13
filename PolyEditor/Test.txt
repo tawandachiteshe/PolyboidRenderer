@@ -1,0 +1,72 @@
+	struct TestData
+	{
+		TestData()
+		{
+			name.resize(8);
+		}
+
+		TestData(const std::string& name, uint32_t): name(name){}
+
+		std::string name;
+		uint32_t age;
+	};
+
+		TestData x{ "Tawanda", 2};
+
+		std::ofstream out("struct.bin", std::ios::binary | std::ios::out);
+
+		auto total = sizeof(x.age) + x.name.size();
+
+		int8_t* data = new int8_t[total];
+
+		std::memcpy(data, x.name.c_str(), 7);
+		std::memcpy(&data[7], &x.age, 4);
+
+		out.write((char*) data, total);
+
+		delete[] data;
+		out.close();
+
+		//ate seeks to the end of the file brooooo
+		std::ifstream in("struct.bin", std::ios::binary | std::ios::ate);
+		uint32_t size;
+
+		int8_t* memBlock;
+
+		if (in.is_open())
+		{
+			
+			size = in.tellg();
+
+			memBlock = new int8_t[size];
+			in.seekg(0, std::ios::beg);
+			in.read((char*)memBlock, size);
+
+			TestData a;
+			TestData* data = (TestData*)memBlock;
+
+			char* name = new char[8];
+			name[7] = 0;
+			
+			using T = decltype(a.name);
+			T b = "Tawanda2";
+			auto stuff = GetName(b);
+
+
+			std::memcpy(name, memBlock, sizeof(char) * 7);
+
+			a.name = name;
+			delete[] name;
+
+			std::memcpy(&a.age, &memBlock[7], sizeof(char) * 4);
+
+
+			spdlog::info("{} data", memBlock);
+
+			in.close();
+			delete[] memBlock;
+
+		}
+
+	
+		

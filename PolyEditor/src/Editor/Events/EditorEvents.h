@@ -3,23 +3,36 @@
 
 namespace Polyboid
 {
+	class GameObject;
+
+
 	class GameObjectOutlineClick : public Event
 	{
 
 	private:
-		uint32_t gameObjectId;
+		GameObject* gameObjectId;
 
 	public:
-		GameObjectOutlineClick(uint32_t gameObject) : gameObjectId(gameObject)
+		GameObjectOutlineClick(GameObject* gameObject) : gameObjectId(gameObject)
 		{
 			m_Type = EventType::ON_GAME_OBJECT_SELECTED;
 		}
 
-		uint32_t GetGameObjectID() { return gameObjectId; }
+		GameObject* GetGameObject() { return gameObjectId; }
 
-
-		
 	};
+
+	class GameObjectOutlineDeleted : public Event
+	{
+	public:
+		GameObjectOutlineDeleted()
+		{
+			m_Type = EventType::ON_GAME_OBJECT_DELETED;
+		}
+
+
+	};
+
 
 	class EditorPlayModeEnter : public Event
 	{

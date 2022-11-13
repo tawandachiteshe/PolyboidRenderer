@@ -7,24 +7,39 @@
 
 namespace Polyboid
 {
-	void Square::OnGameObjectConstruction()
+	void Square::OnCreate()
 	{
-		GameObject::OnGameObjectConstruction();
-
-		AddOrReplaceComponent<Shape>(glm::vec4{ 1.0f, .23f, 0.45f, 1.0f });
-
-		auto size = GetWorld()->GetGameObjects().size();
-
-		spdlog::info("{0} objects number {1}", m_Name, size);
-
-		auto& transform = GetComponent<Transform>();
-		transform.Position.y += 0.2f;
+		GameObject::OnCreate();
+		GetWorld()->CreateGameObject("Tawnada");
+		GetWorld()->CreateGameObject("Red");
+		if (!HasComponent<ShapeComponent>())
+		{
+			AddComponent<ShapeComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+		}
 
 	}
 
 	void Square::OnBeginPlay()
 	{
 		GameObject::OnBeginPlay();
+
+	
+
+		m_Red = GetWorld()->FindGameObjectByName("Red");
+
+		if (m_Red)
+		{
+			m_Red->AddComponent<ShapeComponent>();
+
+			m_Red->GetComponent<TransformComponent>();
+
+		}
+		else
+		{
+			m_Red = GetWorld()->CreateGameObject<Square>("Red");
+		}
+
+		
 
 	}
 
@@ -33,19 +48,14 @@ namespace Polyboid
 		GameObject::OnUpdate(dt);
 
 		
-		auto& transform = GetComponent<Transform>();
-		transform.Rotation.z += dt * 10.0f;
-
-		
 	}
 
 	void Square::OnEndPlay()
 	{
 		GameObject::OnEndPlay();
-		RemoveComponent<Square>();
-
-		GetComponent<Transform>().Rotation = { 0.0f, 0.0f, 0.0f };
 
 		spdlog::info("On box end");
+		GetWorld()->DestroyGameObject(m_Red);
+		m_Red = nullptr;
 	}
 }

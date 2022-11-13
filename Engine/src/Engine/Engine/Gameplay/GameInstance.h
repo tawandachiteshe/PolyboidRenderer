@@ -11,7 +11,7 @@ namespace Polyboid
 	struct GameInstanceData
 	{
 		Ref<Camera> m_CurrentCamera;
-		World* m_CurrentWorld = nullptr;
+		Ref<World> m_CurrentWorld = nullptr;
 	};
 
 	class GameInstance
@@ -20,9 +20,9 @@ namespace Polyboid
 		static Ref<GameInstanceData> m_sData;
 		static void SetCurrentCamera(const Ref<Camera>& camera);
 
-		static void SetCurrentWorld(World* world);
+		static void SetCurrentWorld(const Ref<World>& world);
 
-		static World* GetCurrentWorld();
+		static Ref<World>& GetCurrentWorld();
 
 
 		static Ref<Camera>& GetCurrentCamera();

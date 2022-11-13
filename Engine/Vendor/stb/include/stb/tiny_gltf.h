@@ -963,6 +963,7 @@ struct OrthographicCamera {
   double znear;  // required
 
   OrthographicCamera() : xmag(0.0), ymag(0.0), zfar(0.0), znear(0.0) {}
+ 
   DEFAULT_METHODS(OrthographicCamera)
   bool operator==(const OrthographicCamera &) const;
 
@@ -1722,6 +1723,8 @@ void JsonParse(JsonDocument &doc, const char *str, size_t length,
 
 #ifdef __APPLE__
 #include "TargetConditionals.h"
+#include "OrthographicCamera.h"
+#include "PerspectiveCamera.h"
 #endif
 
 #ifdef __clang__

@@ -1,14 +1,26 @@
 #pragma once
 #include <vector>
 #include <string>
-
-#include "Engine/Engine/ECS/GameObjectClass.h"
+#include <Engine/Engine/ECS/Components.h>
 #include <entt/entt.hpp>
 
+#include "GameInstance.h"
+#include "Engine/Engine/ECS/GameObject.h"
 
 namespace Polyboid
 {
 	class GameObject;
+
+	template<typename T, typename ... Args>
+	class TGameObject : public T
+	{
+	public:
+		TGameObject(Args&&... args) : T(std::forward<Args>(args) ...)
+		{
+
+		}
+
+	};
 
 	class World
 	{
@@ -19,10 +31,46 @@ namespace Polyboid
 		void OnBeginPlay() const;
 		void OnUpdate(float ts) const;
 		void OnEndPlay() const;
-		
-		template<typename Class>
-		GameObjectClass<Class>* CreateGameObject(const std::string& name = "GameObject");
+		~World();
 
+		std::vector<GameObject*>::iterator begin() { return m_GameObjects.begin(); }
+		std::vector<GameObject*>::iterator end() { return m_GameObjects.end(); }
+
+		void DestroyGameObject(GameObject* gameObject);
+		void DestroyGameObjectByName(const std::string& name);
+		void DestroyGameObjectsByName(const std::string& name);
+		void DestroyGameObjectWithId(UUID id);
+		void DestroyGameObjects(std::vector<GameObject*>::iterator& objects);
+		void DestroyGameObject(std::vector<GameObject*>::iterator& object);
+
+		GameObject* FindGameObjectByName(const std::string& name);
+		GameObject* FindGameObjectByID(const UUID& id);
+		std::vector<GameObject*> FindGameObjectsByName(const std::string& name);
+
+		template<typename Class>
+		TGameObject<Class>* CreateGameObject(const std::string& name = "GameObject")
+		{
+			auto id = CreateEntityID();
+			auto* gameObjectClass = new TGameObject<Class>();
+			gameObjectClass->SetID(id);
+
+			gameObjectClass->SetWorld(GameInstance::GetCurrentWorld());
+
+			//default components here
+			gameObjectClass->AddComponent<TagComponent>(name);
+			gameObjectClass->AddComponent<TransformComponent>();
+			gameObjectClass->AddComponent<IDComponent>();
+
+			gameObjectClass->OnCreate();
+
+
+			m_GameObjects.emplace_back(gameObjectClass);
+
+
+			return gameObjectClass;
+		}
+
+		GameObject* CreateGameObject(const std::string& name = "GameObject");
 		
 		std::vector<GameObject*>& GetGameObjects() { return m_GameObjects; }
 
@@ -61,20 +109,5 @@ namespace Polyboid
 		
 	};
 
-	template<typename Class>
-	GameObjectClass<Class>* World::CreateGameObject(const std::string& name )
-	{
-		auto* gameObjectClass = new GameObjectClass<Class>();
-		m_GameObjects.emplace_back(gameObjectClass);
 
-		gameObjectClass->SetWorld(this);
-		gameObjectClass->OnGameObjectConstruction();
-
-		gameObjectClass->GetComponent<Tag>().name = name;
-
-	
-
-		
-		return gameObjectClass;
-	}
 }

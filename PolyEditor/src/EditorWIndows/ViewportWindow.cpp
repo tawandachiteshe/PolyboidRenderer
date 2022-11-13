@@ -7,37 +7,46 @@
 #include "Editor/Events/EditorEvents.h"
 #include "Engine/Engine/Input.h"
 #include "Engine/Engine/ECS/ECSManager.h"
-#include "Engine/Engine/ECS/GameObject.h"
 #include "Engine/Engine/Events/EventSystem.h"
 #include "Engine/Engine/Gameplay/GameInstance.h"
 #include "Engine/Engine/Gameplay/World.h"
 #include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/Renderer2D.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "Engine/Engine/Math/Math.h"
+
+#include <fstream>
+#include "Editor/Editor.h"
 
 
 namespace Polyboid
 {
 
 
+#define GetName(x) #x
+
 	ViewportWindow::ViewportWindow(const std::string& name)
 	{
+
+
 		m_Name = name;
 
 		auto app = Application::Get();
-		auto& appdata = app->GetAppData();
-		auto aspect = appdata.windowSpecs.GetAspectRatio();
+		auto& winSpecs = app->GetWindowSpecs();
+		auto aspect = winSpecs.GetAspectRatio();
+		auto width = winSpecs.Width;
+		auto height = winSpecs.Height;
 
-		float fov = 45.0f;
+		float fov = 30.0f;
 
 
 		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 1000.0f);
-		m_Framebuffer = Framebuffer::MakeFramebuffer({ appdata.windowSpecs.Width, appdata.windowSpecs.Height });
+		m_Framebuffer = Framebuffer::MakeFramebuffer({ width, height });
 
 		GameInstance::SetCurrentCamera(m_ViewportCamera);
+		Editor::SetEditorCamera(m_ViewportCamera);
 
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
+		EventSystem::Bind(EventType::ON_GAME_OBJECT_DELETED, BIND_EVENT(OnGameObjectDeleted));
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -61,15 +70,21 @@ namespace Polyboid
 	{
 
 		auto gameEvent = CastEventAs<GameObjectOutlineClick>(event);
-		m_CurrentGameObject = gameEvent.GetGameObjectID();
+		m_CurrentGameObject = gameEvent.GetGameObject();
 
-		spdlog::info("Game Selected event {}", m_CurrentGameObject);
 
+	}
+
+	void ViewportWindow::OnGameObjectDeleted(const Event& event)
+	{
+		m_CurrentGameObject = nullptr;
 	}
 
 	void ViewportWindow::RenderImgui()
 	{
 
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 1, 2 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
 		
 		ImGui::Begin(m_Name.c_str());
 
@@ -98,17 +113,14 @@ namespace Polyboid
 
 
 		ImGuizmo::SetOrthographic(false);
-		 ImGuizmo::SetDrawlist();
-		
-		
+		ImGuizmo::SetDrawlist();
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, contentSize.x, contentSize.y);
 
-		
 
-		if (m_CurrentGameObject != entt::null)
+		if (m_CurrentGameObject != nullptr)
 		{
 
-			auto& transform = GameInstance::GetCurrentWorld()->GetComponent<Transform>(m_CurrentGameObject);
+			auto& transform = m_CurrentGameObject->GetComponent<TransformComponent>();
 			auto mat = glm::mat4(transform.GetTransform());
 	
 
@@ -129,6 +141,7 @@ namespace Polyboid
 			{
 				//scale
 				m_GizmoOperation = ImGuizmo::SCALE;
+				
 			}
 
 
@@ -140,21 +153,11 @@ namespace Polyboid
 			glm::quat rot;
 			glm::vec3 scale;
 
-			
-			//ImGui::InputFloat3("Sc", matrixScale, 3);
 
 			if (ImGuizmo::IsUsing())
 			{
 				Math::DecomposeMatrix(pos, scale, rot, mat);
 				glm::vec3 rotEuler = glm::eulerAngles(rot);
-
-				ImGui::Begin("Stuff");
-				ImGui::InputFloat3("pos", glm::value_ptr(pos));
-				ImGui::InputFloat3("scale", glm::value_ptr(scale));
-				ImGui::InputFloat3("rot", glm::value_ptr(rotEuler));
-				
-				ImGui::End();
-
 
 				transform.Position = pos;
 				transform.Scale = scale;
@@ -173,6 +176,7 @@ namespace Polyboid
 		ImGui::EndChild();
 
 		ImGui::End();
+		ImGui::PopStyleVar(2);
 
 	}
 

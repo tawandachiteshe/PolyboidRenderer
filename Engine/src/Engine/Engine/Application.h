@@ -26,6 +26,7 @@ namespace Polyboid
 		std::unique_ptr<PolyboidWindow>& GetWindow() { return m_Window; }
     	static Application* Get() { return s_Instance; }
         ApplicationData& GetAppData() { return  m_AppData; }
+        WindowSpecs& GetWindowSpecs() { return m_AppData.windowSpecs; }
         
     protected:
         

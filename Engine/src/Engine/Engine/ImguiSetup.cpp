@@ -26,6 +26,9 @@ namespace Polyboid
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
+        
+        io.Fonts->AddFontFromFileTTF("Resources/Fonts/roboto_mono.ttf", 16);
+
         s_Data.io = &io;
 
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls

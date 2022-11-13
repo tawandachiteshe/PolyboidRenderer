@@ -8,17 +8,26 @@ namespace Polyboid
 
 	static std::filesystem::path s_ResourcePath = "Resources";
 
-	static  std::filesystem::path s_IconsPath = "/Icons/";
+	static  std::filesystem::path s_IconsPath = "Icons";
+
+	static std::string MakeIconsPath(const std::string& iconName)
+	{
+		auto iconsDir = s_ResourcePath / s_IconsPath;
+		auto iconFile = iconsDir / iconName;
+
+		return iconFile.string();
+	}
 
 	void Resource::Init()
 	{
 
-		auto iconsDir = s_ResourcePath += s_IconsPath;
 
-		m_sData->m_Icons["play"] = Texture::MakeTexture2D(iconsDir.string() + "play.png");
-		m_sData->m_Icons["stop"] = Texture::MakeTexture2D(iconsDir.string() + "stop.png");
-		m_sData->m_Icons["folder"] = Texture::MakeTexture2D(iconsDir.string() + "folder.png");
-		m_sData->m_Icons["file"] = Texture::MakeTexture2D(iconsDir.string() + "file.png");
+		m_sData->m_Icons["play"] = Texture::MakeTexture2D(MakeIconsPath("play.png"));
+		m_sData->m_Icons["stop"] = Texture::MakeTexture2D(MakeIconsPath("stop.png"));
+		m_sData->m_Icons["folder"] = Texture::MakeTexture2D(MakeIconsPath("folder.png"));
+		m_sData->m_Icons["file"] = Texture::MakeTexture2D(MakeIconsPath("file.png"));
+		m_sData->m_Icons["game_object"] = Texture::MakeTexture2D(MakeIconsPath("game_object.png"));
+		m_sData->m_Icons["camera"] = Texture::MakeTexture2D(MakeIconsPath("camera.png"));
 
 	}
 

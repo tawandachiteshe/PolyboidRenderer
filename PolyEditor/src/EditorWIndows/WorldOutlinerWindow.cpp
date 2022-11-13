@@ -22,40 +22,61 @@ namespace Polyboid
 
 	void WorldOutlinerWindow::RenderImgui()
 	{
-
 		ImGui::Begin(m_Name.c_str());
 		auto& registry = GameInstance::GetCurrentWorld()->GetRegistry();
 
-		auto view = registry.view<Tag>();
+		auto view = registry.view<TagComponent, IDComponent>();
 
-		for (auto entity :  view.each())
+		static bool open = true;
+		ImGui::ShowDemoWindow(&open);
+
+
+		if (ImGui::TreeNodeEx("Game Objects", ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			auto& [entityHandle, tag] = entity;
-		;
-			
-			if (ImGui::TreeNodeEx(tag.name.c_str(), ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_DefaultOpen))
+			for (auto entity : view.each())
 			{
-				
-				if (ImGui::IsItemClicked())
-				{
-					GameObjectOutlineClick event(static_cast<uint32_t>(entityHandle));
-					EventSystem::GetDispatcher()->Dispatch(event);
-					spdlog::info("{}", static_cast<uint32_t>(entityHandle));
-				}
-		
+				auto& [entityHandle, tag, id] = entity;
 
-				ImGui::TreePop();
+				static std::string id_string = "##";
+
+				ImGui::PushID(std::to_string(id.id).c_str());
+				if (ImGui::Selectable(tag.name.c_str(), id.id == m_CurrentGameObject))
+				{
+
+					GameObjectOutlineClick event(GameInstance::GetCurrentWorld()->FindGameObjectByID(id.id));
+					EventSystem::GetDispatcher()->Dispatch(event);
+					m_CurrentGameObject = id.id;
+				}
+
+				if (ImGui::BeginPopupContextItem())
+				{
+					if(ImGui::Button("Delete"))
+					{
+						auto* gameObject = GameInstance::GetCurrentWorld()->FindGameObjectByID(m_CurrentGameObject);
+						if (gameObject != nullptr)
+						{
+							GameObjectOutlineDeleted event;
+							EventSystem::GetDispatcher()->Dispatch(event);
+							GameInstance::GetCurrentWorld()->DestroyGameObject(gameObject);
+							m_CurrentGameObject = 0;
+						}
+					}
+
+					ImGui::EndPopup();
+				}
+
+				ImGui::PopID();
+
 			}
-			
+
+			ImGui::TreePop();
 		}
 
-		ImGui::End();
 
+		ImGui::End();
 	}
 
 	void WorldOutlinerWindow::Update(float ts)
 	{
 	}
-
 }
-

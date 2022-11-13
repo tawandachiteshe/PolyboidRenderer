@@ -1,45 +1,37 @@
 ﻿#pragma once
 #include <cstdint>
+#include <spdlog/spdlog.h>
 
-#include "Components.h"
+#include "Engine/Engine/Base.h"
 #include "Engine/Engine/Gameplay/World.h"
 #include "entt/entt.hpp"
 
 namespace Polyboid
 {
+   
 	class GameObject
     {
 
     protected:
-        World* m_World = nullptr;
+        Ref<World> m_World = nullptr;
         std::string m_Name = "";
         uint32_t m_ID = entt::null;
-        World* GetWorld() const { return  m_World; }
+		Ref<World> GetWorld() { return  m_World; }
 
     public:
-        virtual ~GameObject() = default;
-
-        virtual void OnGameObjectConstruction()
-        {
-            m_ID = GetWorld()->CreateEntityID();
-
-            m_Name = "GameObject";
-
-            if (m_Name == "GameObject")
-            {
-                m_Name += "_" + std::to_string(m_ID);
-            }
-
-            AddComponent<Tag>(m_Name);
-            AddComponent<Transform>();
-        }
+        virtual ~GameObject();
+        virtual void OnCreate() {}
         virtual void OnBeginPlay() {}
         virtual void OnEndPlay() { }
+        virtual void OnDestroy();
         virtual void OnUpdate(float dt) { }
+        void SetID(uint32_t id) { m_ID = id; }
 
     public:
 
-      
+        void SetWorld(const Ref<World>& world) { m_World = world; }
+
+        GameObject(entt::entity entityID): m_ID(static_cast<uint32_t>(entityID)) {  }
 
         GameObject(const std::string& name = "GameObject"): m_Name(name) {}
 
@@ -56,14 +48,22 @@ namespace Polyboid
         bool RemoveComponent();
 
         template<class Component>
-        bool HasComponent();
+        bool HasComponent()
+        {
+            auto& registry = m_World->GetRegistry();
+            
+            return registry.any_of<Component>(static_cast<entt::entity>(m_ID));;
+        }
 
     };
+
+
+
 
     template <class  Component>
     Component& GameObject::GetComponent()
     {
-        auto& registry = GetWorld()->GetRegistry();
+        auto& registry = m_World->GetRegistry();
 
         auto view = registry.view<Component>();
         
@@ -74,37 +74,39 @@ namespace Polyboid
     template <typename Component, typename ... Args>
     void GameObject::AddComponent(Args&&... args)
     {
-        auto& registry = GetWorld()->GetRegistry();
+	    if (HasComponent<Component>())
+	    {
+            spdlog::error("Component Already exist");
+		    return;
+	    }
+
+        auto& registry = m_World->GetRegistry();
         registry.emplace<Component>(static_cast<const entt::entity>(m_ID), std::forward<Args>(args) ...);
     }
 
     template <typename Component, typename ... Args>
     void GameObject::AddOrReplaceComponent(Args&&... args)
     {
-        auto& registry = GetWorld()->GetRegistry();
+        if (HasComponent<Component>())
+        {
+            spdlog::error("Component Already exist");
+            return;
+        }
+
+        auto& registry = m_World->GetRegistry();
         registry.emplace_or_replace<Component>(static_cast<const entt::entity>(m_ID), std::forward<Args>(args) ...);
     }
 
     template <typename Component>
     bool GameObject::RemoveComponent()
     {
-        auto& registry = GetWorld()->GetRegistry();
+        auto& registry = m_World->GetRegistry();
 
-        registry.clear<Component>();
     	registry.remove<Component>(static_cast<const entt::entity>(m_ID));
       
         return false;
     }
 
-    template <class Component>
-    bool GameObject::HasComponent()
-    {
-        auto& registry = GetWorld()->GetRegistry();
-
-        bool isThere = registry.any_of<Component>(static_cast<const entt::entity>(m_ID));
-
-        return isThere;
-    }
 
 
 

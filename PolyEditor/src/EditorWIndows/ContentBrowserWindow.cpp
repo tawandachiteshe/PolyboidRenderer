@@ -92,8 +92,9 @@ namespace Polyboid
 				{
 
 					const auto pathStr = entry.path().stem().string();
+					
 					if (ImGui::ImageButton(pathStr.c_str(),(ImTextureID)Resource::GetIcons().at("folder")->GetTextureID(),
-						{ 64, 64 }, { 1, 1 }, { 0, 0 }))
+						{ 48, 48 }, { 1, 1 }, { 0, 0 }))
 					{
 						s_CurrentDir = entry.path();
 
@@ -130,7 +131,7 @@ namespace Polyboid
 					static bool clicked = false;
 
 					if(ImGui::ImageButton(pathStr.c_str(), (ImTextureID)Resource::GetIcons().at("file")->GetTextureID(),
-						{ 64, 64 }, { 1, 1 }, { 0, 0 }))
+						{ 48, 48 }, { 1, 1 }, { 0, 0 }))
 					{
 						spdlog::info("file {}", pathStr.c_str());
 

@@ -119,13 +119,16 @@ namespace Polyboid
 		s_sData.quadVerts[3] = { { -0.5f, 0.5f, 0.0f }, {1.0f, 1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f } };
 
 		//temp solution
-		s_sData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4), 0);
+		s_sData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2, 0);
 
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
-		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetViewProjection()), sizeof(glm::mat4));
+
+		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
+		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
+
 		s_sData.QuadVertexBufferPtr = s_sData.QuadVertexBufferBase.data();
 
 	}

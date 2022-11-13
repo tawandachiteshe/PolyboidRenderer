@@ -12,6 +12,7 @@
 
 namespace Polyboid
 {
+	class GameObject;
 	class EditorCamera;
 
 
@@ -28,12 +29,13 @@ namespace Polyboid
 
 
 	private:
-		uint32_t m_CurrentGameObject = entt::null;
+		GameObject* m_CurrentGameObject = nullptr;
 		bool m_Focused = false;
 		ImGuizmo::OPERATION m_GizmoOperation = ImGuizmo::TRANSLATE;
 		ImGuizmo::MODE m_GizmoMode = ImGuizmo::WORLD;
 
 		void OnGameObjectSelected(const Event& event);
+		void OnGameObjectDeleted(const Event& event);
 
 		// Inherited via EditorWindow
 		virtual void RenderImgui() override;

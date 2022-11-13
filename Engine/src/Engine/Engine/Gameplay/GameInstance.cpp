@@ -11,12 +11,12 @@ namespace Polyboid
 		m_sData->m_CurrentCamera = camera;
 	}
 
-	void GameInstance::SetCurrentWorld(World* world)
+	void GameInstance::SetCurrentWorld(const Ref<World>& world)
 	{
 		m_sData->m_CurrentWorld = world;
 	}
 
-	World* GameInstance::GetCurrentWorld()
+	Ref<World>& GameInstance::GetCurrentWorld()
 	{
 		return  m_sData->m_CurrentWorld;
 	}

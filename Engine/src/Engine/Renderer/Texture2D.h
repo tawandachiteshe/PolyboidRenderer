@@ -30,6 +30,7 @@ namespace Polyboid
         void Bind(uint32_t slot = 0);
 
         uint32_t GetTextureID() const { return m_TextureID; }
+        
 
 
         ~Texture();

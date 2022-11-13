@@ -11,16 +11,9 @@
 
 namespace Polyboid 
 {
-	struct EditorGlobalData
-	{
-		Ref<EditorCamera> m_EditorCamera;
 
-	};
-	
 	class EditorLayer: public Layer
 	{
-
-
 
 	private:
 		std::vector<EditorWindow*> m_Windows;
@@ -33,9 +26,6 @@ namespace Polyboid
 
 	public:
 
-		static Unique<EditorGlobalData> m_sEditorData;
-
-		static Unique<EditorGlobalData>& GetEditorData() { return m_sEditorData; }
 
 		EditorLayer(const std::string& name);
 		void OnAttach() override;

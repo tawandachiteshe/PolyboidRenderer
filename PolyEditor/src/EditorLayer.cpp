@@ -2,8 +2,10 @@
 #include <imgui.h>
 
 #include "Editor/Resource.h"
+#include "Editor/WorldSerializer.h"
 #include "Editor/Events/EditorEvents.h"
 #include "EditorWIndows/ContentBrowserWindow.h"
+#include "EditorWIndows/DetailsWindow.h"
 #include "EditorWIndows/ViewportWindow.h"
 #include "EditorWIndows/WorldOutlinerWindow.h"
 #include "EditorWIndows/GameObjectPlacer.h"
@@ -161,7 +163,6 @@ namespace Polyboid
         m_Windows.emplace_back(window);
     }
 
-    Unique<EditorGlobalData> EditorLayer::m_sEditorData = std::make_unique<EditorGlobalData>();
 
     EditorLayer::EditorLayer(const std::string& name)
     {
@@ -177,34 +178,31 @@ namespace Polyboid
 
         float fov = 45.0f;
 
-
-    	m_sEditorData->m_EditorCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 1000.0f);
         Resource::Init();
 
-        m_World = std::make_shared<World>();
+        m_World = std::make_shared<World>("Level1");
+    	GameInstance::SetCurrentWorld(m_World);
 
-    	GameInstance::SetCurrentWorld(m_World.get());
 
-        GameInstance::SetCurrentCamera(m_sEditorData->m_EditorCamera);
     }
 
 	void EditorLayer::OnAttach()
 	{
         AddWindow(new ContentBrowserWindow("Content Browser"));
         AddWindow(new ViewportWindow("Viewport"));
-        AddWindow(new GameObjectPlacer("Game object placer"));
+        AddWindow(new GameObjectPlacer("GameObject placer"));
         AddWindow(new WorldOutlinerWindow("World outliner"));
+        AddWindow(new DetailsWindow("Details"));
 
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_ENTER, BIND_EVENT(OnEditorEnterPlayMode));
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_EXIT, BIND_EVENT(OnEditorExitPlayMode));
 
-       
+
+        //temp solustion
+        static const char* worldDir = "Assets/Worlds";
+    	WorldSerializer::Serialize(worldDir);
 
         m_World->CreateGameObject<Square>("Square");
-        m_World->CreateGameObject<Triangle>("Triangle 1");
-        m_World->CreateGameObject<Triangle>("Triangle 2");
-        m_World->CreateGameObject<Triangle>("Triangle 3");
-        m_World->CreateGameObject<Triangle>("Triangle 4");
         
 	}
 
@@ -225,6 +223,7 @@ namespace Polyboid
     void EditorLayer::OnEditorEnterPlayMode(const Event& event)
     {
         spdlog::info("Entered Playmode");
+
         m_World->OnBeginPlay();
     }
 
@@ -244,6 +243,8 @@ namespace Polyboid
         for (auto window : m_Windows)
         {
             window->RenderImgui();
+            static auto open = false;
+
         }
 
     }

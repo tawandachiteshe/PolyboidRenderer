@@ -1,0 +1,13 @@
+{
+  "_name": "Level1",
+  "game_objects": [
+    {
+      "Position": [
+        1,
+        2,
+        3
+      ],
+      "id": 25
+    }
+  ]
+}
