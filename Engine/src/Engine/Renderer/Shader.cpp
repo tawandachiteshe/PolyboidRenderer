@@ -6,6 +6,7 @@
 
 #include "Engine/Engine/Base.h"
 #include "Engine/Engine/FileReader.h"
+#include "Engine/Engine/Debug/Profiler.h"
 #include "glad/glad.h"
 #include "glm/fwd.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -15,6 +16,8 @@ namespace Polyboid
 {
     void Shader::PrepareShaders(const char* vertexSrc, const char* fragSrc)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         uint32_t fragShader = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragShader, 1, &fragSrc, NULL);
         glCompileShader(fragShader);
@@ -45,6 +48,8 @@ namespace Polyboid
 
     void Shader::CheckErrors(uint32_t shader, const char* type)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         int32_t hasCompiled = 0;
 
         char infoLog[1024];
@@ -85,6 +90,8 @@ namespace Polyboid
 
     Shader::Shader(const std::string& vertexPath, const std::string& fragPath)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         //read files here
         const std::string vertexSrc = FileReader::ReadString(vertexPath);
         const std::string fragSrc = FileReader::ReadString(fragPath);
@@ -94,65 +101,86 @@ namespace Polyboid
 
     Shader::~Shader()
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         glDeleteProgram(m_Program);
     }
 
 
     void Shader::Bind()
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         glUseProgram(m_Program);
     }
 
     Ref<Shader> Shader::MakeShader(const std::string& vertexPath, const std::string& fragPath)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         return std::make_shared<Shader>(vertexPath, fragPath);
     }
 
     void Shader::SetInt(const std::string& name, int value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform1i(location, value);
     }
 
     void Shader::SetIntArray(const std::string& name, int* values, uint32_t count)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform1iv(location, count, values);
     }
 
     void Shader::SetFloat(const std::string& name, float value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform1f(location, value);
     }
 
     void Shader::SetFloat2(const std::string& name, const glm::vec2& value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform2f(location, value.x, value.y);
     }
 
     void Shader::SetFloat3(const std::string& name, const glm::vec3& value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform3f(location, value.x, value.y, value.z);
     }
 
     void Shader::SetFloat4(const std::string& name, const glm::vec4& value)
     {
-        
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniform4f(location, value.x, value.y, value.z, value.w);
     }
 
     void Shader::SetMat3(const std::string& name, const glm::mat3& value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniformMatrix3fv(location, 1, GL_FALSE, glm::value_ptr(value));
     }
 
     void Shader::SetMat4(const std::string& name, const glm::mat4& value)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         GLint location = glGetUniformLocation(m_Program, name.c_str());
         glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
     }

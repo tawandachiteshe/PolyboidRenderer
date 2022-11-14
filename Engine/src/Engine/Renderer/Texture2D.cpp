@@ -3,6 +3,7 @@
 
 #include <stb/stb_image.h>
 
+#include "Engine/Engine/Debug/Profiler.h"
 #include "glad/glad.h"
 
 
@@ -10,7 +11,9 @@ namespace Polyboid
 {
     Texture::Texture(const std::string& textureImagePath)
     {
-        
+
+        POLYBOID_PROFILE_FUNCTION();
+
         stbi_set_flip_vertically_on_load(true);
         uint8_t* data = stbi_load(textureImagePath.c_str(), &m_Width, &m_Height, &m_Channels, 0);
 
@@ -48,6 +51,9 @@ namespace Polyboid
 
     Texture::Texture(uint32_t width, uint32_t height): m_Width(width), m_Height(height)
     {
+
+        POLYBOID_PROFILE_FUNCTION();
+
         m_InternalFormat = GL_RGBA8;
         m_DataFormat = GL_RGBA;
 
@@ -64,12 +70,16 @@ namespace Polyboid
 
     void Texture::SetData(void* data, uint32_t size)
     {
+        POLYBOID_PROFILE_FUNCTION();
+   
         uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
         glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
     }
 
     void Texture::Bind(uint32_t slot)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         glBindTextureUnit(slot, m_TextureID);
         glBindSampler(slot, m_SamplersID);
         
@@ -77,16 +87,22 @@ namespace Polyboid
 
     Texture::~Texture()
     {
-        glDeleteTextures(1, &m_TextureID);
+        POLYBOID_PROFILE_FUNCTION();
+
+    	glDeleteTextures(1, &m_TextureID);
     }
 
     Ref<Texture> Texture::MakeTexture2D(const std::string& textureImagePath)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         return std::make_shared<Texture>(textureImagePath);
     }
 
     Ref<Texture> Texture::MakeTexture2D(uint32_t width, uint32_t height)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         return std::make_shared<Texture>(width, height);
     }
 }

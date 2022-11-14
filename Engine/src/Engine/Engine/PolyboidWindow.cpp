@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "KeyCodes.h"
+#include "Debug/Profiler.h"
 #include "Engine/Renderer/Context.h"
 #include "Events/EventSystem.h"
 #include "Events/MouseEvents.h"
@@ -65,6 +66,7 @@ namespace Polyboid
 
     PolyboidWindow::PolyboidWindow(const WindowSpecs& specs)
     {
+        POLYBOID_PROFILE_FUNCTION();
         if (!glfwInit())
         {
             __debugbreak();
@@ -107,17 +109,20 @@ namespace Polyboid
 
     std::unique_ptr<PolyboidWindow> PolyboidWindow::MakeWindow(const WindowSpecs& specs)
     {
+        POLYBOID_PROFILE_FUNCTION();
         return std::make_unique<PolyboidWindow>(specs);
     }
     
 
     void PolyboidWindow::PollEvents()
     {
+        POLYBOID_PROFILE_FUNCTION();
         glfwPollEvents();
     }
 
     PolyboidWindow::~PolyboidWindow()
     {
+        POLYBOID_PROFILE_FUNCTION();
         glfwTerminate();
     }
 }

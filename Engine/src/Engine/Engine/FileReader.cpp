@@ -6,11 +6,14 @@
 #include <fstream>
 #include <sstream>
 
+#include "Debug/Profiler.h"
+
 
 namespace Polyboid
 {
     std::string FileReader::ReadStringEF(const std::string& Path)
     {
+        POLYBOID_PROFILE_FUNCTION();
         std::ifstream in(Path, std::ios::binary);
 
         if (in)
@@ -28,6 +31,7 @@ namespace Polyboid
 
     std::string FileReader::ReadString(const std::string& Path)
     {
+        POLYBOID_PROFILE_FUNCTION();
         std::ifstream in(Path);
         std::stringstream ss;
         ss << in.rdbuf();

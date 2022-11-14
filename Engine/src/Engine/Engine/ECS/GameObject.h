@@ -50,6 +50,7 @@ namespace Polyboid
         template<class Component>
         bool HasComponent()
         {
+          
             auto& registry = m_World->GetRegistry();
             
             return registry.any_of<Component>(static_cast<entt::entity>(m_ID));;
@@ -63,6 +64,7 @@ namespace Polyboid
     template <class  Component>
     Component& GameObject::GetComponent()
     {
+    
         auto& registry = m_World->GetRegistry();
 
         auto view = registry.view<Component>();
@@ -74,6 +76,7 @@ namespace Polyboid
     template <typename Component, typename ... Args>
     void GameObject::AddComponent(Args&&... args)
     {
+       
 	    if (HasComponent<Component>())
 	    {
             spdlog::error("Component Already exist");
@@ -87,6 +90,7 @@ namespace Polyboid
     template <typename Component, typename ... Args>
     void GameObject::AddOrReplaceComponent(Args&&... args)
     {
+      
         if (HasComponent<Component>())
         {
             spdlog::error("Component Already exist");
@@ -100,6 +104,7 @@ namespace Polyboid
     template <typename Component>
     bool GameObject::RemoveComponent()
     {
+      
         auto& registry = m_World->GetRegistry();
 
     	registry.remove<Component>(static_cast<const entt::entity>(m_ID));

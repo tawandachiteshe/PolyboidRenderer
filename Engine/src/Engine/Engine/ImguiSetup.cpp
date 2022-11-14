@@ -8,6 +8,7 @@
 #include "ImGuizmo.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "Debug/Profiler.h"
 #include "GLFW/glfw3.h"
 
 
@@ -23,6 +24,7 @@ namespace Polyboid
 
     void Imgui::Init()
     {
+        POLYBOID_PROFILE_FUNCTION();
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -78,6 +80,7 @@ namespace Polyboid
 
     void Imgui::Begin()
     {
+        POLYBOID_PROFILE_FUNCTION();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -87,6 +90,7 @@ namespace Polyboid
 
     void Imgui::End()
     {
+        POLYBOID_PROFILE_FUNCTION();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         if ((*s_Data.io).ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -100,6 +104,7 @@ namespace Polyboid
 
     void Imgui::ShutDown()
     {
+        POLYBOID_PROFILE_FUNCTION();
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

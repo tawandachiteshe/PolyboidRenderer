@@ -1,20 +1,24 @@
 #include "boidpch.h"
 
 #include "Framebuffer.h"
+
 #include <glad/glad.h>
 #include <spdlog/spdlog.h>
+
+#include "Engine/Engine/Debug/Profiler.h"
 
 namespace Polyboid
 {
 	Framebuffer::Framebuffer(const FramebufferSettings& settings) : m_Settings(settings)
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		ReCreateFramebuffer();
 	
 	}
 
 	void Framebuffer::ReCreateFramebuffer()
 	{
-
+		POLYBOID_PROFILE_FUNCTION();
 		if (m_ID)
 		{
 
@@ -56,6 +60,7 @@ namespace Polyboid
 
 	void Framebuffer::Resize(uint32_t width, uint32_t height)
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		m_Settings.width = width;
 		m_Settings.height = height;
 
@@ -64,6 +69,7 @@ namespace Polyboid
 
 	void Framebuffer::Bind()
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		glBindFramebuffer(GL_FRAMEBUFFER, m_ID);
 
 		glViewport(0, 0, m_Settings.width, m_Settings.height);
@@ -72,11 +78,13 @@ namespace Polyboid
 
 	void Framebuffer::UnBind()
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	std::shared_ptr<Framebuffer> Framebuffer::MakeFramebuffer(const FramebufferSettings& settings)
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		return std::make_shared<Framebuffer>(settings);
 	}
 

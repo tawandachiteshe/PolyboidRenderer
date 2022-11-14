@@ -5,7 +5,6 @@
 #include "Event.h"
 #include "Engine/Engine/Base.h"
 
-
 namespace Polyboid
 {
 
@@ -16,6 +15,7 @@ namespace Polyboid
     private:
         void AddEventHandler(const EventType& type, const std::function<EventHandlerFn>& fun)
         {
+           
             m_Handlers[type].emplace_back(fun);
         }
 
@@ -25,6 +25,7 @@ namespace Polyboid
 
         void Dispatch(const Event& eventName)
         {
+           
             auto type = eventName.GetType();
             if (m_Handlers.find(type) == m_Handlers.end())
                 return;
@@ -57,6 +58,7 @@ namespace Polyboid
 
         static void Bind(const EventType& type, const std::function<EventHandlerFn>& fun)
         {
+            
         	s_Dispatcher->AddEventHandler(type, fun);
         }
 

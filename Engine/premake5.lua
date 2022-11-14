@@ -19,6 +19,7 @@ project "Engine"
         "Vendor/glfw/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
+        "Vendor/assimp/include",
         "Vendor/entt",
         "Vendor/imgui/src",
     }
@@ -26,7 +27,7 @@ project "Engine"
     defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
-		"GLFW_INCLUDE_NONE"
+		"GLFW_INCLUDE_NONE",
 	}
 
     links
@@ -34,6 +35,7 @@ project "Engine"
         "GLFW",
         "glad",
         "imgui",
+        "Vendor/assimp/bin/assimp.lib",
         "opengl32.lib"
     }
 

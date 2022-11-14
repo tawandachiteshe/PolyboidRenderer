@@ -55,6 +55,7 @@ namespace Polyboid
 
 	void Renderer2D::Init()
 	{
+		POLYBOID_PROFILE_FUNCTION();
 
 		s_sData.vertexBufferArray = VertexBufferArray::MakeVertexBufferArray();
 		s_sData.shader = Shader::MakeShader("Assets/Shaders/renderer2D.vert",
@@ -125,6 +126,7 @@ namespace Polyboid
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
+		POLYBOID_PROFILE_FUNCTION();
 
 		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
 		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
@@ -135,6 +137,7 @@ namespace Polyboid
 
 	void Renderer2D::DebugWindow()
 	{
+		POLYBOID_PROFILE_FUNCTION();
 
 		ImGui::Begin("Renderer 2D stats");
 		ImGui::Text("Quad count: %d ", s_sData.quadCount);
@@ -153,6 +156,7 @@ namespace Polyboid
 
 	void Renderer2D::EndDraw()
 	{
+		POLYBOID_PROFILE_FUNCTION();
 		
 		if (s_sData.quadCount)
 		{
@@ -179,6 +183,8 @@ namespace Polyboid
 
 	void Renderer2D::Reset()
 	{
+		POLYBOID_PROFILE_FUNCTION();
+		
 		s_sData.quadCount = 0;
 		s_sData.quadOffset = 0;
 		s_sData.indexCount = 0;
@@ -186,6 +192,8 @@ namespace Polyboid
 
 	void Renderer2D::Shutdown()
 	{
+		POLYBOID_PROFILE_FUNCTION();
+		
 		if (!s_sData.QuadVertexBufferBase.empty())
 		{
 			s_sData.QuadVertexBufferBase.clear();
@@ -195,6 +203,7 @@ namespace Polyboid
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
 
+		POLYBOID_PROFILE_FUNCTION();
 		
 		for (auto& quadVert : s_sData.quadVerts)
 		{
@@ -223,7 +232,8 @@ namespace Polyboid
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec4& color)
 	{
-
+		POLYBOID_PROFILE_FUNCTION();
+		
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
 
 		DrawQuad(translate, color);
@@ -232,6 +242,7 @@ namespace Polyboid
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, float rotation, const glm::vec4& color)
 	{
+		POLYBOID_PROFILE_FUNCTION();
 
 		const auto translate = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), glm::radians(rotation),
 			glm::vec3(0, 0, 1));

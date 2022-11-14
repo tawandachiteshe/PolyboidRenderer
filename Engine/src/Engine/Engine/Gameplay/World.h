@@ -50,6 +50,7 @@ namespace Polyboid
 		template<typename Class>
 		TGameObject<Class>* CreateGameObject(const std::string& name = "GameObject")
 		{
+			
 			auto id = CreateEntityID();
 			auto* gameObjectClass = new TGameObject<Class>();
 			gameObjectClass->SetID(id);

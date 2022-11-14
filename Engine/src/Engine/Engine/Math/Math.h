@@ -13,6 +13,7 @@ namespace Polyboid
 
 		static void DecomposeMatrix(glm::vec3& position, glm::vec3& scale, glm::quat& orientation, glm::mat4& mat)
 		{
+			
 			glm::vec3 skew;
 			glm::vec4 perspective;
 

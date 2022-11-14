@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Application.h"
+#include "Debug/Profiler.h"
 #include "GLFW/glfw3.h"
 
 
@@ -12,6 +13,7 @@ namespace Polyboid
 {
     glm::vec2 Input::GetMousePosition()
     {
+        POLYBOID_PROFILE_FUNCTION();
         double xpos, ypos;
         glfwGetCursorPos(Application::Get()->GetWindow()->GetNativeWindow(), &xpos, &ypos);
         return glm::vec2(xpos, ypos);
@@ -19,21 +21,25 @@ namespace Polyboid
 
     float Input::GetMouseX()
     {
+        POLYBOID_PROFILE_FUNCTION();
         return GetMousePosition().x;
     }
 
     float Input::GetMouseY()
     {
+        POLYBOID_PROFILE_FUNCTION();
         return GetMousePosition().y;
     }
 
     void Input::SetCursorMode(CursorMode mode)
     {
+        POLYBOID_PROFILE_FUNCTION();
         glfwSetInputMode(Application::Get()->GetWindow()->GetNativeWindow(), GLFW_CURSOR,  static_cast<int>(mode));
     }
 
     bool Input::MousePressed(MouseCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         const int state = glfwGetMouseButton(window, static_cast<int>(codes));
 
@@ -42,6 +48,7 @@ namespace Polyboid
 
     bool Input::MouseReleased(MouseCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         const int state = glfwGetMouseButton(window, static_cast<int>(codes));
 
@@ -50,6 +57,7 @@ namespace Polyboid
 
     bool Input::MouseHeld(MouseCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         const int state = glfwGetMouseButton(window, static_cast<int>(codes));
 
@@ -58,6 +66,7 @@ namespace Polyboid
 
     bool Input::KeyPressed(KeyCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         int state = glfwGetKey(window, static_cast<int>(codes));
 
@@ -66,6 +75,7 @@ namespace Polyboid
 
     bool Input::KeyReleased(KeyCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         const int state = glfwGetKey(window, static_cast<int>(codes));
 
@@ -74,6 +84,7 @@ namespace Polyboid
 
     bool Input::KeyHeld(KeyCodes codes)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto window = Application::Get()->GetWindow()->GetNativeWindow();
         const int state = glfwGetKey(window, static_cast<int>(codes));
 

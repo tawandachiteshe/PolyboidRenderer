@@ -14,12 +14,12 @@ namespace Polyboid
 {
 	World::World(const std::string& name): m_Name(name)
 	{
+		
 		m_GameObjects.reserve(200000);
 	}
 
 	void World::OnBeginPlay() const
 	{
-
 		for (const auto gameObject : m_GameObjects)
 		{
 			gameObject->OnBeginPlay();
@@ -28,6 +28,7 @@ namespace Polyboid
 
 	void World::OnUpdate(float ts) const
 	{
+		
 		for (const auto gameObject : m_GameObjects)
 		{
 			gameObject->OnUpdate(ts);
@@ -36,13 +37,11 @@ namespace Polyboid
 
 	void World::OnEndPlay() const
 	{
+		
 		for (const auto gameObject : m_GameObjects)
 		{
 			gameObject->OnEndPlay();
 		}
-
-		
-
 
 	}
 
@@ -52,6 +51,7 @@ namespace Polyboid
 
 	void World::DestroyGameObject(GameObject* gameObject)
 	{
+		
 		auto it = std::find(begin(), end(), gameObject);
 
 		DestroyGameObject(it);
@@ -60,7 +60,7 @@ namespace Polyboid
 
 	void World::DestroyGameObjectByName(const std::string& name)
 	{
-
+		
 		auto it = std::find_if(begin(), end(), [&](GameObject* value)
 			{
 				auto& tag = value->GetComponent<TagComponent>();
@@ -76,6 +76,7 @@ namespace Polyboid
 
 	void World::DestroyGameObjectsByName(const std::string& name)
 	{
+		
 		while (FindGameObjectByName(name))
 		{
 			auto it = std::find_if(begin(), end(), [&](GameObject* gameObject)
@@ -91,6 +92,7 @@ namespace Polyboid
 
 	void World::DestroyGameObjectWithId(UUID id)
 	{
+		
 		 auto it = std::find_if(begin(), end(), [&](GameObject* value)
 			{
 				auto& id = value->GetComponent<IDComponent>();
@@ -104,7 +106,7 @@ namespace Polyboid
 
 	void World::DestroyGameObjects(std::vector<GameObject*>::iterator& objects)
 	{
-
+		
 		for (;objects != std::end(m_GameObjects); ++objects)
 		{
 			GameObject* temp = *objects;
@@ -117,6 +119,7 @@ namespace Polyboid
 
 	void World::DestroyGameObject(std::vector<GameObject*>::iterator& object)
 	{
+		
 		if (object != m_GameObjects.end())
 		{
 
@@ -131,6 +134,7 @@ namespace Polyboid
 
 	GameObject* World::FindGameObjectByName(const std::string& name)
 	{
+		
 		auto it = std::find_if(begin(), end(), [&](GameObject* value)
 			{
 				auto& tag = value->GetComponent<TagComponent>();
@@ -154,6 +158,7 @@ namespace Polyboid
 
 	GameObject* World::FindGameObjectByID(const UUID& id)
 	{
+		
 		auto it = std::find_if(begin(), end(), [&](GameObject* value)
 			{
 				auto& idComponent = value->GetComponent<IDComponent>();
@@ -176,6 +181,7 @@ namespace Polyboid
 
 	std::vector<GameObject*> World::FindGameObjectsByName(const std::string& name)
 	{
+		
 		std::vector<GameObject*> objects;
 
 
@@ -193,6 +199,7 @@ namespace Polyboid
 
 	GameObject* World::CreateGameObject(const std::string& name)
 	{
+		
 		auto id = CreateEntityID();
 
 		auto* gameObjectClass = new GameObject(static_cast<entt::entity>(id));
@@ -217,6 +224,7 @@ namespace Polyboid
 	void World::Render()
 	{
 
+		
 		auto cameraView = m_Registry.view<TransformComponent, CameraComponent>();
 
 		for (const auto entity : cameraView)

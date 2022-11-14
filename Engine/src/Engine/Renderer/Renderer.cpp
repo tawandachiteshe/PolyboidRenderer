@@ -17,17 +17,23 @@ namespace Polyboid
     
     void Renderer::Init() {
 
+        POLYBOID_PROFILE_FUNCTION();
+
         RenderAPI::Init();
         Renderer2D::Init();
     }
 
     void Renderer::Clear(const glm::vec4& color )
     {
+        POLYBOID_PROFILE_FUNCTION();
+       
         RenderAPI::Clear(color);
     }
 
     void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         shader->Bind();
         s_RenderStorage->m_VA = va;
         s_RenderStorage->m_Shader = shader;
@@ -36,16 +42,21 @@ namespace Polyboid
 
     void Renderer::BeginDraw(const Ref<Camera3D>& camera)
     {
+        POLYBOID_PROFILE_FUNCTION();
+       
          s_RenderStorage->m_Shader->SetMat4("uViewProj", camera->GetViewProjectionMatrix());
     }
 
     void Renderer::EndDraw()
     {
+        POLYBOID_PROFILE_FUNCTION();
     }
 
 
     void Renderer::DrawIndexed(uint32_t _count, uint32_t elementCount)
     {
+        POLYBOID_PROFILE_FUNCTION();
+       
         s_RenderStorage->m_Shader->Bind();
         s_RenderStorage->m_VA->Bind();
 
@@ -59,6 +70,8 @@ namespace Polyboid
 
     void Renderer::CreateViewPort(const glm::vec2& viewportSize)
     {
+        POLYBOID_PROFILE_FUNCTION();
+
         RenderAPI::CreateViewport(viewportSize);
     }
 

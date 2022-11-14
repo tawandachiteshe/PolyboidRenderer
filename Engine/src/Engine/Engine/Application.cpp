@@ -24,6 +24,8 @@ namespace Polyboid
 
     Application::Application()
     {
+        POLYBOID_PROFILE_FUNCTION();
+        
         spdlog::info("App init");
 
         s_Instance = this;
@@ -52,12 +54,14 @@ namespace Polyboid
 
     Application::~Application()
     {
+        POLYBOID_PROFILE_FUNCTION();
         ShutDown();
     }
 
 
     void Application::OnWindowResizeEvent(const Event& event)
     {
+        POLYBOID_PROFILE_FUNCTION();
         const auto _event = CastEventAs<WindowResizeEvent>(event);
 
         m_AppData.windowSpecs.Height = _event.GetHeight();
@@ -66,17 +70,19 @@ namespace Polyboid
 
     void Application::OnWindowsCloseEvent(const Event& event)
     {
-       
+        POLYBOID_PROFILE_FUNCTION();
         m_IsRunning = false;
     }
 
     void Application::AddLayer(Layer* layer)
     {
+        POLYBOID_PROFILE_FUNCTION();
         m_Layers.AddLayer(layer);
     }
 
     void Application::ShutDown()
     {
+        POLYBOID_PROFILE_FUNCTION();
         Imgui::ShutDown();
         Renderer2D::Shutdown();
        
@@ -84,9 +90,10 @@ namespace Polyboid
 
     void Application::Run()
     {
+        POLYBOID_PROFILE_FUNCTION();
         while (m_IsRunning)
         {
-
+            
             m_Window->PollEvents();
            
 
@@ -95,24 +102,32 @@ namespace Polyboid
 
             // update here.....
 
-            for (auto layer : m_Layers)
             {
-                layer->OnUpdate(m_DeltaTime);
+                POLYBOID_PROFILE_SCOPE("Update");
+
+                for (auto layer : m_Layers)
+                {
+                    layer->OnUpdate(m_DeltaTime);
+                }
             }
+     
             
             m_LastFrame = currentFrame;
 
             //rendering here////
 
-            Imgui::Begin();
-
-            //imgui here....
-            for (auto layer : m_Layers)
             {
-                layer->OnImguiRender();
-            }
+                POLYBOID_PROFILE_SCOPE("Imgui");
+                Imgui::Begin();
 
-        	Imgui::End();
+                //imgui here....
+                for (auto layer : m_Layers)
+                {
+                    layer->OnImguiRender();
+                }
+
+                Imgui::End();
+            }
 
 
             m_Swapchain->SwapBuffers();

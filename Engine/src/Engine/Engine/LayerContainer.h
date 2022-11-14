@@ -2,6 +2,8 @@
 #include <Engine/Engine/Layer.h>
 #include <vector>
 
+#include "Debug/Profiler.h"
+
 
 namespace Polyboid
 {
@@ -12,12 +14,14 @@ namespace Polyboid
 		LayerContainer() = default;
 		void AddLayer(Layer* layer)
 		{
+			POLYBOID_PROFILE_FUNCTION();
 			layer->OnAttach();
 			m_Layers.emplace_back(layer);
 		}
 
 		void RemoveLayer(Layer* layer)
 		{
+			POLYBOID_PROFILE_FUNCTION();
 			layer->OnDetach();
 			auto it = std::find(m_Layers.begin(), m_Layers.end(), layer);
 			m_Layers.erase(it);
