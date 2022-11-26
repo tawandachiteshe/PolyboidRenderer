@@ -3,22 +3,22 @@
 #include <string>
 
 #include "Engine/Engine/UUID.h"
-#include "glm/fwd.hpp"
-#include "glm/vec3.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "glm/gtx/rotate_normalized_axis.hpp"
 #include "glm/gtx/transform.hpp"
+#include "Engine/Engine/Base.h"
 
 namespace Polyboid
 {
 	enum class ShapeType  
 	{
-		Quad
+		Quad,
+        Circle
 	};
 
-    enum class CameraType
+    enum class CameraProjectionType
     {
-        Ortho, 
+        Orthographic, 
         Perspective
     };
 
@@ -43,13 +43,25 @@ namespace Polyboid
 
 	};
 
+    class Camera;
+
+
     //thinking about this...
     struct CameraComponent
     {
-        glm::mat4 view;
-        bool current;
-        CameraType type;
-        CameraComponent() = default;
+
+        CameraProjectionType Type;
+        Ref<Camera> Camera;
+
+        bool Current = false;
+
+        float FOV = 30.0f;
+        float Near = 0.01f;
+        float Far = 1000.0f;
+    	float Size = 10.0f;
+
+
+    	CameraComponent() = default;
         CameraComponent(const CameraComponent&) = default;
 
 
@@ -83,6 +95,9 @@ namespace Polyboid
     {
         ShapeType type = ShapeType::Quad;
         glm::vec4 color = glm::vec4{ 1.0f };
+        float thickness = 0.0f;
+        float fade = 0.0f;
+
         ShapeComponent() = default;
         ShapeComponent(const ShapeComponent& shape) = default;
         ShapeComponent(const glm::vec4& color): color(color) {}

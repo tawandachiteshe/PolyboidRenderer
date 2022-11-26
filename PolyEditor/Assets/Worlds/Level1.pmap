@@ -2,12 +2,164 @@
   "_name": "Level1",
   "game_objects": [
     {
-      "Position": [
-        1,
-        2,
-        3
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "IDComponent": {
+            "id": 5257917186991523097
+          }
+        },
+        {
+          "TagComponent": {
+            "tag": "Tawnada"
+          }
+        }
       ],
-      "id": 25
+      "id": 5257917186991523097,
+      "name": "Tawnada"
+    },
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "IDComponent": {
+            "id": 8075222876230695136
+          }
+        },
+        {
+          "TagComponent": {
+            "tag": "Red"
+          }
+        }
+      ],
+      "id": 8075222876230695136,
+      "name": "Red"
+    },
+    {
+      "components": [
+        {
+          "ShapeComponent": {
+            "color": [
+              1.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "TransformComponent": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "IDComponent": {
+            "id": 6337076627231813203
+          }
+        },
+        {
+          "TagComponent": {
+            "tag": "Square"
+          }
+        }
+      ],
+      "id": 6337076627231813203,
+      "name": "Square"
+    },
+    {
+      "components": [
+        {
+          "ShapeComponent": {
+            "color": [
+              0.2592167854309082,
+              0.11408428847789764,
+              0.7510548830032349,
+              1.0
+            ]
+          }
+        },
+        {
+          "TransformComponent": {
+            "position": [
+              2.74822998046875,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              -0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "IDComponent": {
+            "id": 4344272328165094039
+          }
+        },
+        {
+          "TagComponent": {
+            "tag": "NewBlueSquare"
+          }
+        }
+      ],
+      "id": 4344272328165094039,
+      "name": "NewBlueSquare"
     }
   ]
 }

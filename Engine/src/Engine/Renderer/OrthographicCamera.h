@@ -7,7 +7,7 @@ namespace Polyboid
 	class OrthographicCamera : public Camera
 	{
 	public:
-		OrthographicCamera();
+		OrthographicCamera(float left, float right, float bottom, float top);
 		~OrthographicCamera();
 
 	private:

@@ -12,7 +12,7 @@ namespace Polyboid
 	class WorldOutlinerWindow : public EditorWindow
 	{
 	private:
-		UUID m_CurrentGameObject = 0;
+		uint64_t m_CurrentGameObject = 0;
 	public:
 		WorldOutlinerWindow(const std::string& name);
 		virtual ~WorldOutlinerWindow();

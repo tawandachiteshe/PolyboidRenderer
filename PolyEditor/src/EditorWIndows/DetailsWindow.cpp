@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "Editor/Events/EditorEvents.h"
 #include "Engine/Engine/Events/EventSystem.h"
+#include "Engine/Engine/Scripting/ScriptingEngine.h"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Polyboid
@@ -32,7 +33,7 @@ namespace Polyboid
 
 		ImGui::PushID(makeID.c_str());
 		ImGui::PushStyleColor(ImGuiCol_Button, {color.x, color.y, color.z, color.w});
-		const bool isClicked = ImGui::Button(text, { 32, 0 });
+		const bool isClicked = ImGui::Button(text, {32, 0});
 		ImGui::PopStyleColor();
 		ImGui::PopID();
 
@@ -41,26 +42,26 @@ namespace Polyboid
 
 	static void DrawTransformVectorComponent(const std::string& label, glm::vec3& value, float size = 68)
 	{
-		static  int index = 0;
-	
+		static int index = 0;
+
 		auto makeIDX = std::string("##PX").append(label);
 		auto makeIDY = std::string("##PY").append(label);
 		auto makeIDZ = std::string("##PZ").append(label);
 
 
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10 });
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, {0, 10});
 		ImGui::TextWrapped(label.c_str());
-		DrawColoredButton("X", { 1.0f, 0.0f, 0.0f, 1.0f }, makeIDX);
+		DrawColoredButton("X", {1.0f, 0.0f, 0.0f, 1.0f}, makeIDX);
 
 
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(size);
-		
+
 
 		ImGui::DragFloat(makeIDX.c_str(), &value.x, 0.01f);
 		ImGui::SameLine();
 		DrawColoredButton("Y", {0.21f, 0.86f, 0.11f, 1.0f}, makeIDY);
-	
+
 		ImGui::SameLine();
 		ImGui::SetNextItemWidth(size);
 
@@ -70,12 +71,10 @@ namespace Polyboid
 		DrawColoredButton("Z", {0.0f, 0.0f, 1.0f, 1.0f}, makeIDZ);
 		ImGui::SameLine();
 
-		
+
 		ImGui::SetNextItemWidth(size);
 		ImGui::DragFloat(makeIDZ.c_str(), &value.z, 0.01f);
 		ImGui::PopStyleVar();
-
-
 	}
 
 	static void DrawTransformComponent(GameObject* gameObject, float size)
@@ -92,8 +91,6 @@ namespace Polyboid
 
 			//Rotation
 			DrawTransformVectorComponent("Rotation", transform.Rotation, size);
-
-
 		}
 	}
 
@@ -110,55 +107,89 @@ namespace Polyboid
 
 		if (m_CurrentObject != nullptr)
 		{
-		
+			ImGui::Button("Add Script");
+
+			if (ImGui::BeginPopupContextItem("AddScript", ImGuiPopupFlags_MouseButtonLeft))
+			{
+				for (auto& monoClass : ScriptingEngine::GetClasses())
+				{
+					std::string className = monoClass;
+					if(ImGui::Selectable(className.c_str()))
+					{
+						m_CurrentObject->AttachScript(className);
+					}
+				}
+				ImGui::EndPopup();
+			}
+
 			ImGui::Button("Add Component", { windowContent - 4, 0 });
-		
-			
+
+
 			if (ImGui::BeginPopupContextItem("##item", ImGuiPopupFlags_MouseButtonLeft))
 			{
 				ImGui::SetNextItemWidth(windowContent);
-			
+
 				if (!m_CurrentObject->HasComponent<ShapeComponent>())
 				{
-			
 					if (ImGui::Selectable("Shape"))
 					{
-			
 						m_CurrentObject->AddComponent<ShapeComponent>();
 					}
-			
 				}
-			
+
 				ImGui::EndPopup();
 			}
 
 			ImGui::Spacing();
 			ImGui::Spacing();
 			ImGui::Spacing();
-			
+
 			if (m_CurrentObject->HasComponent<TransformComponent>())
 			{
 				DrawTransformComponent(m_CurrentObject, size);
 			}
 
-			
+
 			if (m_CurrentObject->HasComponent<ShapeComponent>())
 			{
 				ImGui::Spacing();
 				ImGui::Separator();
-			
+
 				if (ImGui::CollapsingHeader("Shape", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					auto& shapeComponent = m_CurrentObject->GetComponent<ShapeComponent>();
 
 					ImGui::ColorEdit3("Color", glm::value_ptr(shapeComponent.color));
+
+
+					const char* items[] = {
+						"QUAD", "CIRCLE", "LINE"
+					};
+					static int item_current = 0;
+					if(ImGui::Combo("Shape Type", &item_current, items, IM_ARRAYSIZE(items)))
+					{
+						switch (item_current)
+						{
+						case 0:
+							shapeComponent.type = ShapeType::Quad;
+							break;
+						case 1:
+							shapeComponent.type = ShapeType::Circle;
+							break;
+						default:
+							break;
+						}
+
+					}
+					if (shapeComponent.type == ShapeType::Circle)
+					{
+						ImGui::DragFloat("Thickness", &shapeComponent.thickness, 0.01f);
+						ImGui::DragFloat("Fade", &shapeComponent.fade, 0.01f);
+					}
+					
 				}
-			
 			}
 		}
-
-
-
 
 
 		ImGui::End();

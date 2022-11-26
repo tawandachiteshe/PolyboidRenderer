@@ -4,7 +4,7 @@
 #include <Engine/Engine/ECS/Components.h>
 #include <entt/entt.hpp>
 
-#include "GameInstance.h"
+#include "GameStatics.h"
 #include "Engine/Engine/ECS/GameObject.h"
 
 namespace Polyboid
@@ -48,19 +48,27 @@ namespace Polyboid
 		std::vector<GameObject*> FindGameObjectsByName(const std::string& name);
 
 		template<typename Class>
-		TGameObject<Class>* CreateGameObject(const std::string& name = "GameObject")
+		TGameObject<Class>* CreateGameObject(const std::string& name = "GameObject", uint64_t uuid = 0)
 		{
 			
 			auto id = CreateEntityID();
 			auto* gameObjectClass = new TGameObject<Class>();
 			gameObjectClass->SetID(id);
 
-			gameObjectClass->SetWorld(GameInstance::GetCurrentWorld());
+			gameObjectClass->SetWorld(GameStatics::GetCurrentWorld());
 
 			//default components here
 			gameObjectClass->AddComponent<TagComponent>(name);
 			gameObjectClass->AddComponent<TransformComponent>();
-			gameObjectClass->AddComponent<IDComponent>();
+
+			if (uuid != 0)
+			{
+				gameObjectClass->AddComponent<IDComponent>(uuid);
+			}
+			else
+			{
+				gameObjectClass->AddComponent<IDComponent>();
+			}
 
 			gameObjectClass->OnCreate();
 
@@ -71,7 +79,7 @@ namespace Polyboid
 			return gameObjectClass;
 		}
 
-		GameObject* CreateGameObject(const std::string& name = "GameObject");
+		GameObject* CreateGameObject(const std::string& name = "GameObject", uint64_t id = 0);
 		
 		std::vector<GameObject*>& GetGameObjects() { return m_GameObjects; }
 

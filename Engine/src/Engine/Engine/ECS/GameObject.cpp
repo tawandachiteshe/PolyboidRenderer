@@ -1,6 +1,8 @@
 ﻿#include "boidpch.h"
 #include "GameObject.h"
 
+#include "Engine/Engine/Scripting/ScriptingEngine.h"
+
 
 namespace Polyboid
 {
@@ -11,10 +13,47 @@ namespace Polyboid
 		registry.destroy(static_cast<entt::entity>(m_ID));
 	}
 
+	void GameObject::OnCreate()
+	{
+	}
+
+	void GameObject::OnBeginPlay()
+	{
+		for (auto& script : m_MonoScripts)
+		{
+			script->InvokeMethod("OnBeginPlay");
+		}
+	}
+
+	void GameObject::OnUpdate(float dt)
+	{
+		for (auto& script : m_MonoScripts)
+		{
+			script->InvokeMethod("OnUpdate", { &dt });
+		}
+	}
+
+	void GameObject::OnEndPlay()
+	{
+		for (auto& script : m_MonoScripts)
+		{
+			script->InvokeMethod("OnEndPlay");
+		}
+	}
+
 	void GameObject::OnDestroy()
 	{
 		
 		auto& registry = GetWorld()->GetRegistry();
 		registry.destroy(static_cast<entt::entity>(m_ID));
+	}
+
+
+	void GameObject::AttachScript(const std::string& monoKlassName)
+	{
+		auto klass = std::make_shared<MonoClassInstance>(ScriptingEngine::FindClass(monoKlassName));
+		klass->SetField("gameObjectID", (uint64_t)GetComponent<IDComponent>().id);
+		klass->InvokeMethod("OnConstruct");
+		m_MonoScripts.emplace_back(klass);
 	}
 }

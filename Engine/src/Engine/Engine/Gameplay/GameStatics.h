@@ -14,7 +14,7 @@ namespace Polyboid
 		Ref<World> m_CurrentWorld = nullptr;
 	};
 
-	class GameInstance
+	class GameStatics
 	{
 	public:
 		static Ref<GameInstanceData> m_sData;
@@ -23,7 +23,6 @@ namespace Polyboid
 		static void SetCurrentWorld(const Ref<World>& world);
 
 		static Ref<World>& GetCurrentWorld();
-
 
 		static Ref<Camera>& GetCurrentCamera();
 

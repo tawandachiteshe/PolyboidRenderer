@@ -5,7 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "GameInstance.h"
+#include "GameStatics.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Engine/ECS/Components.h"
 
@@ -24,6 +24,7 @@ namespace Polyboid
 		{
 			gameObject->OnBeginPlay();
 		}
+
 	}
 
 	void World::OnUpdate(float ts) const
@@ -197,7 +198,7 @@ namespace Polyboid
 		return objects;
 	}
 
-	GameObject* World::CreateGameObject(const std::string& name)
+	GameObject* World::CreateGameObject(const std::string& name, uint64_t uuid)
 	{
 		
 		auto id = CreateEntityID();
@@ -205,12 +206,21 @@ namespace Polyboid
 		auto* gameObjectClass = new GameObject(static_cast<entt::entity>(id));
 		gameObjectClass->SetID(id);
 
-		gameObjectClass->SetWorld(GameInstance::GetCurrentWorld());
+		gameObjectClass->SetWorld(GameStatics::GetCurrentWorld());
 
 		//default components here
 		gameObjectClass->AddComponent<TagComponent>(name);
 		gameObjectClass->AddComponent<TransformComponent>();
-		gameObjectClass->AddComponent<IDComponent>();
+
+		if (uuid != 0)
+		{
+			gameObjectClass->AddComponent<IDComponent>(uuid);
+		}
+		else
+		{
+			gameObjectClass->AddComponent<IDComponent>();
+		}
+		
 
 		gameObjectClass->OnCreate();
 
@@ -231,14 +241,15 @@ namespace Polyboid
 		{
 			auto [transform, camera] = cameraView.get<TransformComponent, CameraComponent>(entity);
 
-			if (camera.current)
+			if (camera.Camera)
 			{
-				spdlog::info("camera With id {}", static_cast<int32_t>(entity));
+				GameStatics::SetCurrentCamera(camera.Camera);
+				//spdlog::info("camera With id {}", static_cast<int32_t>(entity));
 			}
 
 		}
 
-		const auto& camera = GameInstance::GetCurrentCamera();
+		const auto& camera = GameStatics::GetCurrentCamera();
 
 		Renderer2D::BeginDraw(camera);
 
@@ -249,7 +260,19 @@ namespace Polyboid
 
 			auto [transform, shape] = view.get<TransformComponent, ShapeComponent>(entity);
 
-			Renderer2D::DrawQuad(transform.GetTransform(), shape.color);
+
+			switch (shape.type)
+			{
+			case ShapeType::Quad:
+				Renderer2D::DrawQuad(transform.GetTransform(), shape.color);
+				break;
+			case ShapeType::Circle:
+				Renderer2D::DrawCircle(transform.GetTransform(), shape.color, shape.thickness, shape.fade);
+			default:
+				break;
+			}
+
+			
 
 
 		}

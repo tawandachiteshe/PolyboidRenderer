@@ -5667,7 +5667,7 @@ GLFWAPI GLFWglproc glfwGetProcAddress(const char* procname);
  *  ICD have been found.
  *
  *  The availability of a Vulkan loader and even an ICD does not by itself guarantee that
- *  surface creation or even instance creation is possible.  Call @ref
+ *  surface creation or even m_Instance creation is possible.  Call @ref
  *  glfwGetRequiredInstanceExtensions to check whether the extensions necessary for Vulkan
  *  surface creation are available and @ref glfwGetPhysicalDevicePresentationSupport to
  *  check whether a queue family of a physical device supports image presentation.
@@ -5689,7 +5689,7 @@ GLFWAPI int glfwVulkanSupported(void);
 
 /*! @brief Returns the Vulkan instance extensions required by GLFW.
  *
- *  This function returns an array of names of Vulkan instance extensions required
+ *  This function returns an array of names of Vulkan m_Instance extensions required
  *  by GLFW for creating Vulkan surfaces for GLFW windows.  If successful, the
  *  list will always contain `VK_KHR_surface`, so if you don't require any
  *  additional extensions you can pass this list directly to the
@@ -5736,7 +5736,7 @@ GLFWAPI const char** glfwGetRequiredInstanceExtensions(uint32_t* count);
 /*! @brief Returns the address of the specified Vulkan instance function.
  *
  *  This function returns the address of the specified Vulkan core or extension
- *  function for the specified instance.  If instance is set to `NULL` it can
+ *  function for the specified m_Instance.  If m_Instance is set to `NULL` it can
  *  return any function exported from the Vulkan loader, including at least the
  *  following functions:
  *
@@ -5772,19 +5772,19 @@ GLFWAPI const char** glfwGetRequiredInstanceExtensions(uint32_t* count);
  *
  *  @ingroup vulkan
  */
-GLFWAPI GLFWvkproc glfwGetInstanceProcAddress(VkInstance instance, const char* procname);
+GLFWAPI GLFWvkproc glfwGetInstanceProcAddress(VkInstance m_Instance, const char* procname);
 
 /*! @brief Returns whether the specified queue family can present images.
  *
  *  This function returns whether the specified queue family of the specified
  *  physical device supports presentation to the platform GLFW was built for.
  *
- *  If Vulkan or the required window surface creation instance extensions are
- *  not available on the machine, or if the specified instance was not created
+ *  If Vulkan or the required window surface creation m_Instance extensions are
+ *  not available on the machine, or if the specified m_Instance was not created
  *  with the required extensions, this function returns `GLFW_FALSE` and
  *  generates a @ref GLFW_API_UNAVAILABLE error.  Call @ref glfwVulkanSupported
  *  to check whether Vulkan is at least minimally available and @ref
- *  glfwGetRequiredInstanceExtensions to check what instance extensions are
+ *  glfwGetRequiredInstanceExtensions to check what m_Instance extensions are
  *  required.
  *
  *  @param[in] instance The instance that the physical device belongs to.
@@ -5809,7 +5809,7 @@ GLFWAPI GLFWvkproc glfwGetInstanceProcAddress(VkInstance instance, const char* p
  *
  *  @ingroup vulkan
  */
-GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhysicalDevice device, uint32_t queuefamily);
+GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance m_Instance, VkPhysicalDevice device, uint32_t queuefamily);
 
 /*! @brief Creates a Vulkan surface for the specified window.
  *
@@ -5820,11 +5820,11 @@ GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhys
  *  GLFW_API_UNAVAILABLE error.  Call @ref glfwVulkanSupported to check whether
  *  Vulkan is at least minimally available.
  *
- *  If the required window surface creation instance extensions are not
- *  available or if the specified instance was not created with these extensions
+ *  If the required window surface creation m_Instance extensions are not
+ *  available or if the specified m_Instance was not created with these extensions
  *  enabled, this function returns `VK_ERROR_EXTENSION_NOT_PRESENT` and
  *  generates a @ref GLFW_API_UNAVAILABLE error.  Call @ref
- *  glfwGetRequiredInstanceExtensions to check what instance extensions are
+ *  glfwGetRequiredInstanceExtensions to check what m_Instance extensions are
  *  required.
  *
  *  The window surface cannot be shared with another API so the window must
@@ -5832,7 +5832,7 @@ GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhys
  *  set to `GLFW_NO_API` otherwise it generates a @ref GLFW_INVALID_VALUE error
  *  and returns `VK_ERROR_NATIVE_WINDOW_IN_USE_KHR`.
  *
- *  The window surface must be destroyed before the specified Vulkan instance.
+ *  The window surface must be destroyed before the specified Vulkan m_Instance.
  *  It is the responsibility of the caller to destroy the window surface.  GLFW
  *  does not destroy it for you.  Call `vkDestroySurfaceKHR` to destroy the
  *  surface.
@@ -5872,7 +5872,7 @@ GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhys
  *
  *  @ingroup vulkan
  */
-GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance, GLFWwindow* window, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
+GLFWAPI VkResult glfwCreateWindowSurface(VkInstance m_Instance, GLFWwindow* window, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
 
 #endif /*VK_VERSION_1_0*/
 

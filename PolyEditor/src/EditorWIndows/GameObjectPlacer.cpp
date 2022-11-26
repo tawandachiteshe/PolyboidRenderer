@@ -3,7 +3,7 @@
 #include <Editor/Resource.h>
 #include <spdlog/spdlog.h>
 
-#include "Engine/Engine/Gameplay/GameInstance.h"
+#include "Engine/Engine/Gameplay/GameStatics.h"
 #include "Engine/Engine/Gameplay/World.h"
 
 namespace Polyboid 
@@ -42,8 +42,7 @@ namespace Polyboid
 					static char name[128];
 					if (ImGui::InputText("GameObject", name, 128, ImGuiInputTextFlags_EnterReturnsTrue))
 					{
-						spdlog::info("buffer data{}", name);
-						GameInstance::GetCurrentWorld()->CreateGameObject(name);
+						GameStatics::GetCurrentWorld()->CreateGameObject(name);
 					}
 					
 					ImGui::EndPopup();

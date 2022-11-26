@@ -26,6 +26,11 @@ project "PolyEditor"
 
     }
 
+    dependson
+    {
+        "PolyboidManaged"
+    }
+
     links 
     { 
         "Engine"

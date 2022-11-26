@@ -10,12 +10,6 @@ namespace Polyboid
 	void Square::OnCreate()
 	{
 		GameObject::OnCreate();
-		GetWorld()->CreateGameObject("Tawnada");
-		GetWorld()->CreateGameObject("Red");
-		if (!HasComponent<ShapeComponent>())
-		{
-			AddComponent<ShapeComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
-		}
 
 	}
 

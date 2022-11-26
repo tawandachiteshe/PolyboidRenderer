@@ -11,12 +11,77 @@
 #include "EditorWIndows/GameObjectPlacer.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Events/EventSystem.h"
-#include "Engine/Engine/Gameplay/GameInstance.h"
+#include "Engine/Engine/Gameplay/GameStatics.h"
 #include "Gameplay/Box.h"
+
+//temp solution temp
+#include <Windows.h>
+#include <commdlg.h>
+
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3.h>
+#include <GLFW/glfw3native.h>
+
+#include "Editor/Editor.h"
+#include "Engine/Engine/Engine.h"
 
 
 namespace Polyboid
 {
+
+    static std::filesystem::path s_AssetsPath = "Assets";
+
+    static std::string OpenWindowsDialog()
+    {
+    
+
+        OPENFILENAMEA ofn;
+        CHAR szFile[260] = { 0 };
+        CHAR currentDir[256] = { 0 };
+        ZeroMemory(&ofn, sizeof(OPENFILENAME));
+        ofn.lStructSize = sizeof(OPENFILENAME);
+        ofn.hwndOwner = glfwGetWin32Window((Application::Get()->GetWindow()->GetNativeWindow()));
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile);
+        if (GetCurrentDirectoryA(256, currentDir))
+            ofn.lpstrInitialDir = currentDir;
+        ofn.lpstrFilter = "(*.pmap)\0*.pmap\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+        if (GetOpenFileNameA(&ofn) == TRUE)
+            return ofn.lpstrFile;
+
+        return  std::string();
+    }
+
+
+    std::string SaveWindowsDialog()
+    {
+        OPENFILENAMEA ofn;
+        CHAR szFile[260] = { 0 };
+        CHAR currentDir[256] = { 0 };
+        ZeroMemory(&ofn, sizeof(OPENFILENAME));
+        ofn.lStructSize = sizeof(OPENFILENAME);
+        ofn.hwndOwner = glfwGetWin32Window((Application::Get()->GetWindow()->GetNativeWindow()));
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile);
+        if (GetCurrentDirectoryA(256, currentDir))
+            ofn.lpstrInitialDir = currentDir;
+        ofn.lpstrFilter = "(*.pmap)\0*.pmap\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
+
+        // Sets the default extension by extracting it from the filter
+        ofn.lpstrDefExt = strchr(ofn.lpstrFilter, '\0') + 1;
+
+        if (GetSaveFileNameA(&ofn) == TRUE)
+        	return ofn.lpstrFile;
+
+        return  std::string();
+    }
+
 
     void EditorLayer::EditorDockSpaceUI(bool* p_open)
     {
@@ -100,8 +165,57 @@ namespace Polyboid
             {
                 // Disabling fullscreen would allow the window to be moved to the front of other windows,
                 // which we can't undo at the moment without finer window depth/z control.
-                ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-                ImGui::MenuItem("Padding", NULL, &opt_padding);
+
+                if (ImGui::MenuItem("New...", "Ctrl + Shift + N"))
+                {
+
+					auto pathDialog = SaveWindowsDialog();
+
+					if (!pathDialog.empty())
+					{
+                        std::filesystem::path path = pathDialog;
+                        auto stem = path.stem();
+                        std::string worldName = stem.string();
+                        EventSystem::GetDispatcher()->Dispatch(GameObjectOutlineClick(nullptr));
+                        auto world = Engine::CreateWorld(worldName);
+                        Editor::SetCurrentWorldMapPath(path.string());
+                        Editor::SetCurrentWorldName(worldName);
+
+                        GameStatics::SetCurrentWorld(world);
+					}
+                }
+
+                if(ImGui::MenuItem("Save as..."))
+                {
+
+                    auto pathDialog = SaveWindowsDialog();
+
+                    if (!pathDialog.empty())
+                    {
+
+                        WorldSerializer::Serialize(pathDialog);
+                    }
+                }
+
+                if(ImGui::MenuItem("Save World", "Ctrl + S"))
+                {
+                    //temp solution
+                    WorldSerializer::Serialize(Editor::GetCurrentWorldMapPath());
+                }
+
+                if (ImGui::MenuItem("Load World", "Ctrl + O"))
+                {
+
+                    auto str = OpenWindowsDialog();
+
+                    if (!str.empty())
+                    {
+                        EventSystem::GetDispatcher()->Dispatch(GameObjectOutlineClick(nullptr));
+                        WorldSerializer::Deserialize(str);
+                    }
+
+	              
+                }
 
                 if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
                     *p_open = false;
@@ -180,8 +294,8 @@ namespace Polyboid
 
         Resource::Init();
 
-        m_World = std::make_shared<World>("Level1");
-    	GameInstance::SetCurrentWorld(m_World);
+        m_World = std::make_shared<World>("untitled");
+    	GameStatics::SetCurrentWorld(m_World);
 
 
     }
@@ -197,12 +311,6 @@ namespace Polyboid
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_ENTER, BIND_EVENT(OnEditorEnterPlayMode));
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_EXIT, BIND_EVENT(OnEditorExitPlayMode));
 
-
-        //temp solustion
-        static const char* worldDir = "Assets/Worlds";
-    	WorldSerializer::Serialize(worldDir);
-
-        m_World->CreateGameObject<Square>("Square");
         
 	}
 

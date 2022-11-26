@@ -1,0 +1,40 @@
+{
+  "_name": "Tawanda",
+  "game_objects": [
+    {
+      "components": [
+        {
+          "ShapeComponent": {
+            "color": [
+              0.0,
+              0.23030516505241394,
+              0.8270041942596436,
+              1.0
+            ]
+          }
+        },
+        {
+          "TransformComponent": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 11403088117295454451,
+      "name": "BlueSquare"
+    }
+  ]
+}

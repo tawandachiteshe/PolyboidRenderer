@@ -17,5 +17,6 @@ include "Engine/Vendor/glad"
 include "Engine/Vendor/imgui"
 group ""
 
+include "PolyboidManaged"
 include "Engine"
 include "PolyEditor"

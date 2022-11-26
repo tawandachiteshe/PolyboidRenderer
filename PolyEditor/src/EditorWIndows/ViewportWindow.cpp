@@ -8,7 +8,7 @@
 #include "Engine/Engine/Input.h"
 #include "Engine/Engine/ECS/ECSManager.h"
 #include "Engine/Engine/Events/EventSystem.h"
-#include "Engine/Engine/Gameplay/GameInstance.h"
+#include "Engine/Engine/Gameplay/GameStatics.h"
 #include "Engine/Engine/Gameplay/World.h"
 #include "Engine/Renderer/Renderer.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -42,7 +42,7 @@ namespace Polyboid
 		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 1000.0f);
 		m_Framebuffer = Framebuffer::MakeFramebuffer({ width, height });
 
-		GameInstance::SetCurrentCamera(m_ViewportCamera);
+		GameStatics::SetCurrentCamera(m_ViewportCamera);
 		Editor::SetEditorCamera(m_ViewportCamera);
 
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
@@ -112,6 +112,8 @@ namespace Polyboid
 		 auto wsize = ImGui::GetWindowSize();
 		 ImGui::Image((ImTextureID)m_Framebuffer->GetColorAttachment0TextureID(), wsize, ImVec2(0, 1), ImVec2(1, 0));
 
+
+		
 
 		ImGuizmo::SetOrthographic(false);
 		ImGuizmo::SetDrawlist();
@@ -198,7 +200,7 @@ namespace Polyboid
 
 		//Editor rendering here....
 
-		GameInstance::GetCurrentWorld()->Render();
+		GameStatics::GetCurrentWorld()->Render();
 
 		
 	

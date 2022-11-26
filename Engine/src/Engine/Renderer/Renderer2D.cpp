@@ -18,55 +18,78 @@
 
 namespace Polyboid
 {
+	static const uint32_t MAX_GEOMETRY = 20000;
 
-	struct Renderer2DData
+	struct QuadData
 	{
 		uint32_t quadsVertsCount = 4;
 		uint32_t quadsIndicesCount = 6;
 
-		uint32_t maxQuads = 20000;
-
-
-		uint32_t vtxSize = quadsVertsCount * maxQuads;
-		uint32_t idxSize = quadsIndicesCount * maxQuads;
-
-		Ref<VertexBufferArray> vertexBufferArray;
-		Ref<VertexBuffer> vertexBuffer;
+		Ref<VertexBufferArray> QuadVertexBufferArray;
+		Ref<VertexBuffer> QuadVertexBuffer;
 		Ref<Shader> shader;
-
-		std::vector<Vertex2D> QuadVertexBufferBase;
-		Vertex2D* QuadVertexBufferPtr = nullptr;
 
 		uint32_t quadCount = 0;
 		uint32_t quadOffset = 0;
 
-		uint32_t indexCount = 0;
-		bool submitOnce = false;
+
+		uint32_t vtxSize = quadsVertsCount * MAX_GEOMETRY;
+		uint32_t idxSize = quadsIndicesCount * MAX_GEOMETRY;
 
 		glm::vec4 QuadVertexPositions[4] = {};
-		Vertex2D quadVerts[4] = {};
-
-		std::shared_ptr<UniformBuffer> m_CameraUB;
+		QuadVertex quadVerts[4] = {};
 
 
+		std::vector<QuadVertex> QuadVerticesData;
+		uint32_t quadIndexCount = 0;
 	};
 
-	static Renderer2DData s_sData;
+	struct CircleData
+	{
+		uint32_t quadsVertsCount = 4;
+		uint32_t quadsIndicesCount = 6;
 
-	void Renderer2D::Init()
+		Ref<VertexBufferArray> CircleVertexBufferArray;
+		Ref<VertexBuffer> CircleVertexBuffer;
+		Ref<Shader> shader;
+
+		uint32_t circleCount = 0;
+		uint32_t circleOffset = 0;
+
+
+		uint32_t vtxSize = quadsVertsCount * MAX_GEOMETRY;
+		uint32_t idxSize = quadsIndicesCount * MAX_GEOMETRY;
+
+		glm::vec4 circleVertexPositions[4] = {};
+		CircleVertex circleVerts[4] = {};
+
+
+		std::vector<CircleVertex> CircleVerticesData;
+
+		uint32_t circleIndexCount = 0;
+	};
+
+	struct Renderer2DData
+	{
+		
+		std::shared_ptr<UniformBuffer> m_CameraUB;
+	};
+
+	static Renderer2DData s_RenderData;
+	static QuadData s_QuadData;
+	static CircleData s_CircleData;
+
+	void Renderer2D::PrepareQuads()
 	{
 		POLYBOID_PROFILE_FUNCTION();
 
-		s_sData.vertexBufferArray = VertexBufferArray::MakeVertexBufferArray();
-		s_sData.shader = Shader::MakeShader("Assets/Shaders/renderer2D.vert",
-			"Assets/Shaders/renderer2D.frag");
+		s_QuadData.QuadVertexBufferArray = VertexBufferArray::MakeVertexBufferArray();
 
-		uint32_t vtxSize = s_sData.vtxSize;
-		uint32_t idxSize = s_sData.idxSize;
+		uint32_t vtxSize = s_QuadData.vtxSize;
+		uint32_t idxSize = s_QuadData.idxSize;
 
-		s_sData.vertexBuffer = VertexBuffer::MakeVertexBuffer(vtxSize * sizeof(Vertex2D));
-
-		s_sData.QuadVertexBufferBase = std::vector<Vertex2D>(vtxSize);
+		s_QuadData.QuadVertexBuffer = VertexBuffer::MakeVertexBuffer(vtxSize * sizeof(QuadVertex));
+		s_QuadData.QuadVerticesData = std::vector<QuadVertex>(vtxSize);
 		auto* quadIndices = new uint32_t[idxSize];
 
 		uint32_t lastIndex = 0;
@@ -88,168 +111,289 @@ namespace Polyboid
 				quadIndices[i++] = quadIndices[lastIndex - 6] + 4;
 				quadIndices[i++] = quadIndices[lastIndex - 5] + 4;
 				quadIndices[i++] = quadIndices[lastIndex - 4] + 4;
-								   
+
 				quadIndices[i++] = quadIndices[lastIndex - 3] + 4;
 				quadIndices[i++] = quadIndices[lastIndex - 2] + 4;
 				quadIndices[i++] = quadIndices[lastIndex - 1] + 4;
 			}
-		
+
 
 			lastIndex = i;
-
 		}
 
 
-		s_sData.vertexBufferArray->Bind();
+		s_QuadData.QuadVertexBufferArray->Bind();
 		const Ref<IndexBuffer> indexBuffer = IndexBuffer::MakeIndexBuffer(quadIndices, idxSize);
 		delete[] quadIndices;
 
-		s_sData.vertexBuffer->DescribeBuffer({
-			{ BufferComponent::Float3, "aPosition" },
-			{ BufferComponent::Float4, "aColor" },
-			{ BufferComponent::Float2, "aUV" }
-			});
+		s_QuadData.QuadVertexBuffer->DescribeBuffer({
+			{BufferComponent::Float3, "aPosition"},
+			{BufferComponent::Float4, "aColor"},
+			{BufferComponent::Float2, "aUV"}
+		});
 
-		s_sData.vertexBufferArray->AddVertexBuffer(s_sData.vertexBuffer);
-		s_sData.vertexBufferArray->SetIndexBuffer(indexBuffer);
+		s_QuadData.QuadVertexBufferArray->AddVertexBuffer(s_QuadData.QuadVertexBuffer);
+		s_QuadData.QuadVertexBufferArray->SetIndexBuffer(indexBuffer);
 
 
-		s_sData.quadVerts[0] = { {0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f} };
-		s_sData.quadVerts[1] = { { 0.5f, -0.5f, 0.0f }, {1.0f, 1.0f, 1.0f, 1.0f}, { 1.0f, 0.0f } };
-		s_sData.quadVerts[2] = { { -0.5f, -0.5f, 0.0f, }, {1.0f, 1.0f, 1.0f, 1.0f}, { 0.0f, 1.0f } };
-		s_sData.quadVerts[3] = { { -0.5f, 0.5f, 0.0f }, {1.0f, 1.0f, 1.0f, 1.0f}, { 1.0f, 1.0f } };
+		s_QuadData.quadVerts[0] = {{0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 0.0f}};
+		s_QuadData.quadVerts[1] = {{0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 0.0f}};
+		s_QuadData.quadVerts[2] = {{-0.5f, -0.5f, 0.0f,}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}};
+		s_QuadData.quadVerts[3] = {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}};
+
+		s_QuadData.shader = Shader::MakeShader("Assets/Shaders/rendererQuad.vert",
+			"Assets/Shaders/rendererQuad.frag");
+
+	}
+
+
+	void Renderer2D::PrepareCircles()
+	{
+		s_CircleData.CircleVertexBufferArray = VertexBufferArray::MakeVertexBufferArray();
+
+		const uint32_t vtxSize = s_CircleData.vtxSize;
+		const uint32_t idxSize = s_CircleData.idxSize;
+
+		s_CircleData.CircleVertexBuffer = VertexBuffer::MakeVertexBuffer(vtxSize * sizeof(CircleVertex));
+		s_CircleData.CircleVerticesData = std::vector<CircleVertex>(vtxSize);
+		auto* quadIndices = new uint32_t[idxSize];
+
+		uint32_t lastIndex = 0;
+
+		for (uint32_t i = 0; i < idxSize; i)
+		{
+			if (lastIndex == 0)
+			{
+				quadIndices[i++] = 0;
+				quadIndices[i++] = 1;
+				quadIndices[i++] = 3;
+
+				quadIndices[i++] = 1;
+				quadIndices[i++] = 2;
+				quadIndices[i++] = 3;
+			}
+			else
+			{
+				quadIndices[i++] = quadIndices[lastIndex - 6] + 4;
+				quadIndices[i++] = quadIndices[lastIndex - 5] + 4;
+				quadIndices[i++] = quadIndices[lastIndex - 4] + 4;
+
+				quadIndices[i++] = quadIndices[lastIndex - 3] + 4;
+				quadIndices[i++] = quadIndices[lastIndex - 2] + 4;
+				quadIndices[i++] = quadIndices[lastIndex - 1] + 4;
+			}
+
+
+			lastIndex = i;
+		}
+
+
+		s_CircleData.CircleVertexBufferArray->Bind();
+		const Ref<IndexBuffer> indexBuffer = IndexBuffer::MakeIndexBuffer(quadIndices, idxSize);
+		delete[] quadIndices;
+
+
+		s_CircleData.CircleVertexBuffer->DescribeBuffer({
+			{BufferComponent::Float3, "aWorldPosition"},
+			{BufferComponent::Float3, "aLocalPosition"},
+			{BufferComponent::Float4, "aColor"},
+			{BufferComponent::Float, "aThickness"},
+			{BufferComponent::Float, "aFade"},
+
+		});
+
+		s_CircleData.CircleVertexBufferArray->AddVertexBuffer(s_CircleData.CircleVertexBuffer);
+		s_CircleData.CircleVertexBufferArray->SetIndexBuffer(indexBuffer);
+
+
+		s_CircleData.circleVerts[0] = {{0.5f, 0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1, 1};
+		s_CircleData.circleVerts[1] = {{0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, 0.0f};
+		s_CircleData.circleVerts[2] = {{-0.5f, -0.5f, 0.0f}, {-0.5f, -0.5f, 0.0f,} , {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f, 1.0f};
+		s_CircleData.circleVerts[3] = {{-0.5f, 0.5f, 0.0f},{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, 1.0f};
+
+		s_CircleData.shader = Shader::MakeShader("Assets/Shaders/rendererCircle.vert",
+			"Assets/Shaders/rendererCircle.frag");
+	}
+
+	void Renderer2D::PrepareQuadsForRendering()
+	{
+		if (s_QuadData.quadCount)
+		{
+			
+
+			uint32_t vertexSize = sizeof(QuadVertex) * s_QuadData.quadOffset;
+			s_QuadData.QuadVertexBuffer->SetData(s_QuadData.QuadVerticesData.data(), vertexSize);
+
+			s_QuadData.shader->Bind();
+			const auto count = s_QuadData.quadIndexCount;
+
+			s_QuadData.QuadVertexBufferArray->Bind();
+			s_QuadData.QuadVertexBuffer->Bind();
+			s_QuadData.QuadVertexBufferArray->GetIndexBuffer()->Bind();
+			RenderAPI::DrawIndexed(count, 4);
+		}
+	}
+
+
+	void Renderer2D::PrepareCircleForRendering()
+	{
+		if (s_CircleData.circleCount)
+		{
+			
+
+			const uint32_t vertexSize = sizeof(CircleVertex) * s_CircleData.circleOffset;
+			s_CircleData.CircleVertexBuffer->SetData(s_CircleData.CircleVerticesData.data(), vertexSize);
+
+			s_CircleData.shader->Bind();
+			const auto count = s_CircleData.circleIndexCount;
+
+			s_CircleData.CircleVertexBufferArray->Bind();
+			s_CircleData.CircleVertexBuffer->Bind();
+			s_CircleData.CircleVertexBufferArray->GetIndexBuffer()->Bind();
+			RenderAPI::DrawIndexed(count, 4);
+		}
+	}
+
+	
+
+
+	void Renderer2D::Init()
+	{
+		POLYBOID_PROFILE_FUNCTION();
+		PrepareQuads();
+		PrepareCircles();
+
 
 		//temp solution
-		s_sData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2, 0);
-
+		s_RenderData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2, 0);
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
 		POLYBOID_PROFILE_FUNCTION();
 
-		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
-		s_sData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
-
-		s_sData.QuadVertexBufferPtr = s_sData.QuadVertexBufferBase.data();
-
+		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
+		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
 	}
 
 	void Renderer2D::DebugWindow()
 	{
 		POLYBOID_PROFILE_FUNCTION();
-
-		ImGui::Begin("Renderer 2D stats");
-		ImGui::Text("Quad count: %d ", s_sData.quadCount);
-		ImGui::Text("Triangle count: %d ", s_sData.quadCount * 2);
-		ImGui::Text("Quad offset: %d ", s_sData.quadOffset);
-		ImGui::Text("Draw Index count: %d", s_sData.indexCount);
-		
-
-		ImGui::Text("Renderer 2D current vtx bytes: %d ", s_sData.quadOffset * sizeof(Vertex2D));
-		ImGui::Text("Renderer 2D current idx bytes: %d ", s_sData.indexCount * sizeof(uint32_t));
-		ImGui::Text("Renderer 2D total vtx bytes: %d ", s_sData.vtxSize * sizeof(Vertex2D));
-		ImGui::Text("Renderer 2D total idx bytes: %d ", s_sData.idxSize * sizeof(uint32_t));
-
-		ImGui::End();
 	}
 
 	void Renderer2D::EndDraw()
 	{
 		POLYBOID_PROFILE_FUNCTION();
-		
-		if (s_sData.quadCount)
-		{
-			
-			s_sData.vertexBufferArray->Bind();
 
-			uint32_t vertexSize = sizeof(Vertex2D) * s_sData.quadOffset;
-			s_sData.vertexBuffer->SetData(s_sData.QuadVertexBufferBase.data(), vertexSize);
-
-			s_sData.submitOnce = true;
-			s_sData.shader->Bind();
-			const auto count = s_sData.indexCount;
-
-			s_sData.vertexBuffer->Bind();
-			s_sData.vertexBufferArray->GetIndexBuffer()->Bind();
-			RenderAPI::DrawIndexed(count, 4);
-			
-		}
-		
-
+		PrepareQuadsForRendering();
+		PrepareCircleForRendering();
 
 		Reset();
+	}
+
+
+
+	void Renderer2D::ResetQuads()
+	{
+		s_QuadData.quadCount = 0;
+		s_QuadData.quadOffset = 0;
+		s_QuadData.quadIndexCount = 0;
+	}
+
+	void Renderer2D::ResetCircles()
+	{
+		s_CircleData.circleCount = 0;
+		s_CircleData.circleOffset = 0;
+		s_CircleData.circleIndexCount = 0;
 	}
 
 	void Renderer2D::Reset()
 	{
 		POLYBOID_PROFILE_FUNCTION();
-		
-		s_sData.quadCount = 0;
-		s_sData.quadOffset = 0;
-		s_sData.indexCount = 0;
+		ResetQuads();
+		ResetCircles();
 	}
 
 	void Renderer2D::Shutdown()
 	{
 		POLYBOID_PROFILE_FUNCTION();
-		
-		if (!s_sData.QuadVertexBufferBase.empty())
+
+		if (!s_QuadData.QuadVerticesData.empty())
 		{
-			s_sData.QuadVertexBufferBase.clear();
+			s_QuadData.QuadVerticesData.clear();
 		}
 	}
 
 	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
 	{
-
 		POLYBOID_PROFILE_FUNCTION();
-		
-		for (auto& quadVert : s_sData.quadVerts)
+
+		int count = 0;
+		for (auto& quadVert : s_QuadData.quadVerts)
 		{
-			if (s_sData.quadOffset < s_sData.vtxSize)
+			if (s_QuadData.quadOffset < s_QuadData.vtxSize)
 			{
-
-				s_sData.QuadVertexBufferPtr->position = transform * glm::vec4(quadVert.position, 1.0f);
-				s_sData.QuadVertexBufferPtr->color = color;
-				s_sData.QuadVertexBufferPtr->uv = quadVert.uv;
-				s_sData.QuadVertexBufferPtr++;
-
+				s_QuadData.QuadVerticesData.at(s_QuadData.quadOffset + count).position = transform * glm::vec4(
+					quadVert.position, 1.0f);
+				s_QuadData.QuadVerticesData.at(s_QuadData.quadOffset + count).color = color;
+				s_QuadData.QuadVerticesData.at(s_QuadData.quadOffset + count).uv = quadVert.uv;
 			}
 
+			count++;
 		}
-		
 
-		if (s_sData.quadOffset < s_sData.vtxSize)
+
+		if (s_QuadData.quadOffset < s_QuadData.vtxSize)
 		{
-			s_sData.quadCount++;
-			s_sData.quadOffset += 4;
-			s_sData.indexCount += 6;
+			s_QuadData.quadCount++;
+			s_QuadData.quadOffset += 4;
+			s_QuadData.quadIndexCount += 6;
 		}
-		
-		
+	}
+
+	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade)
+	{
+		int count = 0;
+		for (auto& circleVert : s_CircleData.circleVerts)
+		{
+			if (s_CircleData.circleOffset < s_CircleData.vtxSize)
+			{
+				s_CircleData.CircleVerticesData.at(s_CircleData.circleOffset + count).WorldPosition = transform * glm::vec4(circleVert.LocalPosition, 1.0f);
+
+				s_CircleData.CircleVerticesData.at(s_CircleData.circleOffset + count).LocalPosition =  circleVert.LocalPosition;
+				s_CircleData.CircleVerticesData.at(s_CircleData.circleOffset + count).color = color;
+				s_CircleData.CircleVerticesData.at(s_CircleData.circleOffset + count).thickness = thickness;
+				s_CircleData.CircleVerticesData.at(s_CircleData.circleOffset + count).fade = fade;
+			}
+
+			count++;
+		}
+
+		if (s_CircleData.circleOffset < s_CircleData.vtxSize)
+		{
+			s_CircleData.circleCount++;
+			s_CircleData.circleOffset += 4;
+			s_CircleData.circleIndexCount += 6;
+		}
 	}
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec4& color)
 	{
 		POLYBOID_PROFILE_FUNCTION();
-		
+
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
 
 		DrawQuad(translate, color);
-
 	}
 
 	void Renderer2D::DrawRotatedQuad(const glm::vec3& position, float rotation, const glm::vec4& color)
 	{
 		POLYBOID_PROFILE_FUNCTION();
 
-		const auto translate = glm::translate(glm::mat4(1.0f), position) * glm::rotate(glm::mat4(1.0f), glm::radians(rotation),
+		const auto translate = glm::translate(glm::mat4(1.0f), position) * glm::rotate(
+			glm::mat4(1.0f), glm::radians(rotation),
 			glm::vec3(0, 0, 1));
 
 		DrawQuad(translate, color);
-
 	}
 }
-
-

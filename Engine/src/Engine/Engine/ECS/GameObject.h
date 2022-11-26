@@ -8,7 +8,8 @@
 
 namespace Polyboid
 {
-   
+	class MonoClassInstance;
+
 	class GameObject
     {
 
@@ -16,16 +17,19 @@ namespace Polyboid
         Ref<World> m_World = nullptr;
         std::string m_Name = "";
         uint32_t m_ID = entt::null;
-		Ref<World> GetWorld() { return  m_World; }
+		Ref<World> GetWorld() { return  GameStatics::GetCurrentWorld(); }
+        std::vector<Ref<MonoClassInstance>> m_MonoScripts;
 
     public:
         virtual ~GameObject();
-        virtual void OnCreate() {}
-        virtual void OnBeginPlay() {}
-        virtual void OnEndPlay() { }
+        virtual void OnCreate();
+        virtual void OnBeginPlay();
+        virtual void OnEndPlay();
         virtual void OnDestroy();
-        virtual void OnUpdate(float dt) { }
+        virtual void OnUpdate(float dt);
+        void AttachScript(const std::string& monoKlassName);
         void SetID(uint32_t id) { m_ID = id; }
+        uint32_t GetID() { return m_ID; }
 
     public:
 
@@ -51,7 +55,7 @@ namespace Polyboid
         bool HasComponent()
         {
           
-            auto& registry = m_World->GetRegistry();
+            auto& registry = GetWorld()->GetRegistry();
             
             return registry.any_of<Component>(static_cast<entt::entity>(m_ID));;
         }
@@ -65,7 +69,7 @@ namespace Polyboid
     Component& GameObject::GetComponent()
     {
     
-        auto& registry = m_World->GetRegistry();
+        auto& registry = GetWorld()->GetRegistry();
 
         auto view = registry.view<Component>();
         
@@ -83,7 +87,7 @@ namespace Polyboid
 		    return;
 	    }
 
-        auto& registry = m_World->GetRegistry();
+        auto& registry = GetWorld()->GetRegistry();
         registry.emplace<Component>(static_cast<const entt::entity>(m_ID), std::forward<Args>(args) ...);
     }
 
@@ -97,7 +101,7 @@ namespace Polyboid
             return;
         }
 
-        auto& registry = m_World->GetRegistry();
+        auto& registry = GetWorld()->GetRegistry();
         registry.emplace_or_replace<Component>(static_cast<const entt::entity>(m_ID), std::forward<Args>(args) ...);
     }
 
@@ -105,7 +109,7 @@ namespace Polyboid
     bool GameObject::RemoveComponent()
     {
       
-        auto& registry = m_World->GetRegistry();
+        auto& registry = GetWorld()->GetRegistry();
 
     	registry.remove<Component>(static_cast<const entt::entity>(m_ID));
       

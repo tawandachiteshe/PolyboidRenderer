@@ -88,13 +88,25 @@ namespace Polyboid
     }
 
 
-    Shader::Shader(const std::string& vertexPath, const std::string& fragPath)
+    Shader:: Shader(const std::string& vertexPath, const std::string& fragPath)
     {
         POLYBOID_PROFILE_FUNCTION();
 
         //read files here
         const std::string vertexSrc = FileReader::ReadString(vertexPath);
         const std::string fragSrc = FileReader::ReadString(fragPath);
+
+
+        if (vertexSrc.empty())
+        {
+            spdlog::error("Vertex Shader src not found path {}", vertexPath);
+        }
+
+        if (fragPath.empty())
+        {
+
+            spdlog::error("Pixel Shader src not found path {}", fragPath);
+        }
 
         PrepareShaders(vertexSrc.c_str(), fragSrc.c_str());
     }

@@ -9,10 +9,10 @@ namespace Polyboid
 {
     enum class BufferComponent
     {
-        Float, Int = 1,
-        Float2, Int2 = 2,
-        Float3, Int3 = 3,
-        Float4, Int4 = 4,
+        Float = 1, Int = 1,
+        Float2 = 2, Int2 = 2,
+        Float3 = 3, Int3 = 3,
+        Float4 = 4, Int4 = 4,
     };
     
     struct VertexBufferLayout

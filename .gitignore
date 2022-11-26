@@ -15,6 +15,9 @@
 
 # Mono auto generated files
 mono_crash.*
+git-sizer.exe
+bin/
+lib/
 
 # Build results
 [Dd]ebug/

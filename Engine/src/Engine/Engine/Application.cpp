@@ -15,6 +15,7 @@
 #include "EntryPoint.h"
 #include "Events/EventSystem.h"
 #include "Events/WindowEvent.h"
+#include "Scripting/ScriptingEngine.h"
 
 
 namespace Polyboid
@@ -42,6 +43,7 @@ namespace Polyboid
 
         Imgui::Init();
         ECSManager::Init();
+        ScriptingEngine::Init();
 
         //multiple overides maybe but is it efficieant and maintainable;;
 
@@ -85,6 +87,7 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
         Imgui::ShutDown();
         Renderer2D::Shutdown();
+        ScriptingEngine::ShutDown();
        
     }
 

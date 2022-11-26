@@ -20,8 +20,14 @@ project "Engine"
         "Vendor/stb/include",
         "Vendor/glad/include",
         "Vendor/assimp/include",
+        "Vendor/mono/include",
         "Vendor/entt",
         "Vendor/imgui/src",
+    }
+
+    dependson
+    {
+        "PolyboidManaged"
     }
 
     defines
@@ -36,6 +42,11 @@ project "Engine"
         "glad",
         "imgui",
         "Vendor/assimp/bin/assimp.lib",
+        "Vendor/mono/lib/libmono-static-sgen.lib",
+        "Ws2_32.lib",
+        "Bcrypt.lib",
+        "Winmm.lib",
+        "Version.lib",
         "opengl32.lib"
     }
 
