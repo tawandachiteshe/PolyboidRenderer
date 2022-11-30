@@ -194,10 +194,11 @@ namespace Polyboid
 			s_Data->Classes.push_back(fullName);
 			s_Data->MonoClasses[fullName] = monoClass;
 
-
 			int fieldCount = mono_class_num_fields(monoClass);
 			spdlog::info("{} has {} fields", className, fieldCount);
 			void* iterator = nullptr;
+
+			std::vector<std::pair<std::string, ScriptingType>> fieldNameAndType;
 
 			while (MonoClassField* field = mono_class_get_fields(monoClass, &iterator))
 			{
@@ -209,9 +210,16 @@ namespace Polyboid
 
 				if (GetFieldAccessibility(field) == AccessibilityType::Public)
 				{
-					spdlog::info("Type of field {} is {}", fieldName, typeName);
+					if (s_Data->TypeMap.find(typeName) != s_Data->TypeMap.end())
+					{
+						fieldNameAndType.push_back({ fieldName, s_Data->TypeMap[typeName] });
+						spdlog::info("Type of field {} is {}", fieldName, typeName);
+					}
 				}
 			}
+
+			s_Data->ClassFields[fullName] = fieldNameAndType;
+
 		}
 	}
 
@@ -318,6 +326,12 @@ namespace Polyboid
 		MonoClass* klass = mono_object_get_class(instance);
 
 		MonoMethod* method = GetMonoMethod(klass, methodName, paramCount);
+
+		if (method == nullptr)
+		{
+			return nullptr;
+		}
+
 
 		MonoObject* object = nullptr;
 
@@ -533,9 +547,40 @@ namespace Polyboid
 		mono_field_set_value(instance, field, value);
 	}
 
+	void ScriptingEngine::GetMonoFieldValue(MonoObject* instance, MonoClassField* field, void* value)
+	{
+		mono_field_get_value(instance, field, value);
+	}
+
 	void* ScriptingEngine::GetMonoValueToCPP(MonoObject* instance)
 	{
 		return mono_object_unbox(instance);
+	}
+
+	int ScriptingEngine::GetClassFieldNumCount(MonoObject* object)
+	{
+		int fieldCount = mono_class_num_fields(GetMonoClassFromInstance(object));
+		return fieldCount;
+	}
+
+	MonoClassField* ScriptingEngine::GetClassFields(MonoObject* object, void* iterator)
+	{
+		return mono_class_get_fields(GetMonoClassFromInstance(object), &iterator);
+	}
+
+	const char* ScriptingEngine::GetMonoClassFieldName(MonoClassField* field)
+	{
+		return mono_field_get_name(field);
+	}
+
+	MonoType* ScriptingEngine::GetMonoClassFieldType(MonoClassField* field)
+	{
+		return mono_field_get_type(field);
+	}
+
+	const char* ScriptingEngine::GetMonoClassFieldTypeName(MonoType* type)
+	{
+		return mono_type_get_name(type);
 	}
 
 	void* ScriptingEngine::GetFunctionPointer(MonoObject* instance, const std::string& name, int paramCount)

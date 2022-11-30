@@ -28,6 +28,10 @@ namespace Polyboid
         virtual void OnDestroy();
         virtual void OnUpdate(float dt);
         void AttachScript(const std::string& monoKlassName);
+        bool HasScriptsAttached() const { return !m_MonoScripts.empty(); }
+        std::vector<Ref<MonoClassInstance>>& GetMonoScripts() { return m_MonoScripts; }
+
+
         void SetID(uint32_t id) { m_ID = id; }
         uint32_t GetID() { return m_ID; }
 

@@ -114,7 +114,7 @@ namespace Polyboid
 				for (auto& monoClass : ScriptingEngine::GetClasses())
 				{
 					std::string className = monoClass;
-					if(ImGui::Selectable(className.c_str()))
+					if (ImGui::Selectable(className.c_str()))
 					{
 						m_CurrentObject->AttachScript(className);
 					}
@@ -122,7 +122,7 @@ namespace Polyboid
 				ImGui::EndPopup();
 			}
 
-			ImGui::Button("Add Component", { windowContent - 4, 0 });
+			ImGui::Button("Add Component", {windowContent - 4, 0});
 
 
 			if (ImGui::BeginPopupContextItem("##item", ImGuiPopupFlags_MouseButtonLeft))
@@ -166,7 +166,7 @@ namespace Polyboid
 						"QUAD", "CIRCLE", "LINE"
 					};
 					static int item_current = 0;
-					if(ImGui::Combo("Shape Type", &item_current, items, IM_ARRAYSIZE(items)))
+					if (ImGui::Combo("Shape Type", &item_current, items, IM_ARRAYSIZE(items)))
 					{
 						switch (item_current)
 						{
@@ -179,14 +179,63 @@ namespace Polyboid
 						default:
 							break;
 						}
-
 					}
 					if (shapeComponent.type == ShapeType::Circle)
 					{
 						ImGui::DragFloat("Thickness", &shapeComponent.thickness, 0.01f);
 						ImGui::DragFloat("Fade", &shapeComponent.fade, 0.01f);
 					}
-					
+				}
+			}
+
+			if (m_CurrentObject->HasScriptsAttached())
+			{
+				for (auto& script : m_CurrentObject->GetMonoScripts())
+				{
+					std::string scriptName = script->GetMonoClassName();
+
+					if (ImGui::CollapsingHeader(scriptName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+					{
+						for (auto& field : script->GetFields())
+						{
+							const auto& [name, type] = field;
+
+							switch (type)
+							{
+							case ScriptingType::Boolean:
+								{
+									auto value = script->GetField<bool>(name);
+									if (ImGui::Checkbox(name.c_str(), &value))
+									{
+										script->SetField<bool>(name, value);
+									}
+								}
+								break;
+							case ScriptingType::Vector3:
+								{
+									auto value = script->GetField<glm::vec3>(name);
+									if (ImGui::DragFloat3(field.first.c_str(), glm::value_ptr(value), .1f))
+									{
+										script->SetField<glm::vec3>(name, value);
+									}
+									break;
+								}
+
+							case ScriptingType::Float:
+								{
+									float value = script->GetField<float>(name);
+									if (ImGui::DragFloat(field.first.c_str(), &value, .1f))
+									{
+										script->SetField<float>(name, value);
+									}
+								}
+
+								break;
+							default:
+								break;
+							}
+						}
+					}
 				}
 			}
 		}

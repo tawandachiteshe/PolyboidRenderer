@@ -16,6 +16,7 @@ extern "C" {
 	typedef struct _MonoImage MonoImage;
 	typedef struct _MonoClassField MonoClassField;
 	typedef union _MonoError MonoError;
+	typedef struct _MonoType MonoType;
 }
 
 namespace Polyboid
@@ -30,7 +31,15 @@ namespace Polyboid
 		return *static_cast<T*>(mono_object_unbox(result));
 	}
 
-
+	enum class ScriptingType
+	{
+		Float,
+		Double,
+		String,
+		Boolean,
+		Int32,
+		Vector3
+	};
 
 	enum class AccessibilityType : uint8_t
 	{
@@ -70,6 +79,16 @@ namespace Polyboid
 
 	struct ScriptingData
 	{
+
+		std::unordered_map<std::string, ScriptingType> TypeMap = {
+			{ "System.Single", ScriptingType::Float },
+			{ "System.Double", ScriptingType::Double },
+			{ "System.Int32", ScriptingType::Int32 },
+			{ "System.String", ScriptingType::String },
+			{ "System.Boolean", ScriptingType::Boolean },
+			{ "Polyboid.Vector3", ScriptingType::Vector3 },
+		};
+
 		MonoAssembly* EngineAssembly = nullptr;
 		MonoAssembly* AppAssembly = nullptr;
 
@@ -78,13 +97,12 @@ namespace Polyboid
 
 		std::vector<std::string> Classes;
 		std::unordered_map<std::string, MonoClass*> MonoClasses;
+		std::unordered_map<std::string, std::vector<std::pair<std::string, ScriptingType>>> ClassFields;
 	};
 
 	class ScriptingEngine
 	{
 	private:
-
-		
 
 		static Unique<ScriptingData> s_Data;
 
@@ -101,6 +119,7 @@ namespace Polyboid
 	public:
 
 		static  std::vector<std::string>& GetClasses() { return s_Data->Classes; }
+		static  std::vector < std::pair<std::string, ScriptingType>>& GetClassFields(const std::string& className) { return s_Data->ClassFields.at(className); }
 
 		static void ShutDown();
 		static MonoString* ToMonoString(const std::string& str);
@@ -125,7 +144,15 @@ namespace Polyboid
 		static bool CheckMonoError(MonoError& error);
 		static std::string MonoStringToUTF8(MonoString* monoString);
 		static void SetMonoFieldValue(MonoObject* instance, MonoClassField* field, void* value);
+		static void GetMonoFieldValue(MonoObject* instance, MonoClassField* field, void* value);
+
 		static void* GetMonoValueToCPP(MonoObject* instance);
+		static int GetClassFieldNumCount(MonoObject* object);
+		static MonoClassField* GetClassFields(MonoObject* object, void* iterator);
+		static const char* GetMonoClassFieldName(MonoClassField* field);
+		static MonoType* GetMonoClassFieldType(MonoClassField* field);
+		static const char* GetMonoClassFieldTypeName(MonoType* type);
+
 
 
 		//templelates here
@@ -189,10 +216,10 @@ namespace Polyboid
 
 			if (field == nullptr)
 			{
-				return 0;
+				return T{};
 			}
 
-			mono_field_get_value(instance, field, &value);
+			GetMonoFieldValue(instance, field, &value);
 			return value;
 		}
 
@@ -201,14 +228,11 @@ namespace Polyboid
 		{
 			auto field = GetMonoClassField(instance, fieldName);
 
-			
-
 			if (field == nullptr)
 			{
 				return;
 			}
 
-	
 			SetMonoFieldValue(instance, field, &value);
 			
 
@@ -241,18 +265,32 @@ namespace Polyboid
 	{
 	private:
 		MonoObject* m_Instance = nullptr;
+		std::string m_ClassName;
+
 	public:
+
+		std::string& GetMonoClassName() { return m_ClassName; }
+
+		std::vector<std::pair<std::string, ScriptingType>> GetFields() { return ScriptingEngine::GetClassFields(m_ClassName); }
 
 		operator MonoObject* () const { return m_Instance; }
 
-		MonoClassInstance(MonoClass* klass)
+		MonoClassInstance(MonoClass* klass, const std::string& className = "hehe") : m_ClassName(className)
 		{
 			m_Instance = ScriptingEngine::CreateMonoClassInstance(klass);
+			
 		}
 
-		MonoClassInstance(const std::string& nameSpaceName, const std::string& className, MonoAssembly* assembly)
+		MonoClassInstance(const std::string& nameSpaceName, const std::string& className, MonoAssembly* assembly) 
 		{
+			std::string tempClass = className;
+			std::string tempName = nameSpaceName;
+
+			m_ClassName = tempName.append(".").append(className);
+			
+
 			m_Instance = ScriptingEngine::CreateMonoClassInstance(nameSpaceName.c_str(), className.c_str(), assembly);
+			
 		}
 
 		template<typename T>
@@ -295,10 +333,7 @@ namespace Polyboid
 
 		void InvokeMethod(const std::string& methodName, std::initializer_list<void*> params = {})
 		{
-			if(ScriptingEngine::InvokeMonoMethod(m_Instance, methodName.c_str(), params) == nullptr)
-			{
-				
-			}
+			ScriptingEngine::InvokeMonoMethod(m_Instance, methodName.c_str(), params);
 		}
 
 		template<typename ReturnType>

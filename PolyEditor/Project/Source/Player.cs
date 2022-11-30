@@ -9,13 +9,15 @@ namespace Polyboid
 {
     public class Player : GameObject
     {
-        public float power;
+        public float power = 0;
         public String name;
         public Vector3 position;
-        public bool isHaha;
+        public bool usePosition;
         public int Hehe;
         public double ju;
-       // public uint id;
+        public uint id;
+        public ulong hahadsahuid;
+
        private Vector3 dir;
 
         public void OnConstruct()
@@ -36,9 +38,23 @@ namespace Polyboid
 
         public void OnUpdate(float dt)
         {
+
+            // Console.WriteLine("Power {0}", power);
+
+            dir.x = power;
+
+            if (usePosition)
+            {
+                dir = position;
+            }
+           
+
+            var transform = GetComponent<Transform>();
+            transform.Position = dir;
+
             if (Input.IsKeyPressed(KeyCodes.A))
             {
-                var transform = GetComponent<Transform>();
+           
                 dir.x -= 2.0f * dt;
                 transform.Position = dir;
                 Console.WriteLine("A pressed");
@@ -46,21 +62,20 @@ namespace Polyboid
 
             if ((Input.IsKeyPressed(KeyCodes.D)))
             {
-                var transform = GetComponent<Transform>();
+                
                 dir.x += 2.0f * dt;
                 transform.Position = dir;
             }
 
             if ((Input.IsKeyPressed(KeyCodes.W)))
             {
-                var transform = GetComponent<Transform>();
                 dir.y -= 2.0f * dt;
                 transform.Position = dir;
             }
 
             if ((Input.IsKeyPressed(KeyCodes.S)))
             {
-                var transform = GetComponent<Transform>();
+                
                 dir.y += 2.0f * dt;
                 transform.Position = dir;
             }

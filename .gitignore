@@ -410,3 +410,4 @@ bin
 
 # JetBrains Rider
 *.sln.iml
+*.lib
