@@ -60,7 +60,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Source\BoxCrawl.cs" />
+    <Compile Include="Source\Inventory.cs" />
     <Compile Include="Source\Player.cs" />
+    <Compile Include="Source\RedBox.cs" />
+    <Compile Include="Source\Tawanda.cs" />
+    <Compile Include="Source\Weapon.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\PolyboidManaged\PolyboidManaged.csproj">

@@ -19,6 +19,7 @@ namespace Polyboid
         uint32_t m_ID = entt::null;
 		Ref<World> GetWorld() { return  GameStatics::GetCurrentWorld(); }
         std::vector<Ref<MonoClassInstance>> m_MonoScripts;
+        std::vector<std::string> m_MonoScriptsName;
 
     public:
         virtual ~GameObject();
@@ -30,6 +31,8 @@ namespace Polyboid
         void AttachScript(const std::string& monoKlassName);
         bool HasScriptsAttached() const { return !m_MonoScripts.empty(); }
         std::vector<Ref<MonoClassInstance>>& GetMonoScripts() { return m_MonoScripts; }
+        void ReAttachScripts();
+        void ClearScripts();
 
 
         void SetID(uint32_t id) { m_ID = id; }

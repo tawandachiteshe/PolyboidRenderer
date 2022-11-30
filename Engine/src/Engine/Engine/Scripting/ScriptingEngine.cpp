@@ -69,7 +69,6 @@ namespace Polyboid
 
 		MonoDomain* rootDomain = mono_jit_init("PolyboidRuntime");
 
-
 		if (rootDomain == nullptr)
 		{
 			return;
@@ -77,8 +76,7 @@ namespace Polyboid
 
 		s_Data->RootDomain = rootDomain;
 
-		s_Data->AppDomain = mono_domain_create_appdomain("PolyboidAppDomain", nullptr);
-		mono_domain_set(s_Data->AppDomain, true);
+		InitAppDomain();
 
 		if (false)
 			mono_debug_domain_create(s_Data->RootDomain);
@@ -86,6 +84,12 @@ namespace Polyboid
 		// mono_thread_set_main(mono_thread_current());
 
 		s_Data->Classes.reserve(100);
+	}
+
+	void ScriptingEngine::InitAppDomain()
+	{
+		s_Data->AppDomain = mono_domain_create_appdomain("PolyboidAppDomain", nullptr);
+		mono_domain_set(s_Data->AppDomain, true);
 	}
 
 	MonoAssembly* ScriptingEngine::LoadAssembly(const std::string& assemblyPath)
@@ -126,16 +130,7 @@ namespace Polyboid
 
 		PrintAssemblyType(s_Data->EngineAssembly);
 
-
-		// MonoClassInstance m_Instance("Polyboid", "Tawanda");
-		// m_Instance.InvokeMethod("PrintAll");
-		// m_Instance.SetField<float>("health", 200);
-		// m_Instance.SetField<std::string>("m_Name", "TAwand ais cool templan");
-		// m_Instance.InvokeMethod("PrintAll");
-
 		GetClassesInfo();
-
-		//InvokeMonoMethod(m_Instance, "SayName", 3, params);
 	}
 
 	void ScriptingEngine::PrintAssemblyType(MonoAssembly* assembly)
@@ -195,7 +190,6 @@ namespace Polyboid
 			s_Data->MonoClasses[fullName] = monoClass;
 
 			int fieldCount = mono_class_num_fields(monoClass);
-			spdlog::info("{} has {} fields", className, fieldCount);
 			void* iterator = nullptr;
 
 			std::vector<std::pair<std::string, ScriptingType>> fieldNameAndType;
@@ -213,7 +207,6 @@ namespace Polyboid
 					if (s_Data->TypeMap.find(typeName) != s_Data->TypeMap.end())
 					{
 						fieldNameAndType.push_back({ fieldName, s_Data->TypeMap[typeName] });
-						spdlog::info("Type of field {} is {}", fieldName, typeName);
 					}
 				}
 			}
@@ -221,6 +214,23 @@ namespace Polyboid
 			s_Data->ClassFields[fullName] = fieldNameAndType;
 
 		}
+	}
+
+	void ScriptingEngine::ReloadAssembly()
+	{
+		mono_domain_set(mono_get_root_domain(), false);
+
+		mono_domain_unload(s_Data->AppDomain);
+
+		s_Data->Classes.clear();
+		s_Data->ClassFields.clear();
+		s_Data->MonoClasses.clear();
+
+		InitAppDomain();
+
+		LoadAssemblies();
+
+
 	}
 
 	void ScriptingEngine::ShutDown()

@@ -25,6 +25,7 @@
 
 #include "Editor/Editor.h"
 #include "Engine/Engine/Engine.h"
+#include "Engine/Engine/Scripting/ScriptingEngine.h"
 
 
 namespace Polyboid
@@ -215,6 +216,22 @@ namespace Polyboid
                     }
 
 	              
+                }
+
+                if (ImGui::MenuItem("Reload C#", "Ctrl + R"))
+                {
+
+                    for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
+                    {
+                        gameObject->ClearScripts();
+                    }
+
+                    ScriptingEngine::ReloadAssembly();
+
+                    for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
+                    {
+                        gameObject->ReAttachScripts();
+                    }
                 }
 
                 if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))

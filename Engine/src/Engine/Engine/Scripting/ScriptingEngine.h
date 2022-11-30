@@ -108,6 +108,8 @@ namespace Polyboid
 
 		static void InitMono();
 
+		static void InitAppDomain();
+
 		static MonoAssembly* LoadAssembly(const std::string& assemblyPath);
 
 		static void LoadAssemblies();
@@ -116,7 +118,11 @@ namespace Polyboid
 
 		static void GetClassesInfo();
 
+		
+
 	public:
+
+		static void ReloadAssembly();
 
 		static  std::vector<std::string>& GetClasses() { return s_Data->Classes; }
 		static  std::vector < std::pair<std::string, ScriptingType>>& GetClassFields(const std::string& className) { return s_Data->ClassFields.at(className); }

@@ -56,5 +56,25 @@ namespace Polyboid
 		klass->SetField("gameObjectID", static_cast<uint64_t>(GetComponent<IDComponent>().id));
 		klass->InvokeMethod("OnConstruct");
 		m_MonoScripts.emplace_back(klass);
+		m_MonoScriptsName.emplace_back(monoKlassName);
+	}
+
+	void GameObject::ReAttachScripts()
+	{
+		m_MonoScripts.clear();
+
+		for (auto& name : m_MonoScriptsName)
+		{
+			auto klass = std::make_shared<MonoClassInstance>(ScriptingEngine::FindClass(name), name);
+			klass->SetField("gameObjectID", static_cast<uint64_t>(GetComponent<IDComponent>().id));
+			klass->InvokeMethod("OnConstruct");
+			m_MonoScripts.emplace_back(klass);
+		}
+
+	}
+
+	void GameObject::ClearScripts()
+	{
+		m_MonoScripts.clear();
 	}
 }
