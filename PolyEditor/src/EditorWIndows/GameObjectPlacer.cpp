@@ -5,6 +5,7 @@
 
 #include "Engine/Engine/Gameplay/GameStatics.h"
 #include "Engine/Engine/Gameplay/World.h"
+#include "Engine/Engine/Scripting/ScriptingEngine.h"
 
 namespace Polyboid 
 {
@@ -25,9 +26,23 @@ namespace Polyboid
 
 		ImGui::Begin(m_Name.c_str());
 
-		// ImGui::Columns(12, "GameObjectsPlacer", false);
+		ImGui::Columns(4, "GameObjectsPlacer", false);
 
-		for (auto gameObjectType : m_GameObjects)
+		for (const auto& name : ScriptingEngine::GetClasses())
+		{
+			if (ImGui::ImageButton(name.c_str(), (ImTextureID)Resource::GetIcons().at("game_object")->GetTextureID(), { 48, 48 }, { 1, 1 }, { 0, 0 }))
+			{
+				auto handle = GameStatics::GetCurrentWorld()->CreateGameObject(name);
+				handle->AttachScript(name);
+			}
+			ImGui::TextWrapped(name.c_str());
+			ImGui::NextColumn();
+		}
+
+
+		ImGui::Columns(4, "GameObjectsPlacer", false);
+		//prebuild objects
+		for (const auto gameObjectType : m_GameObjects)
 		{
 			switch (gameObjectType)
 			{
@@ -48,8 +63,8 @@ namespace Polyboid
 					ImGui::EndPopup();
 				}
 
-				ImGui::SetCursorPosX(20);
 				ImGui::TextWrapped("Empty");
+				ImGui::NextColumn();
 				break;
 			default:
 				break;

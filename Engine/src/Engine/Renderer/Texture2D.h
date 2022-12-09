@@ -25,9 +25,14 @@ namespace Polyboid
         
     public:
         Texture(const std::string& textureImagePath);
-        Texture(uint32_t width, uint32_t height);
+        Texture(int32_t width, int32_t height, int32_t channels);
         void SetData(void* data, uint32_t size);
         void Bind(uint32_t slot = 0);
+        int32_t GetWidth() const { return m_Width; }
+        int32_t GetHeight() const {
+            return m_Height;
+        }
+
 
         uint32_t GetTextureID() const { return m_TextureID; }
         
@@ -36,7 +41,7 @@ namespace Polyboid
         ~Texture();
 
         static Ref<Texture> MakeTexture2D(const std::string& textureImagePath);
-        static Ref<Texture> MakeTexture2D(uint32_t width, uint32_t height);
+        static Ref<Texture> MakeTexture2D(int32_t width, int32_t height, int32_t channels);
         
     };
 

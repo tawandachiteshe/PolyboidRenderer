@@ -2,18 +2,21 @@
 #include <imgui.h>
 
 #include "Editor/Events/EditorEvents.h"
+#include "Engine/Engine/Input.h"
 #include "Engine/Engine/ECS/Components.h"
 #include "Engine/Engine/Events/EventSystem.h"
 #include "Engine/Engine/Gameplay/GameStatics.h"
 #include "Engine/Engine/Gameplay/World.h"
-#include "spdlog/spdlog.h"
-
+#include "Engine/Engine/MeshImporter/MeshImporter.h"
+#include "fstream"
+#include "Engine/Renderer/Texture3D.h"
 
 namespace Polyboid
 {
 	WorldOutlinerWindow::WorldOutlinerWindow(const std::string& name)
 	{
 		m_Name = name;
+
 	}
 
 	WorldOutlinerWindow::~WorldOutlinerWindow()
@@ -67,6 +70,18 @@ namespace Polyboid
 					}
 
 					ImGui::EndPopup();
+				}
+
+				if (Input::KeyPressed(KeyCodes::DELETE_KEY))
+				{
+					auto* gameObject = GameStatics::GetCurrentWorld()->FindGameObjectByID(m_CurrentGameObject);
+					if (gameObject != nullptr)
+					{
+						GameObjectOutlineDeleted event;
+						EventSystem::GetDispatcher()->Dispatch(event);
+						GameStatics::GetCurrentWorld()->DestroyGameObject(gameObject);
+						m_CurrentGameObject = 0;
+					}
 				}
 
 				

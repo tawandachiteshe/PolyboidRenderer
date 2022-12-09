@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Polyboid;
 
-namespace Sandbox.Source
+namespace Polyboid
 {
     internal class Inventory : GameObject
     {

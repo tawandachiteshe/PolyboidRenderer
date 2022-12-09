@@ -63,6 +63,7 @@
     <Compile Include="Source\Inventory.cs" />
     <Compile Include="Source\Player.cs" />
     <Compile Include="Source\RedBox.cs" />
+    <Compile Include="Source\RotateX.cs" />
     <Compile Include="Source\Tawanda.cs" />
     <Compile Include="Source\Weapon.cs" />
   </ItemGroup>

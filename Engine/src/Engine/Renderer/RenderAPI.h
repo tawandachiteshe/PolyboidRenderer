@@ -27,6 +27,7 @@ namespace Polyboid
 			glEnable(GL_DEPTH_TEST);
 			glCullFace(GL_BACK);
 			glFrontFace(GL_CW);
+			glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 		}
 
 		static void CreateViewport(const glm::vec2& viewportSize)

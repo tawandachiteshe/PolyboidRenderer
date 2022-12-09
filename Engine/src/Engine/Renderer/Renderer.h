@@ -29,8 +29,10 @@ namespace Polyboid
         static void Clear(const glm::vec4& color = { 0.2, 0.2, 0.2, 1.0 });
         static void Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
 
-        static void BeginDraw(const Ref<Camera3D>& camera);
+        static void BeginDraw();
         static void EndDraw();
+        static void EnableDepthMask();
+        static void DisableDepthMask();
 
         static void DrawIndexed(uint32_t count = 0, uint32_t elementCount = 4);
         static void CreateViewPort(const glm::vec2& viewportSize);

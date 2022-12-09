@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "RenderAPI.h"
+#include "RenderCommand.h"
 #include "Renderer2D.h"
 #include "glad/glad.h"
 #include "glm/vec4.hpp"
@@ -35,21 +36,30 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
 
         shader->Bind();
-        s_RenderStorage->m_VA = va;
-        s_RenderStorage->m_Shader = shader;
-        s_RenderStorage->m_Shader->SetMat4("uTransform", transform);
+        va->Bind();
+        shader->SetMat4("uTransform", transform);
+        RenderCommand::DrawIndexed(va->GetIndexBuffer()->GetCount());
     }
 
-    void Renderer::BeginDraw(const Ref<Camera3D>& camera)
+    void Renderer::BeginDraw()
     {
         POLYBOID_PROFILE_FUNCTION();
-       
-         s_RenderStorage->m_Shader->SetMat4("uViewProj", camera->GetViewProjectionMatrix());
+
     }
 
     void Renderer::EndDraw()
     {
         POLYBOID_PROFILE_FUNCTION();
+    }
+
+    void Renderer::EnableDepthMask()
+    {
+        glDepthMask(GL_TRUE);
+    }
+
+    void Renderer::DisableDepthMask()
+    {
+        glDepthMask(GL_FALSE);
     }
 
 

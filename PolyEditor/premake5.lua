@@ -14,6 +14,7 @@ project "PolyEditor"
 
         "%{wks.location}/Engine/src",
         "%{wks.location}/Engine/Vendor/spdlog/include",
+        "%{wks.location}/Engine/Vendor/assimp/include",
         "%{wks.location}/Engine/Vendor/glfw/include",
         "%{wks.location}/Engine/Vendor/glm",
         "%{wks.location}/Engine/Vendor/easy_profiler_core/include",

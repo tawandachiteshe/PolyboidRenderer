@@ -49,13 +49,13 @@ namespace Polyboid
         stbi_image_free(data);
     }
 
-    Texture::Texture(uint32_t width, uint32_t height): m_Width(width), m_Height(height)
+    Texture::Texture(int32_t width, int32_t height, int32_t channels): m_Width(width), m_Height(height), m_Channels(channels)
     {
 
         POLYBOID_PROFILE_FUNCTION();
 
-        m_InternalFormat = GL_RGBA8;
-        m_DataFormat = GL_RGBA;
+        m_InternalFormat = channels == 4 ? GL_RGBA8 : GL_RGB8;
+        m_DataFormat = channels == 4 ? GL_RGBA : GL_RGB;
 
         glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
         glTextureStorage2D(m_TextureID, 1, m_InternalFormat, m_Width, m_Height);
@@ -99,10 +99,10 @@ namespace Polyboid
         return std::make_shared<Texture>(textureImagePath);
     }
 
-    Ref<Texture> Texture::MakeTexture2D(uint32_t width, uint32_t height)
+    Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, int32_t channels)
     {
         POLYBOID_PROFILE_FUNCTION();
 
-        return std::make_shared<Texture>(width, height);
+        return std::make_shared<Texture>(width, height, channels);
     }
 }

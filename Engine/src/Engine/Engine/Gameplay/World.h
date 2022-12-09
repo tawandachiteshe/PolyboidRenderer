@@ -6,9 +6,12 @@
 
 #include "GameStatics.h"
 #include "Engine/Engine/ECS/GameObject.h"
+#include "Engine/Renderer/Texture3D.h"
+#include "Engine/Renderer/VertexBufferArray.h"
 
 namespace Polyboid
 {
+	class Shader;
 	class GameObject;
 
 	template<typename T, typename ... Args>
@@ -24,7 +27,11 @@ namespace Polyboid
 
 	class World
 	{
-
+		//temp
+	private:
+		Ref<Texture3D> m_HDR;
+		Ref<VertexBufferArray> m_Cube;
+		Ref<Shader> m_Shader;
 
 	public:
 		World(const std::string& name = "World");

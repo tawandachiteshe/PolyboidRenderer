@@ -18,6 +18,7 @@ mono_crash.*
 git-sizer.exe
 bin/
 lib/
+*.hdr
 
 # Build results
 [Dd]ebug/
@@ -411,3 +412,4 @@ bin
 # JetBrains Rider
 *.sln.iml
 *.lib
+PolyEditor/assimp-vc143-mt.dll

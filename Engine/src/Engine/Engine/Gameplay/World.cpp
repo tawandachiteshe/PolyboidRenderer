@@ -8,6 +8,8 @@
 #include "GameStatics.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Engine/ECS/Components.h"
+#include "Engine/Engine/MeshImporter/MeshImporter.h"
+#include "Engine/Renderer/Renderer.h"
 
 
 namespace Polyboid
@@ -16,6 +18,11 @@ namespace Polyboid
 	{
 		
 		m_GameObjects.reserve(200000);
+
+		m_HDR = std::make_shared<Texture3D>("Assets/HDRs/thatch_chapel_2k.hdr");
+		m_Cube = MeshImporter::ReadForRendering("Assets/Models/cube.fbx");
+		m_Shader = Shader::MakeShader("Assets/Shaders/skybox.vert", "Assets/Shaders/skybox.frag");
+
 	}
 
 	void World::OnBeginPlay() const
@@ -248,6 +255,13 @@ namespace Polyboid
 			}
 
 		}
+
+		Renderer::BeginDraw();
+		Renderer::DisableDepthMask();
+		m_HDR->Bind();
+		Renderer::Submit(m_Cube, m_Shader);
+		Renderer::EnableDepthMask();
+		Renderer::EndDraw();
 
 		const auto& camera = GameStatics::GetCurrentCamera();
 
