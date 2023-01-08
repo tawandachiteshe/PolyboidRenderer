@@ -9,6 +9,7 @@
 #include "Engine/Engine/Base.h"
 #include "Engine/Renderer/Framebuffer.h"
 #include "Engine/Renderer/UniformBuffer.h"
+#include "glm/vec2.hpp"
 
 namespace Polyboid
 {
@@ -30,9 +31,13 @@ namespace Polyboid
 
 	private:
 		GameObject* m_CurrentGameObject = nullptr;
+		bool m_Playmode = false;
 		bool m_Focused = false;
 		ImGuizmo::OPERATION m_GizmoOperation = ImGuizmo::TRANSLATE;
-		ImGuizmo::MODE m_GizmoMode = ImGuizmo::WORLD;
+		ImGuizmo::MODE m_GizmoMode = ImGuizmo::LOCAL;
+
+		glm::vec2 m_ViewportBounds[2];
+		glm::vec2 m_ViewportSize;
 
 		void OnGameObjectSelected(const Event& event);
 		void OnGameObjectDeleted(const Event& event);

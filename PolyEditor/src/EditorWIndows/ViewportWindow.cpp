@@ -16,6 +16,9 @@
 
 #include <fstream>
 #include "Editor/Editor.h"
+#include "Editor/Resource.h"
+#include "Engine/Engine/Engine.h"
+#include "Engine/Renderer/MaterialLibrary.h"
 
 
 namespace Polyboid
@@ -40,13 +43,29 @@ namespace Polyboid
 
 
 		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 1000.0f);
-		m_Framebuffer = Framebuffer::MakeFramebuffer({ width, height });
+		m_Framebuffer = Framebuffer::MakeFramebuffer({ width, height, { { FramebufferTextureFormat::RGBA8 } } });
+		Engine::SetMainFramebuffer(m_Framebuffer);
+		Engine::SetCurrentFrameBuffer(m_Framebuffer);
 
 		GameStatics::SetCurrentCamera(m_ViewportCamera);
 		Editor::SetEditorCamera(m_ViewportCamera);
 
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_DELETED, BIND_EVENT(OnGameObjectDeleted));
+
+		auto gameObject = GameStatics::GetCurrentWorld()->CreateGameObject("Lighting Ttext");
+		auto light = GameStatics::GetCurrentWorld()->CreateGameObject("Light");
+		UUID id;
+		gameObject->AddComponent<MeshRendererComponent>(id);
+		MaterialLibrary::CreateMaterial(id, "Default");
+		auto& mesh = gameObject->GetComponent<MeshRendererComponent>();
+		mesh.assetName = "cube.fbx";
+		mesh.materialId = id;
+		auto& Tc = light->GetComponent<TransformComponent>();
+		Tc.Position = { 0, 1, 0 };
+		//Tc.Rotation = glm::radians(glm::vec3{ 45, 90, 15 });
+
+		light->AddComponent<PointLightComponent>();
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -85,9 +104,35 @@ namespace Polyboid
 	{
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 1, 2 });
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0, 0 });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 2, 02});
 		
 		ImGui::Begin(m_Name.c_str());
+
+		auto& icons = Resource::GetIcons();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		auto xy = ImGui::GetWindowContentRegionMax();
+
+
+		ImGui::SetCursorPosX(xy.x * 0.5f);
+
+
+		if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(icons[m_Playmode ? "stop" : "play"]->GetTextureID()),
+			{ 32, 32 }))
+		{
+
+			m_Playmode = !m_Playmode;
+
+			if (m_Playmode)
+			{
+				EventSystem::GetDispatcher()->Dispatch(EditorPlayModeEnter());
+			}
+			else
+			{
+				EventSystem::GetDispatcher()->Dispatch(EditorPlayModeExit());
+			}
+		}
+
 
 		 ImGui::BeginChild("GameRender");
 
@@ -103,29 +148,26 @@ namespace Polyboid
 
 		if (boolIsNotZero(contentSize) && DidWindowSizeChange(m_LastViewportWindowSize, contentSize))
 		{
-			m_Framebuffer->Resize(contentSize.x, contentSize.y);
+			Engine::GetCurrentFrameBuffer()->Resize(contentSize.x, contentSize.y);
 			m_ViewportCamera->SetViewportSize(contentSize.x, contentSize.y);
 		}
 
 		 m_LastViewportWindowSize = contentSize;
 
 		 auto wsize = ImGui::GetWindowSize();
-		 ImGui::Image((ImTextureID)m_Framebuffer->GetColorAttachment0TextureID(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+		 ImGui::Image((ImTextureID)Engine::GetCurrentFrameBuffer()->GetColorAttachment0(), wsize, ImVec2(0, 1), ImVec2(1, 0));
 
-
-		
-
-		ImGuizmo::SetOrthographic(false);
-		ImGuizmo::SetDrawlist();
-		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, contentSize.x, contentSize.y);
+		 auto pos = ImGui::GetWindowPos();
 
 
 		if (m_CurrentGameObject != nullptr)
 		{
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			ImGuizmo::SetRect(pos.x, pos.y, contentSize.x, contentSize.y);
 
 			auto& transform = m_CurrentGameObject->GetComponent<TransformComponent>();
-			auto mat = glm::mat4(transform.GetTransform());
-	
+			auto mat = transform.GetTransform();
 
 			auto& view = m_ViewportCamera->GetViewMatrix();
 			auto& proj = m_ViewportCamera->GetProjection();
@@ -152,9 +194,9 @@ namespace Polyboid
 				glm::value_ptr(mat));
 
 
-			glm::vec3 pos;
-			glm::quat rot;
-			glm::vec3 scale;
+			static glm::vec3 pos = transform.Position;
+			static glm::quat rot = transform.Rotation;
+			static glm::vec3 scale = transform.Scale;
 
 
 			if (ImGuizmo::IsUsing())
@@ -162,19 +204,14 @@ namespace Polyboid
 				Math::DecomposeMatrix(pos, scale, rot, mat);
 				glm::vec3 rotEuler = glm::eulerAngles(rot);
 
+				glm::vec3 delta = rotEuler - transform.Rotation;
 				transform.Position = pos;
 				transform.Scale = scale;
-				transform.Rotation = rotEuler;
+				transform.Rotation += delta;
 			}
 
 		}
-		
 
-		
-
-		//ImGuizmo::DrawGrid(glm::value_ptr(view), glm::value_ptr(proj), glm::value_ptr(glm::mat4(1.0f)), 100);
-
-		//spdlog::info(" imguizmo is over {0} is using {1} {2}", ImGuizmo::IsOver(), ImGuizmo::IsUsing(), ImGui::IsMouseClicked(0));
 
 		ImGui::EndChild();
 
@@ -193,19 +230,14 @@ namespace Polyboid
 		{
 			m_ViewportCamera->OnUpdate(ts);
 		}
-	
-		m_Framebuffer->Bind();
-		Renderer::Clear({ .2f, .2f, .2f, 1.0f });
+
+
 		//ViewportRenderer::SetUniformBuffers(m_ViewportCamera->GetViewProjection());
 
 		//Editor rendering here....
 
-		GameStatics::GetCurrentWorld()->Render();
+		GameStatics::GetCurrentWorld()->Render(ts);
 
-		
-	
-
-		m_Framebuffer->UnBind();
 
 	}
 

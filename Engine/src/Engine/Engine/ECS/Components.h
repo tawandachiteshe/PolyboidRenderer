@@ -7,6 +7,7 @@
 #include "glm/gtx/rotate_normalized_axis.hpp"
 #include "glm/gtx/transform.hpp"
 #include "Engine/Engine/Base.h"
+#include "spdlog/spdlog.h"
 
 namespace Polyboid
 {
@@ -15,6 +16,20 @@ namespace Polyboid
 		Quad,
         Circle
 	};
+
+    enum class LightType
+    {
+        Directional = 0,
+        Spot = 1,
+        Point = 2
+	};
+
+    enum class AttentuationType
+    {
+        InverseSquare = 0,
+    	Exp = 1,
+        Smooth = 2
+    };
 
     enum class CameraProjectionType
     {
@@ -101,6 +116,70 @@ namespace Polyboid
         ShapeComponent() = default;
         ShapeComponent(const ShapeComponent& shape) = default;
         ShapeComponent(const glm::vec4& color): color(color) {}
+    };
+
+
+    struct LightComponent
+    {
+        glm::vec4 color = glm::vec4{ 1.0f };
+        LightType type = LightType::Directional;
+
+        LightComponent(const glm::vec4& color) : color(color) {}
+        LightComponent() = default;
+        LightComponent(const LightComponent& shape) = default;
+
+    };
+
+    struct DirectionLightComponent : LightComponent
+    {
+        glm::vec3 direction = { 0, 1, 0};
+        float Energy = 2.0;
+
+        DirectionLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        DirectionLightComponent() = default;
+        DirectionLightComponent(const DirectionLightComponent& shape) = default;
+    };
+
+    struct SpotLightComponent : LightComponent
+    {
+        glm::vec3 direction = { 0, 1, 0 };
+        float InnerAngle = 45.0f;
+        float OuterAngle = 2.5f;
+        float Distance = 1.5;
+        float Energy = 2.0;
+
+        SpotLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        SpotLightComponent() = default;
+        SpotLightComponent(const SpotLightComponent& shape) = default;
+
+    };
+
+
+    struct PointLightComponent : LightComponent
+    {
+
+        float Distance = 1.5;
+        float Energy = 2.0;
+        
+
+        PointLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        PointLightComponent() = default;
+        PointLightComponent(const PointLightComponent& shape) = default;
+
+
+
+    };
+
+    struct MeshRendererComponent
+    {
+        std::string assetName;
+        UUID assetId;
+        uint64_t materialId = assetId;
+
+        MeshRendererComponent() = default;
+        MeshRendererComponent(const MeshRendererComponent& mesh) = default;
+        explicit MeshRendererComponent(const UUID& assetID) : assetId(assetID) {}
+        explicit MeshRendererComponent(std::string assetName) : assetName(std::move(assetName)) {}
     };
 
     struct TagComponent

@@ -21,6 +21,7 @@ project "Engine"
         "Vendor/glad/include",
         "Vendor/assimp/include",
         "Vendor/mono/include",
+        "Vendor/spirv/include",
         "Vendor/entt",
         "Vendor/imgui/src",
     }

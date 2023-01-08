@@ -246,46 +246,6 @@ namespace Polyboid
 
 
 
-        static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar;
-
-
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
-
-    	ImGui::Begin("##UIToolBar", nullptr, flags);
-
-        auto& icons = Resource::GetIcons();
-
-        ImGuiStyle& style = ImGui::GetStyle();
-        auto xy = ImGui::GetWindowContentRegionMax();
-       
-
-        ImGui::SetCursorPosX(xy.x  * 0.5f);
-        ImGui::SetCursorPosY((xy.y * 0.5f) - 15);
-
-
-        if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(icons[m_PlayMode ? "stop" : "play"]->GetTextureID()),
-            { 32, 32 }))
-        {
-	       
-            m_PlayMode = !m_PlayMode;
-
-            if (m_PlayMode)
-            {
-                EventSystem::GetDispatcher()->Dispatch(EditorPlayModeEnter());
-            }
-            else
-            {
-                EventSystem::GetDispatcher()->Dispatch(EditorPlayModeExit());
-            }
-        }
-
-
-
-        ImGui::End();
-        ImGui::PopStyleVar(2);
-
-
         ImGui::End();
     }
 

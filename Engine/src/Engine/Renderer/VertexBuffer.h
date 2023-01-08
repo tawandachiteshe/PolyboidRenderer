@@ -25,6 +25,7 @@ namespace Polyboid
         
     public:  
         VertexBufferLayout(const BufferComponent& component, const std::string& name) : m_Stride(0), m_Bytes(0), name(name), component(component) {}
+        VertexBufferLayout(const std::string& name, const BufferComponent& component) : m_Stride(0), m_Bytes(0), name(name), component(component) {}
 
         std::string name;
         BufferComponent component;

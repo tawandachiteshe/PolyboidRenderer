@@ -9,6 +9,7 @@
 #include "Engine/Renderer/Swapchain.h"
 #include <GLFW/glfw3.h>
 
+#include "AssetManager.h"
 #include "ImguiSetup.h"
 #include "ECS/ECSManager.h"
 #include "Engine/Renderer/Renderer2D.h"
@@ -44,6 +45,7 @@ namespace Polyboid
         Imgui::Init();
         ECSManager::Init();
         ScriptingEngine::Init();
+        AssetManager::Init();
 
         //multiple overides maybe but is it efficieant and maintainable;;
 

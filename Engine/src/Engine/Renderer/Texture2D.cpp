@@ -9,23 +9,91 @@
 
 namespace Polyboid
 {
-    Texture::Texture(const std::string& textureImagePath)
+	Texture::Texture(int32_t width, int32_t height, const TextureSettings& settings): m_Width(width), m_Height(height), m_InternalFormat(0)
+	{
+		switch (settings.format)
+		{
+			case TextureInternalFormat::RG16F:
+	            m_InternalFormat = GL_RG32F;
+	            m_DataFormat = GL_RG;
+	            break;
+			case TextureInternalFormat::RGBA32F:
+	            m_InternalFormat = GL_RGBA32F;
+	            m_DataFormat = GL_RGBA;
+	            break;
+			case TextureInternalFormat::RGBA8:
+	            m_InternalFormat = GL_RGBA8;
+	            m_DataFormat = GL_RGBA;
+	            break;
+			case TextureInternalFormat::R32F:
+				m_InternalFormat = GL_R32F;
+                m_DataFormat = GL_RED;
+				break;
+            case TextureInternalFormat::R32I:
+                m_InternalFormat = GL_R32I;
+                m_DataFormat = GL_RED;
+                break;
+		case TextureInternalFormat::DEPTH:
+            m_InternalFormat = GL_UNSIGNED_INT_24_8;
+            m_DataFormat = GL_DEPTH_COMPONENT;
+            break;
+		}
+
+
+		switch (settings.wrap)
+		{
+            case TextureWrap::Repeat:
+                m_TextureWrap = GL_REPEAT;
+                break;
+            case TextureWrap::MirroredRepeat:
+                m_TextureWrap = GL_MIRRORED_REPEAT;
+                break;
+            case TextureWrap::ClampToEdge:
+                m_TextureWrap = GL_CLAMP_TO_EDGE;
+                break;
+		}
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+
+        glTextureStorage2D(m_TextureID, 1, m_InternalFormat, m_Width, m_Height);
+
+        glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, m_TextureWrap);
+        glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, m_TextureWrap);
+
+        glCreateSamplers(1, &m_SamplersID);
+	}
+
+    Texture::Texture(const std::string& textureImagePath, bool isHdri)
     {
 
         POLYBOID_PROFILE_FUNCTION();
 
         stbi_set_flip_vertically_on_load(true);
-        uint8_t* data = stbi_load(textureImagePath.c_str(), &m_Width, &m_Height, &m_Channels, 0);
+    	uint8_t* data = nullptr;
+        float* fdata = nullptr;
+
+        if (isHdri)
+        {
+            fdata = stbi_loadf(textureImagePath.c_str(), &m_Width, &m_Height, &m_Channels, 0);
+        }
+        else
+        {
+            data = stbi_load(textureImagePath.c_str(), &m_Width, &m_Height, &m_Channels, 0);
+        }
+
 
         GLenum internalFormat = 0, dataFormat = 0;
         if (m_Channels == 4)
         {
-            internalFormat = GL_RGBA8;
+            internalFormat = isHdri ? GL_RGBA32F : GL_RGBA8;
             dataFormat = GL_RGBA;
         }
         else if (m_Channels == 3)
         {
-            internalFormat = GL_RGB8;
+            internalFormat = isHdri ? GL_RGB32F : GL_RGB8;
             dataFormat = GL_RGB;
         }
 
@@ -41,12 +109,30 @@ namespace Polyboid
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-        glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+        if (isHdri)
+        {
+            glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_FLOAT , fdata);
+        }
+        else
+        {
+            glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+        }
+
+       
 
         glCreateSamplers(1, &m_SamplersID);
+
+        if (data)
+        {
+            stbi_image_free(data);
+        }
+
+        if (fdata)
+        {
+            stbi_image_free(fdata);
+        }
         
         
-        stbi_image_free(data);
     }
 
     Texture::Texture(int32_t width, int32_t height, int32_t channels): m_Width(width), m_Height(height), m_Channels(channels)
@@ -66,6 +152,8 @@ namespace Polyboid
 
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glCreateSamplers(1, &m_SamplersID);
     }
 
     void Texture::SetData(void* data, uint32_t size)
@@ -76,13 +164,22 @@ namespace Polyboid
         glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, m_DataFormat, GL_UNSIGNED_BYTE, data);
     }
 
-    void Texture::Bind(uint32_t slot)
+    void Texture::Bind(uint32_t slot, bool computeTexture)
     {
         POLYBOID_PROFILE_FUNCTION();
 
-        glBindTextureUnit(slot, m_TextureID);
-        glBindSampler(slot, m_SamplersID);
-        
+        if (computeTexture)
+        {
+            glBindImageTexture(0, m_TextureID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+        }
+        else
+        {
+            glBindTextureUnit(slot, m_TextureID);
+            glBindSampler(slot, m_SamplersID);
+        }
+
+
+       
     }
 
     Texture::~Texture()
@@ -92,11 +189,11 @@ namespace Polyboid
     	glDeleteTextures(1, &m_TextureID);
     }
 
-    Ref<Texture> Texture::MakeTexture2D(const std::string& textureImagePath)
+    Ref<Texture> Texture::MakeTexture2D(const std::string& textureImagePath, bool isHdri)
     {
         POLYBOID_PROFILE_FUNCTION();
 
-        return std::make_shared<Texture>(textureImagePath);
+        return std::make_shared<Texture>(textureImagePath, isHdri);
     }
 
     Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, int32_t channels)
@@ -104,5 +201,10 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
 
         return std::make_shared<Texture>(width, height, channels);
+    }
+
+    Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, const TextureSettings& settings)
+    {
+        return std::make_shared<Texture>(width, height, settings);
     }
 }

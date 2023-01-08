@@ -23,10 +23,12 @@ namespace Polyboid
     public:
         //internals maybe
         Shader(const std::string& vertexPath, const std::string& fragPath);
+        explicit Shader(const std::string& computePath);
         ~Shader();
         
         void Bind();
         static  Ref<Shader> MakeShader(const std::string& vertexPath, const std::string& fragPath);
+        static  Ref<Shader> MakeShader(const std::string& computePath);
 
         void SetInt(const std::string& name, int value);
         void SetIntArray(const std::string& name, int* values, uint32_t count);

@@ -12,6 +12,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 
+
 namespace Polyboid
 {
     void Shader::PrepareShaders(const char* vertexSrc, const char* fragSrc)
@@ -111,6 +112,25 @@ namespace Polyboid
         PrepareShaders(vertexSrc.c_str(), fragSrc.c_str());
     }
 
+    Shader::Shader(const std::string& computePath)
+    {
+        const std::string vertexSrc = FileReader::ReadString(computePath);
+
+        uint32_t computeShader;
+
+        computeShader = glCreateShader(GL_COMPUTE_SHADER);
+        const char* src = vertexSrc.c_str();
+        glShaderSource(computeShader, 1, &src, nullptr);
+        glCompileShader(computeShader);
+        CheckErrors(computeShader, "COMPUTE");
+
+        m_Program = glCreateProgram();
+        glAttachShader(m_Program, computeShader);
+        glLinkProgram(m_Program);
+        CheckErrors(m_Program, "PROGRAM");
+
+    }
+
     Shader::~Shader()
     {
         POLYBOID_PROFILE_FUNCTION();
@@ -131,6 +151,11 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
 
         return std::make_shared<Shader>(vertexPath, fragPath);
+    }
+
+    Ref<Shader> Shader::MakeShader(const std::string& computePath)
+    {
+        return std::make_shared<Shader>(computePath);
     }
 
     void Shader::SetInt(const std::string& name, int value)

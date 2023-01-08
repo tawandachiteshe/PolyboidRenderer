@@ -6,6 +6,9 @@
 #include "Bitmap.h"
 #include "Texture2D.h"
 #include "Engine/Engine/Base.h"
+#include "Engine/Engine/Serializer.h"
+#include "Engine/Engine/Debug/Timer.h"
+#include "Engine/Engine/Utils/FileSystem.h"
 #include "Engine/Engine/Utils/HDRtoCubemap.hpp"
 #include "glm/common.hpp"
 #include "glm/vec2.hpp"
@@ -170,18 +173,23 @@ namespace Polyboid
 
 	Texture3D::Texture3D(const std::string& path)
 	{
-		std::filesystem::path filePath = path;
 
-		std::string temp = filePath.stem().string();
-		std::string temp2 = filePath.parent_path().string();
-		temp2.append("/");
+		const auto cachedImageExist = FileSystem::GenCacheFilename(path);
 
-		auto cachedImageExist = temp2.append(temp.append(".cached.hdr"));
+		Ref<CubeMapFace<uint8_t>> cubemapFace = nullptr;
 
-		HdriToCubemap<uint8_t> m_cubemap(path, 512);
-		//auto isHdri = m_cubemap.isHdri();
-		//m_cubemap.writeCubemap("Assets/HDRs");
-
+		if (std::filesystem::exists(cachedImageExist))
+		{
+			CubeMapSerializer s;
+			cubemapFace = s.Read(cachedImageExist);
+		}
+		else
+		{
+			HDRToCubemap<uint8_t> cubemap(path, 512);
+			CubeMapSerializer s(cubemap.GetCubeMapFace());
+			s.Write(cachedImageExist);
+			cubemapFace = cubemap.GetCubeMapFace();
+		}
 
 		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_ID);
 		glTextureParameteri(
@@ -194,26 +202,96 @@ namespace Polyboid
 			m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(
 			m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTextureStorage2D(m_ID, 1, GL_RGB32F, 512, 512);
+		glTextureStorage2D(m_ID, 1, GL_RGB32F, cubemapFace->GetResolution(), cubemapFace->GetResolution());
+
+		glCreateSamplers(1, &m_Sampler);
+
+		for (int i = 0; i != 6; ++i)
+		{
+			if (cubemapFace->GetIsUsingVector())
+			{
+				glTextureSubImage3D(m_ID, 0, 0, 0, i, cubemapFace->GetResolution(), cubemapFace->GetResolution(), 1, GL_RGB, GL_UNSIGNED_BYTE, cubemapFace->GetArrayFaces()[i].data());
+			}
+			else
+			{
+				glTextureSubImage3D(m_ID, 0, 0, 0, i, cubemapFace->GetResolution(), cubemapFace->GetResolution(), 1, GL_RGB, GL_UNSIGNED_BYTE, cubemapFace->GetFaces()[i]);
+			}
+			
+		}
+
+
+	}
+
+	Texture3D::Texture3D(void** data, int32_t resolution, int32_t channels)
+	{
+
+		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_ID);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureStorage2D(m_ID, 1, GL_RGB32F, resolution, resolution);
+
+		glCreateSamplers(1, &m_Sampler);
 
 
 		for (int i = 0; i != 6; ++i)
 		{
+			
+			glTextureSubImage3D(m_ID, 0, 0, 0, i, resolution, resolution, 1, GL_RGB, GL_UNSIGNED_BYTE, data[i]);
+		}
+	}
 
-			glTextureSubImage3D(m_ID, 0, 0, 0, i, 512, 512, 1, GL_RGB, GL_UNSIGNED_BYTE, m_cubemap.getFaces()[i]);
+	Texture3D::Texture3D(uint32_t resolution, uint32_t mipLevels): m_Resolution(resolution)
+	{
+
+		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_ID);
+
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+
+		if (mipLevels > 1)
+		{
+			glTextureParameteri(
+				m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		}
+		else
+		{
+
+			glTextureParameteri(
+				m_ID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		}
 
 
-		// for (int i = 0; i != 6; ++i)
-		// {
-		// 	// Bitmap temp(map.GetWidth(), map.GetHeight(), 3,pixels);
-		// 	// Bitmap::WriteBitmapToFile(temp, std::string("tawanda").append(std::to_string(i)).append(".hdr"));
-		// 	glTextureSubImage3D(m_ID, 0, 0, 0, i, 512, 512, 1, GL_RGB, GL_UNSIGNED_BYTE, m_cubemap.getFaces()[i]);
-		// }
+		glTextureParameteri(
+			m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureStorage2D(m_ID, mipLevels, GL_RGBA32F, static_cast<int>(resolution), static_cast<int>(resolution));
+
+		if (mipLevels > 1)
+		{
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
+			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		}
+
+		glCreateSamplers(1, &m_Sampler);
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
 	}
 
-	void Texture3D::Bind()
+	void Texture3D::Bind(uint32_t textureUnit)
 	{
-		glBindTexture(GL_TEXTURE_CUBE_MAP, m_ID);
+		glBindTextureUnit(textureUnit, m_ID);
+		glBindSampler(textureUnit, m_Sampler);
 	}
 }

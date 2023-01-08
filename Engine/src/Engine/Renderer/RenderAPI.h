@@ -11,6 +11,7 @@
 
 namespace Polyboid
 {
+	enum class ClearMode { Depth, Color, DepthColor };
 
 	class RenderAPI
 	{
@@ -26,9 +27,32 @@ namespace Polyboid
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_DEPTH_TEST);
 			glCullFace(GL_BACK);
-			glFrontFace(GL_CW);
+			glFrontFace(GL_CCW);
 			glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
 		}
+
+		static void CullFront()
+		{
+			glCullFace(GL_FRONT);
+		}
+
+		static void CullBack()
+		{
+			glCullFace(GL_BACK);
+		}
+
+
+		static void CullFrontBack()
+		{
+			glCullFace(GL_FRONT_AND_BACK);
+		}
+
+		static void CullNone()
+		{
+			glCullFace(GL_NONE);
+		}
+
 
 		static void CreateViewport(const glm::vec2& viewportSize)
 		{
@@ -37,12 +61,28 @@ namespace Polyboid
 			glViewport(0, 0, static_cast<GLsizei>(viewportSize.x), static_cast<GLsizei>(viewportSize.y));
 		}
 
-		static void Clear(const glm::vec4& color)
+		static void SetClearColor(const glm::vec4& color)
+		{
+			glClearColor(color.x, color.y, color.z, color.w);
+		}
+
+		static void Clear(const ClearMode& mode)
 		{
 			POLYBOID_PROFILE_FUNCTION();
 
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			glClearColor(color.x, color.y, color.z, color.w);
+			switch (mode)
+			{
+			case ClearMode::Color:
+				glClear(GL_COLOR_BUFFER_BIT);
+				break;
+			case ClearMode::Depth:
+				glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				break;
+			case ClearMode::DepthColor:
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				break;
+			}
+
 		}
 
 		static void DrawIndexed(uint32_t count, uint16_t elementCount = 2)

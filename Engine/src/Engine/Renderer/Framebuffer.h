@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 #include <memory>
 
+#include "glm/vec4.hpp"
+
 namespace Polyboid 
 {
 	enum class FramebufferTextureFormat
@@ -11,6 +13,7 @@ namespace Polyboid
 		DEPTH24_STENCIL8,
 		RGBA8,
 		R32I,
+		R32F
 	};
 
 
@@ -29,81 +32,69 @@ namespace Polyboid
 			glBindTexture(GL_TEXTURE_2D, texture);
 		}
 
-		static void AttachColorTexture(uint32_t width, uint32_t height, uint32_t texture, uint32_t attachmentIndex = 0)
+		static void AttachColorTexture(uint32_t width, uint32_t height, const FramebufferTextureFormat& format,uint32_t texture, uint32_t attachmentIndex = 0)
 		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			switch (format)
+			{
+			case FramebufferTextureFormat::DEPTH:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, nullptr);
+				break;
+			case FramebufferTextureFormat::DEPTH24_STENCIL8:
+				glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, width, height);
+				break;
+			case FramebufferTextureFormat::RGBA8:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				break;
+			case FramebufferTextureFormat::R32I:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED, GL_INT, nullptr);
+				break;
+			case FramebufferTextureFormat::R32F:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+				break;
+			}
+
+			glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+			glBindTexture(GL_TEXTURE_2D, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + attachmentIndex, GL_TEXTURE_2D, texture, 0);
 		}
 
 		static void AttachDepthTexture(uint32_t width, uint32_t height, uint32_t texture)
 		{
 			glTexImage2D(
-				GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, width, height, 0,
-				GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL
+				GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
+				GL_DEPTH_COMPONENT, GL_FLOAT, NULL
 			);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+			glBindTexture(GL_TEXTURE_2D, 0);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texture, 0);
 		}
 
-		static void AttachTexture(uint32_t height, uint32_t width, FramebufferTextureFormat format, uint32_t* out, uint32_t colorIndex = 0)
-		{
-			uint32_t* texture = out;
-			CreateTexture(texture);
-			BindTexture(*texture);
-
-
-			switch (format)
-			{
-			case FramebufferTextureFormat::DEPTH:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, GL_DEPTH_COMPONENT, 0, GL_UNSIGNED_BYTE, nullptr);
-				break;
-			case FramebufferTextureFormat::DEPTH24_STENCIL8:
-				glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, width, height);
-				break;
-			case FramebufferTextureFormat::RGBA8:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, GL_RGBA, 0, GL_UNSIGNED_BYTE, nullptr);
-				break;
-			case FramebufferTextureFormat::R32I:
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, GL_RED, 0, GL_UNSIGNED_BYTE, nullptr);
-				break;
-			default:
-				break;
-			}
-
-			
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-
-
-			if (format == FramebufferTextureFormat::RGBA8)
-			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + colorIndex, GL_TEXTURE_2D, *texture, 0);
-			}
-			else if (format == FramebufferTextureFormat::DEPTH24_STENCIL8)
-			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *texture, 0);
-			}
-
-			
-
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-		}
 	}
+
+
+	struct FramebufferTexture
+	{
+		FramebufferTextureFormat format;
+	};
 
 	struct FramebufferSettings {
 		 // might need this FramebufferTextureFormat format;
 		uint32_t width, height;
 
-		FramebufferSettings(const FramebufferSettings& settings): width(settings.width), height(settings.height) {}
-		FramebufferSettings(uint32_t width, uint32_t height): width(width), height(height) {}
+		std::vector<FramebufferTexture> m_Textures;
+		FramebufferSettings() = default;
+
+		FramebufferSettings(const FramebufferSettings& settings): width(settings.width), height(settings.height), m_Textures(settings.m_Textures) {}
+		FramebufferSettings(uint32_t width, uint32_t height, const std::initializer_list<FramebufferTexture>& textures = {}): width(width), height(height), m_Textures(textures) {}
 	};
 
 	class Framebuffer
@@ -115,7 +106,9 @@ namespace Polyboid
 		//might need it maybe.... idk im not reading
 		// might need multi sampled
 		uint32_t m_ColorAttachment = 0, m_DepthAttachment = 0;
+		uint32_t m_DepthSampler;
 
+		std::vector<uint32_t> m_ColorAttachments;
 		FramebufferSettings m_Settings;
 
 	
@@ -129,9 +122,22 @@ namespace Polyboid
 		void ReCreateFramebuffer();
 		void Resize(uint32_t width, uint32_t height);
 		void Bind();
+		void ClearColor(uint32_t attachmentIndex = 0 , const glm::vec4& color = { 0.2, 0.2, 0.2, 1.0f });
+		void BindColorAttachments(uint32_t index = 0, uint32_t textureIndex = 0);
+		void BindDepthAttachment(uint32_t textureIndex = 0);
 		void UnBind();
 		static std::shared_ptr<Framebuffer> MakeFramebuffer(const FramebufferSettings& settings);
-		uint32_t GetColorAttachment0TextureID() { return m_ColorAttachment; }
+		std::vector<uint32_t>& GetColorAttachments() { return m_ColorAttachments; }
+		uint32_t GetColorAttachment0()
+		{
+			if (m_ColorAttachments.empty())
+			{
+				return 0;
+			}
+
+			return m_ColorAttachments[0];
+		}
+		uint32_t GetDepthAttachment() { return m_DepthAttachment; }
 
 	};
 

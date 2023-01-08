@@ -15,11 +15,13 @@ layout (std140, binding = 0) uniform CameraBuffer {
 };
 
 
+
 out vec4 vColor; 
+out vec2 vUV;
 
 void main() {
 	
 	gl_Position = projection * view * vec4(aPosition, 1.0f);
 	vColor = aColor;
-
+	vUV = aUV;
 }

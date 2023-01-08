@@ -6,11 +6,15 @@
 
 #include "GameStatics.h"
 #include "Engine/Engine/ECS/GameObject.h"
+#include "Engine/Renderer/Framebuffer.h"
+#include "Engine/Renderer/Renderbuffer.h"
+#include "Engine/Renderer/Texture2D.h"
 #include "Engine/Renderer/Texture3D.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 
 namespace Polyboid
 {
+	class WorldRenderer;
 	class Shader;
 	class GameObject;
 
@@ -27,11 +31,6 @@ namespace Polyboid
 
 	class World
 	{
-		//temp
-	private:
-		Ref<Texture3D> m_HDR;
-		Ref<VertexBufferArray> m_Cube;
-		Ref<Shader> m_Shader;
 
 	public:
 		World(const std::string& name = "World");
@@ -92,7 +91,7 @@ namespace Polyboid
 
 		std::string& GetName() { return m_Name; }
 
-		void Render();
+		void Render(float dt);
 
 		entt::registry& GetRegistry() { return m_Registry; }
 
@@ -112,15 +111,12 @@ namespace Polyboid
 
 	private:
 
-		
-
 		entt::registry m_Registry;
 
 		std::string m_Name;
+		Ref<WorldRenderer> m_Renderer;
 
 		//find a better data structure for this:::
-
-		
 		std::vector<GameObject*> m_GameObjects;
 		
 	};

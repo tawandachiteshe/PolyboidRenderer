@@ -11,8 +11,7 @@
 * @date November 22, 2020
 */
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
 
@@ -22,96 +21,74 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "CubeMapFace.hpp"
+#include "glm/ext/scalar_common.hpp"
 
 #include "glm/ext/scalar_constants.hpp"
 
 namespace Polyboid
 {
-   
 
     template <typename T>
-    class HdriToCubemap
+    class HDRToCubemap
     {
     public:
         static constexpr auto M_PI = glm::pi<float>();
-        HdriToCubemap(const std::string& fileLocation, int cubemapResolution, bool filterLinear = true);
-        ~HdriToCubemap();
+        HDRToCubemap(const std::string& fileLocation, int cubemapResolution, bool filterLinear = true);
+        ~HDRToCubemap();
 
-        bool isHdri() const { return m_isHdri; }
-        int getCubemapResolution() const { return m_cubemapResolution; }
-        int getNumChannels() const { return m_channels; }
-        T** getFaces() { return m_faces; }
-        T* getFront() { return m_faces[0]; }
-        T* getBack() { return m_faces[1]; }
-        T* getLeft() { return m_faces[2]; }
-        T* getRight() { return m_faces[3]; }
-        T* getUp() { return m_faces[4]; }
-        T* getDown() { return m_faces[5]; }
-        void writeCubemap(const std::string& outputFolder = "");
+        bool IsHdri() const { return m_isHdri; }
+        Ref<CubeMapFace<T>> GetCubeMapFace() { return m_faces; }
+        void WriteCubemap(const std::string& outputFolder = "");
 
     private:
-        void calculateCubemap();
+        void CalculateCubemap();
 
     private:
         bool m_isHdri;
-        int m_width, m_height, m_channels;
+        int m_width{}, m_height{}, m_channels{};
         bool m_filterLinear;
         T* m_imageData;
-        T** m_faces;
+    	Ref<CubeMapFace<T>> m_faces = nullptr;
         int m_cubemapResolution;
     };
 
     template <>
-    HdriToCubemap<uint8_t>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
-        : m_cubemapResolution(cubemapResolution), m_filterLinear(filterLinear)
+    inline HDRToCubemap<uint8_t>::HDRToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
+        : m_filterLinear(filterLinear), m_cubemapResolution(cubemapResolution)
     {
         stbi_set_flip_vertically_on_load(1);
         m_isHdri = stbi_is_hdr(pathHdri.c_str());
-        if (m_isHdri)
-            std::cout << "Warning: image will be converted from hdr to ldr by stb_image. Use float-type template argument to create an hdr cubemap\n";
         m_isHdri = false;
 
         m_imageData = stbi_load(pathHdri.c_str(), &m_width, &m_height, &m_channels, 0);
-        if (!m_imageData)
-            throw std::runtime_error(std::string("Failed to load image ") + pathHdri);
 
-        m_faces = new unsigned char* [6];
-        for (int i = 0; i < 6; i++)
-            m_faces[i] = new unsigned char[m_cubemapResolution * m_cubemapResolution * m_channels];
-
-        calculateCubemap();
+        m_faces =  std::make_shared<CubeMapFace<uint8_t>>(m_cubemapResolution, m_channels);
+        CalculateCubemap();
     }
 
     template <>
-    HdriToCubemap<float>::HdriToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
-        : m_cubemapResolution(cubemapResolution), m_filterLinear(filterLinear)
+    inline HDRToCubemap<float>::HDRToCubemap(const std::string& pathHdri, int cubemapResolution, bool filterLinear)
+        : m_filterLinear(filterLinear), m_cubemapResolution(cubemapResolution)
     {
         m_isHdri = stbi_is_hdr(pathHdri.c_str());
-        if (!m_isHdri)
-            std::cout << "Warning: image will be converted from ldr to hdr by stb_image. Use unsigned-char-type template argument to create an ldr cubemap\n";
         m_isHdri = true;
 
         m_imageData = stbi_loadf(pathHdri.c_str(), &m_width, &m_height, &m_channels, 0);
-        if (!m_imageData)
-            throw std::runtime_error(std::string("Failed to load image ") + pathHdri);
 
-        m_faces = new float* [6];
-        for (int i = 0; i < 6; i++)
-            m_faces[i] = new float[m_cubemapResolution * m_cubemapResolution * m_channels];
+        m_faces = std::make_shared<CubeMapFace<float>>(m_cubemapResolution, m_channels);
 
-        calculateCubemap();
+        CalculateCubemap();
     }
 
     template<typename T>
-    HdriToCubemap<T>::~HdriToCubemap()
+    HDRToCubemap<T>::~HDRToCubemap()
     {
         stbi_image_free(m_imageData);
-        for (int i = 0; i < 6; i++)
-            delete[] * m_faces++;
     }
 
     template<typename T>
-    void HdriToCubemap<T>::writeCubemap(const std::string& outputFolder)
+    void HDRToCubemap<T>::WriteCubemap(const std::string& outputFolder)
     {
         stbi_flip_vertically_on_write(1);
         std::vector<std::string> filenames = { "front", "back", "left", "right", "up", "down" };
@@ -137,10 +114,9 @@ namespace Polyboid
 
  // cpu implementation
     template<typename T>
-    void HdriToCubemap<T>::calculateCubemap()
+    void HDRToCubemap<T>::CalculateCubemap()
     {
-        struct Vec3 { float x, y, z; };
-        std::array<std::array<Vec3, 3>, 6> startRightUp = { { // for each face, contains the 3d starting point (corresponding to left bottom pixel), right direction, and up direction in 3d space, correponding to pixel x,y coordinates of each face		{{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        std::array<std::array<glm::vec3, 3>, 6> startRightUp = { { // for each face, contains the 3d starting point (corresponding to left bottom pixel), right direction, and up direction in 3d space, correponding to pixel x,y coordinates of each face		{{-1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
         	{{{1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}}},   // right
         	{{{-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, -1.0f}, {0.0f, 1.0f, 0.0f}}},  // left
              {{{-1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, -1.0f}}},   // down
@@ -151,12 +127,12 @@ namespace Polyboid
 
         for (int i = 0; i < 6; i++)
         {
-            Vec3& start = startRightUp[i][0];
-            Vec3& right = startRightUp[i][1];
-            Vec3& up = startRightUp[i][2];
+            glm::vec3& start = startRightUp[i][0];
+            glm::vec3& right = startRightUp[i][1];
+            glm::vec3& up = startRightUp[i][2];
 
-            T* face = m_faces[i];
-            Vec3 pixelDirection3d; // 3d direction corresponding to a pixel in the cubemap face
+            T* face = (m_faces->GetFaces())[i];
+            glm::vec3 pixelDirection3d {}; // 3d direction corresponding to a pixel in the cubemap face
             //#pragma omp parallel for (private pixelDirection?)
             for (int row = 0; row < m_cubemapResolution; row++)
             {
@@ -190,8 +166,8 @@ namespace Polyboid
                         float factorCol = modf(colHdri - 0.5f, &intCol);        // factor gives the contribution of the next column, while the contribution of intCol is 1 - factor
                         float factorRow = modf(rowHdri - 0.5f, &intRow);
 
-                        int low_idx_row = static_cast<int>(intRow);
-                        int low_idx_column = static_cast<int>(intCol);
+                        const int low_idx_row = static_cast<int>(intRow);
+                        const int low_idx_column = static_cast<int>(intCol);
                         int high_idx_column;
                         if (factorCol < 0.0f)                           //modf can only give a negative value if the azimuth falls in the first pixel, left of the center, so we have to mix with the pixel on the opposite side of the panoramic image
                             high_idx_column = m_width - 1;
@@ -217,11 +193,11 @@ namespace Polyboid
 
                         for (int j = 0; j < m_channels; j++)
                         {
-                            uint8_t interpolatedValue = static_cast<uint8_t>(m_imageData[low_idx_column * m_channels + m_width * low_idx_row * m_channels + j] * f1 +
+	                        auto interpolatedValue = static_cast<uint8_t>(m_imageData[low_idx_column * m_channels + m_width * low_idx_row * m_channels + j] * f1 +
                                 m_imageData[low_idx_column * m_channels + m_width * high_idx_row * m_channels + j] * f2 +
                                 m_imageData[high_idx_column * m_channels + m_width * low_idx_row * m_channels + j] * f3 +
                                 m_imageData[high_idx_column * m_channels + m_width * high_idx_row * m_channels + j] * f4);
-                            face[col * m_channels + m_cubemapResolution * row * m_channels + j] = std::clamp(interpolatedValue, (uint8_t)0, (uint8_t)255);
+                            face[col * m_channels + m_cubemapResolution * row * m_channels + j] = glm::clamp(interpolatedValue, static_cast<uint8_t>(0), static_cast<uint8_t>(255));
                         }
                     }
                 }

@@ -6,6 +6,10 @@
 #include <filesystem>
 
 
+struct aiNode;
+struct aiScene;
+struct aiMesh;
+
 namespace Polyboid
 {
 	class VertexBufferArray;
@@ -42,9 +46,14 @@ namespace Polyboid
 
 	class MeshImporter
 	{
+	private:
+		static  RendererMeshData GetMesh(const aiMesh* mesh);
+		static  void ProcessNode(aiNode* node, const aiScene* scene, std::vector<RendererMeshData>& meshesData);
+		
+
 	public:
-		static RendererMeshData Read(const std::filesystem::path& path);
-		static Ref<VertexBufferArray> ReadForRendering(const std::filesystem::path& path);
+		static std::vector<RendererMeshData> Read(const std::filesystem::path& path);
+		static std::vector<Ref<VertexBufferArray>> ReadForRendering(const std::filesystem::path& path);
 
 	};
 	

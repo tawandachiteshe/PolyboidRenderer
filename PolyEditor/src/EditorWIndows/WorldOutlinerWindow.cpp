@@ -30,8 +30,8 @@ namespace Polyboid
 
 		auto view = registry.view<TagComponent, IDComponent>();
 
-		static bool open = true;
-		ImGui::ShowDemoWindow(&open);
+		// static bool open = true;
+		// ImGui::ShowDemoWindow(&open);
 
 
 		if (ImGui::TreeNodeEx("Game Objects", ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_DefaultOpen))

@@ -6,6 +6,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Editor/Resource.h"
+#include "Engine/Engine/AssetManager.h"
 
 
 namespace Polyboid 
@@ -34,7 +35,7 @@ namespace Polyboid
 
 		if (ImGui::BeginPopupContextWindow())
 		{
-			ImGui::BeginPopupContextItem();
+
 			if(ImGui::Button("Create Folder"))
 			{
 				createNewfolder = true;
@@ -135,6 +136,19 @@ namespace Polyboid
 					{
 						spdlog::info("file {}", pathStr.c_str());
 
+					}
+
+					if (ImGui::BeginPopupContextItem(pathStr.c_str()))
+					{
+
+						if(ImGui::Selectable("Proccess Mesh"))
+						{
+							spdlog::info("file {}", entry.path().string());
+							AssetManager::LoadMesh(entry.path().string());
+						}
+						
+
+						ImGui::EndPopup();
 					}
 
 				

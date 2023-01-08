@@ -6,38 +6,29 @@
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
+#include "Engine/Engine/Serializer.h"
+#include "Engine/Engine/Utils/FileSystem.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 
 
 namespace Polyboid
 {
-	RendererMeshData MeshImporter::Read(const std::filesystem::path& path)
+	RendererMeshData MeshImporter::GetMesh(const aiMesh* mesh)
 	{
-		Assimp::Importer importer;
-
-		const aiScene* scene = importer.ReadFile(path.string(), aiProcess_Triangulate);
-
-		if (!scene || !scene->HasMeshes())
-		{
-			spdlog::error("unable to load meshes");
-			return {};
-		}
-
 		RendererMeshData data = {};
 
 
 		//for now we get first mesh in a scene
-		auto mesh = scene->mMeshes[0];
 
 		if (mesh->HasPositions())
 		{
 			for (int i = 0; i < mesh->mNumVertices; ++i)
 			{
-				glm::vec3 vertex = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+				glm::vec3 vertex = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
 				data.vertices.push_back(mesh->mVertices[i].x);
 				data.vertices.push_back(mesh->mVertices[i].y);
 				data.vertices.push_back(mesh->mVertices[i].z);
-			
+
 
 				data.HasColors = mesh->HasVertexColors(i);
 
@@ -64,7 +55,7 @@ namespace Polyboid
 
 				}
 
-				
+
 				//texture coord 0 for now
 				if (mesh->mTextureCoords[0])
 				{
@@ -90,31 +81,77 @@ namespace Polyboid
 			}
 		}
 
-
 		return data;
 	}
 
-	Ref<VertexBufferArray> MeshImporter::ReadForRendering(const std::filesystem::path& path)
+	void MeshImporter::ProcessNode(aiNode* node, const aiScene* scene, std::vector<RendererMeshData>& meshesData)
 	{
-		auto meshData = Read(path);
+		for (int i = 0; i < node->mNumMeshes; ++i)
+		{
+			auto mesh = scene->mMeshes[node->mMeshes[i]];
+			meshesData.push_back(GetMesh(mesh));
+		}
+
+		for (int i = 0; i < node->mNumChildren; ++i)
+		{
+			ProcessNode(node->mChildren[i], scene, meshesData);
+		}
+	}
+
+	std::vector<RendererMeshData> MeshImporter::Read(const std::filesystem::path& path)
+	{
+		//auto cachedMesh = FileSystem::GenCacheFilename(path.string(), ".polymesh");
+
+		std::vector<RendererMeshData> meshesData;
+		Assimp::Importer importer;
+
+		const aiScene* scene = importer.ReadFile(path.string(), aiProcess_Triangulate);
+
+		if (!scene || !scene->HasMeshes())
+		{
+			spdlog::error("unable to load meshes");
+			return {};
+		}
+
+		ProcessNode(scene->mRootNode, scene, meshesData);
+
+
+		return meshesData;
+	}
+
+	std::vector<Ref<VertexBufferArray>> MeshImporter::ReadForRendering(const std::filesystem::path & path)
+	{
+		auto _meshData = Read(path);
+
+		//std::vector<Ref<VertexBufferArray>> vas(2);
+		std::vector<Ref<VertexBufferArray>> _vertexBuffers;
+
+
+		for (auto& meshData : _meshData)
+		{
+
+			auto va = VertexBufferArray::MakeVertexBufferArray();
+			va->Bind();
+
+			auto ib = IndexBuffer::MakeIndexBuffer(meshData.Indices.data(), meshData.Indices.size());
+
+			auto vb = VertexBuffer::MakeVertexBuffer(meshData.vertices.data(), meshData.vertices.size() * sizeof(float));
+			vb->DescribeBuffer({
+				{ BufferComponent::Float3, "aPosition" },
+				{ BufferComponent::Float3, "aNormal" },
+				{ BufferComponent::Float2, "aUV" }
+				});
+
+			va->AddVertexBuffer(vb);
+			va->SetIndexBuffer(ib);
+
+			_vertexBuffers.push_back(va);
+		}
 
 
 
-		auto va = VertexBufferArray::MakeVertexBufferArray();
-		va->Bind();
 
-		auto ib = IndexBuffer::MakeIndexBuffer(meshData.Indices.data(), meshData.Indices.size());
 
-		auto vb = VertexBuffer::MakeVertexBuffer(meshData.vertices.data(), meshData.vertices.size() * sizeof(float));
-		vb->DescribeBuffer({
-			{ BufferComponent::Float3, "aPosition" },
-			{ BufferComponent::Float3, "aNormal" },
-			{ BufferComponent::Float2, "aUV" }
-		});
-
-		va->AddVertexBuffer(vb);
-		va->SetIndexBuffer(ib);
-
-		return va;
+		return _vertexBuffers;
 	}
 }
