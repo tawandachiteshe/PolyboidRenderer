@@ -66,7 +66,39 @@ namespace Polyboid
         glCreateSamplers(1, &m_SamplersID);
 	}
 
-    Texture::Texture(const std::string& textureImagePath, bool isHdri)
+	Texture::Texture(int32_t width, int32_t height, int32_t channels, void* data): m_InternalFormat(0), m_Width(width),
+		m_Height(height), m_Channels(channels)
+	{
+
+        GLenum internalFormat = 0, dataFormat = 0;
+        if (m_Channels == 4)
+        {
+            internalFormat = GL_RGBA8;
+            dataFormat = GL_RGBA;
+        }
+        else if (m_Channels == 3)
+        {
+            internalFormat =  GL_RGB8;
+            dataFormat = GL_RGB;
+        }
+
+        m_InternalFormat = internalFormat;
+        m_DataFormat = dataFormat;
+
+        glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+        glTextureStorage2D(m_TextureID, 1, internalFormat, m_Width, m_Height);
+
+        glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
+
+        glCreateSamplers(1, &m_SamplersID);
+	}
+
+	Texture::Texture(const std::string& textureImagePath, bool isHdri)
     {
 
         POLYBOID_PROFILE_FUNCTION();
@@ -201,6 +233,11 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
 
         return std::make_shared<Texture>(width, height, channels);
+    }
+
+    Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, int32_t channels, void* data)
+    {
+        return std::make_shared<Texture>(width, height, channels, data);
     }
 
     Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, const TextureSettings& settings)

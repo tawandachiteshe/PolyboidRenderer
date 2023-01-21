@@ -343,32 +343,93 @@ namespace Polyboid
 						ImGui::EndCombo();
 					}
 
-					if (auto mat = MaterialLibrary::GetMaterial(meshRenderer.assetId))
+				
+
+					if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
 					{
-						static auto albedoColor = mat->GetAlbedo();
-						if(ImGui::ColorEdit3("Albedo Color", glm::value_ptr(albedoColor)))
+						auto& meshesWithData = AssetManager::GetMesh(meshRenderer.assetName);
+
+						uint32_t count = 0;
+
+						for (auto meshData : meshesWithData)
 						{
-							mat->SetAlbedo(albedoColor);
+							auto [_, mat] = meshData;
+
+							ImGui::PushID((mat->GetName() + std::to_string(count)).c_str());
+
+							ImGui::Separator();
+							ImGui::Text("Material name: %s", mat->GetName().c_str());
+							{
+								
+								if (mat)
+								{
+									 auto albedoColor = mat->GetAlbedo();
+									if (ImGui::ColorEdit3("Albedo Color", glm::value_ptr(albedoColor)))
+									{
+										mat->SetAlbedo(albedoColor);
+									}
+
+									 auto roughness = mat->GetRoughness();
+									if (ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f))
+									{
+										mat->SetRoughness(roughness);
+									}
+
+									 auto metallic = mat->GetMetallic();
+									if (ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f))
+									{
+										mat->SetMetallic(metallic);
+									}
+
+									ImGui::Text("Textures");
+									ImGui::Separator();
+									ImGui::NewLine();
+
+									 if (ImGui::BeginTable("Textures Table", 2))
+									 {
+
+									 	ImGui::TableNextRow();
+										ImGui::TableSetColumnIndex(0);
+									 	ImGui::Text("Albedo");
+
+									 	ImGui::TableNextColumn();
+									 	ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mDiffuseTexture)->GetTextureID()), { 32, 32 });
+
+										ImGui::TableNextRow();
+										ImGui::TableSetColumnIndex(0);
+										ImGui::Text("Normals");
+
+										ImGui::TableNextColumn();
+										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mNormalsTexture)->GetTextureID()), { 32, 32 });
+
+										ImGui::TableNextRow();
+										ImGui::TableSetColumnIndex(0);
+										ImGui::Text("Metallic & Roughness");
+										ImGui::TableNextColumn();
+										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mMetallicTexture)->GetTextureID()), { 32, 32 });
+
+										ImGui::TableNextRow();
+										ImGui::TableSetColumnIndex(0);
+										ImGui::Text("Ambient Occlusion");
+										ImGui::TableNextColumn();
+										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mAOTexture)->GetTextureID()), { 32, 32 });
+
+										 ImGui::EndTable();
+									 }
+
+									
+								}
+							}
+
+							ImGui::PopID();
+
+							count++;
 						}
 
-						static auto specularColor = mat->GetAO();
-						if (ImGui::ColorEdit3("Ambient Occlusion", glm::value_ptr(specularColor)))
-						{
-							mat->SetAO(specularColor);
-						}
-
-						static auto roughness = mat->GetRoughness();
-						if (ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f))
-						{
-							mat->SetRoughness(roughness);
-						}
-
-						static auto metallic = mat->GetMetallic();
-						if (ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f))
-						{
-							mat->SetMetallic(roughness);
-						}
 					}
+
+
+		
 
 					if (ImGui::Button("Add Standard Material"))
 					{

@@ -18,15 +18,44 @@ out vec3 vNormal;
 out vec3 vPixelPosition;
 out vec3 vPosition;
 
+
+struct Vertex {
+  float sPosition[3]; 
+  float sNormal[3];
+  float sUV[2];
+  float sTangents[3];
+  float sBitagents[3];
+};
+
+
+layout(std430, binding = 0) readonly buffer Vertices {
+  Vertex in_Vertices[];
+};
+
+vec3 getPosition(int i) {
+	return vec3( in_Vertices[i].sPosition[0], in_Vertices[i].sPosition[1], in_Vertices[i].sPosition[2]);
+}
+
+vec3 getNormal(int i) {
+	return vec3( in_Vertices[i].sNormal[0], in_Vertices[i].sNormal[1], in_Vertices[i].sNormal[2]);
+}
+
+
+vec2 getUV(int i) {
+	return vec2(in_Vertices[i].sUV[0], in_Vertices[i].sUV[1]);
+}
+
+
+
 void main() {
 	
 
 	//mat4(mat3(view))
 
-	gl_Position = projection * view * uTransform * vec4(aPosition, 1.0f);
-	vUV = aUV;
-	vNormal = mat3(transpose(inverse(uTransform))) * aNormal;
-	vPixelPosition = vec3(uTransform * vec4(aPosition, 1.0));
-	vPosition = aPosition;
+	gl_Position = projection * view * uTransform * vec4(getPosition(gl_VertexID), 1.0f);
+	vUV = getUV(gl_VertexID);
+	vNormal = mat3(transpose(inverse(uTransform))) * getNormal(gl_VertexID);
+	vPixelPosition = vec3(uTransform * vec4(getPosition(gl_VertexID), 1.0));
+	vPosition = getPosition(gl_VertexID);
 
 }

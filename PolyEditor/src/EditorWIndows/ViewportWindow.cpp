@@ -17,6 +17,7 @@
 #include <fstream>
 #include "Editor/Editor.h"
 #include "Editor/Resource.h"
+#include "Engine/Engine/AssetManager.h"
 #include "Engine/Engine/Engine.h"
 #include "Engine/Renderer/MaterialLibrary.h"
 
@@ -39,13 +40,10 @@ namespace Polyboid
 		auto width = winSpecs.Width;
 		auto height = winSpecs.Height;
 
-		float fov = 30.0f;
+		float fov = 45.0f;
 
 
-		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 1000.0f);
-		m_Framebuffer = Framebuffer::MakeFramebuffer({ width, height, { { FramebufferTextureFormat::RGBA8 } } });
-		Engine::SetMainFramebuffer(m_Framebuffer);
-		Engine::SetCurrentFrameBuffer(m_Framebuffer);
+		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 10000.0f);
 
 		GameStatics::SetCurrentCamera(m_ViewportCamera);
 		Editor::SetEditorCamera(m_ViewportCamera);
@@ -53,19 +51,13 @@ namespace Polyboid
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_DELETED, BIND_EVENT(OnGameObjectDeleted));
 
-		auto gameObject = GameStatics::GetCurrentWorld()->CreateGameObject("Lighting Ttext");
-		auto light = GameStatics::GetCurrentWorld()->CreateGameObject("Light");
-		UUID id;
-		gameObject->AddComponent<MeshRendererComponent>(id);
-		MaterialLibrary::CreateMaterial(id, "Default");
-		auto& mesh = gameObject->GetComponent<MeshRendererComponent>();
-		mesh.assetName = "cube.fbx";
-		mesh.materialId = id;
-		auto& Tc = light->GetComponent<TransformComponent>();
-		Tc.Position = { 0, 1, 0 };
-		//Tc.Rotation = glm::radians(glm::vec3{ 45, 90, 15 });
+		auto* object = GameStatics::GetCurrentWorld()->CreateGameObject("Cube");
 
-		light->AddComponent<PointLightComponent>();
+		UUID id;
+		object->AddComponent<MeshRendererComponent>(id);
+		MaterialLibrary::CreateMaterial(id, "Default");
+		auto& mesh = object->GetComponent<MeshRendererComponent>();
+		mesh.assetName = "cube.fbx";
 	}
 
 	ViewportWindow::~ViewportWindow()

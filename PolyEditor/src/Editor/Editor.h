@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 #include "EditorCamera.h"
 #include "Engine/Engine/Base.h"
 

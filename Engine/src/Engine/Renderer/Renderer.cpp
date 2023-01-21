@@ -4,10 +4,13 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Material.h"
 #include "RenderAPI.h"
 #include "RenderCommand.h"
 #include "Renderer2D.h"
+#include "Texture2D.h"
 #include "UniformBuffer.h"
+#include "Engine/Engine/AssetManager.h"
 #include "glad/glad.h"
 #include "glm/vec4.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -47,7 +50,17 @@ namespace Polyboid
             shader->Bind();
             va->Bind();
             shader->SetMat4("uTransform", transform);
-            RenderCommand::DrawIndexed(va->GetIndexBuffer()->GetCount());
+
+            if (va->GetIndicesCount() > 0)
+            {
+                RenderCommand::DrawIndexed(va->GetIndicesCount());
+            }
+            else
+            {
+                //RenderCommand::DrawIndexed(va->GetIndexBuffer()->GetCount());
+            }
+
+           
         }
 
     }
@@ -59,6 +72,44 @@ namespace Polyboid
 	    {
             Submit(va, shader, transform);
 	    }
+    }
+
+    void Renderer::Submit(const std::pair<Ref<VertexBufferArray>, Ref<Material>>& va, const Ref<Shader>& shader,
+	    const glm::mat4& transform)
+    {
+
+        shader->Bind();
+        auto& mat = va.second;
+        shader->SetFloat3("uMaterial.Albedo", mat->GetAlbedo());
+        shader->SetFloat3("uMaterial.AO", mat->GetAO());
+       
+        AssetManager::GetTexture(mat->mDiffuseTexture)->Bind(4);
+        AssetManager::GetTexture(mat->mNormalsTexture)->Bind(5);
+        AssetManager::GetTexture(mat->mMetallicTexture)->Bind(6);
+        AssetManager::GetTexture(mat->mAOTexture)->Bind(7);
+        AssetManager::GetTexture(mat->mRoughnessTexture)->Bind(8);
+
+        //float specularExponent = glm::exp2(mat->GetRoughness() * 11) + 2;
+        shader->SetFloat("uMaterial.Roughness", 1 - mat->GetRoughness());
+        shader->SetFloat("uMaterial.Metallic", mat->GetMetallic());
+
+        shader->SetInt("uMaterial.Textures.albedo", 4);
+        shader->SetInt("uMaterial.Textures.normals", 5);
+        shader->SetInt("uMaterial.Textures.metallic", 6);
+        shader->SetInt("uMaterial.Textures.ao", 7);
+        shader->SetInt("uMaterial.Textures.roughness", 8);
+
+        Submit(va.first, shader, transform);
+
+    }
+
+    void Renderer::Submit(const std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& vas,
+	    const Ref<Shader>& shader, const glm::mat4& transform)
+    {
+        for (auto& va : vas)
+        {
+            Submit(va, shader, transform);
+        }
     }
 
     void Renderer::BeginDraw(const Ref<Camera>& camera)

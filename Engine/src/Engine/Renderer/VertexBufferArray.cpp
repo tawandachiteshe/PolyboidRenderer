@@ -3,6 +3,7 @@
 #include "VertexBufferArray.h"
 
 
+#include "ShaderBufferStorage.h"
 #include "Engine/Engine/Debug/Profiler.h"
 #include "glad/glad.h"
 
@@ -14,6 +15,13 @@ namespace Polyboid
         POLYBOID_PROFILE_FUNCTION();
         //Generate this before anything
         glCreateVertexArrays(1, &m_ID);
+    }
+
+    VertexBufferArray::VertexBufferArray(const Ref<ShaderBufferStorage>& buffer, uint32_t indiceCount) : m_IndiceCount(indiceCount)
+    {
+        glCreateVertexArrays(1, &m_ID);
+        glBindVertexArray(m_ID);
+        glVertexArrayElementBuffer(m_ID, buffer->GetID());
     }
 
     VertexBufferArray::~VertexBufferArray()
@@ -59,15 +67,32 @@ namespace Polyboid
         buffer->Bind();
     }
 
+    void VertexBufferArray::SetShaderBufferStorage(const Ref<ShaderBufferStorage>& verts)
+    {
+        m_Storage = verts;
+    }
+
     void VertexBufferArray::Bind()
     {
         POLYBOID_PROFILE_FUNCTION();
         glBindVertexArray(m_ID);
+
+        if (m_Storage != nullptr)
+        {
+            m_Storage->Bind();
+        }
+
+       
     }
 
     std::shared_ptr<VertexBufferArray> VertexBufferArray::MakeVertexBufferArray()
     {
         POLYBOID_PROFILE_FUNCTION();
         return std::make_shared<VertexBufferArray>();
+    }
+
+    std::shared_ptr<VertexBufferArray> VertexBufferArray::MakeVertexBufferArray(const Ref<ShaderBufferStorage>& indices, uint32_t indicesCount)
+    {
+        return std::make_shared<VertexBufferArray>(indices, indicesCount);
     }
 }

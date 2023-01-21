@@ -28,7 +28,6 @@ namespace Polyboid
 	void ContentBrowserWindow::RenderImgui()
 	{
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 20, 20 });
 		ImGui::Begin(m_Name.c_str());
 
 		static bool createNewfolder = false;
@@ -81,7 +80,7 @@ namespace Polyboid
 			}
 		}
 
-		ImGui::Columns(12, "Folder icons", false);
+		ImGui::Columns(8, "Folder icons", false);
 		
 
 		if (std::filesystem::exists(s_WorkDir))
@@ -171,7 +170,6 @@ namespace Polyboid
 
 
 		ImGui::End();
-		ImGui::PopStyleVar();
 
 	}
 

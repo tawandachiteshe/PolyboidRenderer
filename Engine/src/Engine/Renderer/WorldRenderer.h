@@ -4,6 +4,8 @@
 
 namespace Polyboid
 {
+	class Material;
+
 	enum class WorldRendererType
 	{
 		Forward,
@@ -61,7 +63,7 @@ namespace Polyboid
 		Ref<Texture> m_MainTexture;
 		Ref<Texture> m_ComputeTexture;
 
-		std::vector<Ref<VertexBufferArray>> m_Cube;
+		std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>> m_Cube;
 		Ref<VertexBufferArray> m_Quad;
 
 	private:

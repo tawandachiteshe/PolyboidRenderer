@@ -18,6 +18,13 @@ namespace Polyboid
 	class Material
 	{
 	public:
+		UUID mDiffuseTexture = 0;
+		UUID mRoughnessTexture = 0;
+		UUID mMetallicTexture = 0;
+		UUID mAOTexture = 0;
+		UUID mNormalsTexture = 0;
+
+		std::string& GetName() { return m_Name; }
 
 		Material() = default;
 		Material(const std::string& name);

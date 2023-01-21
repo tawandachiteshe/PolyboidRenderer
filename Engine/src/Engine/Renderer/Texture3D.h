@@ -15,7 +15,7 @@ namespace Polyboid
 		uint32_t GetID() { return m_ID; }
 
 		Texture3D() = default;
-		Texture3D(const std::string& path);
+		Texture3D(const std::string& path, uint32_t resolution);
 		Texture3D(void** data, int32_t resolution, int32_t channels = 3);
 
 		//Old implentation previous open gl version needs internet :)

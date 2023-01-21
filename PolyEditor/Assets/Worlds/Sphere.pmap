@@ -1,0 +1,130 @@
+{
+  "_name": "untitled",
+  "game_objects": [
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              2.2825851440429688,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 12979978744162186476,
+      "name": "Sphere 1"
+    },
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              -0.05008941888809204,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 3528048142431707616,
+      "name": "Sphere 2"
+    },
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              -2.6178500652313232,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 15699423363853779543,
+      "name": "Sphere 3"
+    },
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              4.59551477432251,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 16998616721797661027,
+      "name": "Sphere 4"
+    },
+    {
+      "components": [
+        {
+          "TransformComponent": {
+            "position": [
+              -5.432896137237549,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ],
+      "id": 6118878281634479740,
+      "name": "Sphere 5"
+    }
+  ]
+}

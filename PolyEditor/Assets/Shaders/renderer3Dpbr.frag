@@ -5,22 +5,33 @@ in vec2 vUV;
 in vec3 vNormal;
 in vec3 vPixelPosition;
 in vec3 vPosition;
+in mat3 vTBN;
 
 const float PI = 3.14159265359;
 
 #define DIRECTIONAL_LIGHT	0
 #define SPOT_LIGHT			1
 #define POINT_LIGHT			2
-#define MAX_LIGHTS			8
+#define MAX_LIGHTS			4
 
+struct MaterialTextures
+{
+	sampler2D normals;
+	sampler2D albedo;
+	sampler2D ao;
+	sampler2D metallic;
+	sampler2D roughness;
+};
 
 struct MaterialData 
 {
 	vec3 Albedo;
-	vec3 AO;
 	float Metallic;
 	float Roughness;
+	MaterialTextures Textures;
 };
+
+
 
 struct CameraData 
 {
@@ -68,9 +79,7 @@ uniform float uAmbientStrength = 0.1;
 layout (binding = 0) uniform samplerCube prefilterMap;
 layout (binding = 1) uniform sampler2D brdfLUT;
 layout (binding = 2) uniform samplerCube irradianceMap;
-layout (binding = 5) uniform samplerCube envMap;
-layout (binding = 3) uniform sampler2D normalMap;
-layout (binding = 4) uniform sampler2D uShadowMap;
+layout (binding = 3) uniform samplerCube envMap;
 
 uniform CameraData uCameraData;
 uniform int uLightType[MAX_LIGHTS];
@@ -159,11 +168,13 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 	pow(1.0 - cosTheta, 5.0);
 }
 
+/*
 vec3 GetNormalVector(vec2 uv)
 {
 	vec2 m = texture(normalMap, uv).xy;
 	return vec3(m, sqrt(1.0 - m.x * m.x - m.y * m.y));
 }
+*/
 
 vec3 UnpackNormals(vec3 normals)
 {
@@ -174,7 +185,7 @@ vec3 UnpackNormals(vec3 normals)
 vec3 CalculateCookTorrance(vec3 N, vec3 H, vec3 L, vec3 V, vec3 F0)
 {
 	vec3 albedo = uMaterial.Albedo;
-	vec3 AO = uMaterial.AO;
+	vec3 AO = vec3(1.0f);
 	float metallic = uMaterial.Metallic;
 	float roughness = uMaterial.Roughness;
 
@@ -197,10 +208,11 @@ vec3 CalculateCookTorrance(vec3 N, vec3 H, vec3 L, vec3 V, vec3 F0)
 
 vec3 CalculateDiffuse(vec3 N) 
 {
-	vec3 albedo = uMaterial.Albedo;
+	vec3 albedoTexture = texture(uMaterial.Textures.albedo, vUV).xyz;
+	vec3 albedo = albedoTexture * uMaterial.Albedo;
 	
 	//diffuse map
-	vec3 irradiance = texture(irradianceMap, N).xyz;
+	vec3 irradiance = texture(irradianceMap, N * vec3(1.0)).xyz;
 	vec3 diffuse = irradiance * albedo;
 
 	return diffuse;
@@ -210,17 +222,19 @@ vec3 CalculateDiffuse(vec3 N)
 
 vec3 CalculateSpecular(vec3 V, vec3 N, vec3 F)
 {
-	
-	float roughness = uMaterial.Roughness;
+	vec3 metallicTexture = texture(uMaterial.Textures.metallic, vUV).xyz;
+	float roughness = 1.0f;
+	roughness = metallicTexture.g * roughness;
+	roughness = clamp(roughness, 0.04, 1.0);
 	
 	vec3 R = reflect(-V, N);
-	const float MAX_REFLECTION_LOD = 1.5;
+	const float MAX_REFLECTION_LOD = 5;
 
 	float roughness01 = (roughness) * MAX_REFLECTION_LOD;
 
 	vec3 prefilteredColor = textureLod(prefilterMap, R, roughness01).rgb;
 
-	vec2 uv = vec2(max(dot(N, V), 0.0), roughness);
+	vec2 uv = clamp(vec2(max(dot(N, V), 0.0), roughness), vec2(0.0), vec2(1.0));
 	uv.x = -uv.x;
 
 	vec2 envBRDF = texture(brdfLUT, uv).rg;
@@ -242,9 +256,9 @@ float CalculateLightDistance(int lightIndex)
 }
 
 
-vec3 DirectionalLightL()
+vec3 DirectionalLightL(int lightIndex)
 {
-	vec3 L = normalize(uDirectionalLight[0].Direction);
+	vec3 L = normalize(uDirectionalLight[lightIndex].Direction);
 	return L;
 }
 
@@ -271,7 +285,7 @@ vec3 CalculateL(int lightIndex)
 	switch(uLightType[lightIndex])
 	{
 		case DIRECTIONAL_LIGHT:
-			return DirectionalLightL();
+			return DirectionalLightL(lightIndex);
 		case SPOT_LIGHT:
 			return SpotLightL(lightIndex);
 		case POINT_LIGHT:
@@ -308,32 +322,57 @@ vec3 CalculateRadiance(int lightIndex)
 	
 }
 
+
+
 void main()
 {
-	vec3 albedo = uMaterial.Albedo;
-	vec3 AO = uMaterial.AO;
-	float metallic = uMaterial.Metallic;
-	float roughness = uMaterial.Roughness;
+	vec3 albedoTexture = texture(uMaterial.Textures.albedo, vUV).xyz;
+	vec3 aoTexture = texture(uMaterial.Textures.ao, vUV).xyz;
+	vec3 normalTexture = texture(uMaterial.Textures.normals, vUV).xyz;
+	vec3 metallicTexture = texture(uMaterial.Textures.metallic, vUV).xyz;
+	vec3 roughnessTexture = texture(uMaterial.Textures.roughness, vUV).xyz;
 
+	vec3 albedo = uMaterial.Albedo * albedoTexture;
+	vec3 AO = aoTexture;
+	float metallic = 1.0f;
+	float roughness = 1.0f;
+
+	
+	roughness = metallicTexture.g * roughness;
+	roughness = clamp(roughness, 0.04, 1.0);
+
+	metallic = metallicTexture.b * metallic;
+	metallic = clamp(metallic, 0.0, 1.0);
+	
 	//Camera view and Normals
-	vec3 N = normalize(vNormal);
-	vec3 V = normalize(uCameraData.ViewPosition - vPixelPosition);
+	vec3 N = vec3(0.0);
+	vec3 V = vec3(0.0);
+
+	if(normalTexture == vec3(1.0f))
+	{
+		N = normalize(vNormal);
+	} else {
+		N = normalize(vTBN * UnpackNormals(normalTexture)); 
+	}
+
+
+	V = normalize(uCameraData.ViewPosition - vPixelPosition);
+	 
 	
 	vec3 F0 = vec3(0.04);
 	F0 = mix(F0, albedo, metallic);
-
 	
 	// reflectance equation
 	vec3 Lo = vec3(0.0);
 
 	
 	//Cook torrance
-	vec3 F = fresnelSchlickRoughness(clamp(dot(N, V), 0.0, 1.0), F0, roughness);
+	vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
 
 	//specular from map
 	vec3 specular = CalculateSpecular(V, N, F);
 	vec3 kS = F;
-	vec3 kD = vec3(1.0) - kS;
+	vec3 kD = albedo * (vec3(1.0) - kS);
 	kD *= 1.0 - metallic;
 
 	//diffuse map
@@ -347,7 +386,7 @@ void main()
 		vec3 radiance = CalculateRadiance(i);
 
 		// add to outgoing radiance Lo
-		float NdotL = max(dot(N, L), 0.0);
+		float NdotL = clamp(dot(N, L), 0.001, 1.0);
 		Lo += (kD * albedo / PI + specular) * radiance * NdotL;
 	}
 
@@ -360,8 +399,8 @@ void main()
 	vec3 ambient = (kD * diffuse + specular) * AO;
 
 	vec3 color = ambient + Lo;
-	color = color / (color + vec3(1.0));
-	color = pow(color, vec3(1.0/2.2));
+	//color = color / (color + vec3(1.0));
+	//color = pow(color, vec3(1.0/2.2));
 
 
 	FragColor = vec4(color, 1.0f);

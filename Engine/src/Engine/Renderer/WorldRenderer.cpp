@@ -52,11 +52,19 @@ namespace Polyboid
 
 		// Load Textures
 		m_Hdr2D = Texture::MakeTexture2D("Assets/HDRs/thatch_chapel_2k.hdr", true);
-		m_HDR = std::make_shared<Texture3D>("Assets/HDRs/thatch_chapel_2k.hdr");
+		m_HDR = std::make_shared<Texture3D>("Assets/HDRs/thatch_chapel_2k.hdr", 512);
 		m_IrradianceMap = std::make_shared<Texture3D>(mapRes);
 		m_PrefilterMap = std::make_shared<Texture3D>(512, 6);
 		m_BrdfLUT = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG16F, ClampToEdge});
 		m_ComputeTexture = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RGBA32F, ClampToEdge});
+
+		auto whiteTexture = Texture::MakeTexture2D(1, 1, 4);
+
+		uint32_t data = 0xFFFFFFFF;
+		whiteTexture->SetData(&data, sizeof(data));
+
+		AssetManager::LoadTexture(0, whiteTexture);
+
 	}
 
 	void WorldRenderer::InitShaders()
@@ -153,10 +161,6 @@ namespace Polyboid
 		Renderer::Submit(m_Quad, m_BrdfLutShader);
 		m_LutRenderBuffer->UnBind();
 
-
-		ComputeRenderer::Begin();
-		ComputeRenderer::WriteToTexture(m_ComputeTexture, m_ComputeShader);
-		ComputeRenderer::End();
 	}
 
 	void WorldRenderer::RenderLights()
@@ -239,18 +243,10 @@ namespace Polyboid
 			auto va = AssetManager::GetMesh(mesh.assetName);
 			auto mat = MaterialLibrary::GetMaterial(mesh.materialId);
 
-			m_RendererShader->Bind();
-			m_RendererShader->SetFloat3("uMaterial.Albedo", mat->GetAlbedo());
-			m_RendererShader->SetFloat3("uMaterial.AO", mat->GetAO());
-
-			//float specularExponent = glm::exp2(mat->GetRoughness() * 11) + 2;
-			m_RendererShader->SetFloat("uMaterial.Roughness", mat->GetRoughness());
-			m_RendererShader->SetFloat("uMaterial.Metallic", mat->GetMetallic());
-
 			m_PrefilterMap->Bind();
 			m_BrdfLUT->Bind(1);
 			m_IrradianceMap->Bind(2);
-			m_HDR->Bind(5);
+			m_HDR->Bind(3);
 
 
 			Renderer::CullMode(CullMode::Back);
@@ -262,7 +258,7 @@ namespace Polyboid
 	{
 		Renderer::DisableDepthMask();
 		Renderer::CullMode(CullMode::Front);
-		m_PrefilterMap->Bind();
+		m_BrdfLUT->Bind();
 		Renderer::Submit(m_Cube, m_SkyboxShader);
 		Renderer::EnableDepthMask();
 	}
@@ -337,6 +333,7 @@ namespace Polyboid
 
 	void WorldRenderer::DeferredRenderer()
 	{
+
 	}
 
 

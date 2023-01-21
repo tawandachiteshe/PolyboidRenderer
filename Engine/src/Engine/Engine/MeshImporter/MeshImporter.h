@@ -6,13 +6,18 @@
 #include <filesystem>
 
 
+struct aiMaterial;
 struct aiNode;
 struct aiScene;
 struct aiMesh;
 
 namespace Polyboid
 {
+	class Material;
 	class VertexBufferArray;
+
+	using MeshDataIdxArray = std::vector<size_t>;
+	using MatToMeshMap = std::map<aiMaterial*, MeshDataIdxArray*>;
 
 	struct RendererVertex
 	{
@@ -47,13 +52,14 @@ namespace Polyboid
 	class MeshImporter
 	{
 	private:
+		static  RendererMeshData GetMeshV2(const aiScene* scene, const MatToMeshMap& meshToMap);
 		static  RendererMeshData GetMesh(const aiMesh* mesh);
-		static  void ProcessNode(aiNode* node, const aiScene* scene, std::vector<RendererMeshData>& meshesData);
+		static  void ProcessNode(aiNode* node, const aiScene* scene, std::vector<std::pair<RendererMeshData, Ref<Material>>>& meshesData);
 		
 
 	public:
-		static std::vector<RendererMeshData> Read(const std::filesystem::path& path);
-		static std::vector<Ref<VertexBufferArray>> ReadForRendering(const std::filesystem::path& path);
+		static std::vector<std::pair<RendererMeshData, Ref<Material>>> Read(const std::filesystem::path& path);
+		static std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>> ReadForRendering(const std::filesystem::path& path);
 
 	};
 	

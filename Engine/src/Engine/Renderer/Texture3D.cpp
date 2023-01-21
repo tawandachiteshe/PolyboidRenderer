@@ -171,7 +171,7 @@ namespace Polyboid
 	}
 
 
-	Texture3D::Texture3D(const std::string& path)
+	Texture3D::Texture3D(const std::string& path, uint32_t resolution)
 	{
 
 		const auto cachedImageExist = FileSystem::GenCacheFilename(path);
@@ -185,7 +185,7 @@ namespace Polyboid
 		}
 		else
 		{
-			HDRToCubemap<uint8_t> cubemap(path, 512);
+			HDRToCubemap<uint8_t> cubemap(path, resolution);
 			CubeMapSerializer s(cubemap.GetCubeMapFace());
 			s.Write(cachedImageExist);
 			cubemapFace = cubemap.GetCubeMapFace();

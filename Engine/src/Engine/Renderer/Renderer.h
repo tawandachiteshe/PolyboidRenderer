@@ -10,6 +10,7 @@
 
 namespace Polyboid
 {
+	class Material;
 	class UniformBuffer;
 	class RenderAPI;
 
@@ -35,6 +36,10 @@ namespace Polyboid
         static void SetClearColor(const glm::vec4& color = { 0.2, 0.2, 0.2, 1.0 });
         static void Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
         static void Submit(const std::vector<Ref<VertexBufferArray>>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
+
+        static void Submit(const std::pair<Ref<VertexBufferArray>, Ref<Material>>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
+        static void Submit(const std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
+
 
         static void BeginDraw(const Ref<Camera>& camera);
         static void EndDraw();
