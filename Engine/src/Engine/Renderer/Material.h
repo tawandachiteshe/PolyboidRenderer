@@ -9,10 +9,16 @@ namespace Polyboid
 	struct MaterialData
 	{
 		MaterialData() = default;
-		glm::vec3 Albedo{ 1.0f };
-		glm::vec3 AO{ 1.0f };
-		float Roughness = 1.0f;
+		glm::vec3 Albedo{1.0f};
+		glm::vec3 AO{1.0f};
+		
 		float Metallic = 0.5f;
+		float Roughness = 1.0f;
+
+		int32_t textures[4] = {-1, -1, -1, -1};
+
+		MaterialData(const MaterialData& data): Albedo(data.Albedo), AO(data.AO), Metallic(data.Metallic), Roughness(data.Roughness) {}
+
 	};
 
 	class Material
@@ -28,6 +34,17 @@ namespace Polyboid
 
 		Material() = default;
 		Material(const std::string& name);
+
+		void SetData(const MaterialData& data) { m_Data = data; }
+
+		void SetTextures(int32_t* textures)
+		{
+			m_Data.textures[0] = textures[0];
+			m_Data.textures[1] = textures[1];
+			m_Data.textures[2] = textures[2];
+			m_Data.textures[3] = textures[3];
+		}
+
 		void SetAlbedoColor(const glm::vec4& color);
 		glm::vec4& GetAlbedoColor();
 
@@ -47,11 +64,11 @@ namespace Polyboid
 
 		void SetID(const UUID& id);
 
-	private:
+		MaterialData& GetData() { return m_Data; }
 
+	private:
 		std::string m_Name;
 		UUID m_ID;
 		MaterialData m_Data;
 	};
-	
 }

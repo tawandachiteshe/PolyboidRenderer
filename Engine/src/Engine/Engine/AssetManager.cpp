@@ -5,6 +5,8 @@
 
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "MeshImporter/MeshImporter.h"
+#include "Engine/Renderer/Material.h"
+
 
 namespace Polyboid
 {
@@ -15,7 +17,7 @@ namespace Polyboid
 
 
 
-	std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& AssetManager::LoadMesh(const std::string& path)
+	MeshDataRenderer& AssetManager::LoadMesh(const std::string& path)
 	{
 
 		std::filesystem::path fPath = path;
@@ -33,16 +35,12 @@ namespace Polyboid
 		return  s_Data->m_Meshes[fileName];
 	}
 
-	std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& AssetManager::GetMesh(const std::string& AssetName)
+	MeshDataRenderer& AssetManager::GetMesh(const std::string& AssetName)
 	{
-		if (s_Data->m_Meshes.find(AssetName) != s_Data->m_Meshes.end())
-		{
-			return s_Data->m_Meshes[AssetName];
-		}
+		// if (s_Data->m_Meshes.find(AssetName) != s_Data->m_Meshes.end())
+		// {
 
-		std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>> data;
-
-		return data;
+		return s_Data->m_Meshes[AssetName];
 	}
 
 	void AssetManager::LoadTexture(const UUID& id, const Ref<Texture>& texture)

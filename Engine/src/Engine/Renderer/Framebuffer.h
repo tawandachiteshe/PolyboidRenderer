@@ -12,6 +12,7 @@ namespace Polyboid
 		DEPTH,
 		DEPTH24_STENCIL8,
 		RGBA8,
+		RGBA32F,
 		R32I,
 		R32F
 	};
@@ -50,6 +51,9 @@ namespace Polyboid
 				break;
 			case FramebufferTextureFormat::R32F:
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+				break;
+			case FramebufferTextureFormat::RGBA32F:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, nullptr);
 				break;
 			}
 
@@ -106,7 +110,6 @@ namespace Polyboid
 		//might need it maybe.... idk im not reading
 		// might need multi sampled
 		uint32_t m_ColorAttachment = 0, m_DepthAttachment = 0;
-		uint32_t m_DepthSampler;
 
 		std::vector<uint32_t> m_ColorAttachments;
 		FramebufferSettings m_Settings;
@@ -128,6 +131,9 @@ namespace Polyboid
 		void UnBind();
 		static std::shared_ptr<Framebuffer> MakeFramebuffer(const FramebufferSettings& settings);
 		std::vector<uint32_t>& GetColorAttachments() { return m_ColorAttachments; }
+
+		FramebufferSettings& GetSettings() { return m_Settings; }
+
 		uint32_t GetColorAttachment0()
 		{
 			if (m_ColorAttachments.empty())

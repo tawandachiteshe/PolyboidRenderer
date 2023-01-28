@@ -36,7 +36,6 @@ namespace Polyboid
     private:
 
         uint32_t m_TextureID = 0;
-        uint32_t m_SamplersID = 0;
         GLenum m_InternalFormat, m_DataFormat = 0;
         GLint m_TextureWrap = 0;
         int32_t m_Width = 0, m_Height = 0, m_Channels = 0;

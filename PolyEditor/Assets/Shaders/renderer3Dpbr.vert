@@ -17,6 +17,8 @@ out vec3 vNormal;
 out vec3 vPixelPosition;
 out vec3 vPosition;
 out mat3 vTBN;
+out vec2 vWTS;
+out flat float vMeshIdx;
 
 
 struct Vertex {
@@ -26,6 +28,7 @@ struct Vertex {
   float sUV[2];
   float sTangents[3];
   float sBitagents[3];
+  float sMeshIndex;
 };
 
 
@@ -55,6 +58,10 @@ vec3 getBiTangents(int i) {
 	return vec3( in_Vertices[i].sBitagents[0], in_Vertices[i].sBitagents[1], in_Vertices[i].sBitagents[2]);
 }
 
+float getMeshID(int i)
+{
+	return in_Vertices[i].sMeshIndex;
+}
 
 void main() {
 	
@@ -68,7 +75,7 @@ void main() {
 	vUV = getUV(gl_VertexID);
 	vNormal = mat3(transpose(inverse(uTransform))) * normals;
 	vPixelPosition = vec3(uTransform * vec4(getPosition(gl_VertexID), 1.0));
-	vPosition = getPosition(gl_VertexID);
+	vPosition =  getPosition(gl_VertexID);
 
 	vec3 tagents = getTangents(gl_VertexID);
 	vec3 bitagents = getBiTangents(gl_VertexID);
@@ -79,5 +86,6 @@ void main() {
 	mat3 TBN = mat3(T, B, N);
 
 	vTBN = TBN;
+	vMeshIdx = getMeshID(gl_VertexID);
 
 }

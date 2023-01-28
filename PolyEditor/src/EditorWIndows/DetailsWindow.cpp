@@ -1,11 +1,13 @@
 #include "DetailsWindow.h"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "Editor/Events/EditorEvents.h"
 #include "Engine/Engine/AssetManager.h"
 #include "Engine/Engine/Events/EventSystem.h"
 #include "Engine/Engine/Scripting/ScriptingEngine.h"
 #include "Engine/Renderer/MaterialLibrary.h"
+#include "Engine/Renderer/ShaderBufferStorage.h"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Polyboid
@@ -34,12 +36,80 @@ namespace Polyboid
 		std::string makeID = name + text;
 
 		ImGui::PushID(makeID.c_str());
-		ImGui::PushStyleColor(ImGuiCol_Button, { color.x, color.y, color.z, color.w });
-		const bool isClicked = ImGui::Button(text, { 32, 0 });
+		ImGui::PushStyleColor(ImGuiCol_Button, {color.x, color.y, color.z, color.w});
+		const bool isClicked = ImGui::Button(text);
 		ImGui::PopStyleColor();
 		ImGui::PopID();
 
 		return isClicked;
+	}
+
+
+	static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f,
+	                            float columnWidth = 100.0f)
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		auto boldFont = io.Fonts->Fonts[0];
+
+		ImGui::PushID(label.c_str());
+
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, columnWidth);
+		ImGui::Text(label.c_str());
+		ImGui::NextColumn();
+
+		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0, 0});
+
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 buttonSize = {lineHeight + 3.0f, lineHeight};
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.9f, 0.2f, 0.2f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.8f, 0.1f, 0.15f, 1.0f});
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("X", buttonSize))
+			values.x = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3f, 0.8f, 0.3f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.2f, 0.7f, 0.2f, 1.0f});
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Y", buttonSize))
+			values.y = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.2f, 0.35f, 0.9f, 1.0f});
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.1f, 0.25f, 0.8f, 1.0f});
+		ImGui::PushFont(boldFont);
+		if (ImGui::Button("Z", buttonSize))
+			values.z = resetValue;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+
+		ImGui::PopStyleVar();
+
+		ImGui::Columns(1);
+
+		ImGui::PopID();
 	}
 
 	static void DrawTransformVectorComponent(const std::string& label, glm::vec3& value, float size = 68)
@@ -52,29 +122,13 @@ namespace Polyboid
 		auto makeIDZ = std::string("##PZ").append(label);
 
 
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, 10 });
-		ImGui::TextWrapped(label.c_str());
-		DrawColoredButton("X", { 1.0f, 0.0f, 0.0f, 1.0f }, makeIDX);
+		ImGui::Text(label.c_str());
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(size);
+		ImGui::DragFloat("X", &value.x, 0.01f);
+		ImGui::DragFloat("Y", &value.y, 0.01f);
+		ImGui::DragFloat("Z", &value.z, 0.01f);
 
-		
-		ImGui::DragFloat(makeIDX.c_str(), &value.x, 0.01f);
-		ImGui::SameLine();
-		DrawColoredButton("Y", { 0.21f, 0.86f, 0.11f, 1.0f }, makeIDY);
-		ImGui::SameLine();
-		ImGui::SetNextItemWidth(size);
-
-
-		ImGui::DragFloat(makeIDY.c_str(), &value.y, 0.01f);
-		ImGui::SameLine();
-		DrawColoredButton("Z", { 0.0f, 0.0f, 1.0f, 1.0f }, makeIDZ);
-		ImGui::SameLine();
-
-
-		ImGui::SetNextItemWidth(size);
-		ImGui::DragFloat(makeIDZ.c_str(), &value.z, 0.01f);
-		ImGui::PopStyleVar();
+		//ImGui::DragFloat3(label.c_str(), glm::value_ptr(value), 0.01f);
 	}
 
 	static void DrawTransformComponent(GameObject* gameObject, float size)
@@ -84,14 +138,15 @@ namespace Polyboid
 		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			//Position
-			DrawTransformVectorComponent("Position", transform.Position, size);
+			DrawVec3Control("Position", transform.Position);
 
 			//Scale
-			DrawTransformVectorComponent("Scale", transform.Scale, size);
+			DrawVec3Control("Scale", transform.Scale, 1.0f);
 
 			//Rotation
-			static auto rotation = transform.Rotation;
-			DrawTransformVectorComponent("Rotation", transform.Rotation, size);
+			glm::vec3 rotation = glm::degrees(transform.Rotation);
+			DrawVec3Control("Rotation", rotation);
+			transform.Rotation = glm::radians(rotation);
 			//transform.Rotation = glm::radians(rotation);
 		}
 	}
@@ -124,7 +179,7 @@ namespace Polyboid
 				ImGui::EndPopup();
 			}
 
-			ImGui::Button("Add Component", { windowContent - 4, 0 });
+			ImGui::Button("Add Component", {windowContent - 4, 0});
 
 
 			if (ImGui::BeginPopupContextItem("##item", ImGuiPopupFlags_MouseButtonLeft))
@@ -170,7 +225,7 @@ namespace Polyboid
 					if (ImGui::Selectable("Spot Light"))
 					{
 						auto& transform = m_CurrentObject->GetComponent<TransformComponent>();
-						transform.Rotation = { 0, -1, 0 };
+						transform.Rotation = {0, -1, 0};
 						m_CurrentObject->AddComponent<SpotLightComponent>();
 					}
 				}
@@ -181,7 +236,7 @@ namespace Polyboid
 					if (ImGui::Selectable("Directional Light"))
 					{
 						auto& transform = m_CurrentObject->GetComponent<TransformComponent>();
-						transform.Rotation = { 0, -1, 0 };
+						transform.Rotation = {0, -1, 0};
 						m_CurrentObject->AddComponent<DirectionLightComponent>();
 					}
 				}
@@ -241,30 +296,25 @@ namespace Polyboid
 
 			if (m_CurrentObject->HasComponent<DirectionLightComponent>())
 			{
-
 				if (ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					auto& light = m_CurrentObject->GetComponent<DirectionLightComponent>();
 
 					if (ImGui::ColorEdit3("Color", glm::value_ptr(light.color)))
 					{
-						
 					}
 
 					if (ImGui::DragFloat3("Direction", glm::value_ptr(light.direction)))
 					{
-
 					}
 
 					ImGui::DragFloat("Energy", &light.Energy, 0.01f);
-
 				}
 			}
 
 
 			if (m_CurrentObject->HasComponent<PointLightComponent>())
 			{
-
 				if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					auto& light = m_CurrentObject->GetComponent<PointLightComponent>();
@@ -272,53 +322,41 @@ namespace Polyboid
 					ImGui::ColorEdit3("Color", glm::value_ptr(light.color));
 					ImGui::DragFloat("Distance", &light.Distance, 0.01f);
 					ImGui::DragFloat("Energy", &light.Energy, 0.01f);
-
 				}
 			}
 
 
-
 			if (m_CurrentObject->HasComponent<SpotLightComponent>())
 			{
-
 				if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					auto& light = m_CurrentObject->GetComponent<SpotLightComponent>();
 
 					if (ImGui::ColorEdit3("Color", glm::value_ptr(light.color)))
 					{
-
 					}
 
 					if (ImGui::DragFloat3("Direction", glm::value_ptr(light.direction)))
 					{
-
 					}
 
 					if (ImGui::DragFloat("Inner Angle", &light.InnerAngle, 0.01f))
 					{
-
 					}
 
 
 					if (ImGui::DragFloat("Outer Angle", &light.OuterAngle, 0.01f))
 					{
-
 					}
 
 					ImGui::DragFloat("Energy", &light.Energy, 0.01f);
-
-
-
 				}
 			}
 
 			if (m_CurrentObject->HasComponent<MeshRendererComponent>())
 			{
-
 				if (ImGui::CollapsingHeader("Mesh Renderer", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-
 					auto& meshRenderer = m_CurrentObject->GetComponent<MeshRendererComponent>();
 
 					static int item_current = 0;
@@ -327,9 +365,8 @@ namespace Polyboid
 
 					static int currentItem = 0;
 
-					if(ImGui::BeginCombo("Mesh Asset", meshes[currentItem].c_str()))
+					if (ImGui::BeginCombo("Mesh Asset", meshes[currentItem].c_str()))
 					{
-
 						for (int n = 0; n < meshes.size(); n++)
 						{
 							const bool is_selected = (currentItem == n);
@@ -338,12 +375,10 @@ namespace Polyboid
 								currentItem = n;
 								meshRenderer.assetName = meshes[currentItem];
 							}
-
 						}
 						ImGui::EndCombo();
 					}
 
-				
 
 					if (ImGui::CollapsingHeader("Materials", ImGuiTreeNodeFlags_DefaultOpen))
 					{
@@ -351,31 +386,31 @@ namespace Polyboid
 
 						uint32_t count = 0;
 
-						for (auto meshData : meshesWithData)
+						for (auto& meshData : meshesWithData)
 						{
-							auto [_, mat] = meshData;
+							auto [mat, _] = meshData;
+
 
 							ImGui::PushID((mat->GetName() + std::to_string(count)).c_str());
 
 							ImGui::Separator();
 							ImGui::Text("Material name: %s", mat->GetName().c_str());
 							{
-								
 								if (mat)
 								{
-									 auto albedoColor = mat->GetAlbedo();
+									auto albedoColor = mat->GetAlbedo();
 									if (ImGui::ColorEdit3("Albedo Color", glm::value_ptr(albedoColor)))
 									{
 										mat->SetAlbedo(albedoColor);
 									}
 
-									 auto roughness = mat->GetRoughness();
+									auto roughness = mat->GetRoughness();
 									if (ImGui::DragFloat("Roughness", &roughness, 0.01f, 0.0f, 1.0f))
 									{
 										mat->SetRoughness(roughness);
 									}
 
-									 auto metallic = mat->GetMetallic();
+									auto metallic = mat->GetMetallic();
 									if (ImGui::DragFloat("Metallic", &metallic, 0.01f, 0.0f, 1.0f))
 									{
 										mat->SetMetallic(metallic);
@@ -385,51 +420,53 @@ namespace Polyboid
 									ImGui::Separator();
 									ImGui::NewLine();
 
-									 if (ImGui::BeginTable("Textures Table", 2))
-									 {
-
-									 	ImGui::TableNextRow();
+									if (ImGui::BeginTable("Textures Table", 2))
+									{
+										ImGui::TableNextRow();
 										ImGui::TableSetColumnIndex(0);
-									 	ImGui::Text("Albedo");
+										ImGui::Text("Albedo");
 
-									 	ImGui::TableNextColumn();
-									 	ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mDiffuseTexture)->GetTextureID()), { 32, 32 });
+										ImGui::TableNextColumn();
+										ImGui::Image(
+											ImTextureID(AssetManager::GetTexture(mat->mDiffuseTexture)->GetTextureID()),
+											{32, 32});
 
 										ImGui::TableNextRow();
 										ImGui::TableSetColumnIndex(0);
 										ImGui::Text("Normals");
 
 										ImGui::TableNextColumn();
-										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mNormalsTexture)->GetTextureID()), { 32, 32 });
+										ImGui::Image(
+											ImTextureID(AssetManager::GetTexture(mat->mNormalsTexture)->GetTextureID()),
+											{32, 32});
 
 										ImGui::TableNextRow();
 										ImGui::TableSetColumnIndex(0);
 										ImGui::Text("Metallic & Roughness");
 										ImGui::TableNextColumn();
-										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mMetallicTexture)->GetTextureID()), { 32, 32 });
+										ImGui::Image(
+											ImTextureID(
+												AssetManager::GetTexture(mat->mMetallicTexture)->GetTextureID()),
+											{32, 32});
 
 										ImGui::TableNextRow();
 										ImGui::TableSetColumnIndex(0);
 										ImGui::Text("Ambient Occlusion");
 										ImGui::TableNextColumn();
-										ImGui::Image(ImTextureID(AssetManager::GetTexture(mat->mAOTexture)->GetTextureID()), { 32, 32 });
+										ImGui::Image(
+											ImTextureID(AssetManager::GetTexture(mat->mAOTexture)->GetTextureID()),
+											{32, 32});
 
-										 ImGui::EndTable();
-									 }
-
-									
+										ImGui::EndTable();
+									}
 								}
 							}
 
 							ImGui::PopID();
-
 							count++;
 						}
-
 					}
 
-
-		
 
 					if (ImGui::Button("Add Standard Material"))
 					{
@@ -453,34 +490,34 @@ namespace Polyboid
 							switch (type)
 							{
 							case ScriptingType::Boolean:
-							{
-								auto value = script->GetField<bool>(name);
-								if (ImGui::Checkbox(name.c_str(), &value))
 								{
-									script->SetField<bool>(name, value);
-								}
-							}
-							break;
-							case ScriptingType::Vector3:
-							{
-								auto value = script->GetField<glm::vec3>(name);
-								if (ImGui::DragFloat3(field.first.c_str(), glm::value_ptr(value), .1f))
-								{
-									script->SetField<glm::vec3>(name, value);
+									auto value = script->GetField<bool>(name);
+									if (ImGui::Checkbox(name.c_str(), &value))
+									{
+										script->SetField<bool>(name, value);
+									}
 								}
 								break;
-							}
+							case ScriptingType::Vector3:
+								{
+									auto value = script->GetField<glm::vec3>(name);
+									if (ImGui::DragFloat3(field.first.c_str(), glm::value_ptr(value), .1f))
+									{
+										script->SetField<glm::vec3>(name, value);
+									}
+									break;
+								}
 
 							case ScriptingType::Float:
-							{
-								float value = script->GetField<float>(name);
-								if (ImGui::DragFloat(field.first.c_str(), &value, .1f))
 								{
-									script->SetField<float>(name, value);
+									float value = script->GetField<float>(name);
+									if (ImGui::DragFloat(field.first.c_str(), &value, .1f))
+									{
+										script->SetField<float>(name, value);
+									}
 								}
-							}
 
-							break;
+								break;
 							default:
 								break;
 							}
@@ -488,7 +525,6 @@ namespace Polyboid
 					}
 				}
 			}
-
 		}
 
 
@@ -502,7 +538,4 @@ namespace Polyboid
 	DetailsWindow::~DetailsWindow()
 	{
 	}
-
 }
-
-

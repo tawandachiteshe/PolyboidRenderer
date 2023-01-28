@@ -63,7 +63,6 @@ namespace Polyboid
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, m_TextureWrap);
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, m_TextureWrap);
 
-        glCreateSamplers(1, &m_SamplersID);
 	}
 
 	Texture::Texture(int32_t width, int32_t height, int32_t channels, void* data): m_InternalFormat(0), m_Width(width),
@@ -95,7 +94,6 @@ namespace Polyboid
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
 
-        glCreateSamplers(1, &m_SamplersID);
 	}
 
 	Texture::Texture(const std::string& textureImagePath, bool isHdri)
@@ -150,9 +148,7 @@ namespace Polyboid
             glTextureSubImage2D(m_TextureID, 0, 0, 0, m_Width, m_Height, dataFormat, GL_UNSIGNED_BYTE, data);
         }
 
-       
 
-        glCreateSamplers(1, &m_SamplersID);
 
         if (data)
         {
@@ -177,7 +173,7 @@ namespace Polyboid
 
         glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
         glTextureStorage2D(m_TextureID, 1, m_InternalFormat, m_Width, m_Height);
-        glCreateSamplers(1, &m_SamplersID);
+
 
         glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -185,7 +181,6 @@ namespace Polyboid
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-        glCreateSamplers(1, &m_SamplersID);
     }
 
     void Texture::SetData(void* data, uint32_t size)
@@ -207,7 +202,6 @@ namespace Polyboid
         else
         {
             glBindTextureUnit(slot, m_TextureID);
-            glBindSampler(slot, m_SamplersID);
         }
 
 

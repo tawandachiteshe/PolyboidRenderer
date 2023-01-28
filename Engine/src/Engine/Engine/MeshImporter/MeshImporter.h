@@ -4,6 +4,8 @@
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
 #include <filesystem>
+#include <map>
+#include <tuple>
 
 
 struct aiMaterial;
@@ -13,11 +15,11 @@ struct aiMesh;
 
 namespace Polyboid
 {
+	class UUID;
+	struct MaterialData;
+	class ShaderBufferStorage;
 	class Material;
 	class VertexBufferArray;
-
-	using MeshDataIdxArray = std::vector<size_t>;
-	using MatToMeshMap = std::map<aiMaterial*, MeshDataIdxArray*>;
 
 	struct RendererVertex
 	{
@@ -39,8 +41,8 @@ namespace Polyboid
 
 		RendererMeshData() = default;
 
-		bool HasNormals;
-		bool HasColors;
+		bool HasNormals = false;
+		bool HasColors = false;
 		RendererVertex vertex;
 		std::vector<float> vertices;
 		std::vector<uint32_t> Indices;
@@ -49,17 +51,20 @@ namespace Polyboid
 		
 	};
 
+
+	using MeshData = std::map<Ref<Material>, std::vector<RendererMeshData>>;
+	using MeshDataRenderer = std::map<Ref<Material>, Ref<VertexBufferArray>>;
+
 	class MeshImporter
 	{
 	private:
-		static  RendererMeshData GetMeshV2(const aiScene* scene, const MatToMeshMap& meshToMap);
-		static  RendererMeshData GetMesh(const aiMesh* mesh);
-		static  void ProcessNode(aiNode* node, const aiScene* scene, std::vector<std::pair<RendererMeshData, Ref<Material>>>& meshesData);
+		static  RendererMeshData GetMesh(const aiMesh* mesh, uint32_t meshIdx);
+		static  void ProcessNode(aiNode* node, const aiScene* scene, MeshData& meshesData, const std::filesystem::path& path);
 		
 
 	public:
-		static std::vector<std::pair<RendererMeshData, Ref<Material>>> Read(const std::filesystem::path& path);
-		static std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>> ReadForRendering(const std::filesystem::path& path);
+		static MeshData Read(const std::filesystem::path& path);
+		static MeshDataRenderer ReadForRendering(const std::filesystem::path& path);
 
 	};
 	

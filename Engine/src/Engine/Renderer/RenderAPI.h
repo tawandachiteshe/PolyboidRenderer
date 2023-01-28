@@ -11,7 +11,7 @@
 
 namespace Polyboid
 {
-	enum class ClearMode { Depth, Color, DepthColor };
+	enum class ClearMode { Depth, Color, Stencil, DepthColor, DepthColorStencil };
 
 	class RenderAPI
 	{
@@ -26,11 +26,38 @@ namespace Polyboid
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_CULL_FACE);
 			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_STENCIL_TEST);
 			glCullFace(GL_BACK);
 			glFrontFace(GL_CCW);
 			glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
 		}
+
+		static void SetDepthState()
+		{
+			glDepthMask(GL_FALSE);
+			glDepthFunc(GL_GREATER);
+		}
+
+		static void ResetDepthState()
+		{
+			glDepthMask(GL_TRUE);
+			glDepthFunc(GL_LESS);
+		}
+
+
+		static void SetStencilState()
+		{
+			glStencilFunc(GL_ALWAYS, 0, 1);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
+		}
+
+		static void ResetStencilState()
+		{
+			glStencilFunc(GL_ALWAYS, 0, 1);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+		}
+
+
 
 		static void CullFront()
 		{
@@ -46,6 +73,11 @@ namespace Polyboid
 		static void CullFrontBack()
 		{
 			glCullFace(GL_FRONT_AND_BACK);
+		}
+
+		static void SetStencilValue(int32_t value)
+		{
+			glClearStencil(value);
 		}
 
 		static void CullNone()
@@ -76,10 +108,16 @@ namespace Polyboid
 				glClear(GL_COLOR_BUFFER_BIT);
 				break;
 			case ClearMode::Depth:
-				glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				glClear(GL_DEPTH_BUFFER_BIT);
+				break;
+			case ClearMode::Stencil:
+				glClear(GL_STENCIL_BUFFER_BIT);
 				break;
 			case ClearMode::DepthColor:
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				break;
+			case ClearMode::DepthColorStencil:
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 				break;
 			}
 

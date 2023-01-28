@@ -16,6 +16,7 @@ struct Vertex {
   float sUV[2];
   float sTangents[3];
   float sBitagents[3];
+    float sMeshIndex;
 };
 
 

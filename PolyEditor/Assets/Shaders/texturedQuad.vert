@@ -48,7 +48,7 @@ vec2 getUV(int i) {
 void main()
 {
 	
-	gl_Position = projection * view * vec4(getPosition(gl_VertexID), 1.0);
+	gl_Position = vec4(getPosition(gl_VertexID), 1.0);
 
 	vUV = getUV(gl_VertexID);
 }

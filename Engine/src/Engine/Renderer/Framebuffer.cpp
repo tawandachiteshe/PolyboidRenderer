@@ -33,15 +33,14 @@ namespace Polyboid
 				{
 					glDeleteTextures(1, &texture);
 				}
+
 			}
 		
 			
 			glDeleteTextures(1, &m_DepthAttachment);
-			glDeleteSamplers(1, &m_DepthSampler);
 		
 			m_ColorAttachment = 0;
 			m_DepthAttachment = 0;
-			m_DepthSampler = 0;
 			m_ColorAttachments.clear();
 		}
 
@@ -75,6 +74,9 @@ namespace Polyboid
 			case FramebufferTextureFormat::R32F:
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, m_Settings.width, m_Settings.height, 0, GL_RED, GL_FLOAT, nullptr);
 				break;
+			case FramebufferTextureFormat::RGBA32F:
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, m_Settings.width, m_Settings.height, 0, GL_RGBA, GL_FLOAT, nullptr);
+				break;
 			}
 
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -93,7 +95,7 @@ namespace Polyboid
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, m_Settings.width, m_Settings.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, m_Settings.width, m_Settings.height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 
@@ -110,7 +112,7 @@ namespace Polyboid
 		}
 
 		
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_DepthAttachment, 0);
 
 
 	
@@ -126,12 +128,6 @@ namespace Polyboid
 		{
 			glDrawBuffers(drawCount, buffers);
 		}
-
-		
-
-//		
-		
-
 
 
 		if (glCheckNamedFramebufferStatus(m_ID, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -168,19 +164,13 @@ namespace Polyboid
 
 	void Framebuffer::BindColorAttachments(uint32_t index, uint32_t textureIndex)
 	{
-		if (!m_ColorAttachments.empty())
-		{
-			uint32_t texture = m_ColorAttachments.at(index);
-			glBindTextureUnit(textureIndex, texture);
-			glBindSampler(textureIndex, m_DepthSampler);
-		}
-
+		uint32_t texture = m_ColorAttachments.at(index);
+		glBindTextureUnit(textureIndex, texture);
 	}
 
 	void Framebuffer::BindDepthAttachment(uint32_t textureIndex)
 	{
 		glBindTextureUnit(textureIndex, m_DepthAttachment);
-		glBindSampler(textureIndex, m_DepthSampler);
 	}
 
 

@@ -1,16 +1,5 @@
 #version 450 core
 
-
-#define DIRECTIONAL_LIGHT	0
-#define SPOT_LIGHT			1
-#define POINT_LIGHT			2
-#define MAX_LIGHTS			4
-
-
-const float PI = 3.14159265359;
-const vec3 Fdielectric = vec3(0.04);
-
-
 layout (location = 0) out vec4 FragColor;
 
 layout (binding = 0) uniform sampler2D uAlbedoTex;
@@ -18,14 +7,20 @@ layout (binding = 1) uniform sampler2D uNormalTex;
 layout (binding = 2) uniform sampler2D uMetalRoughness;
 layout (binding = 3) uniform sampler2D uPositionsTex;
 
-layout (binding = 5) uniform samplerCube uPrefilterTex;
-layout (binding = 6) uniform sampler2D uBrdfLUTtex;
-layout (binding = 7) uniform samplerCube uIrradianceTex;
-layout (binding = 8) uniform samplerCube uEnvTex;
 
 in vec2 vUV;
+in vec3 vNormal;
+in vec3 vPixelPosition;
+in vec3 vPosition;
+in mat3 vTBN;
 
+const float PI = 3.14159265359;
+const vec3 Fdielectric = vec3(0.04);
 
+#define DIRECTIONAL_LIGHT	0
+#define SPOT_LIGHT			1
+#define POINT_LIGHT			2
+#define MAX_LIGHTS			4
 
 struct CameraData 
 {
@@ -65,31 +60,41 @@ struct SpotLight
 uniform DirectionalLight uDirectionalLight[MAX_LIGHTS];
 uniform PointLight uPointLight[MAX_LIGHTS];
 uniform SpotLight uSpotLight[MAX_LIGHTS];
+uniform int uPointLightsCount;
+uniform int uSpotLightsCount;
+
+uniform float uAmbientStrength = 0.1;
+layout (binding = 5) uniform samplerCube uPrefilterTex;
+layout (binding = 6) uniform sampler2D uBrdfLUTtex;
+layout (binding = 7) uniform samplerCube uIrradianceTex;
+layout (binding = 8) uniform samplerCube uEnvTex;
+
 uniform CameraData uCameraData;
 uniform int uLightType[MAX_LIGHTS];
 
+vec3 CalculateL(int lightIndex);
 
-vec3 CalculateL(int lightIndex, vec3 vPixelPosition);
-
-float CalculateAttenuation(float Range, float Distance)
+float CalculateAttenuation(PointLight light)
 {
 
-	float Linear = 0.1;
+	float Linear = 0.0;
 	float Quadratic = 0.5;
+	float Distance = light.Distance;
+	float Energy = light.Energy;
 	
-	float r = Range;
-	float I = (Distance / (Distance + Linear * r)) * (Distance * Distance / ((Distance * Distance) + Quadratic * (r * r)));
+	float r = length(light.Position - vPixelPosition);
+	float I = Energy * (Distance / (Distance + Linear * r)) * (Distance * Distance / ((Distance * Distance) + Quadratic * (r * r)));
 	float Sphere = I * (Distance - r) / Distance * float(r < Distance);
 	return Sphere;
 }
 
 float CalculateAttenuationV2(float Range, float Distance)
 {
-	return CalculateAttenuation(Range, Distance);
+	return 1.0 - smoothstep(Range * 0.75, Range, Distance);
 }
 
 
-float CalculateSpotCone( SpotLight light, int lightIndex, vec3 vPixelPosition)
+float CalculateSpotCone( SpotLight light, int lightIndex )
 {
 	// If the cosine angle of the light's direction
 	// vector and the vector from the light source to the point being
@@ -100,7 +105,7 @@ float CalculateSpotCone( SpotLight light, int lightIndex, vec3 vPixelPosition)
 	// is greater than maxCos, then the spotlight contribution will be 1.
 	float maxCos = mix( minCos, 1.0, 0.5f );
 
-	float cosAngle = dot( light.Direction, -CalculateL(lightIndex, vPixelPosition) );
+	float cosAngle = dot( light.Direction, -CalculateL(lightIndex) );
 	// Blend between the minimum and maximum cosine angles.
 	return smoothstep( minCos, maxCos, cosAngle );
 }
@@ -112,7 +117,7 @@ vec3 UnpackNormals(vec3 normals)
 }
 
 
-float CalculateLightDistance(int lightIndex, vec3 vPixelPosition)
+float CalculateLightDistance(int lightIndex)
 {
 	switch(uLightType[lightIndex])
 	{
@@ -130,34 +135,34 @@ vec3 DirectionalLightL(int lightIndex)
 	return L;
 }
 
-vec3 PointLightL(int lightIndex, vec3 vPixelPosition)
+vec3 PointLightL(int lightIndex)
 {
 	vec3 L = uPointLight[lightIndex].Position - vPixelPosition;
-	float Distance = CalculateLightDistance(lightIndex, vPixelPosition);
+	float Distance = CalculateLightDistance(lightIndex);
 	L = L / Distance;
 	return L;
 }
 
 
-vec3 SpotLightL(int lightIndex, vec3 vPixelPosition)
+vec3 SpotLightL(int lightIndex)
 {
 	
 	vec3 L = uSpotLight[lightIndex].Position - vPixelPosition;
-	float Distance = CalculateLightDistance(lightIndex, vPixelPosition);
+	float Distance = CalculateLightDistance(lightIndex);
 	L = L / Distance;
 	return L;
 }
 
-vec3 CalculateL(int lightIndex, vec3 vPixelPosition)
+vec3 CalculateL(int lightIndex)
 {
 	switch(uLightType[lightIndex])
 	{
 		case DIRECTIONAL_LIGHT:
 			return DirectionalLightL(lightIndex);
 		case SPOT_LIGHT:
-			return SpotLightL(lightIndex, vPixelPosition);
+			return SpotLightL(lightIndex);
 		case POINT_LIGHT:
-			return PointLightL(lightIndex, vPixelPosition);
+			return PointLightL(lightIndex);
 	}
 }
 
@@ -175,17 +180,17 @@ vec3 CalculateColor(int lightIndex)
 }
 
 
-vec3 CalculateRadiance(int lightIndex, vec3 vPixelPosition)
+vec3 CalculateRadiance(int lightIndex)
 {	
 	switch(uLightType[lightIndex])
 	{
 		case DIRECTIONAL_LIGHT:
 			return  CalculateColor(lightIndex) * uDirectionalLight[lightIndex].Energy;
 		case SPOT_LIGHT:
-			float spotIntensity = CalculateSpotCone(uSpotLight[lightIndex], lightIndex, vPixelPosition);
-			return CalculateColor(lightIndex) * CalculateAttenuationV2(uSpotLight[lightIndex].Distance, CalculateLightDistance(lightIndex, vPixelPosition)) * uSpotLight[lightIndex].Energy * spotIntensity;
+			float spotIntensity = CalculateSpotCone(uSpotLight[lightIndex], lightIndex);
+			return CalculateColor(lightIndex) * CalculateAttenuationV2(uSpotLight[lightIndex].Distance, CalculateLightDistance(lightIndex)) * uSpotLight[lightIndex].Energy * spotIntensity;
 		case POINT_LIGHT:
-			return CalculateColor(lightIndex) * CalculateAttenuationV2(uPointLight[lightIndex].Distance, CalculateLightDistance(lightIndex, vPixelPosition)) * uPointLight[lightIndex].Energy;
+			return CalculateColor(lightIndex) * CalculateAttenuationV2(uPointLight[lightIndex].Distance, CalculateLightDistance(lightIndex)) * uPointLight[lightIndex].Energy;
 	}
 	
 }
@@ -234,10 +239,14 @@ struct ScreenView
 
 
 
-
 void main()
 {
 	vec2 uv = vUV;
+
+	// Everything is in view space.
+	vec4 eyePos = { 0, 0, 0, 1 };
+
+	//uv.x = -uv.x;
 
 	vec3 positions = texture(uPositionsTex, uv).xyz;
 	vec3 albedo = texture(uAlbedoTex, uv).xyz;
@@ -247,6 +256,8 @@ void main()
 	vec3 N = normals;
 	float metalness = metallic.b;
 	float roughness = metallic.g;
+
+
 
 	vec3 Lo = normalize(uCameraData.ViewPosition - positions);
 
@@ -261,12 +272,10 @@ void main()
 
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
-
-		
 	for(int i = 0; i < MAX_LIGHTS; ++i)
 	{
-		vec3 Li = CalculateL(i, positions);
-		vec3 Lradiance = CalculateRadiance(i, positions);
+		vec3 Li = -CalculateL(i);
+		vec3 Lradiance = CalculateRadiance(i);
 
 		// Half-vector between Li and Lo.
 		vec3 Lh = normalize(Li + Lo);
@@ -319,6 +328,8 @@ void main()
 
 		// Sample pre-filtered specular reflection environment at correct mipmap level.
 		int specularTextureLevels = textureQueryLevels(uPrefilterTex);
+
+
 		vec3 specularIrradiance = textureLod(uPrefilterTex, Lr, roughness * specularTextureLevels).rgb;
 
 		// Split-sum approximation factors for Cook-Torrance specular BRDF.
@@ -335,5 +346,6 @@ void main()
 
 	vec3 color = directLighting + ambientLighting;
 
-	FragColor = vec4(color, 1.0f);
+
+	FragColor = vec4(color ,1.0f);
 }

@@ -36,6 +36,7 @@ namespace Polyboid
         void AddVertexBuffer(const Ref<VertexBuffer>& buffer);
         void SetIndexBuffer(const Ref<IndexBuffer>& buffer);
         void SetShaderBufferStorage(const Ref<ShaderBufferStorage>& verts);
+        Ref<ShaderBufferStorage>& GetShaderBufferStorage();
         void Bind();
         static std::shared_ptr<VertexBufferArray> MakeVertexBufferArray();
         static std::shared_ptr<VertexBufferArray> MakeVertexBufferArray(const Ref<ShaderBufferStorage>& indices, uint32_t indiceCount);

@@ -8,6 +8,7 @@
 #include "RenderAPI.h"
 #include "RenderCommand.h"
 #include "Renderer2D.h"
+#include "ShaderBufferStorage.h"
 #include "Texture2D.h"
 #include "UniformBuffer.h"
 #include "Engine/Engine/AssetManager.h"
@@ -28,6 +29,7 @@ namespace Polyboid
         RenderAPI::Init();
         Renderer2D::Init();
         s_RenderStorage->m_UB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2);
+        s_RenderStorage->m_MaterialStorage = ShaderBufferStorage::Make(sizeof(MaterialData) * 128);
     }
 
     void Renderer::Clear(const ClearMode& mode)
@@ -37,11 +39,12 @@ namespace Polyboid
 
     void Renderer::SetClearColor(const glm::vec4& color)
     {
+        POLYBOID_PROFILE_FUNCTION();
         RenderAPI::SetClearColor(color);
     }
 
 
-    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform)
+    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform, bool setMaterials )
     {
         POLYBOID_PROFILE_FUNCTION();
 
@@ -66,51 +69,44 @@ namespace Polyboid
     }
 
     void Renderer::Submit(const std::vector<Ref<VertexBufferArray>>& vas, const Ref<Shader>& shader,
-	    const glm::mat4& transform)
+	    const glm::mat4& transform, bool setMaterials)
     {
 	    for (auto& va : vas)
 	    {
-            Submit(va, shader, transform);
+            Submit(va, shader, transform, setMaterials);
 	    }
     }
 
-    void Renderer::Submit(const std::pair<Ref<VertexBufferArray>, Ref<Material>>& va, const Ref<Shader>& shader,
-	    const glm::mat4& transform)
-    {
 
+    void Renderer::Submit(const MeshDataRenderer& meshData, const Ref<Shader>& shader,
+	    const glm::mat4& transform, bool setMaterials)
+    {
+        POLYBOID_PROFILE_FUNCTION();
         shader->Bind();
-        auto& mat = va.second;
-        shader->SetFloat3("uMaterial.Albedo", mat->GetAlbedo());
-        shader->SetFloat3("uMaterial.AO", mat->GetAO());
-       
-        AssetManager::GetTexture(mat->mDiffuseTexture)->Bind(4);
-        AssetManager::GetTexture(mat->mNormalsTexture)->Bind(5);
-        AssetManager::GetTexture(mat->mMetallicTexture)->Bind(6);
-        AssetManager::GetTexture(mat->mAOTexture)->Bind(7);
-        AssetManager::GetTexture(mat->mRoughnessTexture)->Bind(8);
 
-        //float specularExponent = glm::exp2(mat->GetRoughness() * 11) + 2;
-        shader->SetFloat("uMaterial.Roughness", 1 - mat->GetRoughness());
-        shader->SetFloat("uMaterial.Metallic", mat->GetMetallic());
-
-        shader->SetInt("uMaterial.Textures.albedo", 4);
-        shader->SetInt("uMaterial.Textures.normals", 5);
-        shader->SetInt("uMaterial.Textures.metallic", 6);
-        shader->SetInt("uMaterial.Textures.ao", 7);
-        shader->SetInt("uMaterial.Textures.roughness", 8);
-
-        Submit(va.first, shader, transform);
-
-    }
-
-    void Renderer::Submit(const std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& vas,
-	    const Ref<Shader>& shader, const glm::mat4& transform)
-    {
-        for (auto& va : vas)
+        uint32_t materialOffset = 0;
+        int32_t materialIndex = 0;
+        shader->Bind();
+    	for (auto& materialVA : meshData)
         {
-            Submit(va, shader, transform);
+
+        	auto& [material, vertexBufferArray] = materialVA;
+            AssetManager::GetTexture(material->mDiffuseTexture)->Bind(0);
+            AssetManager::GetTexture(material->mNormalsTexture)->Bind(1);
+            AssetManager::GetTexture(material->mMetallicTexture)->Bind(2);
+
+            shader->SetInt("uMaterialIndex", 0);
+
+            s_RenderStorage->m_MaterialStorage->Bind(1);
+            s_RenderStorage->m_MaterialStorage->SetData(&material->GetData(), sizeof(MaterialData), materialOffset);
+            Submit(vertexBufferArray, shader, transform, setMaterials);
+
+            materialOffset += sizeof(MaterialData);
+            materialIndex++;
         }
+
     }
+
 
     void Renderer::BeginDraw(const Ref<Camera>& camera)
     {
@@ -167,7 +163,7 @@ namespace Polyboid
         const auto count = s_RenderStorage->m_VA->GetIndexBuffer()->GetCount();
         const auto countIf = static_cast<GLsizei>(_count == 0 ? count : _count);
 
-        RenderAPI::DrawIndexed(countIf, 2);
+        RenderAPI::DrawIndexed(countIf, 4);
        
     }
 

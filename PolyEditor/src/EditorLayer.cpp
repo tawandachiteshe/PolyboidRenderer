@@ -24,6 +24,7 @@
 #include <GLFW/glfw3native.h>
 
 #include "Editor/Editor.h"
+#include "EditorWIndows/StatsWindow.h"
 #include "Engine/Engine/Engine.h"
 #include "Engine/Engine/Scripting/ScriptingEngine.h"
 
@@ -284,6 +285,7 @@ namespace Polyboid
         AddWindow(new GameObjectPlacer("GameObject placer"));
         AddWindow(new WorldOutlinerWindow("World outliner"));
         AddWindow(new DetailsWindow("Details"));
+        AddWindow(new StatsWindow());
 
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_ENTER, BIND_EVENT(OnEditorEnterPlayMode));
         EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_EXIT, BIND_EVENT(OnEditorExitPlayMode));

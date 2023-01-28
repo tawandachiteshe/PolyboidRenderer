@@ -7,8 +7,10 @@
 #include "Renderer.h"
 #include "Renderer2D.h"
 #include "Shader.h"
+#include "ShaderBufferStorage.h"
 #include "Engine/Engine/AssetManager.h"
 #include "Engine/Engine/Engine.h"
+#include "glm/gtc/type_ptr.hpp"
 
 
 namespace Polyboid
@@ -17,8 +19,7 @@ namespace Polyboid
 	{
 		// Main Framebuffers
 		m_MainFramebuffer = Framebuffer::MakeFramebuffer({1280, 720, {{FramebufferTextureFormat::RGBA8}}});
-		m_TestFramebuffer = Framebuffer::MakeFramebuffer({1280, 720});
-		m_BugFramebuffer = Framebuffer::MakeFramebuffer({1280, 720});
+
 
 
 		FramebufferSettings settings{};
@@ -26,13 +27,13 @@ namespace Polyboid
 		settings.height = 720;
 		settings.m_Textures = {
 			{FramebufferTextureFormat::RGBA8},
+			{FramebufferTextureFormat::RGBA32F},
 			{FramebufferTextureFormat::RGBA8},
-			{FramebufferTextureFormat::RGBA8},
-			{FramebufferTextureFormat::RGBA8}
+			{FramebufferTextureFormat::RGBA32F},
 		};
 
+		m_NDSFramebuffer = Framebuffer::MakeFramebuffer(settings);
 
-		m_DeferredFramebuffer = Framebuffer::MakeFramebuffer(settings);
 	}
 
 	void WorldRenderer::InitRenderbuffers()
@@ -73,7 +74,14 @@ namespace Polyboid
 		m_SkyboxShader = Shader::MakeShader("Assets/Shaders/skybox.vert", "Assets/Shaders/skybox.frag");
 		m_RenderCubeShader = Shader::MakeShader("Assets/Shaders/renderCube.vert", "Assets/Shaders/renderCube.frag");
 		m_NonPBRShader = Shader::MakeShader("Assets/Shaders/renderer3D.vert", "Assets/Shaders/renderer3D.frag");
-		m_PBRShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/renderer3Dpbr.frag");
+		m_ForwardRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/renderer3Dpbr.frag");
+		m_DeferredRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/deferredRenderer3Dpbr.frag");
+		m_DeferredRendererShaderCheck = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/deferredRendererpbr.frag");
+
+
+		m_GbufferShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/shadowMap.frag");
+
+
 		m_IrradianceShader = Shader::MakeShader("Assets/Shaders/convulateCubemap.vert",
 		                                        "Assets/Shaders/convulateCubemap.frag");
 		m_PrefilterShader = Shader::MakeShader("Assets/Shaders/prefilter.vert", "Assets/Shaders/prefilter.frag");
@@ -89,6 +97,14 @@ namespace Polyboid
 		// Load Meshes
 		m_Cube = AssetManager::LoadMesh("Assets/Models/cube.fbx");
 		m_Quad = Primitives::GenQuad();
+	}
+
+	void WorldRenderer::InitLights()
+	{
+		const uint32_t MAX_LIGHTS = 20000;
+		m_DirectionLightsStorage = ShaderBufferStorage::Make(sizeof(DirectionalLightData) * MAX_LIGHTS);
+		m_SpotLightsStorage = ShaderBufferStorage::Make(sizeof(SpotLightData) * MAX_LIGHTS);
+		m_PointLightsStorage = ShaderBufferStorage::Make(sizeof(PointLightData) * MAX_LIGHTS);
 	}
 
 	void WorldRenderer::PreComputePBRTextures()
@@ -163,7 +179,7 @@ namespace Polyboid
 
 	}
 
-	void WorldRenderer::RenderLights()
+	void WorldRenderer::RenderLights(const Ref<Shader>& shader)
 	{
 		auto& registry = m_Settings.world->GetRegistry();
 
@@ -172,69 +188,85 @@ namespace Polyboid
 		const auto meshDirLightView = registry.view<TransformComponent, DirectionLightComponent>();
 
 
-		int lightCount = 0;
+		int pointLightCount = 0;
+		int pointLightOffset = 0;
+		shader->Bind();
 
 		for (auto entity : meshPointLightView)
 		{
-			m_RendererShader->Bind();
-			m_RendererShader->SetInt("uLightType[" + std::to_string(lightCount) + "]",
-			                         static_cast<int>(LightType::Point));
+			
 			auto [transform, light] = meshPointLightView.get<TransformComponent, PointLightComponent>(entity);
 
-			m_RendererShader->SetFloat3("uPointLight[" + std::to_string(lightCount) + "].Position", transform.Position);
-			m_RendererShader->SetFloat("uPointLight[" + std::to_string(lightCount) + "].Distance", light.Distance);
-			m_RendererShader->SetFloat("uPointLight[" + std::to_string(lightCount) + "].Energy", light.Energy);
-			m_RendererShader->SetFloat3("uPointLight[" + std::to_string(lightCount) + "].Color", light.color);
+			PointLightData data = {};
+			data.Position = transform.Position;
+			data.Color = light.color;
+			data.Distance = light.Distance;
+			data.Energy = light.Energy;
 
-			lightCount++;
+			m_PointLightsStorage->Bind(2);
+			m_PointLightsStorage->SetData(&data, sizeof(data), pointLightOffset);
+
+			pointLightOffset += sizeof(PointLightData);
+			pointLightCount++;
 		}
-		m_RendererShader->SetInt("uPointLightsCount", lightCount);
+		shader->SetInt("uPointLightsCount", pointLightCount);
 
+		int spotLightCount = 0;
+		int spotLightOffset = 0;
 		for (auto entity : meshSpotLightView)
 		{
-			m_RendererShader->Bind();
-			m_RendererShader->SetInt("uLightType[" + std::to_string(lightCount) + "]",
-			                         static_cast<int>(LightType::Spot));
+			
 			auto [transform, light] = meshSpotLightView.get<TransformComponent, SpotLightComponent>(entity);
+			SpotLightData data = {};
 
-			m_RendererShader->SetFloat3("uSpotLight[" + std::to_string(lightCount) + "].Position", transform.Position);
-			m_RendererShader->SetFloat3("uSpotLight[" + std::to_string(lightCount) + "].Direction",
-			                            glm::normalize(transform.Rotation));
-			m_RendererShader->SetFloat("uSpotLight[" + std::to_string(lightCount) + "].Distance", light.Distance);
-			m_RendererShader->SetFloat("uSpotLight[" + std::to_string(lightCount) + "].Energy", light.Energy);
-			m_RendererShader->SetFloat3("uSpotLight[" + std::to_string(lightCount) + "].Color", light.color);
+			data.Position = transform.Position;
+			data.Direction = glm::normalize(transform.Rotation);
+			data.Distance = light.Distance;
+			data.Energy = light.Energy;
+			data.Color = light.color;
+			data.InnerAngle = light.InnerAngle;
+			data.OuterAngle = light.OuterAngle;
 
-			m_RendererShader->SetFloat("uSpotLight[" + std::to_string(lightCount) + "].InnerAngle", light.InnerAngle);
-			m_RendererShader->SetFloat("uSpotLight[" + std::to_string(lightCount) + "].OuterAngle", light.OuterAngle);
+			m_PointLightsStorage->Bind(3);
+			m_SpotLightsStorage->SetData(&data, sizeof(data), spotLightOffset);
 
-			lightCount++;
+			spotLightCount++;
+			spotLightOffset += sizeof(SpotLightData);
 		}
 
+		shader->SetInt("uSpotLightsCount", spotLightCount);
 
+		int dirLightCount = 0;
+		int dirLightOffset = 0;
 		for (auto entity : meshDirLightView)
 		{
-			m_RendererShader->Bind();
-			m_RendererShader->SetInt("uLightType[" + std::to_string(lightCount) + "]",
-			                         static_cast<int>(LightType::Directional));
+
 			auto [transform, light] = meshDirLightView.get<TransformComponent, DirectionLightComponent>(entity);
 
-			m_RendererShader->SetFloat3("uDirectionalLight[" + std::to_string(lightCount) + "].Direction",
-			                            transform.Rotation);
-			m_RendererShader->SetFloat("uDirectionalLight[" + std::to_string(lightCount) + "].Energy", light.Energy);
-			m_RendererShader->SetFloat3("uDirectionalLight[" + std::to_string(lightCount) + "].Color", light.color);
+			DirectionalLightData data = {};
+			data.Direction = glm::normalize(transform.Rotation);
+			data.Energy = light.Energy;
+			data.Color = light.color;
+
+			m_PointLightsStorage->Bind(4);
+			m_DirectionLightsStorage->SetData(&data, sizeof(data), dirLightOffset);
+
+			dirLightCount++;
+			dirLightOffset += sizeof(DirectionalLightData);
 		}
 
+		shader->SetInt("uDirectionLightsCount", dirLightCount);
 
-		lightCount = 0;
+
 	}
 
-	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera)
+	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader, bool setMaterials)
 	{
 		auto& registry = m_Settings.world->GetRegistry();
 		const auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
 
-		m_RendererShader->Bind();
-		m_RendererShader->SetFloat3("uCameraData.ViewPosition", camera->GetPosition());
+		shader->Bind();
+		shader->SetFloat3("uCameraData.ViewPosition", camera->GetPosition());
 
 
 		for (auto entity : meshView)
@@ -243,14 +275,15 @@ namespace Polyboid
 			auto va = AssetManager::GetMesh(mesh.assetName);
 			auto mat = MaterialLibrary::GetMaterial(mesh.materialId);
 
-			m_PrefilterMap->Bind();
-			m_BrdfLUT->Bind(1);
-			m_IrradianceMap->Bind(2);
-			m_HDR->Bind(3);
+			m_PrefilterMap->Bind(28);
+			m_BrdfLUT->Bind(29);
+			m_IrradianceMap->Bind(30);
+			m_HDR->Bind(31);
 
-
-			Renderer::CullMode(CullMode::Back);
-			Renderer::Submit(va, m_RendererShader, transform.GetTransform());
+			m_PointLightsStorage->Bind(2);
+			m_SpotLightsStorage->Bind(3);
+			m_DirectionLightsStorage->Bind(4);
+			Renderer::Submit(va, shader, transform.GetTransform(), setMaterials);
 		}
 	}
 
@@ -263,13 +296,13 @@ namespace Polyboid
 		Renderer::EnableDepthMask();
 	}
 
-	void WorldRenderer::Render3D()
+	void WorldRenderer::Render3D(const Ref<Shader>& shader, bool setMaterials)
 	{
 		const auto& camera = GameStatics::GetCurrentCamera();
 		//Render skybox
 		//temp solution
 		Renderer::BeginDraw(camera);
-		RenderMeshes(camera);
+		RenderMeshes(camera, shader, setMaterials);
 		Renderer::EndDraw();
 	}
 
@@ -305,6 +338,7 @@ namespace Polyboid
 		InitShaders();
 		InitRenderbuffers();
 		InitTextures();
+		InitLights();
 
 		PreComputePBRTextures();
 	}
@@ -323,9 +357,10 @@ namespace Polyboid
 		Renderer::SetClearColor();
 
 		RenderSkybox();
+		RenderLights(m_ForwardRendererShader);
 
-		RenderLights();
-		Render3D();
+		Renderer::CullMode(CullMode::Back);
+		Render3D(m_ForwardRendererShader, true);
 		Render2D();
 
 		m_MainFramebuffer->UnBind();
@@ -333,15 +368,59 @@ namespace Polyboid
 
 	void WorldRenderer::DeferredRenderer()
 	{
+		Engine::SetCurrentFrameBuffer(m_MainFramebuffer);
+		const auto& camera = GameStatics::GetCurrentCamera();
+
+
+		m_NDSFramebuffer->Bind();
+		Renderer::Clear();
+		Renderer::CullMode(CullMode::Back);
+		Render3D(m_DeferredRendererShader, true);
+		m_NDSFramebuffer->UnBind();
+
+
+		m_MainFramebuffer->Bind();
+		Renderer::Clear();
+		Renderer::SetClearColor();
+		//RenderSkybox();
+		RenderLights(m_TexturedQuadShader);
+
+
+		m_DeferredRendererShaderCheck->Bind();
+
+
+		m_NDSFramebuffer->BindColorAttachments();
+		m_NDSFramebuffer->BindColorAttachments(1, 1);
+		m_NDSFramebuffer->BindColorAttachments(2, 2);
+		m_NDSFramebuffer->BindColorAttachments(3, 3);
+		m_NDSFramebuffer->BindDepthAttachment(4);
+		m_PrefilterMap->Bind(5);
+		m_BrdfLUT->Bind(6);
+		m_IrradianceMap->Bind(7);
+		m_HDR->Bind(8);
+
+		
+		
+		m_DeferredRendererShaderCheck->SetMat4("uScreenData.InverseProjection", glm::inverse(camera->GetProjection()));
+		m_DeferredRendererShaderCheck->SetFloat2("uScreenData.ScreenDimensions", { m_MainFramebuffer->GetSettings().width, m_MainFramebuffer->GetSettings().height });
+
+		m_TexturedQuadShader->Bind();
+		m_TexturedQuadShader->SetFloat3("uCameraData.ViewPosition", camera->GetPosition());
+
+		Renderer::CullMode(CullMode::Front);
+		Renderer::Submit(m_Quad, m_TexturedQuadShader);
+
+
+		m_MainFramebuffer->UnBind();
+
+
 
 	}
 
 
 	void WorldRenderer::Render()
 	{
-		m_RendererShader = m_PBRShader;
 
-		
 
 		switch (m_Settings.type)
 		{

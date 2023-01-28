@@ -103,7 +103,7 @@ namespace Polyboid
             spdlog::error("Vertex Shader src not found path {}", vertexPath);
         }
 
-        if (fragPath.empty())
+        if (fragPath.empty() && !fragPath.empty())
         {
 
             spdlog::error("Pixel Shader src not found path {}", fragPath);

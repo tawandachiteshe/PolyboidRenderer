@@ -7,7 +7,6 @@ namespace Polyboid
 	{
 	private:
 		uint32_t m_ID = 0;
-		uint32_t m_Sampler = 0;
 		uint32_t m_Resolution = 0;
 
 	public:

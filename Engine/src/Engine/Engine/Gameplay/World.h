@@ -31,8 +31,10 @@ namespace Polyboid
 
 	class World
 	{
-
+	private:
+		double m_WorldRenderTime = 0.0;
 	public:
+		double GetRenderTime() { return m_WorldRenderTime; }
 		World(const std::string& name = "World");
 		void OnBeginPlay() const;
 		void OnUpdate(float ts) const;

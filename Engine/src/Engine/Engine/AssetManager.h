@@ -1,6 +1,7 @@
 #pragma once
 #include "Base.h"
 #include "UUID.h"
+#include "MeshImporter/MeshImporter.h"
 
 
 namespace Polyboid
@@ -9,9 +10,11 @@ namespace Polyboid
 	class Texture;
 	class VertexBufferArray;
 
+	struct MaterialData;
+
 	struct Data
 	{
-		std::unordered_map<std::string, std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>> m_Meshes;
+		std::unordered_map<std::string, MeshDataRenderer> m_Meshes;
 		std::unordered_map<UUID, Ref<Texture>> m_Textures;
 		std::vector<std::string> m_LoadedMeshNames;
 		std::vector<const char*> m_CStrLoadedMeshNames;
@@ -23,8 +26,8 @@ namespace Polyboid
 		static Unique<Data> s_Data;
 
 	public:
-		static std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& LoadMesh(const std::string& path);
-		static std::vector<std::pair<Ref<VertexBufferArray>, Ref<Material>>>& GetMesh(const std::string & AssetName);
+		static MeshDataRenderer& LoadMesh(const std::string& path);
+		static MeshDataRenderer& GetMesh(const std::string & AssetName);
 		static void LoadTexture(const UUID& id, const  Ref<Texture>& texture);
 		static Ref<Texture>& GetTexture(const UUID& id);
 		static void Init();

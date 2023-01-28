@@ -72,6 +72,11 @@ namespace Polyboid
         m_Storage = verts;
     }
 
+    Ref<ShaderBufferStorage>& VertexBufferArray::GetShaderBufferStorage()
+    {
+        return m_Storage;
+    }
+
     void VertexBufferArray::Bind()
     {
         POLYBOID_PROFILE_FUNCTION();

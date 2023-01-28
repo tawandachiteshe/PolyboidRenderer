@@ -204,7 +204,6 @@ namespace Polyboid
 			m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTextureStorage2D(m_ID, 1, GL_RGB32F, cubemapFace->GetResolution(), cubemapFace->GetResolution());
 
-		glCreateSamplers(1, &m_Sampler);
 
 		for (int i = 0; i != 6; ++i)
 		{
@@ -238,7 +237,6 @@ namespace Polyboid
 			m_ID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTextureStorage2D(m_ID, 1, GL_RGB32F, resolution, resolution);
 
-		glCreateSamplers(1, &m_Sampler);
 
 
 		for (int i = 0; i != 6; ++i)
@@ -283,7 +281,6 @@ namespace Polyboid
 			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		}
 
-		glCreateSamplers(1, &m_Sampler);
 
 		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
@@ -292,6 +289,5 @@ namespace Polyboid
 	void Texture3D::Bind(uint32_t textureUnit)
 	{
 		glBindTextureUnit(textureUnit, m_ID);
-		glBindSampler(textureUnit, m_Sampler);
 	}
 }

@@ -281,6 +281,8 @@ namespace Polyboid
 
 	void World::Render(float dt)
 	{
+		Timer t;
 		m_Renderer->Render();
+		m_WorldRenderTime = t.ElapsedMillis();
 	}
 }
