@@ -201,61 +201,7 @@ namespace Polyboid
 			int32_t indicesOffset;
 		};
 
-		MeshSerializer(const RendererMeshData& meshData)
-		{
-			auto numofVerts = (int32_t)meshData.vertices.size();
-			auto numofIndices = (int32_t)meshData.Indices.size();
 
-			Head h{ numofVerts, numofIndices, numofVerts * 4, numofIndices * 4 };
-
-
-			//First 16 bytes is meta data...
-			s.AddValue<Head>(h);
-
-			s.AddArray<float>(meshData.vertices);
-			s.AddArray<uint32_t>(meshData.Indices);
-		}
-
-
-	
-
-		static MeshSerializer Read(const std::string& filePath)
-		{
-
-			Serializer s;
-
-			return { s.Read(filePath) };
-		}
-		 
-		void Write(const std::string& filePath)
-		{
-			s.Write(filePath);
-		}
-
-		
-		int32_t GetNumberOfVertices()
-		{
-			return s.ReadValue<Head>().numofVerts;
-		}
-
-
-		int32_t GetNumberOfIndices()
-		{
-			return s.ReadValue<Head>().numofIndices;
-
-		}
-
-		std::vector<uint32_t> GetIndices()
-		{
-			const auto offset = (int32_t)sizeof(Head) + (GetNumberOfVertices() * 4);
-			return s.ReadArray<uint32_t>(GetNumberOfIndices(), offset);
-		}
-
-		std::vector<float> GetVertices()
-		{
-			const auto offset = sizeof(Head);
-			return s.ReadArray<float>(GetNumberOfVertices(), offset);
-		}
 
 	};
 

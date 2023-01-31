@@ -25,11 +25,12 @@ namespace Polyboid
 	{
 
 		RendererVertex() = default;
-
-		std::vector<glm::vec3> positions;
-		std::vector<glm::vec2> uvs;
-		std::vector<glm::vec3> normals;
-		std::vector<glm::vec4> colors;
+		glm::vec3 position;
+		glm::vec3 normals;
+		glm::vec2 uv;
+		glm::vec3 tangents;
+		glm::vec3 bitangents;
+		float meshIdx;
 	};
 
 	
@@ -43,8 +44,7 @@ namespace Polyboid
 
 		bool HasNormals = false;
 		bool HasColors = false;
-		RendererVertex vertex;
-		std::vector<float> vertices;
+		std::vector<RendererVertex> vertices;
 		std::vector<uint32_t> Indices;
 
 

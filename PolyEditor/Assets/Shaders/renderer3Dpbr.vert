@@ -4,12 +4,10 @@ layout (std140, binding = 0) uniform CameraBuffer {
     
 	uniform mat4 projection;
     uniform mat4 view;
+	uniform vec3 cameraPosition;
 	
 };
 
-uniform mat4 uProjection;
-uniform mat4 uView;
-	
 
 uniform mat4 uTransform;
 out vec2 vUV;
@@ -62,6 +60,9 @@ float getMeshID(int i)
 {
 	return in_Vertices[i].sMeshIndex;
 }
+
+
+
 
 void main() {
 	

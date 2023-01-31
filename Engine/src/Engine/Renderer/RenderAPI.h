@@ -80,6 +80,12 @@ namespace Polyboid
 			glClearStencil(value);
 		}
 
+		static void SetDepthValue(double value)
+		{
+			glClearDepth(value);
+		}
+
+
 		static void CullNone()
 		{
 			glCullFace(GL_NONE);
@@ -95,6 +101,8 @@ namespace Polyboid
 
 		static void SetClearColor(const glm::vec4& color)
 		{
+
+
 			glClearColor(color.x, color.y, color.z, color.w);
 		}
 
@@ -102,9 +110,11 @@ namespace Polyboid
 		{
 			POLYBOID_PROFILE_FUNCTION();
 
+
 			switch (mode)
 			{
 			case ClearMode::Color:
+				
 				glClear(GL_COLOR_BUFFER_BIT);
 				break;
 			case ClearMode::Depth:

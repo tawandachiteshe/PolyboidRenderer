@@ -19,6 +19,15 @@ namespace Polyboid
 		glDispatchCompute(texture->GetWidth(), texture->GetHeight(), 1);
 	}
 
+	void ComputeRenderer::WriteToBuffer(const Ref<ShaderBufferStorage>& storage, const Ref<Shader>& computeShader,
+		glm::uvec3 threadGroup)
+	{
+		computeShader->Bind();
+		glDispatchCompute(threadGroup.x, threadGroup.y, threadGroup.z);
+
+	}
+
+
 	void ComputeRenderer::End()
 	{
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

@@ -15,11 +15,18 @@ namespace Polyboid
 	class UniformBuffer;
 	class RenderAPI;
 
+	struct CameraData
+	{
+        glm::mat4 Projection;
+        glm::mat4 View;
+        glm::vec3 CameraPosition;
+	};
+
 	struct RendererStorage
     {
         Ref<VertexBufferArray> m_VA = nullptr;
         Ref<Shader> m_Shader = nullptr;
-        Ref<UniformBuffer> m_UB;
+        Ref<UniformBuffer> m_CameraDataUB;
         Ref<ShaderBufferStorage> m_MaterialStorage;
 
         RendererStorage() = default;
@@ -37,9 +44,9 @@ namespace Polyboid
         static void Init();
         static void Clear(const ClearMode& mode = ClearMode::DepthColorStencil);
         static void SetClearColor(const glm::vec4& color = { 0.2, 0.2, 0.2, 1.0 });
-        static void Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f), bool setMaterials = true);
-        static void Submit(const std::vector<Ref<VertexBufferArray>>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f), bool setMaterials = true);
-        static void Submit(const MeshDataRenderer& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f), bool setMaterials = true);
+        static void Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
+        static void Submit(const std::vector<Ref<VertexBufferArray>>& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
+        static void Submit(const MeshDataRenderer& va, const Ref<Shader>& shader, const glm::mat4& transform = glm::mat4(1.0f));
 
         static void BeginDraw(const Ref<Camera>& camera);
         static void EndDraw();

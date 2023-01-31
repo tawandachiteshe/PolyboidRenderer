@@ -32,7 +32,11 @@ namespace Polyboid
 			{FramebufferTextureFormat::RGBA32F},
 		};
 
-		m_NDSFramebuffer = Framebuffer::MakeFramebuffer(settings);
+
+
+		m_GeomFrameBuffer = Framebuffer::MakeFramebuffer(settings);
+		m_LightPassFrameBuffer = Framebuffer::MakeFramebuffer({ 1280, 720, { { FramebufferTextureFormat::RGBA8 } } });
+		m_Depthpass = Framebuffer::MakeFramebuffer({ 1280, 720 });
 
 	}
 
@@ -58,6 +62,8 @@ namespace Polyboid
 		m_PrefilterMap = std::make_shared<Texture3D>(512, 6);
 		m_BrdfLUT = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG16F, ClampToEdge});
 		m_ComputeTexture = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RGBA32F, ClampToEdge});
+		m_oLightGrid = Texture::MakeTexture2D(512, 512, { TextureInternalFormat::RG32UI, ClampToEdge });
+		m_tLightGrid = Texture::MakeTexture2D(512, 512, { TextureInternalFormat::RG32UI, ClampToEdge });
 
 		auto whiteTexture = Texture::MakeTexture2D(1, 1, 4);
 
@@ -75,11 +81,9 @@ namespace Polyboid
 		m_RenderCubeShader = Shader::MakeShader("Assets/Shaders/renderCube.vert", "Assets/Shaders/renderCube.frag");
 		m_NonPBRShader = Shader::MakeShader("Assets/Shaders/renderer3D.vert", "Assets/Shaders/renderer3D.frag");
 		m_ForwardRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/renderer3Dpbr.frag");
-		m_DeferredRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/deferredRenderer3Dpbr.frag");
-		m_DeferredRendererShaderCheck = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/deferredRendererpbr.frag");
-
-
-		m_GbufferShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/shadowMap.frag");
+		m_GeompassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/geomPass.frag");
+		m_DepthpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "");
+		m_LightpassShader = Shader::MakeShader("Assets/Shaders/texturedQuad.vert", "Assets/Shaders/lightPass.frag");
 
 
 		m_IrradianceShader = Shader::MakeShader("Assets/Shaders/convulateCubemap.vert",
@@ -90,6 +94,8 @@ namespace Polyboid
 		m_TexturedQuadShader = Shader::MakeShader("Assets/Shaders/texturedQuad.vert",
 		                                          "Assets/Shaders/texturedQuad.frag");
 		m_ComputeShader = Shader::MakeShader("Assets/Shaders/TestCompute.comp");
+		m_ComputeFrustumShader = Shader::MakeShader("Assets/Shaders/computeFrustrumPlanes.comp");
+		m_ComputeLightCullingShader = Shader::MakeShader("Assets/Shaders/lightCulling.comp");
 	}
 
 	void WorldRenderer::InitMeshes()
@@ -105,6 +111,13 @@ namespace Polyboid
 		m_DirectionLightsStorage = ShaderBufferStorage::Make(sizeof(DirectionalLightData) * MAX_LIGHTS);
 		m_SpotLightsStorage = ShaderBufferStorage::Make(sizeof(SpotLightData) * MAX_LIGHTS);
 		m_PointLightsStorage = ShaderBufferStorage::Make(sizeof(PointLightData) * MAX_LIGHTS);
+		m_FrustumStorage = ShaderBufferStorage::Make(sizeof(Frustum) * 36000);
+
+		m_oLightIndexCounterStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_tLightIndexCounterStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_oLightIndexListStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_tLightIndexListStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+
 	}
 
 	void WorldRenderer::PreComputePBRTextures()
@@ -258,32 +271,28 @@ namespace Polyboid
 		shader->SetInt("uDirectionLightsCount", dirLightCount);
 
 
+		m_PointLightsStorage->Bind(2);
+		m_SpotLightsStorage->Bind(3);
+		m_DirectionLightsStorage->Bind(4);
 	}
 
-	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader, bool setMaterials)
+	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader)
 	{
 		auto& registry = m_Settings.world->GetRegistry();
 		const auto meshView = registry.view<TransformComponent, MeshRendererComponent>();
 
-		shader->Bind();
-		shader->SetFloat3("uCameraData.ViewPosition", camera->GetPosition());
 
-
-		for (auto entity : meshView)
+		for (auto& entity : meshView)
 		{
 			auto [transform, mesh] = meshView.get<TransformComponent, MeshRendererComponent>(entity);
 			auto va = AssetManager::GetMesh(mesh.assetName);
-			auto mat = MaterialLibrary::GetMaterial(mesh.materialId);
 
 			m_PrefilterMap->Bind(28);
 			m_BrdfLUT->Bind(29);
 			m_IrradianceMap->Bind(30);
 			m_HDR->Bind(31);
 
-			m_PointLightsStorage->Bind(2);
-			m_SpotLightsStorage->Bind(3);
-			m_DirectionLightsStorage->Bind(4);
-			Renderer::Submit(va, shader, transform.GetTransform(), setMaterials);
+			Renderer::Submit(va, shader, transform.GetTransform());
 		}
 	}
 
@@ -296,13 +305,13 @@ namespace Polyboid
 		Renderer::EnableDepthMask();
 	}
 
-	void WorldRenderer::Render3D(const Ref<Shader>& shader, bool setMaterials)
+	void WorldRenderer::Render3D(const Ref<Shader>& shader)
 	{
 		const auto& camera = GameStatics::GetCurrentCamera();
 		//Render skybox
 		//temp solution
 		Renderer::BeginDraw(camera);
-		RenderMeshes(camera, shader, setMaterials);
+		RenderMeshes(camera, shader);
 		Renderer::EndDraw();
 	}
 
@@ -313,7 +322,24 @@ namespace Polyboid
 
 		const auto& camera = GameStatics::GetCurrentCamera();
 
+
 		Renderer2D::BeginDraw(camera);
+
+		glm::vec4 color = glm::vec4{ 1.0f };
+		glm::vec4 size = glm::vec4{26.0, 26.0, 1.0, 1.0};
+		glm::vec3 position = glm::vec3{ 0.0f };
+
+		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
+		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
+
+		Renderer2D::DrawLine(p0, p1, color);
+		Renderer2D::DrawLine(p1, p2, color);
+		Renderer2D::DrawLine(p2, p3, color);
+		Renderer2D::DrawLine(p3, p0, color);
+		//Renderer2D::DrawLine({ 0, 0, 0 }, { -200, -200, 0 });
+
 		for (const auto entity : shapeView)
 		{
 			auto [transform, shape] = shapeView.get<TransformComponent, ShapeComponent>(entity);
@@ -353,6 +379,7 @@ namespace Polyboid
 		Engine::SetCurrentFrameBuffer(m_MainFramebuffer);
 
 		m_MainFramebuffer->Bind();
+
 		Renderer::Clear();
 		Renderer::SetClearColor();
 
@@ -360,7 +387,7 @@ namespace Polyboid
 		RenderLights(m_ForwardRendererShader);
 
 		Renderer::CullMode(CullMode::Back);
-		Render3D(m_ForwardRendererShader, true);
+		Render3D(m_ForwardRendererShader);
 		Render2D();
 
 		m_MainFramebuffer->UnBind();
@@ -371,45 +398,50 @@ namespace Polyboid
 		Engine::SetCurrentFrameBuffer(m_MainFramebuffer);
 		const auto& camera = GameStatics::GetCurrentCamera();
 
-
-		m_NDSFramebuffer->Bind();
+		m_Depthpass->Bind();
 		Renderer::Clear();
 		Renderer::CullMode(CullMode::Back);
-		Render3D(m_DeferredRendererShader, true);
-		m_NDSFramebuffer->UnBind();
+		Render3D(m_DepthpassShader);
+		m_Depthpass->UnBind();
 
+
+		ComputeRenderer::Begin();
+		m_ComputeFrustumShader->Bind();
+		m_ComputeFrustumShader->SetMat4("uInverseProjection", glm::inverse(camera->GetProjection()));
+		m_ComputeFrustumShader->SetFloat2("uScreenDimensions", { m_MainFramebuffer->GetSettings().width, m_MainFramebuffer->GetSettings().height });
+		m_FrustumStorage->Bind(0);
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeFrustumShader, { 16, 16, 1 });
+		ComputeRenderer::End();
+
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+		ComputeRenderer::Begin();
+
+		m_Depthpass->BindDepthAttachment();
+		m_oLightGrid->Bind(1, true);
+		m_tLightGrid->Bind(2, true);
+		m_ComputeLightCullingShader->SetMat4("uInverseProjection", glm::inverse(camera->GetProjection()));
+		RenderLights(m_ComputeLightCullingShader);
+
+		m_FrustumStorage->Bind();
+		m_PointLightsStorage->Bind(2);
+		m_SpotLightsStorage->Bind(3);
+		m_DirectionLightsStorage->Bind(4);
+		m_oLightIndexCounterStorage->Bind(5);
+		m_tLightIndexCounterStorage->Bind(6);
+		m_oLightIndexListStorage->Bind(7);
+		m_tLightIndexListStorage->Bind(8);
+
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader, { 16, 16, 1 });
+		ComputeRenderer::End();
 
 		m_MainFramebuffer->Bind();
 		Renderer::Clear();
 		Renderer::SetClearColor();
-		//RenderSkybox();
-		RenderLights(m_TexturedQuadShader);
 
-
-		m_DeferredRendererShaderCheck->Bind();
-
-
-		m_NDSFramebuffer->BindColorAttachments();
-		m_NDSFramebuffer->BindColorAttachments(1, 1);
-		m_NDSFramebuffer->BindColorAttachments(2, 2);
-		m_NDSFramebuffer->BindColorAttachments(3, 3);
-		m_NDSFramebuffer->BindDepthAttachment(4);
-		m_PrefilterMap->Bind(5);
-		m_BrdfLUT->Bind(6);
-		m_IrradianceMap->Bind(7);
-		m_HDR->Bind(8);
-
-		
-		
-		m_DeferredRendererShaderCheck->SetMat4("uScreenData.InverseProjection", glm::inverse(camera->GetProjection()));
-		m_DeferredRendererShaderCheck->SetFloat2("uScreenData.ScreenDimensions", { m_MainFramebuffer->GetSettings().width, m_MainFramebuffer->GetSettings().height });
-
-		m_TexturedQuadShader->Bind();
-		m_TexturedQuadShader->SetFloat3("uCameraData.ViewPosition", camera->GetPosition());
-
+		m_Depthpass->BindDepthAttachment();
 		Renderer::CullMode(CullMode::Front);
 		Renderer::Submit(m_Quad, m_TexturedQuadShader);
-
 
 		m_MainFramebuffer->UnBind();
 

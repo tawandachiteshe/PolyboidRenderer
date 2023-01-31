@@ -7,6 +7,17 @@ namespace Polyboid
 {
 	class Material;
 
+	struct Plane
+	{
+		glm::vec3 Normal;
+		float distance;
+	};
+
+	struct Frustum
+	{
+		Plane planes[4];
+	};
+
 	struct DirectionalLightData
 	{
 		glm::vec3 Direction;
@@ -63,6 +74,12 @@ namespace Polyboid
 		Ref<ShaderBufferStorage> m_DirectionLightsStorage;
 		Ref<ShaderBufferStorage> m_SpotLightsStorage;
 		Ref<ShaderBufferStorage> m_PointLightsStorage;
+		Ref<ShaderBufferStorage> m_FrustumStorage;
+
+		Ref<ShaderBufferStorage> m_oLightIndexCounterStorage;
+		Ref<ShaderBufferStorage> m_tLightIndexCounterStorage;
+		Ref<ShaderBufferStorage> m_oLightIndexListStorage;
+		Ref<ShaderBufferStorage> m_tLightIndexListStorage;
 
 		//Forward Rendering
 		Ref<Framebuffer> m_MainFramebuffer;
@@ -86,13 +103,19 @@ namespace Polyboid
 		Ref<Shader> m_ForwardRendererShader = nullptr;
 
 		//Deferred Rendering
-		Ref<Shader> m_GbufferShader;
-		Ref<Shader> m_DeferredRendererShader;
-		Ref<Shader> m_DeferredRendererShaderCheck;
+		Ref<Shader> m_GeompassShader;
+		Ref<Shader> m_DepthpassShader;
+		Ref<Shader> m_LightpassShader;
+		Ref<Shader> m_DeferredRenderer;
+		Ref<Shader> m_ComputeFrustumShader;
+		Ref<Shader> m_ComputeLightCullingShader;
+
 
 		//Deferred Rendering...
 		//G-Buffer
-		Ref<Framebuffer> m_NDSFramebuffer;
+		Ref<Framebuffer> m_GeomFrameBuffer;
+		Ref<Framebuffer> m_LightPassFrameBuffer;
+		Ref<Framebuffer> m_Depthpass;
 
 
 		Ref<Texture3D> m_HDR;
@@ -102,6 +125,8 @@ namespace Polyboid
 		Ref<Texture> m_BrdfLUT;
 		Ref<Texture> m_MainTexture;
 		Ref<Texture> m_ComputeTexture;
+		Ref<Texture> m_oLightGrid;
+		Ref<Texture> m_tLightGrid;
 
 		MeshDataRenderer m_Cube;
 		Ref<VertexBufferArray> m_Quad;
@@ -121,11 +146,11 @@ namespace Polyboid
 
 		void PreComputePBRTextures();
 		void RenderLights(const Ref<Shader>& shader);
-		void RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader, bool setMaterials);
+		void RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader);
 
 		void RenderSkybox();
 
-		void Render3D(const Ref<Shader>& shader, bool setMaterials);
+		void Render3D(const Ref<Shader>& shader);
 		void Render2D();
 
 	public:

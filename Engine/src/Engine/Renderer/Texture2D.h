@@ -12,6 +12,7 @@ namespace Polyboid
 		RGBA8,
         RGBA32F,
         RG16F,
+        RG32UI,
         R32F,
         R32I,
         DEPTH

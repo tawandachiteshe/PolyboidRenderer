@@ -28,7 +28,7 @@ namespace Polyboid
 
         RenderAPI::Init();
         Renderer2D::Init();
-        s_RenderStorage->m_UB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2);
+        s_RenderStorage->m_CameraDataUB = UniformBuffer::MakeUniformBuffer(sizeof(CameraData));
         s_RenderStorage->m_MaterialStorage = ShaderBufferStorage::Make(sizeof(MaterialData) * 128);
     }
 
@@ -44,7 +44,7 @@ namespace Polyboid
     }
 
 
-    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform, bool setMaterials )
+    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform )
     {
         POLYBOID_PROFILE_FUNCTION();
 
@@ -69,17 +69,17 @@ namespace Polyboid
     }
 
     void Renderer::Submit(const std::vector<Ref<VertexBufferArray>>& vas, const Ref<Shader>& shader,
-	    const glm::mat4& transform, bool setMaterials)
+	    const glm::mat4& transform)
     {
 	    for (auto& va : vas)
 	    {
-            Submit(va, shader, transform, setMaterials);
+            Submit(va, shader, transform);
 	    }
     }
 
 
     void Renderer::Submit(const MeshDataRenderer& meshData, const Ref<Shader>& shader,
-	    const glm::mat4& transform, bool setMaterials)
+	    const glm::mat4& transform)
     {
         POLYBOID_PROFILE_FUNCTION();
         shader->Bind();
@@ -99,7 +99,7 @@ namespace Polyboid
 
             s_RenderStorage->m_MaterialStorage->Bind(1);
             s_RenderStorage->m_MaterialStorage->SetData(&material->GetData(), sizeof(MaterialData), materialOffset);
-            Submit(vertexBufferArray, shader, transform, setMaterials);
+            Submit(vertexBufferArray, shader, transform);
 
             materialOffset += sizeof(MaterialData);
             materialIndex++;
@@ -112,8 +112,13 @@ namespace Polyboid
     {
         POLYBOID_PROFILE_FUNCTION();
 
-        s_RenderStorage->m_UB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
-        s_RenderStorage->m_UB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
+        CameraData data = {};
+        data.Projection = camera->GetProjection();
+        data.View = camera->GetView();
+    	data.CameraPosition = camera->GetPosition();
+
+
+        s_RenderStorage->m_CameraDataUB->SetData(&data, sizeof(data));
 
     }
 

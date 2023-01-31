@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include <memory>
 
+#include "Engine/Engine/Base.h"
 #include "glm/vec4.hpp"
 
 namespace Polyboid 
@@ -118,7 +119,11 @@ namespace Polyboid
 		//supports one texture format RGBA
 		//look whats required for this to work
 	public:
+		uint32_t GetID() { return m_ID; }
 		Framebuffer(const FramebufferSettings& settings);
+		void Blit(const Ref<Framebuffer>& src, uint32_t halfWidth, uint32_t halfHeight, uint32_t attachmentIndex);
+		void ClearColor(const glm::vec4& color);
+		void ClearDepthStencil(float depthValue, uint8_t stencilValue);
 
 		//Recreate Buffer attachments
 	public:

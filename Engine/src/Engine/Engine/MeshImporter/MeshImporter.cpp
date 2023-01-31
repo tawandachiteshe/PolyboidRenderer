@@ -22,6 +22,8 @@ namespace Polyboid
 	RendererMeshData MeshImporter::GetMesh(const aiMesh* mesh, uint32_t meshIdx)
 	{
 		RendererMeshData data = {};
+		RendererVertex vertexData = {};
+		
 
 
 		//for now we get first mesh in a scene
@@ -31,45 +33,30 @@ namespace Polyboid
 			for (int i = 0; i < mesh->mNumVertices; ++i)
 			{
 				glm::vec3 vertex = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
-				data.vertex.positions.push_back(vertex);
 
-				data.vertices.push_back(mesh->mVertices[i].x);
-				data.vertices.push_back(mesh->mVertices[i].y);
-				data.vertices.push_back(mesh->mVertices[i].z);
-
-
-				data.HasColors = mesh->HasVertexColors(i);
-
+				vertexData.position = vertex;
 				if (mesh->HasNormals())
 				{
-					data.HasNormals = true;
-					data.vertex.normals.push_back({mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z});
-					data.vertices.push_back(mesh->mNormals[i].x);
-					data.vertices.push_back(mesh->mNormals[i].y);
-					data.vertices.push_back(mesh->mNormals[i].z);
+					vertexData.normals = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
 				}
 
 
 				//texture coord 0 for now
 				if (mesh->mTextureCoords[0])
 				{
-					data.vertex.uvs.push_back({mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});
-					data.vertices.push_back(mesh->mTextureCoords[0][i].x);
-					data.vertices.push_back(mesh->mTextureCoords[0][i].y);
+					vertexData.uv = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
 				}
 
 				if (mesh->HasTangentsAndBitangents())
 				{
-					data.vertices.push_back(mesh->mTangents[i].x);
-					data.vertices.push_back(mesh->mTangents[i].y);
-					data.vertices.push_back(mesh->mTangents[i].z);
-
-					data.vertices.push_back(mesh->mBitangents[i].x);
-					data.vertices.push_back(mesh->mBitangents[i].y);
-					data.vertices.push_back(mesh->mBitangents[i].z);
+					vertexData.tangents = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
+					vertexData.bitangents = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
+			
 				}
 
-				data.vertices.push_back((float)meshIdx);
+				vertexData.meshIdx = (float)meshIdx;
+
+				data.vertices.push_back(vertexData);
 
 			}
 		}
@@ -317,7 +304,8 @@ namespace Polyboid
 			| aiProcess_SortByPType
 			| aiProcess_Triangulate
 			| aiProcess_CalcTangentSpace
-			| aiProcess_EmbedTextures;
+			| aiProcess_EmbedTextures
+		;
 
 		const aiScene* scene = importer.ReadFile(path.string(), importFlags);
 
@@ -341,24 +329,14 @@ namespace Polyboid
 		std::vector<MaterialData> materialsData;
 		std::vector<Ref<Material>> _materials;
 
-		constexpr uint32_t MAX_MATERIALS = 5000;
-
-		//Combine Trial
-
-
-		Ref<ShaderBufferStorage> materialStorage = ShaderBufferStorage::Make(sizeof(MaterialData) * MAX_MATERIALS);
-
-		uint32_t matOffset = 0;
-
 		for (auto& meshes : _meshData)
 		{
 
 			auto& [material, meshData] = meshes;
 
 			uint32_t offset = 0;
-			uint32_t meshCount = 0;
 
-			std::vector<float> hugeVerts;
+			std::vector<RendererVertex> hugeVerts;
 			std::vector<uint32_t> hugeIdx;
 
 			for (auto& mesh : meshData)
@@ -371,16 +349,14 @@ namespace Polyboid
 					hugeIdx.push_back(idx + offset);
 				}
 
-				offset += (mesh).vertex.positions.size();
+				offset += (mesh).vertices.size();
 
 
 			}
 
 			auto indices = ShaderBufferStorage::Make(hugeIdx.data(), hugeIdx.size() * sizeof(uint32_t));
-
-			Ref<ShaderBufferStorage> verts;
 			auto va = VertexBufferArray::MakeVertexBufferArray(indices, hugeIdx.size());
-			verts = ShaderBufferStorage::Make(hugeVerts.data(), hugeVerts.size() * sizeof(float));
+			Ref<ShaderBufferStorage> verts = ShaderBufferStorage::Make(hugeVerts.data(), hugeVerts.size() * sizeof(RendererVertex));
 
 			va->SetShaderBufferStorage(verts);
 

@@ -197,14 +197,8 @@ namespace Polyboid
 		if (it != std::end(m_GameObjects))
 		{
 			GameObject* tempObject = *it;
-			spdlog::info("Game object {}", tempObject->GetComponent<TagComponent>().name);
 			return tempObject;
 		}
-		else
-		{
-			spdlog::info("Not found");
-		}
-
 
 		return nullptr;
 	}
@@ -220,12 +214,7 @@ namespace Polyboid
 		if (it != std::end(m_GameObjects))
 		{
 			GameObject* tempObject = *it;
-			spdlog::info("Game object {}", tempObject->GetComponent<TagComponent>().name);
 			return tempObject;
-		}
-		else
-		{
-			spdlog::info("Not found");
 		}
 
 		return nullptr;

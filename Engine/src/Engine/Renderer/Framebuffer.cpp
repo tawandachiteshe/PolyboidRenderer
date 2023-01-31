@@ -17,6 +17,23 @@ namespace Polyboid
 	
 	}
 
+	void Framebuffer::Blit(const Ref<Framebuffer>& src, uint32_t halfWidth, uint32_t halfHeight, uint32_t attachmentIndex)
+	{
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glBlitNamedFramebuffer(src->GetID(), m_ID, 0, 0, m_Settings.width, m_Settings.height, 0, 0, halfWidth, halfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
+
+	void Framebuffer::ClearColor(const glm::vec4& color)
+	{
+		glClearNamedFramebufferfv(m_ColorAttachment, GL_COLOR, 0, glm::value_ptr(color));
+	}
+
+	void Framebuffer::ClearDepthStencil(float depthValue, uint8_t stencilValue)
+	{
+		glClearNamedFramebufferfi(m_ID, GL_DEPTH_STENCIL, 0, depthValue, stencilValue);
+	}
+
 	void Framebuffer::ReCreateFramebuffer()
 	{
 		POLYBOID_PROFILE_FUNCTION();
