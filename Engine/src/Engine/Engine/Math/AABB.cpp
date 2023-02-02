@@ -82,9 +82,25 @@ namespace Polyboid
         }
     }
 
+    void AABB::Merge(const AABB& aabb)
+    {
+        mMin.x = glm::min(mMin.x, aabb.mMin.x);
+    	mMin.y = glm::min(mMin.y, aabb.mMin.y);
+    	mMin.z = glm::min(mMin.z, aabb.mMin.z);
+    	mMax.x = glm::max(mMax.x, aabb.mMax.x);
+        mMax.y = glm::max(mMax.y, aabb.mMax.y);
+    	mMax.z = glm::max(mMax.z, aabb.mMax.z);
+    }
+
+    void AABB::Add(const AABB& aabb)
+    {
+        mMin += aabb.mMin;
+        mMax += aabb.mMax;
+    }
+
     void AABB::ExtendDisk(const glm::vec3& c, const glm::vec3& n, glm::f32 r)
     {
-        if (glm::length(n) < 1.e-12) { Extend(c); return; }
+        if (glm::length(n) < 1.e-12f) { Extend(c); return; }
         glm::vec3 norm = glm::normalize(n);
         glm::f32 x = sqrt(1 - norm.x) * r;
         glm::f32 y = sqrt(1 - norm.y) * r;
@@ -131,6 +147,15 @@ namespace Polyboid
         {
             mMin += v;
             mMax += v;
+        }
+    }
+
+    void AABB::Transform(const glm::mat4& mat)
+    {
+        if (!IsNull())
+        {
+            mMin += glm::vec3(mat * glm::vec4(mMin, 1.0f));
+            mMax += glm::vec3(mat * glm::vec4(mMax, 1.0f));
         }
     }
 

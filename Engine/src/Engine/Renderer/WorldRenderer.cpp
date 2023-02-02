@@ -2,7 +2,9 @@
 #include "WorldRenderer.h"
 
 #include "ComputeRenderer.h"
+#include "FrustumCulling.h"
 #include "MaterialLibrary.h"
+#include "PerspectiveCamera.h"
 #include "Primitives.h"
 #include "Renderer.h"
 #include "Renderer2D.h"
@@ -21,7 +23,6 @@ namespace Polyboid
 		m_MainFramebuffer = Framebuffer::MakeFramebuffer({1280, 720, {{FramebufferTextureFormat::RGBA8}}});
 
 
-
 		FramebufferSettings settings{};
 		settings.width = 1280;
 		settings.height = 720;
@@ -33,11 +34,9 @@ namespace Polyboid
 		};
 
 
-
 		m_GeomFrameBuffer = Framebuffer::MakeFramebuffer(settings);
-		m_LightPassFrameBuffer = Framebuffer::MakeFramebuffer({ 1280, 720, { { FramebufferTextureFormat::RGBA8 } } });
-		m_Depthpass = Framebuffer::MakeFramebuffer({ 1280, 720 });
-
+		m_LightPassFrameBuffer = Framebuffer::MakeFramebuffer({1280, 720, {{FramebufferTextureFormat::RGBA8}}});
+		m_Depthpass = Framebuffer::MakeFramebuffer({1280, 720});
 	}
 
 	void WorldRenderer::InitRenderbuffers()
@@ -62,8 +61,8 @@ namespace Polyboid
 		m_PrefilterMap = std::make_shared<Texture3D>(512, 6);
 		m_BrdfLUT = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG16F, ClampToEdge});
 		m_ComputeTexture = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RGBA32F, ClampToEdge});
-		m_oLightGrid = Texture::MakeTexture2D(512, 512, { TextureInternalFormat::RG32UI, ClampToEdge });
-		m_tLightGrid = Texture::MakeTexture2D(512, 512, { TextureInternalFormat::RG32UI, ClampToEdge });
+		m_oLightGrid = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG32UI, ClampToEdge});
+		m_tLightGrid = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG32UI, ClampToEdge});
 
 		auto whiteTexture = Texture::MakeTexture2D(1, 1, 4);
 
@@ -71,7 +70,6 @@ namespace Polyboid
 		whiteTexture->SetData(&data, sizeof(data));
 
 		AssetManager::LoadTexture(0, whiteTexture);
-
 	}
 
 	void WorldRenderer::InitShaders()
@@ -80,7 +78,8 @@ namespace Polyboid
 		m_SkyboxShader = Shader::MakeShader("Assets/Shaders/skybox.vert", "Assets/Shaders/skybox.frag");
 		m_RenderCubeShader = Shader::MakeShader("Assets/Shaders/renderCube.vert", "Assets/Shaders/renderCube.frag");
 		m_NonPBRShader = Shader::MakeShader("Assets/Shaders/renderer3D.vert", "Assets/Shaders/renderer3D.frag");
-		m_ForwardRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/renderer3Dpbr.frag");
+		m_ForwardRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert",
+		                                             "Assets/Shaders/renderer3Dpbr.frag");
 		m_GeompassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/geomPass.frag");
 		m_DepthpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "");
 		m_LightpassShader = Shader::MakeShader("Assets/Shaders/texturedQuad.vert", "Assets/Shaders/lightPass.frag");
@@ -113,11 +112,10 @@ namespace Polyboid
 		m_PointLightsStorage = ShaderBufferStorage::Make(sizeof(PointLightData) * MAX_LIGHTS);
 		m_FrustumStorage = ShaderBufferStorage::Make(sizeof(Frustum) * 36000);
 
-		m_oLightIndexCounterStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_tLightIndexCounterStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_oLightIndexListStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_tLightIndexListStorage		= ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-
+		m_oLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_tLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_oLightIndexListStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+		m_tLightIndexListStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
 	}
 
 	void WorldRenderer::PreComputePBRTextures()
@@ -189,7 +187,6 @@ namespace Polyboid
 		Renderer::Clear(ClearMode::Depth);
 		Renderer::Submit(m_Quad, m_BrdfLutShader);
 		m_LutRenderBuffer->UnBind();
-
 	}
 
 	void WorldRenderer::RenderLights(const Ref<Shader>& shader)
@@ -207,7 +204,6 @@ namespace Polyboid
 
 		for (auto entity : meshPointLightView)
 		{
-			
 			auto [transform, light] = meshPointLightView.get<TransformComponent, PointLightComponent>(entity);
 
 			PointLightData data = {};
@@ -228,7 +224,6 @@ namespace Polyboid
 		int spotLightOffset = 0;
 		for (auto entity : meshSpotLightView)
 		{
-			
 			auto [transform, light] = meshSpotLightView.get<TransformComponent, SpotLightComponent>(entity);
 			SpotLightData data = {};
 
@@ -253,7 +248,6 @@ namespace Polyboid
 		int dirLightOffset = 0;
 		for (auto entity : meshDirLightView)
 		{
-
 			auto [transform, light] = meshDirLightView.get<TransformComponent, DirectionLightComponent>(entity);
 
 			DirectionalLightData data = {};
@@ -276,6 +270,9 @@ namespace Polyboid
 		m_DirectionLightsStorage->Bind(4);
 	}
 
+
+
+
 	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader)
 	{
 		auto& registry = m_Settings.world->GetRegistry();
@@ -291,6 +288,7 @@ namespace Polyboid
 			m_BrdfLUT->Bind(29);
 			m_IrradianceMap->Bind(30);
 			m_HDR->Bind(31);
+
 
 			Renderer::Submit(va, shader, transform.GetTransform());
 		}
@@ -325,20 +323,6 @@ namespace Polyboid
 
 		Renderer2D::BeginDraw(camera);
 
-		glm::vec4 color = glm::vec4{ 1.0f };
-		glm::vec4 size = glm::vec4{26.0, 26.0, 1.0, 1.0};
-		glm::vec3 position = glm::vec3{ 0.0f };
-
-		glm::vec3 p0 = glm::vec3(position.x - size.x * 0.5f, position.y - size.y * 0.5f, position.z);
-		glm::vec3 p1 = glm::vec3(position.x + size.x * 0.5f, position.y - size.y * 0.5f, position.z);
-		glm::vec3 p2 = glm::vec3(position.x + size.x * 0.5f, position.y + size.y * 0.5f, position.z);
-		glm::vec3 p3 = glm::vec3(position.x - size.x * 0.5f, position.y + size.y * 0.5f, position.z);
-
-		Renderer2D::DrawLine(p0, p1, color);
-		Renderer2D::DrawLine(p1, p2, color);
-		Renderer2D::DrawLine(p2, p3, color);
-		Renderer2D::DrawLine(p3, p0, color);
-		//Renderer2D::DrawLine({ 0, 0, 0 }, { -200, -200, 0 });
 
 		for (const auto entity : shapeView)
 		{
@@ -350,10 +334,19 @@ namespace Polyboid
 				break;
 			case ShapeType::Circle:
 				Renderer2D::DrawCircle(transform.GetTransform(), shape.color, shape.thickness, shape.fade);
+				break;
+			case ShapeType::Rect:
+				Renderer2D::DrawRect(transform.GetTransform(), shape.color);
+				break;
+			case ShapeType::Cube:
+				Renderer2D::DrawCube(transform.GetTransform(), shape.color);
+				break;
+			case ShapeType::Pyramid:
+				Renderer2D::DrawPyramid(transform.GetTransform(), shape.nearPlane, shape.farPlane, shape.distance, shape.color);
+				break;
 			}
 		}
 
-		Renderer::CullMode(CullMode::Front);
 		Renderer2D::EndDraw();
 	}
 
@@ -408,12 +401,13 @@ namespace Polyboid
 		ComputeRenderer::Begin();
 		m_ComputeFrustumShader->Bind();
 		m_ComputeFrustumShader->SetMat4("uInverseProjection", glm::inverse(camera->GetProjection()));
-		m_ComputeFrustumShader->SetFloat2("uScreenDimensions", { m_MainFramebuffer->GetSettings().width, m_MainFramebuffer->GetSettings().height });
+		m_ComputeFrustumShader->SetFloat2("uScreenDimensions", {
+			                                  m_MainFramebuffer->GetSettings().width,
+			                                  m_MainFramebuffer->GetSettings().height
+		                                  });
 		m_FrustumStorage->Bind(0);
-		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeFrustumShader, { 16, 16, 1 });
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeFrustumShader, {16, 16, 1});
 		ComputeRenderer::End();
-
-		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		ComputeRenderer::Begin();
 
@@ -432,7 +426,7 @@ namespace Polyboid
 		m_oLightIndexListStorage->Bind(7);
 		m_tLightIndexListStorage->Bind(8);
 
-		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader, { 16, 16, 1 });
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader, {16, 16, 1});
 		ComputeRenderer::End();
 
 		m_MainFramebuffer->Bind();
@@ -444,16 +438,11 @@ namespace Polyboid
 		Renderer::Submit(m_Quad, m_TexturedQuadShader);
 
 		m_MainFramebuffer->UnBind();
-
-
-
 	}
 
 
 	void WorldRenderer::Render()
 	{
-
-
 		switch (m_Settings.type)
 		{
 		case WorldRendererType::Forward:

@@ -268,7 +268,7 @@ namespace Polyboid
 
 
 					const char* items[] = {
-						"QUAD", "CIRCLE", "LINE"
+						"QUAD", "CIRCLE", "RECT", "CUBE", "PYRAMID"
 					};
 					static int item_current = 0;
 					if (ImGui::Combo("Shape Type", &item_current, items, IM_ARRAYSIZE(items)))
@@ -281,14 +281,39 @@ namespace Polyboid
 						case 1:
 							shapeComponent.type = ShapeType::Circle;
 							break;
+						case 2:
+							shapeComponent.type = ShapeType::Rect;
+							break;
+						case 3:
+							shapeComponent.type = ShapeType::Cube;
+							break;
+						case 4:
+							shapeComponent.type = ShapeType::Pyramid;
+							break;
 						default:
 							break;
 						}
 					}
-					if (shapeComponent.type == ShapeType::Circle)
+
+					if (shapeComponent.type == ShapeType::Pyramid)
+					{
+
+						ImGui::DragFloat("Near Plane", &shapeComponent.nearPlane, 0.01f);
+						ImGui::DragFloat("Far Plane", &shapeComponent.farPlane, 0.01f);
+						ImGui::DragFloat("Distance", &shapeComponent.distance, 0.01f);
+
+					}
+
+					if (shapeComponent.type == ShapeType::Circle || shapeComponent.type == ShapeType::Rect)
 					{
 						ImGui::DragFloat("Thickness", &shapeComponent.thickness, 0.01f);
-						ImGui::DragFloat("Fade", &shapeComponent.fade, 0.01f);
+
+
+						if (shapeComponent.type == ShapeType::Circle)
+						{
+							ImGui::DragFloat("Fade", &shapeComponent.fade, 0.01f);
+						}
+						
 					}
 				}
 			}

@@ -13,6 +13,8 @@
 #include "glm/detail/qualifier.hpp"
 #include <Engine/Renderer/UniformBuffer.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "FrustumCulling.h"
 #include "VertexBufferArray.h"
 
 
@@ -46,8 +48,7 @@ namespace Polyboid
 
 	struct LineData
 	{
-		uint32_t LinesVertsCount = 4;
-		uint32_t LinesIndicesCount = 6;
+		uint32_t LinesVertsCount = 2;
 
 		Ref<VertexBufferArray> LineVertexBufferArray;
 		Ref<VertexBuffer> LineVertexBuffer;
@@ -55,16 +56,12 @@ namespace Polyboid
 
 		uint32_t lineCount = 0;
 		uint32_t lineOffset = 0;
-
-
 		uint32_t vtxSize = LinesVertsCount * MAX_GEOMETRY;
-		uint32_t idxSize = LinesIndicesCount * MAX_GEOMETRY;
-
-		glm::vec4 LineVertexPositions[4] = {};
-		LineVertex LineVerts[4] = {};
 
 
 		std::vector<LineVertex> LineVerticesData;
+		LineVertex lineVerts[4];
+
 		uint32_t LineIndexCount = 0;
 	};
 
@@ -245,67 +242,32 @@ namespace Polyboid
 		s_LineData.LineVertexBufferArray = VertexBufferArray::MakeVertexBufferArray();
 
 		const uint32_t vtxSize = s_LineData.vtxSize;
-		const uint32_t idxSize = s_LineData.idxSize;
 
 		s_LineData.LineVertexBuffer = VertexBuffer::MakeVertexBuffer(vtxSize * sizeof(LineVertex));
 		s_LineData.LineVerticesData = std::vector<LineVertex>(vtxSize);
-		auto* quadIndices = new uint32_t[idxSize];
-
-		uint32_t lastIndex = 0;
-
-		for (uint32_t i = 0; i < idxSize; i)
-		{
-			if (lastIndex == 0)
-			{
-				quadIndices[i++] = 0;
-				quadIndices[i++] = 1;
-				quadIndices[i++] = 3;
-
-				quadIndices[i++] = 1;
-				quadIndices[i++] = 2;
-				quadIndices[i++] = 3;
-			}
-			else
-			{
-				quadIndices[i++] = quadIndices[lastIndex - 6] + 4;
-				quadIndices[i++] = quadIndices[lastIndex - 5] + 4;
-				quadIndices[i++] = quadIndices[lastIndex - 4] + 4;
-
-				quadIndices[i++] = quadIndices[lastIndex - 3] + 4;
-				quadIndices[i++] = quadIndices[lastIndex - 2] + 4;
-				quadIndices[i++] = quadIndices[lastIndex - 1] + 4;
-			}
-
-
-			lastIndex = i;
-		}
-
 
 		s_LineData.LineVertexBufferArray->Bind();
-		const Ref<IndexBuffer> indexBuffer = IndexBuffer::MakeIndexBuffer(quadIndices, idxSize);
-		delete[] quadIndices;
-
 
 		s_LineData.LineVertexBuffer->DescribeBuffer({
-			{BufferComponent::Float3, "aWorldPosition"},
-			{BufferComponent::Float3, "aLocalPosition0"},
-			{BufferComponent::Float3, "aLocalPosition1"},
+			{BufferComponent::Float3, "aPosition"},
 			{BufferComponent::Float4, "aColor"},
-			{BufferComponent::Float, "aThickness"},
-			{BufferComponent::Float2, "aUV"}
 			});
 
 		s_LineData.LineVertexBufferArray->AddVertexBuffer(s_LineData.LineVertexBuffer);
-		s_LineData.LineVertexBufferArray->SetIndexBuffer(indexBuffer);
 
-
-		s_LineData.LineVerts[0] = { {0.5f, 0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, {1.0f, 1.0f}};
-		s_LineData.LineVerts[1] = { {0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, {1.0f, 0.0f}};
-		s_LineData.LineVerts[2] = { {-0.5f, -0.5f, 0.0f}, {-0.5f, -0.5f, 0.0f},{-0.5f, -0.5f, 0.0f} , {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f , {0.0f, 0.0f}};
-		s_LineData.LineVerts[3] = { {-0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, {0.0f, 1.0f}};
 
 		s_LineData.shader = Shader::MakeShader("Assets/Shaders/rendererLine.vert",
 			"Assets/Shaders/rendererLine.frag");
+
+		glLineWidth(2.0f);
+		glEnable(GL_LINE_SMOOTH);
+
+
+		s_LineData.lineVerts[0] = { {0.5f, 0.5f, 0.0f}, glm::vec4{1.0f} };
+		s_LineData.lineVerts[1] = { {0.5f, -0.5f, 0.0f}, glm::vec4{1.0f} };
+		s_LineData.lineVerts[2] = { {-0.5f, -0.5f, 0.0f}, glm::vec4{1.0f} };
+		s_LineData.lineVerts[3] = { {-0.5f, 0.5f, 0.0f}, glm::vec4{1.0f} };
+
 	}
 
 	void Renderer2D::PrepareQuadsForRendering()
@@ -358,19 +320,14 @@ namespace Polyboid
 		if (s_LineData.lineCount)
 		{
 
-
+			s_LineData.shader->Bind();
+			s_LineData.LineVertexBufferArray->Bind();
 			const uint32_t vertexSize = sizeof(LineVertex) * s_LineData.lineOffset;
 			s_LineData.LineVertexBuffer->SetData(s_LineData.LineVerticesData.data(), vertexSize);
-
-			s_LineData.shader->Bind();
-			const auto count = s_LineData.LineIndexCount;
-
-			s_LineData.LineVertexBufferArray->Bind();
 			s_LineData.LineVertexBuffer->Bind();
-			s_LineData.LineVertexBufferArray->GetIndexBuffer()->Bind();
 
 			glDisable(GL_CULL_FACE);
-			RenderAPI::DrawIndexed(count, 4);
+			RenderAPI::DrawLines(s_LineData.lineCount);
 			glEnable(GL_CULL_FACE);
 		}
 	}
@@ -384,7 +341,7 @@ namespace Polyboid
 		PrepareLines();
 
 		//temp solution
-		s_RenderData.m_CameraUB = UniformBuffer::MakeUniformBuffer(sizeof(glm::mat4) * 2, 0);
+		s_RenderData.m_CameraUB = UniformBuffer::MakeUniformBuffer((sizeof(glm::mat4) * 2) + sizeof(glm::vec3), 0);
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
@@ -393,6 +350,9 @@ namespace Polyboid
 
 		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
 		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
+		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetPosition()), sizeof(glm::vec3), 128);
+
+		s_RenderData.m_CameraUB->Bind(0);
 	}
 
 	void Renderer2D::DebugWindow()
@@ -431,7 +391,6 @@ namespace Polyboid
 	{
 		s_LineData.lineCount = 0;
 		s_LineData.lineOffset = 0;
-		s_LineData.LineIndexCount = 0;
 	}
 
 	void Renderer2D::Reset()
@@ -481,31 +440,387 @@ namespace Polyboid
 
 	void Renderer2D::DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color, float thickness)
 	{
-		int count = 0;
-		for (auto& lineVert : s_LineData.LineVerts)
-		{
-			if (s_LineData.lineOffset < s_LineData.vtxSize)
-			{
-				glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(glm::length(p1 - p0)));
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).WorldPosition = transform * glm::vec4(lineVert.WorldPosition, 1.0f);
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).LocalPosition0 = p0;
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).LocalPosition1 = p1;
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).color = color;
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).Thickness = thickness;
-				s_LineData.LineVerticesData.at(s_LineData.lineOffset + count).uv = lineVert.uv;
 
-			}
-
-			count++;
-		}
+		s_LineData.LineVerticesData.at(s_LineData.lineOffset).Position = p0;
+		s_LineData.LineVerticesData.at(s_LineData.lineOffset).color = color;
+		s_LineData.LineVerticesData.at(s_LineData.lineOffset + 1).Position = p1;
+		s_LineData.LineVerticesData.at(s_LineData.lineOffset + 1).color = color;
 
 		if (s_LineData.lineOffset < s_LineData.vtxSize)
 		{
-			s_LineData.lineCount++;
-			s_LineData.lineOffset += 4;
-			s_LineData.LineIndexCount += 6;
+			s_LineData.lineCount += 2;
+			s_LineData.lineOffset += 2;
 		}
 	}
+
+	void Renderer2D::DrawRect(const glm::vec3& pos, const glm::vec3& size, const glm::vec4& color, float thickness)
+	{
+
+		glm::vec3 p0 = glm::vec3(pos.x - size.x * 0.5f, pos.y - size.y * 0.5f, pos.z);
+		glm::vec3 p1 = glm::vec3(pos.x + size.x * 0.5f, pos.y - size.y * 0.5f, pos.z);
+		glm::vec3 p2 = glm::vec3(pos.x + size.x * 0.5f, pos.y + size.y * 0.5f, pos.z);
+		glm::vec3 p3 = glm::vec3(pos.x - size.x * 0.5f, pos.y + size.y * 0.5f, pos.z);
+
+		DrawLine(p0, p1, color);
+		DrawLine(p1, p2, color);
+		DrawLine(p2, p3, color);
+		DrawLine(p3, p0, color);
+	}
+
+	void Renderer2D::DrawRect(const glm::mat4& transform, const glm::vec4& color)
+	{
+		glm::vec3 lineVertices[4];
+		for (size_t i = 0; i < 4; i++)
+			lineVertices[i] = transform * glm::vec4(s_LineData.lineVerts[i].Position, 1.0);
+
+
+		DrawLine(lineVertices[0], lineVertices[1], color);
+		DrawLine(lineVertices[1], lineVertices[2], color);
+		DrawLine(lineVertices[2], lineVertices[3], color);
+		DrawLine(lineVertices[3], lineVertices[0], color);
+	}
+
+
+	void Renderer2D::DrawCube(const glm::mat4& transform, const glm::vec4& color)
+	{
+;
+		glm::vec3 positions[16];
+
+		positions[0] = {1.0f, 1.0f, -1.0f};
+		positions[1] = {1.0f, -1.0f, -1.0f};
+		positions[2] = {-1.0f, -1.0f, -1.0f};
+		positions[3] = {-1.0f, 1.0f, -1.0f};
+
+		positions[4] = { 1.0f, 1.0f, 1.0f };
+		positions[5] = { 1.0f, -1.0f, 1.0f };
+		positions[6] = { -1.0f, -1.0f, 1.0f };
+		positions[7] = { -1.0f, 1.0f, 1.0f };
+
+		positions[8] = { -1.0f, -1.0f, -1.0f };
+		positions[9] = { -1.0f, -1.0f, 1.0f };
+		positions[10] = { 1.0f, -1.0f, -1.0f };
+		positions[11] = { 1.0f, -1.0f, 1.0f };
+
+		positions[12] = { -1.0f, 1.0f, -1.0f };
+		positions[13] = { -1.0f, 1.0f, 1.0f };
+		positions[14] = { 1.0f, 1.0f, -1.0f };
+		positions[15] = { 1.0f, 1.0f, 1.0f };
+
+
+		for (size_t i = 0; i < 16; i++)
+			positions[i] = transform * glm::vec4(positions[i], 1.0);
+
+
+		DrawLine(positions[0], positions[1], color);
+		DrawLine(positions[1], positions[2], color);
+		DrawLine(positions[2], positions[3], color);
+		DrawLine(positions[3], positions[0], color);
+
+		DrawLine(positions[4], positions[5], color);
+		DrawLine(positions[5], positions[6], color);
+		DrawLine(positions[6], positions[7], color);
+		DrawLine(positions[7], positions[4], color);
+
+		DrawLine(positions[8], positions[9], color);
+		DrawLine(positions[10], positions[11], color);
+		DrawLine(positions[12], positions[13], color);
+		DrawLine(positions[14], positions[15], color);
+
+	}
+
+	void Renderer2D::DrawCube(const glm::mat4& transform, const glm::vec3& extends, const glm::vec4& color)
+	{
+		glm::vec3 positions[16];
+
+		//-Z
+		positions[0] = { 1.0f, 1.0f, -1.0f };
+		positions[1] = { 1.0f, -1.0f, -1.0f };
+		positions[2] = { -1.0f, -1.0f, -1.0f };
+		positions[3] = { -1.0f, 1.0f, -1.0f };
+
+		//+Z
+		positions[4] = { 1.0f, 1.0f, 1.0f };
+		positions[5] = { 1.0f, -1.0f, 1.0f };
+		positions[6] = { -1.0f, -1.0f, 1.0f };
+		positions[7] = { -1.0f, 1.0f, 1.0f };
+
+		//-Y
+		positions[8] = { -1.0f, -1.0f, -1.0f };
+		positions[9] = { -1.0f, -1.0f, 1.0f };
+		positions[10] = { 1.0f, -1.0f, -1.0f };
+		positions[11] = { 1.0f, -1.0f, 1.0f };
+
+		//+Y
+		positions[12] = { -1.0f, 1.0f, -1.0f };
+		positions[13] = { -1.0f, 1.0f, 1.0f };
+		positions[14] = { 1.0f, 1.0f, -1.0f };
+		positions[15] = { 1.0f, 1.0f, 1.0f };
+
+
+		positions[0] *= extends;
+		positions[1] *= extends;
+		positions[2] *= extends;
+		positions[3] *= extends;
+
+
+		positions[4] *= extends;
+		positions[5] *= extends;
+		positions[6] *= extends;
+		positions[7] *= extends;
+
+
+		positions[8] *= extends;
+		positions[9] *= extends;
+		positions[10] *= extends;
+		positions[11] *= extends;
+
+
+		positions[12] *= extends;
+		positions[13] *= extends;
+		positions[14] *= extends;
+		positions[15] *= extends;
+
+
+		for (size_t i = 0; i < 16; i++)
+			positions[i] = transform * glm::vec4(positions[i], 1.0);
+
+
+		//-Z
+		DrawLine(positions[0], positions[1], color);
+		DrawLine(positions[1], positions[2], color);
+		DrawLine(positions[2], positions[3], color);
+		DrawLine(positions[3], positions[0], color);
+
+		DrawLine(positions[4], positions[5], color);
+		DrawLine(positions[5], positions[6], color);
+		DrawLine(positions[6], positions[7], color);
+		DrawLine(positions[7], positions[4], color);
+
+		//+Z
+		DrawLine(positions[8], positions[9], color);
+		DrawLine(positions[10], positions[11], color);
+		DrawLine(positions[12], positions[13], color);
+		DrawLine(positions[14], positions[15], color);
+	}
+
+	void Renderer2D::DrawCube(const glm::mat4& transform, const AABB& aabb, const glm::vec4& color)
+	{
+		glm::vec3 positions[16];
+
+		auto max = aabb.GetMax();
+		auto min = aabb.GetMin();
+
+		positions[0] = { max.x, max.y, min.z };
+		positions[1] = { max.x, min.y, min.z};
+		positions[2] = { min.x, min.y,min.z };
+		positions[3] = { min.x, max.y, min.z};
+
+		positions[4] = { max.x, max.y, max.z};
+		positions[5] = { max.x, min.y,max.z};
+		positions[6] = { min.x, min.y, max.z	};
+		positions[7] = { min.x, max.y,max.z};
+
+		positions[8] = { min.x, min.y, min.z };
+		positions[9] = { min.x, min.y, max.z };
+		positions[10] = { max.x, min.y, min.z };
+		positions[11] = { max.x, min.y, max.z };
+
+		positions[12] = { min.x,max.y, min.z };
+		positions[13] = { min.x,max.y, max.z };
+		positions[14] = { max.x, max.y, min.z };
+		positions[15] = { max.x, max.y, max.z };
+
+		for (size_t i = 0; i < 16; i++)
+			positions[i] = transform * glm::vec4(positions[i], 1.0);
+
+
+		DrawLine(positions[0], positions[1], color);
+		DrawLine(positions[1], positions[2], color);
+		DrawLine(positions[2], positions[3], color);
+		DrawLine(positions[3], positions[0], color);
+
+		DrawLine(positions[4], positions[5], color);
+		DrawLine(positions[5], positions[6], color);
+		DrawLine(positions[6], positions[7], color);
+		DrawLine(positions[7], positions[4], color);
+
+		DrawLine(positions[8], positions[9], color);
+		DrawLine(positions[10], positions[11], color);
+		DrawLine(positions[12], positions[13], color);
+		DrawLine(positions[14], positions[15], color);
+	}
+
+	void Renderer2D::DrawPyramid(const glm::mat4& transform, float farPlane, float nearPlane , float distance, const glm::vec4& color)
+	{
+		glm::vec3 positions[16];
+
+		// -Z Face
+		positions[0] = { 1.0f, 1.0f, -1.0f };
+		positions[1] = { 1.0f, -1.0f, -1.0f };
+		positions[2] = { -1.0f, -1.0f, -1.0f };
+		positions[3] = { -1.0f, 1.0f, -1.0f };
+
+
+		positions[0] *= nearPlane;
+		positions[1] *= nearPlane;
+		positions[2] *= nearPlane;
+		positions[3] *= nearPlane;
+		positions[0].z = -1.0f;
+		positions[1].z = -1.0f;
+		positions[2].z = -1.0f;
+		positions[3].z = -1.0f;
+
+		positions[4] = { 1.0f, 1.0f, 1.0f };
+		positions[5] = { 1.0f, -1.0f, 1.0f };
+		positions[6] = { -1.0f, -1.0f, 1.0f };
+		positions[7] = { -1.0f, 1.0f, 1.0f };
+
+		positions[8] = { -1.0f, -1.0f, -1.0f };
+		positions[9] = { -1.0f, -1.0f, 1.0f };
+		positions[10] = { 1.0f, -1.0f, -1.0f };
+		positions[11] = { 1.0f, -1.0f, 1.0f };
+
+		positions[12] = { -1.0f, 1.0f, -1.0f };
+		positions[13] = { -1.0f, 1.0f, 1.0f };
+		positions[14] = { 1.0f, 1.0f, -1.0f };
+		positions[15] = { 1.0f, 1.0f, 1.0f };
+
+
+		positions[8].y	*= nearPlane;
+		positions[10].y	*= nearPlane;
+		positions[12].y	*= nearPlane;
+		positions[14].y	*= nearPlane;
+
+		positions[8].x *=	nearPlane;
+		positions[10].x *=	nearPlane;
+		positions[12].x *=	nearPlane;
+		positions[14].x *=	nearPlane;
+
+	
+
+		positions[9] .y *= farPlane; 
+		positions[11].y *= farPlane;
+		positions[13].y *= farPlane;
+		positions[15].y *= farPlane;
+
+		positions[9].z	+= distance;
+		positions[11].z += distance;
+		positions[13].z += distance;
+		positions[15].z += distance;
+
+		positions[4].z += distance;
+		positions[5].z += distance;
+		positions[6].z += distance;
+		positions[7].z += distance;
+
+
+		positions[4].y *= farPlane; 
+		positions[5].y *= farPlane; 
+		positions[6].y *= farPlane; 
+		positions[7].y *= farPlane;
+
+		positions[9].x *=  farPlane;
+		positions[11].x *= farPlane;
+		positions[13].x *= farPlane;
+		positions[15].x *= farPlane;
+
+		positions[4].x *= farPlane;
+		positions[5].x *= farPlane;
+		positions[6].x *= farPlane;
+		positions[7].x *= farPlane;
+
+		for (size_t i = 0; i < 16; i++)
+			positions[i] = (transform * glm::vec4(positions[i], 1.0));
+
+		// -Z Face
+		DrawLine(positions[0], positions[1], color);
+		DrawLine(positions[1], positions[2], color);
+		DrawLine(positions[2], positions[3], color);
+		DrawLine(positions[3], positions[0], color);
+
+		DrawLine(positions[4], positions[5], {1.0f, 0.0, 0.0, 1.0f});
+		DrawLine(positions[5], positions[6], {1.0f, 0.0, 0.0, 1.0f});
+		DrawLine(positions[6], positions[7], {1.0f, 0.0, 0.0, 1.0f});
+		DrawLine(positions[7], positions[4], {1.0f, 0.0, 0.0, 1.0f});
+
+		// +Z Face
+		DrawLine(positions[8], positions[9], {1.0f, 1.0, 0.0, 1.0});
+		DrawLine(positions[10], positions[11], { 1.0f, 1.0, 0.0, 1.0 });
+		DrawLine(positions[12], positions[13], { 1.0f, 1.0, 0.0, 1.0 });
+		DrawLine(positions[14], positions[15], { 1.0f, 1.0, 0.0, 1.0 });
+	}
+
+	void Renderer2D::DrawCameraFrustum(const Ref<Camera>& camera, const glm::vec4& color)
+	{
+
+		
+
+		std::array<glm::vec4, 6> planes = { glm::vec4(1.0f) };
+
+		FrustumCulling::GetFrustumPlanes(camera->GetViewProjection(), planes);
+
+		glm::vec4 leftPlane = planes[0];
+		glm::vec4 rightPlane = planes[1];
+
+		glm::vec4 bottomPlane = planes[2];
+		glm::vec4 topPlane = planes[3];
+
+		
+		glm::vec4 nearPlane = planes[4];
+		glm::vec4 farPlane = planes[5];
+
+
+		const glm::mat4 invVP = glm::inverse(camera->GetViewProjection());
+
+		glm::vec3 positions[16];
+
+		//-Z
+		positions[0] = { rightPlane.x, topPlane.y, farPlane.z };
+		positions[1] = { rightPlane.x, bottomPlane.y, farPlane.z };
+		positions[2] = { leftPlane.x, bottomPlane.y, farPlane.z };
+		positions[3] = { leftPlane.x, topPlane.y, farPlane.z };
+
+		//Z+
+		positions[4] = { rightPlane.x, topPlane.y,	nearPlane.z};
+		positions[5] = { rightPlane.x, bottomPlane.y,	nearPlane.z };
+		positions[6] = { leftPlane.x, bottomPlane.y,	nearPlane.z };
+		positions[7] = { leftPlane.x, topPlane.y,	nearPlane.z };
+
+		positions[8] = { leftPlane.x, bottomPlane.y, farPlane.z };
+		positions[9] = { leftPlane.x, bottomPlane.y, nearPlane.z };
+		positions[10] = { rightPlane.x, bottomPlane.y, farPlane.z };
+		positions[11] = { rightPlane.x, bottomPlane.y, nearPlane.z };
+
+		
+		positions[12] = { leftPlane.x,	topPlane.y, farPlane.z };
+		positions[13] = { leftPlane.x,	topPlane.y, nearPlane.z };
+		positions[14] = { rightPlane.x,	topPlane.y, farPlane.z };
+		positions[15] = { rightPlane.x,	topPlane.y, nearPlane.z };
+
+		for (int i = 0; i < 16; ++i)
+		{
+			glm::vec4 q = invVP * glm::vec4(positions[i], 1.0f);
+			positions[i] = q / q.w;
+		}
+
+
+		DrawLine(positions[0], positions[1], color);
+		DrawLine(positions[1], positions[2], color);
+		DrawLine(positions[2], positions[3], color);
+		DrawLine(positions[3], positions[0], color);
+
+		DrawLine(positions[4], positions[5], color);
+		DrawLine(positions[5], positions[6], color);
+		DrawLine(positions[6], positions[7], color);
+		DrawLine(positions[7], positions[4], color);
+
+		DrawLine(positions[8], positions[9], color);
+		DrawLine(positions[10], positions[11], color);
+		DrawLine(positions[12], positions[13], color);
+		DrawLine(positions[14], positions[15], color);
+
+	}
+
 
 	void Renderer2D::DrawCircle(const glm::mat4& transform, const glm::vec4& color, float thickness, float fade)
 	{

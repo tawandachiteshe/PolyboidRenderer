@@ -30,6 +30,8 @@ namespace Polyboid
 
 		if (mesh->HasPositions())
 		{
+			data.BoundingBox = AABB{ { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z },  { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z} }; //mesh->mAABB.mMax;
+
 			for (int i = 0; i < mesh->mNumVertices; ++i)
 			{
 				glm::vec3 vertex = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
@@ -305,6 +307,7 @@ namespace Polyboid
 			| aiProcess_Triangulate
 			| aiProcess_CalcTangentSpace
 			| aiProcess_EmbedTextures
+			| aiProcess_GenBoundingBoxes
 		;
 
 		const aiScene* scene = importer.ReadFile(path.string(), importFlags);
@@ -328,6 +331,9 @@ namespace Polyboid
 	{
 		std::vector<MaterialData> materialsData;
 		std::vector<Ref<Material>> _materials;
+		std::vector<AABB> m_aabbs;
+
+		
 
 		for (auto& meshes : _meshData)
 		{
@@ -339,9 +345,11 @@ namespace Polyboid
 			std::vector<RendererVertex> hugeVerts;
 			std::vector<uint32_t> hugeIdx;
 
+			AABB aabb;
+
 			for (auto& mesh : meshData)
 			{
-
+				
 				hugeVerts.insert(hugeVerts.end(), mesh.vertices.begin(), mesh.vertices.end());
 
 				for (auto idx : mesh.Indices)
@@ -349,21 +357,23 @@ namespace Polyboid
 					hugeIdx.push_back(idx + offset);
 				}
 
+				m_aabbs.push_back(mesh.BoundingBox);
 				offset += (mesh).vertices.size();
-
-
 			}
 
+			
 			auto indices = ShaderBufferStorage::Make(hugeIdx.data(), hugeIdx.size() * sizeof(uint32_t));
 			auto va = VertexBufferArray::MakeVertexBufferArray(indices, hugeIdx.size());
 			Ref<ShaderBufferStorage> verts = ShaderBufferStorage::Make(hugeVerts.data(), hugeVerts.size() * sizeof(RendererVertex));
 
 			va->SetShaderBufferStorage(verts);
 
-			_vertexBuffers[material] = va;
-
+			
+			_vertexBuffers[material] = { va, m_aabbs };
+			
 		}
 
+		
 
 	}
 

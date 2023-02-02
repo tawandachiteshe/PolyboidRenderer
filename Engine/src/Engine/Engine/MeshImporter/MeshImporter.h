@@ -7,6 +7,8 @@
 #include <map>
 #include <tuple>
 
+#include "Engine/Engine/Math/AABB.h"
+
 
 struct aiMaterial;
 struct aiNode;
@@ -41,19 +43,16 @@ namespace Polyboid
 		//data we want so farrr..
 
 		RendererMeshData() = default;
-
-		bool HasNormals = false;
-		bool HasColors = false;
 		std::vector<RendererVertex> vertices;
 		std::vector<uint32_t> Indices;
-
+		AABB BoundingBox;
 
 		
 	};
 
 
 	using MeshData = std::map<Ref<Material>, std::vector<RendererMeshData>>;
-	using MeshDataRenderer = std::map<Ref<Material>, Ref<VertexBufferArray>>;
+	using MeshDataRenderer = std::map<Ref<Material>, std::pair<Ref<VertexBufferArray>, std::vector<AABB>>>;
 
 	class MeshImporter
 	{

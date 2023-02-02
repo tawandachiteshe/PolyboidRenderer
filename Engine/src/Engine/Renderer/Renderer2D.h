@@ -1,6 +1,7 @@
 #pragma once
 #include "Camera3D.h"
 #include "Engine/Engine/Base.h"
+#include "Engine/Engine/Math/AABB.h"
 #include "Engine/Renderer/Shader.h"
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
@@ -45,24 +46,15 @@ namespace Polyboid
 
 	struct LineVertex
 	{
-		glm::vec3 WorldPosition;
-		glm::vec3 LocalPosition0;
-		glm::vec3 LocalPosition1;
+		glm::vec3 Position;
 		glm::vec4 color;
-		float Thickness;
-		glm::vec2 uv;
 		
 
 		LineVertex() = default;
 
-		LineVertex(const glm::vec3& world_position, const glm::vec3& local_position0, const glm::vec3& local_position1,
-			const glm::vec4& color, float thickness, const glm::vec2& uv)
-			: WorldPosition(world_position),
-			  LocalPosition0(local_position0),
-			  LocalPosition1(local_position1),
-			  color(color),
-		      Thickness(thickness),
-			  uv(uv)
+		LineVertex(const glm::vec3& position, const glm::vec4& color)
+			: Position(position),
+			  color(color)
 		{
 		}
 	};
@@ -92,6 +84,16 @@ namespace Polyboid
 
 		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color = glm::vec4( 1.0f ), float thickness = 0, float fade = 0);
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f), float thickness = 0.1f);
+		static void DrawRect(const glm::vec3& pos, const glm::vec3& size, const glm::vec4& color = glm::vec4{1.0f}, float thickness = 0.1f);
+		static  void DrawRect(const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+		static  void DrawCube(const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));
+		static  void DrawCube(const glm::mat4& transform, const glm::vec3& extends ,const glm::vec4& color = glm::vec4(1.0f));
+		static  void DrawCube(const glm::mat4& transform, const AABB& aabb, const glm::vec4& color = glm::vec4(1.0f));
+
+		static  void DrawPyramid(const glm::mat4& transform, float farPlane = 1.0f, float nearPlane = 1.0f, float distance = 1.0f,const glm::vec4& color = glm::vec4(1.0f));
+
+		static  void DrawCameraFrustum(const Ref<Camera>& camera, const glm::vec4& color = glm::vec4(1.0f));
+
 
 		static void DrawQuad(const glm::vec3& position, const glm::vec4& color = glm::vec4{ 1.0f });
 		static void DrawRotatedQuad(const glm::vec3& position, float rotation, const glm::vec4& color = glm::vec4{ 1.0f });

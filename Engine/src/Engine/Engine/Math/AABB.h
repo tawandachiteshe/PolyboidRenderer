@@ -44,6 +44,10 @@ namespace Polyboid
 		/// Expand the AABB to encompass the given \p aabb.
 		void Extend(const AABB& aabb);
 
+		void Merge(const AABB& aabb);
+
+		void Add(const AABB& aabb);
+
 		/// Expand the AABB to include a disk centered at \p center, with normal \p
 		/// normal, and radius \p radius.
 		/// \xxx Untested -- This function is not represented in our unit tests.
@@ -52,6 +56,7 @@ namespace Polyboid
 
 		/// Translates AABB by vector \p v.
 		void Translate(const glm::vec3& v);
+		void Transform(const glm::mat4& mat);
 
 		/// Scale the AABB by \p scale, centered around \p origin.
 		/// \param[in]  scale  3D vector specifying scale along each axis.
@@ -100,8 +105,8 @@ namespace Polyboid
 
 	private:
 
-		glm::vec3 mMin;   ///< Minimum point.
-		glm::vec3 mMax;   ///< Maximum point.
+		glm::vec3 mMin{};   ///< Minimum point.
+		glm::vec3 mMax{};   ///< Maximum point.
 	};
 
 }

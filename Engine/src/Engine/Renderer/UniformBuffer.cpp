@@ -30,6 +30,11 @@ namespace Polyboid {
 		glDeleteBuffers(1, &m_ID);
 	}
 
+	void UniformBuffer::Bind(uint32_t binding)
+	{
+		glBindBufferBase(GL_UNIFORM_BUFFER, binding, m_ID);
+	}
+
 	std::shared_ptr<UniformBuffer> UniformBuffer::MakeUniformBuffer(uint32_t size, uint32_t binding)
 	{
 		POLYBOID_PROFILE_FUNCTION();

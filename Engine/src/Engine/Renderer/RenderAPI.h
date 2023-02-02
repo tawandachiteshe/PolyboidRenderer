@@ -133,6 +133,11 @@ namespace Polyboid
 
 		}
 
+		static void DrawLines(uint32_t vertexCount)
+		{
+			glDrawArrays(GL_LINES, 0, vertexCount);
+		}
+
 		static void DrawIndexed(uint32_t count, uint16_t elementCount = 2)
 		{
 			POLYBOID_PROFILE_FUNCTION();

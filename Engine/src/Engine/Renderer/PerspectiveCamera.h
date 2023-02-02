@@ -8,7 +8,7 @@ namespace Polyboid
 	class PerspectiveCamera : public Camera
 	{
 		public:
-			PerspectiveCamera(float fov, float aspect, float near, float far);
+			PerspectiveCamera(float fov, float aspect, float nearPlane, float farPlane);
 			~PerspectiveCamera() = default;
 
 		private:

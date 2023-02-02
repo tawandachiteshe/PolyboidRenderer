@@ -13,6 +13,7 @@ layout (std140, binding = 0) uniform CameraBuffer {
     
 	uniform mat4 projection;
     uniform mat4 view;
+	uniform vec3 pos;
 	
 };
 

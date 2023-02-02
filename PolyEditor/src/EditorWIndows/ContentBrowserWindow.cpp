@@ -28,6 +28,8 @@ namespace Polyboid
 	void ContentBrowserWindow::RenderImgui()
 	{
 
+		
+
 		ImGui::Begin(m_Name.c_str());
 
 		static bool createNewfolder = false;

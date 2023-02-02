@@ -14,7 +14,10 @@ namespace Polyboid
 	enum class ShapeType  
 	{
 		Quad,
-        Circle
+        Circle,
+        Rect,
+        Cube,
+        Pyramid
 	};
 
     enum class LightType
@@ -110,8 +113,12 @@ namespace Polyboid
     {
         ShapeType type = ShapeType::Quad;
         glm::vec4 color = glm::vec4{ 1.0f };
-        float thickness = 0.0f;
+        float thickness = 0.5f;
         float fade = 0.0f;
+
+        float nearPlane = 1.0f;
+        float farPlane = 1.0f;
+        float distance = 0.0f;
 
         ShapeComponent() = default;
         ShapeComponent(const ShapeComponent& shape) = default;

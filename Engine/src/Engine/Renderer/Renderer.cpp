@@ -4,6 +4,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "FrustumCulling.h"
 #include "Material.h"
 #include "RenderAPI.h"
 #include "RenderCommand.h"
@@ -12,6 +13,8 @@
 #include "Texture2D.h"
 #include "UniformBuffer.h"
 #include "Engine/Engine/AssetManager.h"
+#include "Engine/Engine/Gameplay/GameStatics.h"
+#include "Engine/Engine/Math/Math.h"
 #include "glad/glad.h"
 #include "glm/vec4.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -28,7 +31,7 @@ namespace Polyboid
 
         RenderAPI::Init();
         Renderer2D::Init();
-        s_RenderStorage->m_CameraDataUB = UniformBuffer::MakeUniformBuffer(sizeof(CameraData));
+        s_RenderStorage->m_CameraDataUB = UniformBuffer::MakeUniformBuffer(140);
         s_RenderStorage->m_MaterialStorage = ShaderBufferStorage::Make(sizeof(MaterialData) * 128);
     }
 
@@ -90,19 +93,32 @@ namespace Polyboid
     	for (auto& materialVA : meshData)
         {
 
-        	auto& [material, vertexBufferArray] = materialVA;
+        	auto& [material, vertexBufferBB] = materialVA;
             AssetManager::GetTexture(material->mDiffuseTexture)->Bind(0);
             AssetManager::GetTexture(material->mNormalsTexture)->Bind(1);
             AssetManager::GetTexture(material->mMetallicTexture)->Bind(2);
 
             shader->SetInt("uMaterialIndex", 0);
 
+            s_RenderStorage->m_CameraDataUB->Bind(0);
             s_RenderStorage->m_MaterialStorage->Bind(1);
             s_RenderStorage->m_MaterialStorage->SetData(&material->GetData(), sizeof(MaterialData), materialOffset);
-            Submit(vertexBufferArray, shader, transform);
+
+
+            auto& [va, aabbs] = vertexBufferBB;
+
+            const auto& camera = GameStatics::GetCurrentCamera();
+            if (camera)
+            {
+                FrustumCulling culling(camera);
+            }
+
+            Submit(va, shader, transform);
 
             materialOffset += sizeof(MaterialData);
             materialIndex++;
+
+     
         }
 
     }
