@@ -128,7 +128,7 @@ namespace Polyboid
 		Ref<Texture> m_oLightGrid;
 		Ref<Texture> m_tLightGrid;
 
-		MeshDataRenderer m_Cube;
+		RenderData m_Cube;
 		Ref<VertexBufferArray> m_Quad;
 
 	private:

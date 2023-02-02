@@ -20,6 +20,7 @@ namespace Polyboid
 
 		virtual void RenderImgui() = 0;
 		virtual void Update(float ts) = 0;
+		virtual void OnRender(float dt) {}
 
 		virtual ~EditorWindow() = default;
 

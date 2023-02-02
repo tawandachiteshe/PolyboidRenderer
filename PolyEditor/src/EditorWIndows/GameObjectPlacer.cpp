@@ -30,7 +30,7 @@ namespace Polyboid
 
 		for (const auto& name : ScriptingEngine::GetClasses())
 		{
-			if (ImGui::ImageButton(name.c_str(), (ImTextureID)Resource::GetIcons().at("game_object")->GetTextureID(), { 48, 48 }, { 1, 1 }, { 0, 0 }))
+			if (ImGui::ImageButton(name.c_str(), (ImTextureID)Resource::GetIcons()["game_object"]->GetTextureID(), { 48, 48 }, { 1, 1 }, { 0, 0 }))
 			{
 				auto handle = GameStatics::GetCurrentWorld()->CreateGameObject(name);
 				handle->AttachScript(name);
@@ -47,7 +47,7 @@ namespace Polyboid
 			switch (gameObjectType)
 			{
 			case GameObjectsType::EMPTY:
-				if(ImGui::ImageButton("EmptyButton", (ImTextureID)Resource::GetIcons().at("game_object")->GetTextureID(), { 48, 48 }, { 1, 1 }, { 0, 0 }))
+				if(ImGui::ImageButton("EmptyButton", (ImTextureID)Resource::GetIcons()["game_object"]->GetTextureID(), {48, 48}, {1, 1}, {0, 0}))
 				{
 					
 				}

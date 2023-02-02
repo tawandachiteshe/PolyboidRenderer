@@ -53,11 +53,6 @@ namespace Polyboid
 
 		auto* object = GameStatics::GetCurrentWorld()->CreateGameObject("Cube");
 
-		UUID id;
-		object->AddComponent<MeshRendererComponent>(id);
-		MaterialLibrary::CreateMaterial(id, "Default");
-		auto& mesh = object->GetComponent<MeshRendererComponent>();
-		mesh.assetName = "cube.fbx";
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -108,8 +103,9 @@ namespace Polyboid
 
 		ImGui::SetCursorPosX(xy.x * 0.5f);
 
+		uint32_t texture = 0;
 
-		if (ImGui::ImageButton(reinterpret_cast<ImTextureID>(icons[m_Playmode ? "stop" : "play"]->GetTextureID()),
+		if (ImGui::ImageButton((ImTextureID)Resource::GetIcons()[m_Playmode ? "stop" : "play"]->GetTextureID(),
 			{ 32, 32 }))
 		{
 
@@ -140,7 +136,7 @@ namespace Polyboid
 
 		if (boolIsNotZero(contentSize) && DidWindowSizeChange(m_LastViewportWindowSize, contentSize))
 		{
-			Engine::GetCurrentFrameBuffer()->Resize(contentSize.x, contentSize.y);
+			//Engine::GetCurrentFrameBuffer()->Resize(contentSize.x, contentSize.y);
 			m_ViewportCamera->SetViewportSize(contentSize.x, contentSize.y);
 		}
 
@@ -228,10 +224,15 @@ namespace Polyboid
 
 		//Editor rendering here....
 
-		GameStatics::GetCurrentWorld()->Render(ts);
+		
 
 
 	}
 
+	void ViewportWindow::OnRender(float dt)
+	{
+		EditorWindow::OnRender(dt);
+		GameStatics::GetCurrentWorld()->Render(dt);
+	}
 }
 

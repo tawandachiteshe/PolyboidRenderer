@@ -21,6 +21,7 @@
 #include "stb/stb_image_write.h"
 #include <stb/stb_image_resize.h>
 
+#include "Engine/Engine/Application.h"
 #include "Engine/Renderer/ComputeRenderer.h"
 #include "Engine/Renderer/Primitives.h"
 #include "Engine/Renderer/WorldRenderer.h"
@@ -80,12 +81,19 @@ namespace Polyboid
 	{
 		m_GameObjects.reserve(200000);
 
-		WorldRendererSettings settings;
-		settings.world.reset(this);
-		settings.type = WorldRendererType::Forward;
 
+	}
 
-		m_Renderer = WorldRenderer::Make(settings);
+	void World::InitRenderer()
+	{
+
+		Application::Get()->SubmitToRenderThread([&]()
+			{
+				WorldRendererSettings settings;
+				settings.type = WorldRendererType::Forward;
+				settings.world = GameStatics::GetCurrentWorld();
+				m_Renderer = WorldRenderer::Make(settings);
+			});
 	}
 
 	void World::OnBeginPlay() const
@@ -270,8 +278,6 @@ namespace Polyboid
 
 	void World::Render(float dt)
 	{
-		Timer t;
 		m_Renderer->Render();
-		m_WorldRenderTime = t.ElapsedMillis();
 	}
 }

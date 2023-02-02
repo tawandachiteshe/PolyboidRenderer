@@ -7,6 +7,8 @@
 
 namespace Polyboid
 {
+	class TextureData;
+
 	enum class TextureInternalFormat
 	{
 		RGBA8,
@@ -63,6 +65,7 @@ namespace Polyboid
         static Ref<Texture> MakeTexture2D(const std::string& textureImagePath, bool isHdri = false);
         static Ref<Texture> MakeTexture2D(int32_t width, int32_t height, int32_t channels);
         static Ref<Texture> MakeTexture2D(int32_t width, int32_t height, int32_t channels, void* data);
+        static Ref<Texture> MakeTexture2D(const Ref<TextureData>& data);
         static Ref<Texture> MakeTexture2D(int32_t width, int32_t height, const TextureSettings& settings);
         
     };

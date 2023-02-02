@@ -78,7 +78,7 @@ namespace Polyboid
         glfwSetErrorCallback(error_callback);
 
 
-        const auto context = Context::MakeContext();
+       
 
         spdlog::info("Creating windows...");
 
@@ -102,9 +102,6 @@ namespace Polyboid
             __debugbreak();
         }
 
-        
-
-        context->MakeCurrent(m_Window);
     }
 
     std::unique_ptr<PolyboidWindow> PolyboidWindow::MakeWindow(const WindowSpecs& specs)

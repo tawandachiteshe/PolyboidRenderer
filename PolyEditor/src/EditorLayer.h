@@ -31,8 +31,7 @@ namespace Polyboid
 		void OnAttach() override;
 		void OnUpdate(float dt) override;
 		void OnImguiRender() override;
-
-		
+		void OnRender(float dt) override;
 	};
 
 	

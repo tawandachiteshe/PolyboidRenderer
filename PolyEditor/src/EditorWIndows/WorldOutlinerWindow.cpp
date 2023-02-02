@@ -47,8 +47,6 @@ namespace Polyboid
 				ImGui::PushID(std::to_string(id.id).c_str());
 				if (ImGui::Selectable(tag.name.c_str(), m_CurrentGameObject == id.id))
 				{
-
-
 					GameObjectOutlineClick event(GameStatics::GetCurrentWorld()->FindGameObjectByID(id.id));
 					EventSystem::GetDispatcher()->Dispatch(event);
 					m_CurrentGameObject = id.id;

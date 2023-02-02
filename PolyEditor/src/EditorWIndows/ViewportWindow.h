@@ -23,7 +23,6 @@ namespace Polyboid
 	public:
 		ViewportWindow(const std::string& name);
 		virtual ~ViewportWindow();
-		Ref<Framebuffer> m_Framebuffer;
 		Ref<EditorCamera> m_ViewportCamera;
 
 		ImVec2 m_LastViewportWindowSize = { 0.0f, 0.0f };
@@ -47,6 +46,8 @@ namespace Polyboid
 
 		virtual void Update(float ts) override;
 
+	public:
+		void OnRender(float dt) override;
 	};
 
 }

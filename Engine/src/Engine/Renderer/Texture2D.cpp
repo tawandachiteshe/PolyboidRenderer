@@ -3,6 +3,7 @@
 
 #include <stb/stb_image.h>
 
+#include "Engine/Engine/TextureData.h"
 #include "Engine/Engine/Debug/Profiler.h"
 #include "glad/glad.h"
 
@@ -226,6 +227,11 @@ namespace Polyboid
 	Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, int32_t channels, void* data)
 	{
 		return std::make_shared<Texture>(width, height, channels, data);
+	}
+
+	Ref<Texture> Texture::MakeTexture2D(const Ref<TextureData>& data)
+	{
+		return std::make_shared<Texture>(data->GetWidth(), data->GetHeight(), data->GetChannels(), data->GetData());
 	}
 
 	Ref<Texture> Texture::MakeTexture2D(int32_t width, int32_t height, const TextureSettings& settings)

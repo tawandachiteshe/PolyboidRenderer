@@ -270,20 +270,24 @@ namespace Polyboid
 
         float fov = 45.0f;
 
-        Resource::Init();
+        Application::Get()->SubmitToRenderThread([]()
+            {
+        	Resource::Init();
+        });
+       
 
         m_World = std::make_shared<World>("untitled");
     	GameStatics::SetCurrentWorld(m_World);
-
+        m_World->InitRenderer();
 
     }
 
 	void EditorLayer::OnAttach()
 	{
-        AddWindow(new ContentBrowserWindow("Content Browser"));
         AddWindow(new ViewportWindow("Viewport"));
-        AddWindow(new GameObjectPlacer("GameObject placer"));
         AddWindow(new WorldOutlinerWindow("World outliner"));
+        AddWindow(new ContentBrowserWindow("Content Browser"));
+        AddWindow(new GameObjectPlacer("GameObject placer"));
         AddWindow(new DetailsWindow("Details"));
         AddWindow(new StatsWindow());
 
@@ -333,6 +337,18 @@ namespace Polyboid
             static auto open = false;
 
         }
+
+    }
+
+    void EditorLayer::OnRender(float dt)
+    {
+	    Layer::OnRender(dt);
+        for (auto window : m_Windows)
+        {
+            window->OnRender(dt);
+
+        }
+
 
     }
 }

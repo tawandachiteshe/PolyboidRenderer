@@ -2,16 +2,17 @@
 
 
 #include <filesystem>
+#include <future>
 #include <imgui.h>
 #include <spdlog/spdlog.h>
 
 #include "Editor/Resource.h"
+#include "Engine/Engine/Application.h"
 #include "Engine/Engine/AssetManager.h"
 
 
-namespace Polyboid 
+namespace Polyboid
 {
-
 	static std::filesystem::path s_WorkDir = "Assets";
 	static std::filesystem::path s_CurrentDir = s_WorkDir;
 
@@ -24,11 +25,28 @@ namespace Polyboid
 	{
 	}
 
+	using std::chrono_literals::operator ""s;
+
+	void ContentBrowserWindow::CheckIfMeshIsLoaded()
+	{
+
+		static uint32_t readyCount = 0;
+
+		for (const auto& futureData : m_Futures)
+		{
+			if(futureData.wait_for(0s) == std::future_status::ready)
+			{
+				m_Futures.clear();
+			}
+		}
+
+	}
+
 
 	void ContentBrowserWindow::RenderImgui()
 	{
 
-		
+		CheckIfMeshIsLoaded();
 
 		ImGui::Begin(m_Name.c_str());
 
@@ -36,11 +54,9 @@ namespace Polyboid
 
 		if (ImGui::BeginPopupContextWindow())
 		{
-
-			if(ImGui::Button("Create Folder"))
+			if (ImGui::Button("Create Folder"))
 			{
 				createNewfolder = true;
-				
 			}
 
 			ImGui::EndPopup();
@@ -52,10 +68,9 @@ namespace Polyboid
 			static char buff[24];
 
 			static bool isFinished;
-		
-			
 
-			if(ImGui::InputText("Folder Name", buff, 24, 0) && isFinished)
+
+			if (ImGui::InputText("Folder Name", buff, 24, 0) && isFinished)
 			{
 			}
 
@@ -68,13 +83,11 @@ namespace Polyboid
 					std::filesystem::create_directory(s_CurrentDir / buff);
 					createNewfolder = false;
 				}
-
-				
 			}
 		}
 
 
-		if(ImGui::Button("..."))
+		if (ImGui::Button("..."))
 		{
 			if (s_CurrentDir != s_WorkDir)
 			{
@@ -83,76 +96,80 @@ namespace Polyboid
 		}
 
 		ImGui::Columns(8, "Folder icons", false);
-		
+
 
 		if (std::filesystem::exists(s_WorkDir))
 		{
 			for (auto& entry : std::filesystem::directory_iterator(s_CurrentDir))
 			{
-
 				if (entry.is_directory())
 				{
-
 					const auto pathStr = entry.path().stem().string();
-					
-					if (ImGui::ImageButton(pathStr.c_str(),(ImTextureID)Resource::GetIcons().at("folder")->GetTextureID(),
-						{ 48, 48 }, { 1, 1 }, { 0, 0 }))
+
+					if (ImGui::ImageButton(pathStr.c_str(), (ImTextureID)Resource::GetIcons()["folder"]->GetTextureID(),
+					                       {48, 48}, {1, 1}, {0, 0}))
 					{
 						s_CurrentDir = entry.path();
 
 						std::string currentDir = s_CurrentDir.string();
-
 					}
 
 
 					if (ImGui::BeginDragDropTarget())
 					{
-
 						if (const auto payload = ImGui::AcceptDragDropPayload("CONTENT_FILE"))
 						{
-
 							std::string filename = static_cast<char*>(payload->Data);
-							std::filesystem::copy(s_CurrentDir/filename, s_CurrentDir/pathStr);
+							std::filesystem::copy(s_CurrentDir / filename, s_CurrentDir / pathStr);
 							std::filesystem::remove(s_CurrentDir / filename);
-
 						}
 
 
 						ImGui::EndDragDropTarget();
 					}
-		
+
 
 					ImGui::TextWrapped(pathStr.c_str());
 					ImGui::NextColumn();
-
-			
 				}
 				else
 				{
 					const auto pathStr = entry.path().filename().string();
 					static bool clicked = false;
 
-					if(ImGui::ImageButton(pathStr.c_str(), (ImTextureID)Resource::GetIcons().at("file")->GetTextureID(),
-						{ 48, 48 }, { 1, 1 }, { 0, 0 }))
+					if (ImGui::ImageButton(pathStr.c_str(), (ImTextureID)Resource::GetIcons()["file"]->GetTextureID(),
+					                       {48, 48}, {1, 1}, {0, 0}))
 					{
 						spdlog::info("file {}", pathStr.c_str());
-
 					}
+
+					
 
 					if (ImGui::BeginPopupContextItem(pathStr.c_str()))
 					{
 
-						if(ImGui::Selectable("Proccess Mesh"))
-						{
-							spdlog::info("file {}", entry.path().string());
-							AssetManager::LoadMesh(entry.path().string());
-						}
 						
+						if (ImGui::Selectable("Proccess Mesh"))
+						{
+							std::string entryCopy = entry.path().string();
+							AssetManager::LoadMesh(entryCopy);
+
+							m_Futures.push_back(std::async(std::launch::async, [&]()
+							{
+								
+								spdlog::info("TAwnada {}", entryCopy);
+								
+							}));
+
+						}
+
 
 						ImGui::EndPopup();
 					}
 
 				
+				
+
 
 					if (ImGui::BeginDragDropSource())
 					{
@@ -164,18 +181,15 @@ namespace Polyboid
 					ImGui::TextWrapped(pathStr.c_str());
 					ImGui::NextColumn();
 				}
-
-				
-				
 			}
 		}
 
 
 		ImGui::End();
-
 	}
 
 	void ContentBrowserWindow::Update(float ts)
 	{
+		
 	}
 }

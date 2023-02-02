@@ -1,5 +1,7 @@
 #pragma once
 
+#include <future>
+
 #include "EditorWindow.h"
 #include <string>
 
@@ -16,6 +18,9 @@ namespace Polyboid
 		virtual ~ContentBrowserWindow();
 
 	private:
+
+		std::vector<std::future<void>> m_Futures;
+		void CheckIfMeshIsLoaded();
 
 		int OnCreateFolder(ImGuiInputTextCallbackData* data);
 

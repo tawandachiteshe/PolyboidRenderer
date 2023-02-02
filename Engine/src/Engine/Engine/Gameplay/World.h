@@ -33,9 +33,15 @@ namespace Polyboid
 	{
 	private:
 		double m_WorldRenderTime = 0.0;
+
+		Ref<WorldRenderer> m_Renderer;
+
 	public:
 		double GetRenderTime() { return m_WorldRenderTime; }
 		World(const std::string& name = "World");
+
+		void InitRenderer();
+
 		void OnBeginPlay() const;
 		void OnUpdate(float ts) const;
 		void OnEndPlay() const;
@@ -116,8 +122,6 @@ namespace Polyboid
 		entt::registry m_Registry;
 
 		std::string m_Name;
-		Ref<WorldRenderer> m_Renderer;
-
 		//find a better data structure for this:::
 		std::vector<GameObject*> m_GameObjects;
 		

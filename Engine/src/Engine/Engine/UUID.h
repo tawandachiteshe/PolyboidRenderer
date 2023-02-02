@@ -22,6 +22,16 @@ namespace Polyboid {
 			return !(m_UUID == lhs.m_UUID);
 		}
 
+		bool operator!=(const uint64_t& lhs) const
+		{
+			return !(m_UUID == lhs);
+		}
+
+		bool operator!=(const uint64_t& lhs)
+		{
+			return !(m_UUID == lhs);
+		}
+
 		bool operator==(const UUID& lhs)
 		{
 			return m_UUID == lhs.m_UUID;

@@ -103,6 +103,8 @@ namespace Polyboid
 		/// \xxx Untested -- This function is not represented in our unit tests.
 		bool IsSimilarTo(const AABB& b, glm::f32 diff = 0.5) const;
 
+	
+
 	private:
 
 		glm::vec3 mMin{};   ///< Minimum point.

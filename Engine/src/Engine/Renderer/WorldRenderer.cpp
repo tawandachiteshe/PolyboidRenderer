@@ -100,7 +100,9 @@ namespace Polyboid
 	void WorldRenderer::InitMeshes()
 	{
 		// Load Meshes
-		m_Cube = AssetManager::LoadMesh("Assets/Models/cube.fbx");
+		AssetManager::LoadMesh("Assets/Models/cube.fbx");
+
+		m_Cube = AssetManager::LoadRenderData("cube.fbx");
 		m_Quad = Primitives::GenQuad();
 	}
 
@@ -282,7 +284,7 @@ namespace Polyboid
 		for (auto& entity : meshView)
 		{
 			auto [transform, mesh] = meshView.get<TransformComponent, MeshRendererComponent>(entity);
-			auto va = AssetManager::GetMesh(mesh.assetName);
+			auto va = AssetManager::LoadRenderData(mesh.assetName);
 
 			m_PrefilterMap->Bind(28);
 			m_BrdfLUT->Bind(29);

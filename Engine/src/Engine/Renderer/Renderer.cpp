@@ -81,7 +81,7 @@ namespace Polyboid
     }
 
 
-    void Renderer::Submit(const MeshDataRenderer& meshData, const Ref<Shader>& shader,
+    void Renderer::Submit(const RenderData& renderData, const Ref<Shader>& shader,
 	    const glm::mat4& transform)
     {
         POLYBOID_PROFILE_FUNCTION();
@@ -90,7 +90,7 @@ namespace Polyboid
         uint32_t materialOffset = 0;
         int32_t materialIndex = 0;
         shader->Bind();
-    	for (auto& materialVA : meshData)
+    	for (auto& materialVA : renderData)
         {
 
         	auto& [material, vertexBufferBB] = materialVA;
@@ -105,13 +105,8 @@ namespace Polyboid
             s_RenderStorage->m_MaterialStorage->SetData(&material->GetData(), sizeof(MaterialData), materialOffset);
 
 
-            auto& [va, aabbs] = vertexBufferBB;
+            auto& va = vertexBufferBB;
 
-            const auto& camera = GameStatics::GetCurrentCamera();
-            if (camera)
-            {
-                FrustumCulling culling(camera);
-            }
 
             Submit(va, shader, transform);
 
@@ -122,6 +117,7 @@ namespace Polyboid
         }
 
     }
+
 
 
     void Renderer::BeginDraw(const Ref<Camera>& camera)

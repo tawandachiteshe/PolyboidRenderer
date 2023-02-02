@@ -14,9 +14,11 @@
 #include "ECS/ECSManager.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
+#include "Debug/Timer.h"
 #include "Events/EventSystem.h"
 #include "Events/WindowEvent.h"
 #include "Scripting/ScriptingEngine.h"
+#include "Engine/Renderer/Context.h"
 
 
 namespace Polyboid
@@ -33,16 +35,10 @@ namespace Polyboid
         s_Instance = this;
         
         m_Window = PolyboidWindow::MakeWindow(m_AppData.windowSpecs);
-        const auto nativeWindow = m_Window->GetNativeWindow();
-
-        Renderer::Init();
-        
-
-        m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
-        m_Swapchain->SetVsync(true);
+      
         m_IsRunning = true;
 
-        Imgui::Init();
+       
         ECSManager::Init();
         ScriptingEngine::Init();
         AssetManager::Init();
@@ -62,6 +58,23 @@ namespace Polyboid
         ShutDown();
     }
 
+
+    void Application::SubmitToRenderThread(const std::function<void()>& function)
+    {
+        m_RenderThreadQueue.push_back(function);
+    }
+
+    void Application::RenderThreadQueue()
+    {
+        std::scoped_lock lock(m_RenderMutex);
+
+	    for (auto& func : m_RenderThreadQueue)
+	    {
+            func();
+	    }
+
+        m_RenderThreadQueue.clear();
+    }
 
     void Application::OnWindowResizeEvent(const Event& event)
     {
@@ -87,8 +100,7 @@ namespace Polyboid
     void Application::ShutDown()
     {
         POLYBOID_PROFILE_FUNCTION();
-        Imgui::ShutDown();
-        Renderer2D::Shutdown();
+
         ScriptingEngine::ShutDown();
        
     }
@@ -96,6 +108,12 @@ namespace Polyboid
     void Application::Run()
     {
         POLYBOID_PROFILE_FUNCTION();
+
+        std::thread renderThread([&]()
+            {
+                Render();
+            });
+
         while (m_IsRunning)
         {
             
@@ -103,7 +121,7 @@ namespace Polyboid
            
 
             const double currentFrame = glfwGetTime();
-            m_DeltaTime = currentFrame - m_LastFrame;
+            stats.m_GameTime = currentFrame - stats.m_LastGameFrame;
 
             // update here.....
 
@@ -112,32 +130,73 @@ namespace Polyboid
 
                 for (auto layer : m_Layers)
                 {
-                    layer->OnUpdate(m_DeltaTime);
+                    layer->OnUpdate(stats.m_GameTime);
                 }
             }
-     
-            
-            m_LastFrame = currentFrame;
+
+            stats.m_LastGameFrame = currentFrame;
 
             //rendering here////
 
+            // {
+            //     POLYBOID_PROFILE_SCOPE("Imgui");
+    
+            // }
+
+
+           // 
+
+        }
+
+        renderThread.detach();
+    }
+
+    void Application::Render()
+    {
+
+
+        const auto context = Context::MakeContext();
+        const auto nativeWindow = m_Window->GetNativeWindow();
+
+        context->MakeCurrent(nativeWindow);
+
+        m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
+        m_Swapchain->SetVsync(true);
+
+      
+        Imgui::Init();
+    	Renderer::Init();
+
+        while (m_IsRunning)
+        {
+
+            const double currentFrame = glfwGetTime();
+            stats.m_RenderTime = currentFrame - stats.m_LastRenderFrame;
+
+            RenderThreadQueue();
+
+            for (auto layer : m_Layers)
             {
-                POLYBOID_PROFILE_SCOPE("Imgui");
-                Imgui::Begin();
-
-                //imgui here....
-                for (auto layer : m_Layers)
-                {
-                    layer->OnImguiRender();
-                }
-
-                Imgui::End();
+                layer->OnRender(stats.m_RenderTime);
             }
 
+        	Imgui::Begin();
+		    
+		    //imgui here....
+		    for (auto layer : m_Layers)
+		    {
+		        layer->OnImguiRender();
+		    }
+		    
+		    Imgui::End();
 
             m_Swapchain->SwapBuffers();
-            
-           
+
+            stats.m_LastRenderFrame = currentFrame;
         }
+
+        Imgui::ShutDown();
+		Renderer2D::Shutdown();
+        
     }
 }

@@ -52,8 +52,9 @@ namespace Polyboid
 
 
 	using MeshData = std::map<Ref<Material>, std::vector<RendererMeshData>>;
-	using MeshDataRenderer = std::map<Ref<Material>, std::pair<Ref<VertexBufferArray>, std::vector<AABB>>>;
-
+	using MeshDataRenderer = std::map<Ref<Material>, RendererMeshData>;
+	using RenderData = std::map<Ref<Material>, Ref<VertexBufferArray>>;
+	
 	class MeshImporter
 	{
 	private:

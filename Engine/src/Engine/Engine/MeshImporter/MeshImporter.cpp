@@ -1,6 +1,8 @@
 #include "boidpch.h"
 #include "MeshImporter.h"
 
+#include <execution>
+#include <future>
 #include <spdlog/spdlog.h>
 #include <stb/stb_image.h>
 
@@ -9,6 +11,7 @@
 #include "assimp/postprocess.h"
 #include "Engine/Engine/AssetManager.h"
 #include "Engine/Engine/Serializer.h"
+#include "Engine/Engine/TextureData.h"
 #include "Engine/Engine/Utils/FileSystem.h"
 #include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/MaterialLibrary.h"
@@ -23,65 +26,72 @@ namespace Polyboid
 	{
 		RendererMeshData data = {};
 		RendererVertex vertexData = {};
-		
 
 
+		auto LoadVerts = [&]()
+		{
+			if (mesh->HasPositions())
+			{
+				data.BoundingBox = AABB{
+					{mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z},
+					{mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z}
+				}; //mesh->mAABB.mMax;
+
+				for (int i = 0; i < mesh->mNumVertices; ++i)
+				{
+					glm::vec3 vertex = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
+
+					vertexData.position = vertex;
+					if (mesh->HasNormals())
+					{
+						vertexData.normals = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
+					}
+
+
+					//texture coord 0 for now
+					if (mesh->mTextureCoords[0])
+					{
+						vertexData.uv = {mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y};
+					}
+
+					if (mesh->HasTangentsAndBitangents())
+					{
+						vertexData.tangents = {mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z};
+						vertexData.bitangents = {
+							mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z
+						};
+					}
+
+					vertexData.meshIdx = (float)meshIdx;
+
+					data.vertices.push_back(vertexData);
+				}
+			}
+
+
+			if (mesh->HasFaces())
+			{
+				for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
+				{
+					const auto& face = mesh->mFaces[i];
+					for (uint32_t j = 0; j < face.mNumIndices; ++j)
+					{
+						data.Indices.push_back(face.mIndices[j]);
+					}
+				}
+			}
+		};
 		//for now we get first mesh in a scene
 
-		if (mesh->HasPositions())
-		{
-			data.BoundingBox = AABB{ { mesh->mAABB.mMin.x, mesh->mAABB.mMin.y, mesh->mAABB.mMin.z },  { mesh->mAABB.mMax.x, mesh->mAABB.mMax.y, mesh->mAABB.mMax.z} }; //mesh->mAABB.mMax;
-
-			for (int i = 0; i < mesh->mNumVertices; ++i)
-			{
-				glm::vec3 vertex = {mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z};
-
-				vertexData.position = vertex;
-				if (mesh->HasNormals())
-				{
-					vertexData.normals = {mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z};
-				}
-
-
-				//texture coord 0 for now
-				if (mesh->mTextureCoords[0])
-				{
-					vertexData.uv = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
-				}
-
-				if (mesh->HasTangentsAndBitangents())
-				{
-					vertexData.tangents = { mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z };
-					vertexData.bitangents = { mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z };
-			
-				}
-
-				vertexData.meshIdx = (float)meshIdx;
-
-				data.vertices.push_back(vertexData);
-
-			}
-		}
-
-
-		if (mesh->HasFaces())
-		{
-			for (uint32_t i = 0; i < mesh->mNumFaces; ++i)
-			{
-				const auto& face = mesh->mFaces[i];
-				for (uint32_t j = 0; j < face.mNumIndices; ++j)
-				{
-					data.Indices.push_back(face.mIndices[j]);
-				}
-			}
-		}
+		auto vertsFuture = std::async(std::launch::async, LoadVerts);
+		vertsFuture.wait();
 
 		return data;
 	}
 
 	static std::map<uint32_t, Ref<Material>> aiMatToEngine;
-	static  std::map<int32_t, UUID> embeddedTextureMap;
-	static  std::map<std::string, UUID> textureMap;
+	static std::map<int32_t, UUID> embeddedTextureMap;
+	static std::map<std::string, UUID> textureMap;
 	static int32_t textureCount = 0;
 	static int32_t textureMax = 27;
 
@@ -97,7 +107,6 @@ namespace Polyboid
 		}
 		else
 		{
-			
 		}
 
 
@@ -115,27 +124,20 @@ namespace Polyboid
 		{
 			if (texture->mHeight == 0)
 			{
-				int32_t width = 0;
-				int32_t height = 0;
-				int32_t channels = 0;
-				stbi_uc* data = stbi_load_from_memory((stbi_uc const*)texture->pcData, texture->mWidth, &width,
-					&height, &channels, 0);
+				Ref<TextureData> data = std::make_shared<TextureData>(texture);
 
-				AssetManager::LoadTexture(engineMaterialTexture,
-					Texture::MakeTexture2D(width, height, channels, data));
+				AssetManager::LoadTextureData(engineMaterialTexture, data);
 
 				embeddedTextureMap[textureIndex] = engineMaterialTexture;
 				id = engineMaterialTexture;
-
-				stbi_image_free(data);
 			}
 		}
 
 		return id;
-
 	}
 
-	static void LoadMaterial(const aiScene* scene, uint32_t matIdx, int32_t* textureIndices, const std::filesystem::path& meshPath)
+	static void LoadMaterial(const aiScene* scene, uint32_t matIdx, int32_t* textureIndices,
+	                         const std::filesystem::path& meshPath)
 	{
 		auto* mat = scene->mMaterials[matIdx];
 
@@ -173,14 +175,14 @@ namespace Polyboid
 				if (textureIdx > -1)
 				{
 					textureIndices[0] = 0;
-					aiMatToEngine[matIdx]->mDiffuseTexture = LoadEmbeddedTexture(texture, textureIdx, aiMatToEngine[matIdx]->mDiffuseTexture);
+					aiMatToEngine[matIdx]->mDiffuseTexture = LoadEmbeddedTexture(
+						texture, textureIdx, aiMatToEngine[matIdx]->mDiffuseTexture);
 				}
 				else
 				{
 					aiMatToEngine[matIdx]->mDiffuseTexture = LoadTexture(path.C_Str(), meshPath);
 				}
 			}
-
 		}
 
 		if (normalsTextures)
@@ -192,12 +194,11 @@ namespace Polyboid
 				if (textureIdx > -1)
 				{
 					textureIndices[1] = 1;
-					aiMatToEngine[matIdx]->mNormalsTexture = LoadEmbeddedTexture(texture, textureIdx, aiMatToEngine[matIdx]->mNormalsTexture);
+					aiMatToEngine[matIdx]->mNormalsTexture = LoadEmbeddedTexture(
+						texture, textureIdx, aiMatToEngine[matIdx]->mNormalsTexture);
 				}
-
 			}
 		}
-
 
 
 		if (metalnessTextures)
@@ -209,7 +210,8 @@ namespace Polyboid
 				if (textureIdx > -1)
 				{
 					textureIndices[2] = 2;
-					aiMatToEngine[matIdx]->mMetallicTexture = LoadEmbeddedTexture(texture, textureIdx, aiMatToEngine[matIdx]->mMetallicTexture);
+					aiMatToEngine[matIdx]->mMetallicTexture = LoadEmbeddedTexture(
+						texture, textureIdx, aiMatToEngine[matIdx]->mMetallicTexture);
 				}
 			}
 		}
@@ -224,60 +226,60 @@ namespace Polyboid
 				if (texture)
 				{
 					textureIndices[3] = 3;
-					aiMatToEngine[matIdx]->mAOTexture = LoadEmbeddedTexture(texture, textureIdx, aiMatToEngine[matIdx]->mAOTexture);
+					aiMatToEngine[matIdx]->mAOTexture = LoadEmbeddedTexture(
+						texture, textureIdx, aiMatToEngine[matIdx]->mAOTexture);
 				}
-
 			}
 		}
-
 	}
 
 
-	void MeshImporter::ProcessNode(aiNode* node, const aiScene* scene, MeshData& meshesData, const std::filesystem::path& path)
+	void MeshImporter::ProcessNode(aiNode* node, const aiScene* scene, MeshData& meshesData,
+	                               const std::filesystem::path& path)
 	{
-
 		auto num = scene->mNumTextures;
 
-		for (int i = 0; i < node->mNumMeshes; ++i)
+		auto LoadData = [&]()
 		{
-			auto mesh = scene->mMeshes[node->mMeshes[i]];
-			auto* mat = scene->mMaterials[mesh->mMaterialIndex];
-
-			int32_t textureIdxs[4] = { -1, -1, -1, -1 };
-
-			aiString matName;
-			if (mat->Get(AI_MATKEY_NAME, matName) == AI_SUCCESS)
+			for (int i = 0; i < node->mNumMeshes; ++i)
 			{
+				auto mesh = scene->mMeshes[node->mMeshes[i]];
+				auto* mat = scene->mMaterials[mesh->mMaterialIndex];
+
+				int32_t textureIdxs[4] = {-1, -1, -1, -1};
+
+				aiString matName;
+				if (mat->Get(AI_MATKEY_NAME, matName) == AI_SUCCESS)
+				{
+				}
+
+				std::string name(matName.C_Str());
+				if (aiMatToEngine.find(mesh->mMaterialIndex) != aiMatToEngine.end())
+				{
+					LoadMaterial(scene, mesh->mMaterialIndex, textureIdxs, path);
+					aiMatToEngine[mesh->mMaterialIndex]->SetTextures(textureIdxs);
+				}
+				else
+				{
+					Ref<Material> engineMaterial = MaterialLibrary::CreateMaterial(UUID(), name);
+					aiMatToEngine[mesh->mMaterialIndex] = engineMaterial;
+					LoadMaterial(scene, mesh->mMaterialIndex, textureIdxs, path);
+					engineMaterial->SetTextures(textureIdxs);
+				}
+
+				if (meshesData.find(aiMatToEngine[mesh->mMaterialIndex]) != meshesData.end())
+				{
+					meshesData[aiMatToEngine[mesh->mMaterialIndex]].push_back(GetMesh(mesh, node->mMeshes[i]));
+				}
+				else
+				{
+					meshesData[aiMatToEngine[mesh->mMaterialIndex]] = {};
+					meshesData[aiMatToEngine[mesh->mMaterialIndex]].push_back(GetMesh(mesh, node->mMeshes[i]));
+				}
 			}
+		};
 
-			std::string name(matName.C_Str());
-			if (aiMatToEngine.find(mesh->mMaterialIndex) != aiMatToEngine.end())
-			{
-				LoadMaterial(scene, mesh->mMaterialIndex, textureIdxs, path);
-				aiMatToEngine[mesh->mMaterialIndex]->SetTextures(textureIdxs);
-			}
-			else
-			{
-				Ref<Material> engineMaterial = MaterialLibrary::CreateMaterial(UUID(), name);
-				aiMatToEngine[mesh->mMaterialIndex] = engineMaterial;
-				LoadMaterial(scene, mesh->mMaterialIndex, textureIdxs, path);
-				engineMaterial->SetTextures(textureIdxs);
-
-
-
-			}
-
-			if (meshesData.find(aiMatToEngine[mesh->mMaterialIndex]) != meshesData.end())
-			{
-				meshesData[aiMatToEngine[mesh->mMaterialIndex]].push_back(GetMesh(mesh, node->mMeshes[i]));
-			}
-			else
-			{
-				meshesData[aiMatToEngine[mesh->mMaterialIndex]] = {};
-				meshesData[aiMatToEngine[mesh->mMaterialIndex]].push_back(GetMesh(mesh, node->mMeshes[i]));
-			}
-
-		}
+		LoadData();
 
 
 		for (int i = 0; i < node->mNumChildren; ++i)
@@ -307,8 +309,7 @@ namespace Polyboid
 			| aiProcess_Triangulate
 			| aiProcess_CalcTangentSpace
 			| aiProcess_EmbedTextures
-			| aiProcess_GenBoundingBoxes
-		;
+			| aiProcess_GenBoundingBoxes;
 
 		const aiScene* scene = importer.ReadFile(path.string(), importFlags);
 
@@ -327,17 +328,14 @@ namespace Polyboid
 		return meshesData;
 	}
 
-	static  void CombineBuffers(const MeshData& _meshData, MeshDataRenderer& _vertexBuffers)
+	static void CombineBuffers(const MeshData& _meshData, MeshDataRenderer& _vertexBuffers)
 	{
 		std::vector<MaterialData> materialsData;
 		std::vector<Ref<Material>> _materials;
 		std::vector<AABB> m_aabbs;
 
-		
-
-		for (auto& meshes : _meshData)
+		std::for_each(std::execution::par, _meshData.begin(), _meshData.end(), [&](auto& meshes)
 		{
-
 			auto& [material, meshData] = meshes;
 
 			uint32_t offset = 0;
@@ -346,10 +344,10 @@ namespace Polyboid
 			std::vector<uint32_t> hugeIdx;
 
 			AABB aabb;
+			RendererMeshData data;
 
 			for (auto& mesh : meshData)
 			{
-				
 				hugeVerts.insert(hugeVerts.end(), mesh.vertices.begin(), mesh.vertices.end());
 
 				for (auto idx : mesh.Indices)
@@ -361,24 +359,15 @@ namespace Polyboid
 				offset += (mesh).vertices.size();
 			}
 
-			
-			auto indices = ShaderBufferStorage::Make(hugeIdx.data(), hugeIdx.size() * sizeof(uint32_t));
-			auto va = VertexBufferArray::MakeVertexBufferArray(indices, hugeIdx.size());
-			Ref<ShaderBufferStorage> verts = ShaderBufferStorage::Make(hugeVerts.data(), hugeVerts.size() * sizeof(RendererVertex));
 
-			va->SetShaderBufferStorage(verts);
+			data.vertices = hugeVerts;
+			data.Indices = hugeIdx;
+			data.BoundingBox = aabb;
 
-			
-			_vertexBuffers[material] = { va, m_aabbs };
-			
-		}
-
-		
-
+			_vertexBuffers[material] = data;
+		});
 	}
 
-
-	
 
 	MeshDataRenderer MeshImporter::ReadForRendering(const std::filesystem::path& path)
 	{

@@ -1,6 +1,8 @@
 #include "boidpch.h"
 #include "AABB.h"
 
+#include <spdlog/spdlog.h>
+
 #include "glm/gtx/component_wise.hpp"
 #include "glm/gtx/extend.hpp"
 
@@ -33,6 +35,7 @@ namespace Polyboid
 
     AABB::~AABB()
     {
+        //spdlog::info("AABB destroyed");
     }
 
     void AABB::Extend(glm::f32 val)
