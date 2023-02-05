@@ -32,6 +32,7 @@ namespace Polyboid
 		static MeshDataRenderer& LoadMesh(const std::string& path);
 		static MeshDataRenderer& GetMesh(const std::string & AssetName);
 		static RenderData LoadRenderData(const std::string& AssetName);
+		static RenderData& GetRenderData(const std::string& AssetName);
 		static void LoadTexture(const UUID& id, const  Ref<Texture>& texture);
 		static void LoadTextureData(const UUID& id, const Ref<TextureData>& texture);
 		static Ref<Texture>& GetTexture(const UUID& id);

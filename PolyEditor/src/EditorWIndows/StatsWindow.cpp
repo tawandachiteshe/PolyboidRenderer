@@ -16,35 +16,14 @@ namespace Polyboid
 	{
 		ImGui::Begin(m_Name.c_str());
 
-		double renderTimert = Application::Get()->GetStats().m_RenderTime;
-		double gameTimert = Application::Get()->GetStats().m_GameTime;
+		auto& stats = Application::Get()->GetStats();
 
-		static double renderTime = 0.0;
-		static double gameTime = 0.0;
 
-		static double renderTimeGUI = 0.0;
-		static double gameTimeGUI = 0.0;
+		ImGui::Text("Render Frame time %f ms", stats.RenderTimeMs);
+		ImGui::Text("Render Frames per second %f", 1000.0 / stats.RenderTimeMs);
 
-		if (renderTime >= 1.0)
-		{
-			renderTimeGUI = renderTimert;
-			renderTime = 0;
-		}
-
-		if (gameTime >= 1.0)
-		{
-			gameTimeGUI = gameTimert;
-			gameTime = 0;
-		}
-
-		renderTime += renderTimert;
-		gameTime += gameTimert;
-
-		ImGui::Text("Render Frame time %f ms", renderTimeGUI);
-		ImGui::Text("Render Frames per second %f", 1.0 / renderTimeGUI);
-
-		ImGui::Text("Game Frame time %f ms", gameTimeGUI);
-		ImGui::Text("Game Frames per second %f", 1.0 / gameTimeGUI);
+		ImGui::Text("Game Frame time %f ms", stats.GameTimeMs);
+		ImGui::Text("Game Frames per second %f", 1000.0 / stats.GameTimeMs);
 
 		ImGui::End();
 	}

@@ -334,7 +334,7 @@ namespace Polyboid
 		std::vector<Ref<Material>> _materials;
 		std::vector<AABB> m_aabbs;
 
-		std::for_each(std::execution::par, _meshData.begin(), _meshData.end(), [&](auto& meshes)
+		std::for_each(std::execution::seq, _meshData.begin(), _meshData.end(), [&](auto& meshes)
 		{
 			auto& [material, meshData] = meshes;
 

@@ -1,6 +1,6 @@
 #version 450 core
 
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 struct Plane
 {
@@ -31,6 +31,7 @@ struct Cone
 struct PointLight
 {
 	float Position[3];
+    float PositionVS[3];
 	float Color[3];
 	float Distance;
 	float Energy;
@@ -40,7 +41,9 @@ struct PointLight
 struct SpotLight
 {
 	float Position[3];
+	float PositionVS[3];
 	float Direction[3];
+	float DirectionVS[3];
 	float Color[3];
 	float InnerAngle;
 	float OuterAngle;
@@ -48,6 +51,20 @@ struct SpotLight
 	float Energy;
 	
 };
+struct LightCounter
+{
+	uint Point;
+    uint Spot;
+    uint Dir;
+};
+
+struct LightIndex
+{
+	uint Point;
+    uint Spot;
+    uint Dir;
+};
+
 
 struct DirectionalLight
 {
@@ -57,8 +74,14 @@ struct DirectionalLight
 };
 
 layout(binding = 0) uniform sampler2D uDepthTexture;
-layout(rg32ui, binding = 1) uniform uimage2D u_oLightGrid;
-layout(rg32ui, binding = 2) uniform uimage2D u_tLightGrid;
+layout(rg32ui, binding = 1) uniform uimage2D u_oPointLightGrid;
+layout(rg32ui, binding = 2) uniform uimage2D u_tPointLightGrid;
+
+layout(rg32ui, binding = 3) uniform uimage2D u_oSpotLightGrid;
+layout(rg32ui, binding = 4) uniform uimage2D u_tSpotLightGrid;
+
+layout(rg32ui, binding = 5) uniform uimage2D u_oDirLightGrid;
+layout(rg32ui, binding = 6) uniform uimage2D u_tDirLightGrid;
 
 
 #define BLOCK_SIZE 16
@@ -73,14 +96,14 @@ shared uint uMaxDepth;
 shared Frustum GroupFrustum;
 
 // Opaque geometry light lists.
-shared uint o_LightCount;
-shared uint o_LightIndexStartOffset;
-shared uint o_LightList[1024];
+shared LightCounter o_LightCount;
+shared LightCounter o_LightIndexStartOffset;
+shared LightCounter o_LightList[1024];
  
 // Transparent geometry light lists.
-shared uint t_LightCount;
-shared uint t_LightIndexStartOffset;
-shared uint t_LightList[1024];
+shared LightCounter t_LightCount;
+shared LightCounter t_LightIndexStartOffset;
+shared LightCounter t_LightList[1024];
 
 layout(std430, binding = 0) readonly buffer Frustums {
   Frustum in_Frustums[];
@@ -101,19 +124,19 @@ layout(std430, binding = 4) readonly buffer DirLights {
 };
 
 layout(std430, binding = 5) buffer oLightIndex {
-  uint o_LightIndexCounter[];
+  uint o_LightIndexCounter[3];
 };
 
 layout(std430, binding = 6) buffer tLightIndex {
-  uint t_LightIndexCounter [];
+  uint t_LightIndexCounter [3];
 };
 
 layout(std430, binding = 7) buffer oLightIndexList  {
-  uint o_LightIndexList[];
+  LightIndex o_LightIndexList[];
 };
 
 layout(std430, binding = 8) buffer tLightIndexList  {
-  uint t_LightIndexList[];
+  LightIndex t_LightIndexList[];
 };
 
 
@@ -203,24 +226,74 @@ bool ConeInsideFrustum( Cone cone, Frustum frustum, float zNear, float zFar )
 }
 
 // Add the light to the visible light list for opaque geometry.
-void o_AppendLight( uint lightIndex )
+void o_AppendLight( uint lightIndex, uint type )
 {
-    uint index; // Index into the visible lights array.
-    index = atomicAdd( o_LightCount, uint(1));
+    uint index;
+    
+    switch(type)
+    {
+        case 0:
+            index = atomicAdd(o_LightCount.Point, 1);
+            break;
+        case 1:
+            index = atomicAdd(o_LightCount.Spot, 1);
+            break;
+        case 2:
+            index = atomicAdd(o_LightCount.Dir, 1);
+            break;
+    }
+    
     if ( index < 1024 )
     {
-        o_LightList[index] = lightIndex;
+       switch(type)
+        {
+            case 0:
+                o_LightList[index].Point = lightIndex;
+                break;
+            case 1:
+                o_LightList[index].Spot = lightIndex;
+                break;
+            case 2:
+                o_LightList[index].Dir = lightIndex;
+                break;
+        }
+       
     }
 }
  
 // Add the light to the visible light list for transparent geometry.
-void t_AppendLight( uint lightIndex )
+void t_AppendLight( uint lightIndex,  uint type )
 {
-    uint index; // Index into the visible lights array.
-    index = atomicAdd( t_LightCount, 1);
+    uint index;
+    
+    switch(type)
+    {
+        case 0:
+            index = atomicAdd(t_LightCount.Point, 1);
+            break;
+        case 1:
+            index = atomicAdd(t_LightCount.Spot, 1);
+            break;
+        case 2:
+            index = atomicAdd(t_LightCount.Dir, 1);
+            break;
+    }
+    
     if ( index < 1024 )
     {
-        t_LightList[index] = lightIndex;
+       switch(type)
+        {
+            case 0:
+                t_LightList[index].Point = lightIndex;
+                break;
+            case 1:
+                t_LightList[index].Spot = lightIndex;
+                break;
+            case 2:
+                t_LightList[index].Dir = lightIndex;
+                break;
+        }
+       
     }
 }
 
@@ -234,54 +307,102 @@ vec4 ClipToView( vec4 clip )
     return view;
 }
 
+// Convert screen space coordinates to view space.
+vec4 ScreenToView( vec4 screen )
+{
+    // Convert to normalized texture coordinates
+    vec2 texCoord = vec2(1280, 720) / gl_GlobalInvocationID.xy;
+    // Convert to clip space
+    vec4 clip = vec4( vec2( texCoord.x, texCoord.y ) * 2.0f - 1.0f, screen.z,
+    screen.w );
+    return ClipToView( clip );
+}
+
+
+
 
 void main()
 {
-    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
+    vec2 texelCoord = vec2(gl_GlobalInvocationID.xy);
 
-    float depthf = texture(uDepthTexture, texelCoord).r;
-    uint depthu = uint(depthf);
+    float depth =  texture(uDepthTexture, texelCoord).r;
 
+    vec4 depthVs = ScreenToView(vec4(texelCoord, depth, 1.0));
+
+    float depthf = depthVs.z;
+    uint depthu = floatBitsToUint(depthf);
+
+    ivec2 tileID = ivec2(gl_WorkGroupID.xy);
+	ivec2 tileNumber = ivec2(gl_NumWorkGroups.xy);
+	uint index = tileID.y * tileNumber.x + tileID.x;
+   
     if(gl_LocalInvocationIndex == 0)
     {
         uMinDepth = 0xffffffff;
         uMaxDepth = 0;
-        o_LightCount = 0;
-        t_LightCount = 0;
-        GroupFrustum = in_Frustums[gl_WorkGroupID.x + ( gl_WorkGroupID.y * gl_NumWorkGroups.x )];
+        o_LightCount.Point = 0;
+        o_LightCount.Spot = 0;
+        o_LightCount.Dir = 0;
+
+        t_LightCount.Point = 0;
+        t_LightCount.Spot = 0;
+        t_LightCount.Dir = 0;
+
+        o_LightIndexCounter[0] = 0;
+        o_LightIndexCounter[1] = 0;
+        o_LightIndexCounter[2] = 0;
+
+           t_LightIndexCounter[0] = 0;
+           t_LightIndexCounter[1] = 0;
+       t_LightIndexCounter[2] = 0;
+
+
+        uint index = (gl_WorkGroupID.x + (gl_WorkGroupID.y * gl_NumWorkGroups.x));
+        GroupFrustum = in_Frustums[index];
+       
     }
 
-    groupMemoryBarrier();
+   
+
+    barrier();
 
     atomicMin(uMinDepth, depthu);
-    atomicMin(uMaxDepth, depthu);
+    atomicMax(uMaxDepth, depthu);
      
-    groupMemoryBarrier();
+    barrier();
 
-    float fMinDepth = float( uMinDepth );
-    float fMaxDepth = float( uMaxDepth );
+
+    float fMinDepth = uintBitsToFloat( uMinDepth );
+    float fMaxDepth = uintBitsToFloat( uMaxDepth );
 
     // Convert depth values to view space.
-    float minDepthVS = ClipToView( vec4( 0, 0, fMinDepth, 1 ) ).z;
-    float maxDepthVS = ClipToView( vec4( 0, 0, fMaxDepth, 1 ) ).z;
-    float nearClipVS = ClipToView( vec4( 0, 0, 0, 1 ) ).z;
+    float minDepthVS = ClipToView( vec4( 0.0, 0.0, fMinDepth, 1.0 ) ).z;
+    float maxDepthVS = ClipToView( vec4( 0.0, 0.0, fMaxDepth, 1.0 ) ).z;
+    float nearClipVS = ClipToView( vec4( 0.0, 0.0, 0.0, 1.0 ) ).z;
  
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
-    Plane minPlane = { vec3( 0, 0, -1 ), -minDepthVS };
- 
+    Plane minPlane = { vec3( 0.0, 0.0, -1.0 ), -minDepthVS };
+
+
     //point lights
     for ( uint i = gl_LocalInvocationIndex; i < uPointLightsCount; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        Sphere sphere = { float3ToVec3(in_PointLights[i].Position), in_PointLights[i].Distance };
+        
+   
+        Sphere sphere;
+        sphere.c = float3ToVec3(in_PointLights[i].PositionVS);
+        sphere.r = in_PointLights[i].Distance;
+
+
         if(SphereInsideFrustum(sphere, GroupFrustum, nearClipVS, maxDepthVS))
         {
-            t_AppendLight(i);
+            t_AppendLight(i, 0);
 
            if ( !SphereInsidePlane( sphere, minPlane ) )
            {
               // Add light to light list for opaque geometry.
-              o_AppendLight( i );
+              o_AppendLight(i, 0);
            }
 
         }
@@ -289,20 +410,20 @@ void main()
 
     for ( uint i = gl_LocalInvocationIndex; i < uSpotLightsCount; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        
-        SpotLight light = in_SpotLights[i];
+        uint lightIndex = i;
+        SpotLight light = in_SpotLights[lightIndex];
         
          float coneRadius = tan( radians( light.InnerAngle ) ) * light.Distance;
-         Cone cone = { float3ToVec3(light.Position).xyz, light.Distance, float3ToVec3(light.Direction).xyz, coneRadius };
+         Cone cone = { float3ToVec3(light.PositionVS).xyz, light.Distance, float3ToVec3(light.DirectionVS).xyz, coneRadius };
          if ( ConeInsideFrustum( cone, GroupFrustum, nearClipVS, maxDepthVS ) )
          {
              // Add light to light list for transparent geometry.
-             t_AppendLight( i );
+             t_AppendLight( lightIndex, 1 );
  
              if ( !ConeInsidePlane( cone, minPlane ) )
              {
                  // Add light to light list for opaque geometry.
-                 o_AppendLight( i );
+                 o_AppendLight(lightIndex, 1 );
              }
           }
        
@@ -310,33 +431,87 @@ void main()
 
     for ( uint i = gl_LocalInvocationIndex; i < uDirectionLightsCount; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-         t_AppendLight( i );
-         o_AppendLight( i );
+         uint lightIndex = i;
+         t_AppendLight( lightIndex, 2 );
+         o_AppendLight( lightIndex, 2 );
     }
+
 
      if ( gl_LocalInvocationIndex == 0 )
     {
-        // Update light grid for opaque geometry.
-        o_LightIndexStartOffset = atomicAdd( o_LightIndexCounter[0], o_LightCount);
-        imageStore(u_oLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( o_LightIndexStartOffset, o_LightCount ), 0, 1));
- 
-        // Update light grid for transparent geometry.
-        t_LightIndexStartOffset = atomicAdd( t_LightIndexCounter[0], t_LightCount);
-        imageStore(u_tLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( t_LightIndexStartOffset, t_LightCount ), 0, 1));
+       
+        //Point Lights
+        o_LightIndexStartOffset.Point = atomicAdd(o_LightIndexCounter[0], o_LightCount.Point);
+        imageStore(u_oPointLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( o_LightIndexStartOffset.Point, o_LightCount.Point ), 0, 1));
+        
+        t_LightIndexStartOffset.Point = atomicAdd(t_LightIndexCounter[0], t_LightCount.Point);
+        imageStore(u_tPointLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( t_LightIndexStartOffset.Point, t_LightCount.Point), 0, 1));
+
+        //Spot Lights
+        o_LightIndexStartOffset.Spot = atomicAdd(o_LightIndexCounter[1], o_LightCount.Spot);
+        imageStore(u_oSpotLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( o_LightIndexStartOffset.Spot, o_LightCount.Spot ), 0, 1));
+        
+        t_LightIndexStartOffset.Spot = atomicAdd(t_LightIndexCounter[1], t_LightCount.Spot);
+        imageStore(u_tSpotLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( t_LightIndexStartOffset.Spot, t_LightCount.Spot), 0, 1));
+
+          //Dir Lights
+        o_LightIndexStartOffset.Dir = atomicAdd(o_LightIndexCounter[2], o_LightCount.Dir);
+        imageStore(u_oDirLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( o_LightIndexStartOffset.Dir, o_LightCount.Dir ), 0, 1));
+        
+        t_LightIndexStartOffset.Dir = atomicAdd(t_LightIndexCounter[2], t_LightCount.Dir);
+        imageStore(u_tDirLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( t_LightIndexStartOffset.Dir, t_LightCount.Dir), 0, 1));
+         
     }
+    
+    barrier();
 
-    groupMemoryBarrier();
 
+    //Point Lights
       // Now update the light index list (all threads).
     // For opaque geometry.
-    for (uint i = gl_LocalInvocationIndex; i < o_LightCount; i += BLOCK_SIZE * BLOCK_SIZE )
+    for (uint i = gl_LocalInvocationIndex; i < o_LightCount.Point; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        o_LightIndexList[o_LightIndexStartOffset + i] = o_LightList[i];
+     
+
+        o_LightIndexList[o_LightIndexStartOffset.Point + i].Point = o_LightList[i].Point;
     }
     // For transparent geometry.
-    for ( uint i = gl_LocalInvocationIndex; i < t_LightCount; i += BLOCK_SIZE * BLOCK_SIZE )
+    for ( uint i = gl_LocalInvocationIndex; i < t_LightCount.Point; i += BLOCK_SIZE * BLOCK_SIZE )
     {
-        t_LightIndexList[t_LightIndexStartOffset + i] = t_LightList[i];
+   
+        t_LightIndexList[t_LightIndexStartOffset.Point + i].Point = t_LightList[i].Point;
+    }
+
+    
+    //Spot Lights
+    // Now update the light index list (all threads).
+    // For opaque geometry.
+    for (uint i = gl_LocalInvocationIndex; i < o_LightCount.Spot; i += BLOCK_SIZE * BLOCK_SIZE )
+    {
+        uint lightIndex = i;
+        o_LightIndexList[o_LightIndexStartOffset.Spot + lightIndex].Spot = o_LightList[i].Spot;
+    }
+    // For transparent geometry.
+    for ( uint i = gl_LocalInvocationIndex; i < t_LightCount.Spot; i += BLOCK_SIZE * BLOCK_SIZE )
+    {
+        uint lightIndex = i;
+        t_LightIndexList[t_LightIndexStartOffset.Spot + lightIndex].Spot = t_LightList[i].Spot;
+    }
+
+
+    //DIr lights
+    // Now update the light index list (all threads).
+    // For opaque geometry.
+    for (uint i = gl_LocalInvocationIndex; i < o_LightCount.Dir; i += BLOCK_SIZE * BLOCK_SIZE )
+    {
+        uint lightIndex = i;
+        o_LightIndexList[o_LightIndexStartOffset.Dir + lightIndex].Dir = o_LightList[i].Dir;
+    }
+    // For transparent geometry.
+    for ( uint i = gl_LocalInvocationIndex; i < t_LightCount.Dir; i += BLOCK_SIZE * BLOCK_SIZE )
+    {
+        uint lightIndex = i;
+        t_LightIndexList[t_LightIndexStartOffset.Dir + lightIndex].Dir = t_LightList[i].Dir;
     }
 
 }

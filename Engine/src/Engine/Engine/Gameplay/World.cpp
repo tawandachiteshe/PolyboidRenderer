@@ -90,7 +90,7 @@ namespace Polyboid
 		Application::Get()->SubmitToRenderThread([&]()
 			{
 				WorldRendererSettings settings;
-				settings.type = WorldRendererType::Forward;
+				settings.type = WorldRendererType::Deferred;
 				settings.world = GameStatics::GetCurrentWorld();
 				m_Renderer = WorldRenderer::Make(settings);
 			});

@@ -140,7 +140,6 @@ namespace Polyboid
 					if (ImGui::ImageButton(pathStr.c_str(), (ImTextureID)Resource::GetIcons()["file"]->GetTextureID(),
 					                       {48, 48}, {1, 1}, {0, 0}))
 					{
-						spdlog::info("file {}", pathStr.c_str());
 					}
 
 					
@@ -153,13 +152,7 @@ namespace Polyboid
 						{
 							std::string entryCopy = entry.path().string();
 							AssetManager::LoadMesh(entryCopy);
-
-							m_Futures.push_back(std::async(std::launch::async, [&]()
-							{
-								
-								spdlog::info("TAwnada {}", entryCopy);
-								
-							}));
+							AssetManager::LoadRenderData(entry.path().filename().string());
 
 						}
 

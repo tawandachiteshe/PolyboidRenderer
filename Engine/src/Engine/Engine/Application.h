@@ -23,6 +23,9 @@ namespace Polyboid
         double m_LastGameFrame = 0.0;
         double m_RenderTime = 0.0;
         double m_LastRenderFrame = 0.0;
+
+        double RenderTimeMs = 0;
+        double GameTimeMs = 0;
     };
     
     class Application

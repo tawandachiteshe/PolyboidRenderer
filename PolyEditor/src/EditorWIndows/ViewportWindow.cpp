@@ -43,7 +43,7 @@ namespace Polyboid
 		float fov = 45.0f;
 
 
-		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 10000.0f);
+		m_ViewportCamera = std::make_shared<EditorCamera>(fov, aspect, 0.1f, 2000.0f);
 
 		GameStatics::SetCurrentCamera(m_ViewportCamera);
 		Editor::SetEditorCamera(m_ViewportCamera);
@@ -51,8 +51,11 @@ namespace Polyboid
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_SELECTED, BIND_EVENT(OnGameObjectSelected));
 		EventSystem::Bind(EventType::ON_GAME_OBJECT_DELETED, BIND_EVENT(OnGameObjectDeleted));
 
-		auto* object = GameStatics::GetCurrentWorld()->CreateGameObject("Cube");
+		std::vector<GameObject*> lights;
 
+		auto* object = GameStatics::GetCurrentWorld()->CreateGameObject("Light");
+
+		
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -125,7 +128,7 @@ namespace Polyboid
 		 ImGui::BeginChild("GameRender");
 
 		 auto hovered = ImGui::IsWindowHovered();
-		 m_Focused = ImGui::IsWindowFocused();
+		 m_Focused = ImGui::IsWindowFocused() && hovered;
 		 ImGui::SetNextFrameWantCaptureMouse(true);
 
 		 
@@ -160,22 +163,26 @@ namespace Polyboid
 			auto& view = m_ViewportCamera->GetViewMatrix();
 			auto& proj = m_ViewportCamera->GetProjection();
 
-			if (Input::KeyPressed(KeyCodes::W))
+			if (m_Focused)
 			{
-				//translation
-				m_GizmoOperation = ImGuizmo::TRANSLATE;
+				if (Input::KeyPressed(KeyCodes::W))
+				{
+					//translation
+					m_GizmoOperation = ImGuizmo::TRANSLATE;
+				}
+				else if (Input::KeyPressed(KeyCodes::E))
+				{
+					//rot
+					m_GizmoOperation = ImGuizmo::ROTATE;
+				}
+				else if (Input::KeyPressed(KeyCodes::R))
+				{
+					//scale
+					m_GizmoOperation = ImGuizmo::SCALE;
+
+				}
 			}
-			else if (Input::KeyPressed(KeyCodes::E))
-			{
-				//rot
-				m_GizmoOperation = ImGuizmo::ROTATE;
-			}
-			else if (Input::KeyPressed(KeyCodes::R))
-			{
-				//scale
-				m_GizmoOperation = ImGuizmo::SCALE;
-				
-			}
+		
 
 
 			ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), m_GizmoOperation, m_GizmoMode,

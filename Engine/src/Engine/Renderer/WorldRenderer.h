@@ -7,6 +7,17 @@ namespace Polyboid
 {
 	class Material;
 
+	struct LightCounter
+	{
+		uint32_t Point = 0, Spot = 0, Dir = 0;
+	};
+
+	struct LightIndex
+	{
+		uint32_t Point = 0, Spot = 0, Dir = 0;
+	};
+
+
 	struct Plane
 	{
 		glm::vec3 Normal;
@@ -28,6 +39,7 @@ namespace Polyboid
 	struct PointLightData
 	{
 		glm::vec3 Position;
+		glm::vec3 PositionVS;
 		glm::vec3 Color;
 		float Distance;
 		float Energy;
@@ -36,7 +48,9 @@ namespace Polyboid
 	struct SpotLightData
 	{
 		glm::vec3 Position;
+		glm::vec3 PositionVS;
 		glm::vec3 Direction;
+		glm::vec3 DirectionVS;
 		glm::vec3 Color;
 
 		float InnerAngle;
@@ -106,6 +120,7 @@ namespace Polyboid
 		Ref<Shader> m_GeompassShader;
 		Ref<Shader> m_DepthpassShader;
 		Ref<Shader> m_LightpassShader;
+		Ref<Shader> m_ForwardpassShader;
 		Ref<Shader> m_DeferredRenderer;
 		Ref<Shader> m_ComputeFrustumShader;
 		Ref<Shader> m_ComputeLightCullingShader;
@@ -125,8 +140,14 @@ namespace Polyboid
 		Ref<Texture> m_BrdfLUT;
 		Ref<Texture> m_MainTexture;
 		Ref<Texture> m_ComputeTexture;
-		Ref<Texture> m_oLightGrid;
-		Ref<Texture> m_tLightGrid;
+		Ref<Texture> m_oPointLightGrid;
+		Ref<Texture> m_tPointLightGrid;
+
+		Ref<Texture> m_oSpotLightGrid;
+		Ref<Texture> m_tSpotLightGrid;
+
+		Ref<Texture> m_oDirLightGrid;
+		Ref<Texture> m_tDirLightGrid;
 
 		RenderData m_Cube;
 		Ref<VertexBufferArray> m_Quad;
@@ -146,6 +167,7 @@ namespace Polyboid
 
 		void PreComputePBRTextures();
 		void RenderLights(const Ref<Shader>& shader);
+		void RenderLightsVS(const Ref<Shader>& shader, const Ref<Camera>& camera);
 		void RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader);
 
 		void RenderSkybox();

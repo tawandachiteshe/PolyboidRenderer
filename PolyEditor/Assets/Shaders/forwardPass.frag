@@ -18,6 +18,14 @@ layout (std140, binding = 0) uniform CameraBuffer {
 	
 };
 
+uniform vec2 uScreenDimensions;
+
+struct LightIndex
+{
+	uint Point;
+    uint Spot;
+    uint Dir;
+};
 
 struct DirectionalLight
 {
@@ -68,7 +76,11 @@ uniform int uDirectionLightsCount;
 uniform int uMaterialIndex = 0;
 
 
-layout(binding = 0) uniform sampler2D uTextures[28];
+layout(binding = 0) uniform sampler2D uTextures[5];
+layout(binding = 6) uniform usampler2D uPointLightGrid;
+layout(binding = 7) uniform usampler2D uSpotLightGrid;
+layout(binding = 8) uniform usampler2D uDirLightGrid;
+
 layout (binding = 28) uniform samplerCube uPrefilterTex;
 layout (binding = 29) uniform sampler2D uBrdfLUTtex;
 layout (binding = 30) uniform samplerCube uIrradianceTex;
@@ -89,6 +101,10 @@ layout(std430, binding = 3) readonly buffer SpotLights {
 
 layout(std430, binding = 4) readonly buffer DirLights {
   DirectionalLight in_DirLights[];
+};
+
+layout(std430, binding = 5) readonly buffer LightIndexBuffer {
+  LightIndex in_LightIndex[];
 };
 
 
@@ -402,29 +418,53 @@ void main()
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
 
+	uvec2 tileIndex = uvec2( floor(gl_FragCoord.xy / 16) );
+
 	//Point Lights
-	for(int i = 0; i < uPointLightsCount; ++i)
+	uvec3 pointLightGrid = texture(uPointLightGrid, tileIndex).xyz;
+	uint pointStartOffset = pointLightGrid.x;
+	uint pointLightCount = pointLightGrid.y;
+
+	//Spot Lights
+	uvec3 spotLightGrid = texture(uSpotLightGrid, tileIndex).xyz;
+	uint spotStartOffset = spotLightGrid.x;
+	uint spotLightCount = spotLightGrid.y;
+
+
+	//Point Lights
+	uvec3 dirLightGrid = texture(uDirLightGrid, tileIndex).xyz;
+	uint  dirStartOffset = dirLightGrid.x;
+	uint  dirLightCount = dirLightGrid.y;
+
+
+	//Point Lights
+	for(int i = 0; i < pointLightCount; ++i)
 	{
-		vec3 Li = PointLightL(i);
-		vec3 Lradiance = PointLightRadiance(i);
+
+		uint lightIndex = in_LightIndex[pointStartOffset + i].Point;
+
+		vec3 Li = PointLightL(int(lightIndex));
+		vec3 Lradiance = PointLightRadiance(int(lightIndex));
 
 		directLighting += CalculateDirectLight(Li, Lradiance, data);
 	}
 
 	//Spot Lights
-	for(int i = 0; i < uSpotLightsCount; ++i)
+	for(int i = 0; i < spotLightCount; ++i)
 	{
-		vec3 Li = SpotLightL(i);
-		vec3 Lradiance = SpotRadiance(i);
+		uint lightIndex = in_LightIndex[spotStartOffset + i].Spot;
+		vec3 Li = SpotLightL(int(lightIndex));
+		vec3 Lradiance = SpotRadiance(int(lightIndex));
 
 		directLighting += CalculateDirectLight(Li, Lradiance, data);
 	}
 
 	//Dir Lights
-	for(int i = 0; i < uDirectionLightsCount; ++i)
+	for(int i = 0; i < dirLightCount; ++i)
 	{
-		vec3 Li = DirectionalLightL(i);
-		vec3 Lradiance = DirLightRadiance(i);
+		uint lightIndex = in_LightIndex[dirStartOffset + i].Dir;
+		vec3 Li = DirectionalLightL(int(lightIndex));
+		vec3 Lradiance = DirLightRadiance(int(lightIndex));
 
 		directLighting += CalculateDirectLight(Li, Lradiance, data);
 	}
@@ -469,6 +509,7 @@ void main()
 	vec3 color = directLighting + ambientLighting;
 
 	//color = pow(color, vec3(1.0/2.2) );
+
 
 	FragColor = vec4(color, 1.0);
 

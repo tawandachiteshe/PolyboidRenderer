@@ -61,8 +61,14 @@ namespace Polyboid
 		m_PrefilterMap = std::make_shared<Texture3D>(512, 6);
 		m_BrdfLUT = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG16F, ClampToEdge});
 		m_ComputeTexture = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RGBA32F, ClampToEdge});
-		m_oLightGrid = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG32UI, ClampToEdge});
-		m_tLightGrid = Texture::MakeTexture2D(512, 512, {TextureInternalFormat::RG32UI, ClampToEdge});
+		m_oPointLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
+		m_tPointLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
+
+		m_oSpotLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
+		m_tSpotLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
+
+		m_oDirLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
+		m_tDirLightGrid = Texture::MakeTexture2D(80, 45, {TextureInternalFormat::RG32UI, ClampToEdge});
 
 		auto whiteTexture = Texture::MakeTexture2D(1, 1, 4);
 
@@ -81,7 +87,9 @@ namespace Polyboid
 		m_ForwardRendererShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert",
 		                                             "Assets/Shaders/renderer3Dpbr.frag");
 		m_GeompassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/geomPass.frag");
-		m_DepthpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "");
+		m_DepthpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/depthPass.frag");
+		m_ForwardpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert",
+		                                         "Assets/Shaders/forwardPass.frag");
 		m_LightpassShader = Shader::MakeShader("Assets/Shaders/texturedQuad.vert", "Assets/Shaders/lightPass.frag");
 
 
@@ -114,10 +122,13 @@ namespace Polyboid
 		m_PointLightsStorage = ShaderBufferStorage::Make(sizeof(PointLightData) * MAX_LIGHTS);
 		m_FrustumStorage = ShaderBufferStorage::Make(sizeof(Frustum) * 36000);
 
-		m_oLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_tLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_oLightIndexListStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
-		m_tLightIndexListStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3600);
+
+		uint32_t indexCounter[2]{0, 0};
+
+		m_oLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3);
+		m_tLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3);
+		m_oLightIndexListStorage = ShaderBufferStorage::Make(sizeof(LightIndex) * 720000);
+		m_tLightIndexListStorage = ShaderBufferStorage::Make(sizeof(LightIndex) * 720000);
 	}
 
 	void WorldRenderer::PreComputePBRTextures()
@@ -202,7 +213,13 @@ namespace Polyboid
 
 		int pointLightCount = 0;
 		int pointLightOffset = 0;
+
+		const auto& camera = GameStatics::GetCurrentCamera();
+
+
+
 		shader->Bind();
+
 
 		for (auto entity : meshPointLightView)
 		{
@@ -210,6 +227,7 @@ namespace Polyboid
 
 			PointLightData data = {};
 			data.Position = transform.Position;
+			data.PositionVS = glm::vec3(camera->GetView() * glm::vec4(transform.Position, 1.0f));
 			data.Color = light.color;
 			data.Distance = light.Distance;
 			data.Energy = light.Energy;
@@ -220,7 +238,10 @@ namespace Polyboid
 			pointLightOffset += sizeof(PointLightData);
 			pointLightCount++;
 		}
+
+
 		shader->SetInt("uPointLightsCount", pointLightCount);
+
 
 		int spotLightCount = 0;
 		int spotLightOffset = 0;
@@ -230,7 +251,9 @@ namespace Polyboid
 			SpotLightData data = {};
 
 			data.Position = transform.Position;
+			data.PositionVS = glm::vec3(camera->GetView() * glm::vec4(transform.Position, 1.0f));
 			data.Direction = glm::normalize(transform.Rotation);
+			data.DirectionVS = glm::vec3(camera->GetView() * glm::vec4(data.Direction, 1.0f));
 			data.Distance = light.Distance;
 			data.Energy = light.Energy;
 			data.Color = light.color;
@@ -244,7 +267,9 @@ namespace Polyboid
 			spotLightOffset += sizeof(SpotLightData);
 		}
 
+
 		shader->SetInt("uSpotLightsCount", spotLightCount);
+
 
 		int dirLightCount = 0;
 		int dirLightOffset = 0;
@@ -264,6 +289,7 @@ namespace Polyboid
 			dirLightOffset += sizeof(DirectionalLightData);
 		}
 
+
 		shader->SetInt("uDirectionLightsCount", dirLightCount);
 
 
@@ -272,7 +298,96 @@ namespace Polyboid
 		m_DirectionLightsStorage->Bind(4);
 	}
 
+	void WorldRenderer::RenderLightsVS(const Ref<Shader>& shader, const Ref<Camera>& camera)
+	{
+		auto& registry = m_Settings.world->GetRegistry();
 
+		const auto meshPointLightView = registry.view<TransformComponent, PointLightComponent>();
+		const auto meshSpotLightView = registry.view<TransformComponent, SpotLightComponent>();
+		const auto meshDirLightView = registry.view<TransformComponent, DirectionLightComponent>();
+
+		auto viewSpace = glm::mat4(1.0f);
+
+		int pointLightCount = 0;
+		int pointLightOffset = 0;
+
+
+		shader->Bind();
+
+
+		for (auto entity : meshPointLightView)
+		{
+			auto [transform, light] = meshPointLightView.get<TransformComponent, PointLightComponent>(entity);
+
+			PointLightData data = {};
+			data.Position = glm::vec3( glm::vec4(transform.Position, 1.0));
+			data.Color = light.color;
+			data.Distance = light.Distance;
+			data.Energy = light.Energy;
+
+			m_PointLightsStorage->Bind(2);
+			m_PointLightsStorage->SetData(&data, sizeof(data), pointLightOffset);
+
+			pointLightOffset += sizeof(PointLightData);
+			pointLightCount++;
+		}
+
+
+		shader->SetInt("uPointLightsCount", pointLightCount);
+
+
+		int spotLightCount = 0;
+		int spotLightOffset = 0;
+		for (auto entity : meshSpotLightView)
+		{
+			auto [transform, light] = meshSpotLightView.get<TransformComponent, SpotLightComponent>(entity);
+			SpotLightData data = {};
+
+			data.Position = glm::vec3( glm::vec4(transform.Position, 1.0));;
+			data.Direction = glm::normalize(transform.Rotation);
+			data.Distance = light.Distance;
+			data.Energy = light.Energy;
+			data.Color = light.color;
+			data.InnerAngle = light.InnerAngle;
+			data.OuterAngle = light.OuterAngle;
+
+			m_PointLightsStorage->Bind(3);
+			m_SpotLightsStorage->SetData(&data, sizeof(data), spotLightOffset);
+
+			spotLightCount++;
+			spotLightOffset += sizeof(SpotLightData);
+		}
+
+
+		shader->SetInt("uSpotLightsCount", spotLightCount);
+
+
+		int dirLightCount = 0;
+		int dirLightOffset = 0;
+		for (auto entity : meshDirLightView)
+		{
+			auto [transform, light] = meshDirLightView.get<TransformComponent, DirectionLightComponent>(entity);
+
+			DirectionalLightData data = {};
+			data.Direction = glm::normalize(transform.Rotation);
+			data.Energy = light.Energy;
+			data.Color = light.color;
+
+			m_PointLightsStorage->Bind(4);
+			m_DirectionLightsStorage->SetData(&data, sizeof(data), dirLightOffset);
+
+			dirLightCount++;
+			dirLightOffset += sizeof(DirectionalLightData);
+		}
+
+
+		shader->SetInt("uDirectionLightsCount", dirLightCount);
+
+
+		m_PointLightsStorage->Bind(2);
+		m_SpotLightsStorage->Bind(3);
+		m_DirectionLightsStorage->Bind(4);
+	}
 
 
 	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader)
@@ -284,7 +399,7 @@ namespace Polyboid
 		for (auto& entity : meshView)
 		{
 			auto [transform, mesh] = meshView.get<TransformComponent, MeshRendererComponent>(entity);
-			auto va = AssetManager::LoadRenderData(mesh.assetName);
+			auto va = AssetManager::GetRenderData(mesh.assetName);
 
 			m_PrefilterMap->Bind(28);
 			m_BrdfLUT->Bind(29);
@@ -344,7 +459,8 @@ namespace Polyboid
 				Renderer2D::DrawCube(transform.GetTransform(), shape.color);
 				break;
 			case ShapeType::Pyramid:
-				Renderer2D::DrawPyramid(transform.GetTransform(), shape.nearPlane, shape.farPlane, shape.distance, shape.color);
+				Renderer2D::DrawPyramid(transform.GetTransform(), shape.nearPlane, shape.farPlane, shape.distance,
+				                        shape.color);
 				break;
 			}
 		}
@@ -362,6 +478,31 @@ namespace Polyboid
 		InitLights();
 
 		PreComputePBRTextures();
+
+		int workGroupsX = (1280 + (1280 % 16)) / 16;
+		int workGroupsY = (720 + (720 % 16)) / 16;
+
+		// for (int i = 0; i < 5 * 16; ++i)
+		// {
+		// 	for (int j = 0; j < 3 * 16; ++j)
+		// 	{
+		// 		int count = i + (j * (5 * 16));
+		// 		spdlog::info("Index {} x {} y {}", count, i, j);
+		// 	}
+		// }
+
+		// int c = 0;
+		// for (int i = 10; i < 200; i += 256)
+		// {
+		//
+		// 	spdlog::info("I is the word {} {}", i, i / 256);
+		// 	c++;
+		// }
+
+		glm::uint threadCount = 16 * 16;
+		glm::uint passCount = (2 + threadCount - 1) / threadCount;
+
+		glm::uint lightIndex = 0 * threadCount + 2;
 	}
 
 	Ref<WorldRenderer> WorldRenderer::Make(const WorldRendererSettings& settings)
@@ -388,6 +529,20 @@ namespace Polyboid
 		m_MainFramebuffer->UnBind();
 	}
 
+#define BLOCK_SIZE 16
+
+	static glm::ivec2 TotalNumberOfThreads(const glm::ivec2& screenDim)
+	{
+		return {screenDim.x / BLOCK_SIZE, screenDim.y / BLOCK_SIZE};
+	}
+
+	static glm::ivec2 TotalNumberOfThreadGroups(const glm::ivec2& screenDim)
+	{
+		float y = glm::ceil((float)TotalNumberOfThreads(screenDim).y / (float)BLOCK_SIZE);
+		float x = glm::ceil((float)TotalNumberOfThreads(screenDim).x / (float)BLOCK_SIZE);
+		return {x, y};
+	}
+
 	void WorldRenderer::DeferredRenderer()
 	{
 		Engine::SetCurrentFrameBuffer(m_MainFramebuffer);
@@ -408,16 +563,30 @@ namespace Polyboid
 			                                  m_MainFramebuffer->GetSettings().height
 		                                  });
 		m_FrustumStorage->Bind(0);
-		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeFrustumShader, {16, 16, 1});
+
+		auto threadGroups = TotalNumberOfThreadGroups({1280, 720});
+
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeFrustumShader, {threadGroups, 1});
 		ComputeRenderer::End();
+
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		ComputeRenderer::Begin();
 
 		m_Depthpass->BindDepthAttachment();
-		m_oLightGrid->Bind(1, true);
-		m_tLightGrid->Bind(2, true);
+		m_oPointLightGrid->Bind(1, true);
+		m_tPointLightGrid->Bind(2, true);
+
+		m_oSpotLightGrid->Bind(3, true);
+		m_tSpotLightGrid->Bind(4, true);
+
+		m_oDirLightGrid->Bind(5, true);
+		m_tDirLightGrid->Bind(6, true);
+
+
+		m_ComputeLightCullingShader->SetMat4("uView", camera->GetView());
 		m_ComputeLightCullingShader->SetMat4("uInverseProjection", glm::inverse(camera->GetProjection()));
-		RenderLights(m_ComputeLightCullingShader);
+		RenderLightsVS(m_ComputeLightCullingShader, camera);
 
 		m_FrustumStorage->Bind();
 		m_PointLightsStorage->Bind(2);
@@ -428,16 +597,28 @@ namespace Polyboid
 		m_oLightIndexListStorage->Bind(7);
 		m_tLightIndexListStorage->Bind(8);
 
-		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader, {16, 16, 1});
+		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader,
+		                               {TotalNumberOfThreads({1280, 720}), 1});
 		ComputeRenderer::End();
+
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		m_MainFramebuffer->Bind();
 		Renderer::Clear();
 		Renderer::SetClearColor();
 
-		m_Depthpass->BindDepthAttachment();
-		Renderer::CullMode(CullMode::Front);
-		Renderer::Submit(m_Quad, m_TexturedQuadShader);
+		Renderer::CullMode(CullMode::Back);
+		m_tLightIndexListStorage->Bind(5);
+		m_tPointLightGrid->Bind(6);
+		m_tSpotLightGrid->Bind(7);
+		m_tDirLightGrid->Bind(8);
+
+		m_ForwardpassShader->SetFloat2("uScreenDimensions", {
+									  m_MainFramebuffer->GetSettings().width,
+									  m_MainFramebuffer->GetSettings().height
+			});
+		Render3D(m_ForwardpassShader);
+		Render2D();
 
 		m_MainFramebuffer->UnBind();
 	}

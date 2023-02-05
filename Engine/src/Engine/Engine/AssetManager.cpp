@@ -56,7 +56,6 @@ namespace Polyboid
 			return s_Data->m_RendererMeshes[AssetName];
 		}
 
-		
 
 		RenderData data;
 
@@ -106,6 +105,11 @@ namespace Polyboid
 		s_Data->m_RendererMeshes[AssetName] = data;
 
 		return data;
+	}
+
+	RenderData& AssetManager::GetRenderData(const std::string& AssetName)
+	{
+		return s_Data->m_RendererMeshes[AssetName];
 	}
 
 	void AssetManager::LoadTexture(const UUID& id, const Ref<Texture>& texture)

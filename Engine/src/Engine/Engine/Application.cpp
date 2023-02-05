@@ -114,14 +114,26 @@ namespace Polyboid
                 Render();
             });
 
+
+        double lastTime = glfwGetTime();
+        int nbFrames = 0;
+
         while (m_IsRunning)
         {
-            
-            m_Window->PollEvents();
-           
+
+            double currentTime = glfwGetTime();
+            nbFrames++;
+            if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
+                // printf and reset timer
+                stats.GameTimeMs = 1000.0 / double(nbFrames);
+                nbFrames = 0;
+                lastTime += 1.0;
+            }
+
 
             const double currentFrame = glfwGetTime();
             stats.m_GameTime = currentFrame - stats.m_LastGameFrame;
+            stats.m_LastGameFrame = currentFrame;
 
             // update here.....
 
@@ -134,17 +146,8 @@ namespace Polyboid
                 }
             }
 
-            stats.m_LastGameFrame = currentFrame;
+            m_Window->PollEvents();
 
-            //rendering here////
-
-            // {
-            //     POLYBOID_PROFILE_SCOPE("Imgui");
-    
-            // }
-
-
-           // 
 
         }
 
@@ -167,11 +170,24 @@ namespace Polyboid
         Imgui::Init();
     	Renderer::Init();
 
+        double lastTime = glfwGetTime();
+        int nbFrames = 0;
+
         while (m_IsRunning)
         {
 
             const double currentFrame = glfwGetTime();
             stats.m_RenderTime = currentFrame - stats.m_LastRenderFrame;
+            stats.m_LastRenderFrame = currentFrame;
+
+            double currentTime = glfwGetTime();
+            nbFrames++;
+            if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
+                // printf and reset timer
+                stats.RenderTimeMs = 1000.0 / double(nbFrames);
+                nbFrames = 0;
+                lastTime += 1.0;
+            }
 
             RenderThreadQueue();
 
@@ -192,7 +208,7 @@ namespace Polyboid
 
             m_Swapchain->SwapBuffers();
 
-            stats.m_LastRenderFrame = currentFrame;
+            
         }
 
         Imgui::ShutDown();

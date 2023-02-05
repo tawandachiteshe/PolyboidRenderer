@@ -17,7 +17,7 @@ namespace Polyboid
 
 	TextureData::~TextureData()
 	{
-		spdlog::info("Destroy");
+		
 		if (m_Width != 1)
 		{
 			stbi_image_free(m_Data);

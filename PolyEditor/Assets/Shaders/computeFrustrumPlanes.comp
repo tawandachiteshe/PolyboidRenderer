@@ -5,7 +5,7 @@
 //gl_LocalInvocationID;
 //gl_GlobalInvocationID;
 //gl_LocalInvocationIndex;
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
 struct Plane
 {
@@ -56,7 +56,7 @@ vec4 ScreenToView( vec4 screen )
     // Convert to normalized texture coordinates
     vec2 texCoord = screen.xy / uScreenDimensions;
     // Convert to clip space
-    vec4 clip = vec4( vec2( texCoord.x, 1.0f - texCoord.y ) * 2.0f - 1.0f, screen.z,
+    vec4 clip = vec4( vec2( texCoord.x, texCoord.y ) * 2.0f - 1.0f, screen.z,
     screen.w );
     return ClipToView( clip );
 }
@@ -69,6 +69,8 @@ layout(std430, binding = 0) buffer Frustums {
 void main()
 {
 
+    const ivec2 numThreads = ivec2(1280 / BLOCK_SIZE, 720 / BLOCK_SIZE); 
+
 	 // View space eye position is always at the origin.
     const vec3 eyePos = vec3( 0, 0, 0 );
  
@@ -76,13 +78,13 @@ void main()
     // frustum vertices.
     vec4 screenSpace[4];
     // Top left point
-    screenSpace[0] = vec4( gl_GlobalInvocationID.xy * BLOCK_SIZE, -1.0f, 1.0f );
+    screenSpace[0] = vec4( (gl_GlobalInvocationID.xy) * BLOCK_SIZE, 1.0f, 1.0f );
     // Top right point
-    screenSpace[1] = vec4( vec2( gl_GlobalInvocationID.x + 1, gl_GlobalInvocationID.y ) * BLOCK_SIZE, -1.0f, 1.0f );
+    screenSpace[1] = vec4( vec2( gl_GlobalInvocationID.x + 1, gl_GlobalInvocationID.y ) * BLOCK_SIZE, 1.0f, 1.0f );
     // Bottom left point
-    screenSpace[2] = vec4( vec2( gl_GlobalInvocationID.x, gl_GlobalInvocationID.y + 1 ) * BLOCK_SIZE, -1.0f, 1.0f );
+    screenSpace[2] = vec4( vec2( gl_GlobalInvocationID.x, gl_GlobalInvocationID.y + 1 ) * BLOCK_SIZE, 1.0f, 1.0f );
     // Bottom right point
-    screenSpace[3] = vec4( vec2( gl_GlobalInvocationID.x + 1, gl_GlobalInvocationID.y + 1 ) * BLOCK_SIZE, -1.0f, 1.0f );
+    screenSpace[3] = vec4( vec2( gl_GlobalInvocationID.x + 1, gl_GlobalInvocationID.y + 1 ) * BLOCK_SIZE, 1.0f, 1.0f );
 
     vec3 viewSpace[4];
     // Now convert the screen space points to view space
@@ -98,13 +100,19 @@ void main()
     frustum.planes[0] = ComputePlane( eyePos, viewSpace[2], viewSpace[0] );
     // Right plane
     frustum.planes[1] = ComputePlane( eyePos, viewSpace[1], viewSpace[3] );
-    // Top plane
+   // Bottom plane
     frustum.planes[2] = ComputePlane( eyePos, viewSpace[0], viewSpace[1] );
-    // Bottom plane
+    // Top plane
     frustum.planes[3] = ComputePlane( eyePos, viewSpace[3], viewSpace[2] );
+  
+   
 
+ 
+    if ( gl_GlobalInvocationID.x < numThreads.x && gl_GlobalInvocationID.y < numThreads.y )
+    {
+        uint index = gl_GlobalInvocationID.x + ( gl_GlobalInvocationID.y * numThreads.x );
+        out_Frustums[index] = frustum;
+    }
 
-    uint index = gl_GlobalInvocationID.x + ( gl_GlobalInvocationID.y * gl_NumWorkGroups.x );
-    out_Frustums[index] = frustum;
 
 }
