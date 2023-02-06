@@ -114,6 +114,13 @@ namespace Polyboid
 		m_Quad = Primitives::GenQuad();
 	}
 
+	struct LightCount
+	{
+		uint32_t a;
+		uint32_t b;
+		uint32_t c;
+	};
+
 	void WorldRenderer::InitLights()
 	{
 		const uint32_t MAX_LIGHTS = 20000;
@@ -125,8 +132,8 @@ namespace Polyboid
 
 		uint32_t indexCounter[2]{0, 0};
 
-		m_oLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3);
-		m_tLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(uint32_t) * 3);
+		m_oLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(LightCount));
+		m_tLightIndexCounterStorage = ShaderBufferStorage::Make(sizeof(LightCount));
 		m_oLightIndexListStorage = ShaderBufferStorage::Make(sizeof(LightIndex) * 720000);
 		m_tLightIndexListStorage = ShaderBufferStorage::Make(sizeof(LightIndex) * 720000);
 	}
@@ -503,6 +510,15 @@ namespace Polyboid
 		glm::uint passCount = (2 + threadCount - 1) / threadCount;
 
 		glm::uint lightIndex = 0 * threadCount + 2;
+
+		const auto& camera = GameStatics::GetCurrentCamera();
+
+
+		glm::vec3 viewPos = glm::vec3(camera->GetView() * glm::vec4(glm::vec3(10, 10, 10), 1.0f));
+
+		float d = glm::dot(glm::vec3(0.85, 8.55, -0.52), viewPos);
+
+		bool inSide = d - 0.0f < -20.0f;
 	}
 
 	Ref<WorldRenderer> WorldRenderer::Make(const WorldRendererSettings& settings)
@@ -554,6 +570,7 @@ namespace Polyboid
 		Render3D(m_DepthpassShader);
 		m_Depthpass->UnBind();
 
+		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		ComputeRenderer::Begin();
 		m_ComputeFrustumShader->Bind();
@@ -582,11 +599,11 @@ namespace Polyboid
 
 		m_oDirLightGrid->Bind(5, true);
 		m_tDirLightGrid->Bind(6, true);
-
+		m_ComputeLightCullingShader->Bind();
 
 		m_ComputeLightCullingShader->SetMat4("uView", camera->GetView());
 		m_ComputeLightCullingShader->SetMat4("uInverseProjection", glm::inverse(camera->GetProjection()));
-		RenderLightsVS(m_ComputeLightCullingShader, camera);
+		RenderLights(m_ComputeLightCullingShader);
 
 		m_FrustumStorage->Bind();
 		m_PointLightsStorage->Bind(2);
@@ -596,6 +613,10 @@ namespace Polyboid
 		m_tLightIndexCounterStorage->Bind(6);
 		m_oLightIndexListStorage->Bind(7);
 		m_tLightIndexListStorage->Bind(8);
+
+		LightCount data = { 0, 0, 0 };
+		m_tLightIndexCounterStorage->SetData(&data, sizeof(data), 0);
+		m_oLightIndexCounterStorage->SetData(&data, sizeof(data), 0);
 
 		ComputeRenderer::WriteToBuffer(m_FrustumStorage, m_ComputeLightCullingShader,
 		                               {TotalNumberOfThreads({1280, 720}), 1});

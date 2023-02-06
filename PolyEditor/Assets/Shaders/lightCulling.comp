@@ -110,7 +110,7 @@ layout(std430, binding = 0) readonly buffer Frustums {
 };
 
 
-layout(std430, binding = 2) readonly buffer PointLights {
+layout(std430, binding = 2) buffer PointLights {
   PointLight in_PointLights[];
 };
 
@@ -323,14 +323,6 @@ vec4 ScreenToView( vec4 screen )
 
 void main()
 {
-    vec2 texelCoord = vec2(gl_GlobalInvocationID.xy);
-
-    float depth =  texture(uDepthTexture, texelCoord).r;
-
-    vec4 depthVs = ScreenToView(vec4(texelCoord, depth, 1.0));
-
-    float depthf = depthVs.z;
-    uint depthu = floatBitsToUint(depthf);
 
     ivec2 tileID = ivec2(gl_WorkGroupID.xy);
 	ivec2 tileNumber = ivec2(gl_NumWorkGroups.xy);
@@ -348,15 +340,6 @@ void main()
         t_LightCount.Spot = 0;
         t_LightCount.Dir = 0;
 
-        o_LightIndexCounter[0] = 0;
-        o_LightIndexCounter[1] = 0;
-        o_LightIndexCounter[2] = 0;
-
-           t_LightIndexCounter[0] = 0;
-           t_LightIndexCounter[1] = 0;
-       t_LightIndexCounter[2] = 0;
-
-
         uint index = (gl_WorkGroupID.x + (gl_WorkGroupID.y * gl_NumWorkGroups.x));
         GroupFrustum = in_Frustums[index];
        
@@ -366,23 +349,29 @@ void main()
 
     barrier();
 
+    
+    vec2 texelCoord = vec2(gl_GlobalInvocationID.xy);
+
+    float depth =  texture(uDepthTexture, texelCoord).r;
+
+    uint depthu = floatBitsToUint(depth);
+
     atomicMin(uMinDepth, depthu);
     atomicMax(uMaxDepth, depthu);
-     
-    barrier();
-
 
     float fMinDepth = uintBitsToFloat( uMinDepth );
     float fMaxDepth = uintBitsToFloat( uMaxDepth );
 
     // Convert depth values to view space.
-    float minDepthVS = ClipToView( vec4( 0.0, 0.0, fMinDepth, 1.0 ) ).z;
-    float maxDepthVS = ClipToView( vec4( 0.0, 0.0, fMaxDepth, 1.0 ) ).z;
-    float nearClipVS = ClipToView( vec4( 0.0, 0.0, 0.0, 1.0 ) ).z;
+    float        minDepthVS = ClipToView( vec4( 0.0, 0.0, fMinDepth, 1.0 ) ).z;
+    float        maxDepthVS = ClipToView( vec4( 0.0, 0.0, fMaxDepth, 1.0 ) ).z;
+    float        nearClipVS = ClipToView( vec4( 0.0, 0.0, 0.0, 1.0 ) ).z;
  
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).
     Plane minPlane = { vec3( 0.0, 0.0, -1.0 ), -minDepthVS };
+     
+    barrier();
 
 
     //point lights
@@ -442,7 +431,8 @@ void main()
        
         //Point Lights
         o_LightIndexStartOffset.Point = atomicAdd(o_LightIndexCounter[0], o_LightCount.Point);
-        imageStore(u_oPointLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( o_LightIndexStartOffset.Point, o_LightCount.Point ), 0, 1));
+        imageStore(u_oPointLightGrid, ivec2(gl_WorkGroupID.xy), uvec4(vec2( o_LightIndexStartOffset.Point, o_LightCount.Point ), 0, 1));
+
         
         t_LightIndexStartOffset.Point = atomicAdd(t_LightIndexCounter[0], t_LightCount.Point);
         imageStore(u_tPointLightGrid, ivec2(gl_WorkGroupID.xy), ivec4(vec2( t_LightIndexStartOffset.Point, t_LightCount.Point), 0, 1));

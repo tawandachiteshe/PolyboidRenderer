@@ -418,7 +418,8 @@ void main()
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
 
-	uvec2 tileIndex = uvec2( floor(gl_FragCoord.xy / 16) );
+	uvec2 location = uvec2(gl_FragCoord.xy);
+	uvec2 tileIndex = location / uvec2(16, 16);
 
 	//Point Lights
 	uvec3 pointLightGrid = texture(uPointLightGrid, tileIndex).xyz;
