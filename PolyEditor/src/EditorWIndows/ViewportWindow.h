@@ -26,6 +26,7 @@ namespace Polyboid
 		Ref<EditorCamera> m_ViewportCamera;
 
 		ImVec2 m_LastViewportWindowSize = { 0.0f, 0.0f };
+		ImVec2 m_WindowOffset = { 0, 0 };
 
 
 	private:

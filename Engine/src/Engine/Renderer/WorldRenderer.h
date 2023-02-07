@@ -32,6 +32,7 @@ namespace Polyboid
 	struct DirectionalLightData
 	{
 		glm::vec3 Direction;
+		glm::vec3 DirectionVS;
 		glm::vec3 Color;
 		float Energy;
 	};

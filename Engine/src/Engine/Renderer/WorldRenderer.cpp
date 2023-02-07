@@ -88,7 +88,7 @@ namespace Polyboid
 		                                             "Assets/Shaders/renderer3Dpbr.frag");
 		m_GeompassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/geomPass.frag");
 		m_DepthpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert", "Assets/Shaders/depthPass.frag");
-		m_ForwardpassShader = Shader::MakeShader("Assets/Shaders/renderer3Dpbr.vert",
+		m_ForwardpassShader = Shader::MakeShader("Assets/Shaders/forwardPass.vert",
 		                                         "Assets/Shaders/forwardPass.frag");
 		m_LightpassShader = Shader::MakeShader("Assets/Shaders/texturedQuad.vert", "Assets/Shaders/lightPass.frag");
 
@@ -232,9 +232,10 @@ namespace Polyboid
 		{
 			auto [transform, light] = meshPointLightView.get<TransformComponent, PointLightComponent>(entity);
 
+
 			PointLightData data = {};
 			data.Position = transform.Position;
-			data.PositionVS = glm::vec3(camera->GetView() * glm::vec4(transform.Position, 1.0f));
+			data.PositionVS = glm::vec3(camera->GetView() * glm::vec4(data.Position, 1.0f));
 			data.Color = light.color;
 			data.Distance = light.Distance;
 			data.Energy = light.Energy;
@@ -286,6 +287,7 @@ namespace Polyboid
 
 			DirectionalLightData data = {};
 			data.Direction = glm::normalize(transform.Rotation);
+			data.DirectionVS = glm::vec3(camera->GetView() * glm::vec4(data.Direction, 1.0f));
 			data.Energy = light.Energy;
 			data.Color = light.color;
 
@@ -304,98 +306,6 @@ namespace Polyboid
 		m_SpotLightsStorage->Bind(3);
 		m_DirectionLightsStorage->Bind(4);
 	}
-
-	void WorldRenderer::RenderLightsVS(const Ref<Shader>& shader, const Ref<Camera>& camera)
-	{
-		auto& registry = m_Settings.world->GetRegistry();
-
-		const auto meshPointLightView = registry.view<TransformComponent, PointLightComponent>();
-		const auto meshSpotLightView = registry.view<TransformComponent, SpotLightComponent>();
-		const auto meshDirLightView = registry.view<TransformComponent, DirectionLightComponent>();
-
-		auto viewSpace = glm::mat4(1.0f);
-
-		int pointLightCount = 0;
-		int pointLightOffset = 0;
-
-
-		shader->Bind();
-
-
-		for (auto entity : meshPointLightView)
-		{
-			auto [transform, light] = meshPointLightView.get<TransformComponent, PointLightComponent>(entity);
-
-			PointLightData data = {};
-			data.Position = glm::vec3( glm::vec4(transform.Position, 1.0));
-			data.Color = light.color;
-			data.Distance = light.Distance;
-			data.Energy = light.Energy;
-
-			m_PointLightsStorage->Bind(2);
-			m_PointLightsStorage->SetData(&data, sizeof(data), pointLightOffset);
-
-			pointLightOffset += sizeof(PointLightData);
-			pointLightCount++;
-		}
-
-
-		shader->SetInt("uPointLightsCount", pointLightCount);
-
-
-		int spotLightCount = 0;
-		int spotLightOffset = 0;
-		for (auto entity : meshSpotLightView)
-		{
-			auto [transform, light] = meshSpotLightView.get<TransformComponent, SpotLightComponent>(entity);
-			SpotLightData data = {};
-
-			data.Position = glm::vec3( glm::vec4(transform.Position, 1.0));;
-			data.Direction = glm::normalize(transform.Rotation);
-			data.Distance = light.Distance;
-			data.Energy = light.Energy;
-			data.Color = light.color;
-			data.InnerAngle = light.InnerAngle;
-			data.OuterAngle = light.OuterAngle;
-
-			m_PointLightsStorage->Bind(3);
-			m_SpotLightsStorage->SetData(&data, sizeof(data), spotLightOffset);
-
-			spotLightCount++;
-			spotLightOffset += sizeof(SpotLightData);
-		}
-
-
-		shader->SetInt("uSpotLightsCount", spotLightCount);
-
-
-		int dirLightCount = 0;
-		int dirLightOffset = 0;
-		for (auto entity : meshDirLightView)
-		{
-			auto [transform, light] = meshDirLightView.get<TransformComponent, DirectionLightComponent>(entity);
-
-			DirectionalLightData data = {};
-			data.Direction = glm::normalize(transform.Rotation);
-			data.Energy = light.Energy;
-			data.Color = light.color;
-
-			m_PointLightsStorage->Bind(4);
-			m_DirectionLightsStorage->SetData(&data, sizeof(data), dirLightOffset);
-
-			dirLightCount++;
-			dirLightOffset += sizeof(DirectionalLightData);
-		}
-
-
-		shader->SetInt("uDirectionLightsCount", dirLightCount);
-
-
-		m_PointLightsStorage->Bind(2);
-		m_SpotLightsStorage->Bind(3);
-		m_DirectionLightsStorage->Bind(4);
-	}
-
 
 	void WorldRenderer::RenderMeshes(const Ref<Camera>& camera, const Ref<Shader>& shader)
 	{
@@ -625,10 +535,19 @@ namespace Polyboid
 		glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 		m_MainFramebuffer->Bind();
+
 		Renderer::Clear();
 		Renderer::SetClearColor();
 
 		Renderer::CullMode(CullMode::Back);
+
+		m_ForwardpassShader->Bind();
+
+		m_ForwardpassShader->Bind();
+		m_PointLightsStorage->Bind(2);
+		m_SpotLightsStorage->Bind(3);
+		m_DirectionLightsStorage->Bind(4);
+
 		m_tLightIndexListStorage->Bind(5);
 		m_tPointLightGrid->Bind(6);
 		m_tSpotLightGrid->Bind(7);
@@ -638,10 +557,13 @@ namespace Polyboid
 									  m_MainFramebuffer->GetSettings().width,
 									  m_MainFramebuffer->GetSettings().height
 			});
+
+	
 		Render3D(m_ForwardpassShader);
 		Render2D();
 
 		m_MainFramebuffer->UnBind();
+
 	}
 
 

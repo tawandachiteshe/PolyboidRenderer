@@ -10,14 +10,18 @@ layout (std140, binding = 0) uniform CameraBuffer {
 
 
 uniform mat4 uTransform;
-out vec2 vUV;
-out vec3 vNormal;
-out vec3 vPixelPosition;
-out vec3 vTangentPixelPosition;
-out vec3 vTangentViewPosition;
-out vec3 vPosition;
-out mat3 vTBN;
-out vec3 vViewPosition;
+
+out VS_OUT
+{
+	vec3 vPositionVS;
+	vec3 vTangentVS;
+	vec3 vBinormalVS;
+	vec3 vNormalVS;
+	vec2 vUV;
+	vec4 vPosition;
+	vec3 vPixelPosition;
+
+} vs_out;
 
 
 struct Vertex {
@@ -71,29 +75,21 @@ void main() {
 	//mat4(mat3(view))
 
 	vec3 normals = getNormal(gl_VertexID);
-
-
-	gl_Position = projection * view * uTransform * vec4(getPosition(gl_VertexID), 1.0f);
-	vUV = getUV(gl_VertexID);
-
-	vPixelPosition = vec3(uTransform * vec4(getPosition(gl_VertexID), 1.0));
-	vPosition =  getPosition(gl_VertexID);
-
+	vec3 bitangents = getBiTangents(gl_VertexID);
 	vec3 tagents = getTangents(gl_VertexID);
-	vec3 bitagents = getBiTangents(gl_VertexID);
+	vec2 uv = getUV(gl_VertexID);
 
-	vec3 T = normalize(vec3(uTransform * vec4(tagents,   0.0)));
-	vec3 B = normalize(vec3(uTransform * vec4(bitagents, 0.0)));
-	vec3 N = normalize(vec3(uTransform * vec4(normals,   0.0)));
-	mat3 TBN = mat3(T, B, N);
+	vec4 position =  projection * view * uTransform * vec4(getPosition(gl_VertexID), 1.0f);
 
-	vNormal = mat3(transpose(inverse(uTransform))) * normals;
+	gl_Position = position;
+	mat4 viewModel = view * uTransform;
 
-	vTangentViewPosition = TBN * cameraPosition;
-	vTangentPixelPosition = TBN * vec3(uTransform * vec4(getPosition(gl_VertexID), 1.0));
-	vViewPosition = cameraPosition;
-
-
-	vTBN = TBN;
+	vs_out.vPositionVS = (viewModel * vec4(getPosition(gl_VertexID), 1.0f)).xyz;
+	vs_out.vTangentVS = mat3(viewModel) * tagents;
+	vs_out.vNormalVS = mat3(viewModel) * normals;
+	vs_out.vBinormalVS = mat3(viewModel) * bitangents;
+	vs_out.vUV = uv;
+	vs_out.vPosition = position;
+	vs_out.vPixelPosition = vec3(uTransform * vec4(getPosition(gl_VertexID), 1.0));
 
 }

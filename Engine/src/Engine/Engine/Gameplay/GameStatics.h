@@ -12,6 +12,7 @@ namespace Polyboid
 	{
 		Ref<Camera> m_CurrentCamera;
 		Ref<World> m_CurrentWorld = nullptr;
+		glm::vec2 windowOffset;
 	};
 
 	class GameStatics
@@ -21,6 +22,9 @@ namespace Polyboid
 		static void SetCurrentCamera(const Ref<Camera>& camera);
 
 		static void SetCurrentWorld(const Ref<World>& world);
+
+		static void SetWindowOffset(const glm::vec2& offset);
+		static glm::vec2 GetWindowOffset();
 
 		static Ref<World>& GetCurrentWorld();
 

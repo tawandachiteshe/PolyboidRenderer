@@ -24,6 +24,13 @@ namespace Polyboid
 		glBlitNamedFramebuffer(src->GetID(), m_ID, 0, 0, m_Settings.width, m_Settings.height, 0, 0, halfWidth, halfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 	}
 
+	void Framebuffer::Blit(uint32_t src, uint32_t halfWidth, uint32_t halfHeight, uint32_t attachmentIndex)
+	{
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glBlitNamedFramebuffer(src, m_ID, 0, 0, m_Settings.width, m_Settings.height, 0, 0, halfWidth, halfHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+	}
+
 	void Framebuffer::ClearColor(const glm::vec4& color)
 	{
 		glClearNamedFramebufferfv(m_ColorAttachment, GL_COLOR, 0, glm::value_ptr(color));

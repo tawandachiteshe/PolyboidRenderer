@@ -1,11 +1,18 @@
 #version 450 core
 
 out vec4 FragColor;
-in vec2 vUV;
-in vec3 vNormal;
-in vec3 vPixelPosition;
-in vec3 vPosition;
-in mat3 vTBN;
+
+in VS_OUT
+{
+	vec3 vPositionVS;
+	vec3 vTangentVS;
+	vec3 vBinormalVS;
+	vec3 vNormalVS;
+	vec2 vUV;
+	vec4 vPosition;
+	vec3 vPixelPosition;
+
+} vs_in;
 
 const float PI = 3.14159265359;
 const vec3 Fdielectric = vec3(0.04);
@@ -30,6 +37,7 @@ struct LightIndex
 struct DirectionalLight
 {
 	float Direction[3];
+	float DirectionVS[3];
 	float Color[3];
 	float Energy;
 };
@@ -133,13 +141,13 @@ float CalculateAttenuationV2(float Range, float Distance)
 
 float SpotLightDistance(int lightIndex)
 {
-	return length(float3ToVec3(in_SpotLights[lightIndex].Position) - vPixelPosition);
+	return length(float3ToVec3(in_SpotLights[lightIndex].PositionVS) - vs_in.vPositionVS);
 }
 
 vec3 SpotLightL(int lightIndex)
 {
 	
-	vec3 L = float3ToVec3(in_SpotLights[lightIndex].Position) - vPixelPosition;
+	vec3 L = float3ToVec3(in_SpotLights[lightIndex].PositionVS) - vs_in.vPositionVS;
 	float Distance = SpotLightDistance(lightIndex);
 	L = L / Distance;
 	return L;
@@ -159,7 +167,7 @@ float CalculateSpotCone(int lightIndex)
 	// is greater than maxCos, then the spotlight contribution will be 1.
 	float maxCos = mix( minCos, 1.0, 0.5f );
 
-	float cosAngle = dot( float3ToVec3(light.Direction), -SpotLightL(lightIndex) );
+	float cosAngle = dot( float3ToVec3(light.DirectionVS), -SpotLightL(lightIndex) );
 	// Blend between the minimum and maximum cosine angles.
 	return smoothstep( minCos, maxCos, cosAngle );
 }
@@ -185,12 +193,12 @@ vec3 UnpackNormals(vec3 normals)
 
 float PointLightDistance(int lightIndex)
 {
-	return length(float3ToVec3(in_PointLights[lightIndex].Position) - vPixelPosition);
+	return length(float3ToVec3(in_PointLights[lightIndex].PositionVS) - vs_in.vPositionVS);
 }
 
 vec3 PointLightL(int lightIndex)
 {
-	vec3 L = float3ToVec3(in_PointLights[lightIndex].Position) - vPixelPosition;
+	vec3 L = float3ToVec3(in_PointLights[lightIndex].PositionVS) - vs_in.vPositionVS;
 	float Distance = PointLightDistance(lightIndex);
 	L = L / Distance;
 	return L;
@@ -203,7 +211,6 @@ vec3 PointLightColor(int lightIndex)
 
 vec3 PointLightRadiance(int lightIndex)
 {
-	
 	float attenuation = CalculateAttenuationV2(in_PointLights[lightIndex].Distance, PointLightDistance(lightIndex));
 	
 	return PointLightColor(lightIndex) * attenuation * in_PointLights[lightIndex].Energy;
@@ -212,7 +219,7 @@ vec3 PointLightRadiance(int lightIndex)
 
 vec3 DirectionalLightL(int lightIndex)
 {
-	vec3 L = normalize(float3ToVec3(in_DirLights[lightIndex].Direction));
+	vec3 L = normalize(-float3ToVec3(in_DirLights[lightIndex].DirectionVS));
 	return L;
 }
 
@@ -275,15 +282,15 @@ vec4 getTexture(int textureIdx)
 	switch(getTextureIndex(textureIdx))
 	{
 		case 0:
-			return texture(uTextures[0], vUV);
+			return texture(uTextures[0], vs_in.vUV);
 		case 1:
-			return texture(uTextures[1], vUV);
+			return texture(uTextures[1], vs_in.vUV);
 		case 2:
-			return texture(uTextures[2], vUV);
+			return texture(uTextures[2], vs_in.vUV);
 		case 3:
-			return texture(uTextures[3], vUV);
+			return texture(uTextures[3], vs_in.vUV);
 		case 4:
-			return texture(uTextures[4], vUV);
+			return texture(uTextures[4], vs_in.vUV);
 	}
 
 	return vec4(0.54, 0.98, 0.67, 1.0);
@@ -304,11 +311,15 @@ vec3 getNormalTexture()
 {
 	if(getTextureIndex(1) == -1)
 	{
-		return normalize(vNormal);
+		return normalize(vs_in.vNormalVS);
 	} else {
+
+		mat3 TBN = mat3( normalize( vs_in.vTangentVS ),
+                         normalize( vs_in.vBinormalVS ),
+                         normalize( vs_in.vNormalVS ) );
 	
 		vec3 N = normalize(2.0 * getTexture(1).rgb - 1.0);
-		return normalize(vTBN * N);
+		return normalize(TBN * N);
 	}
 }
 
@@ -337,7 +348,7 @@ struct SurfaceData
 vec3 CalculateDirectLight(vec3 Li, vec3 Lradiance, SurfaceData data)
 {
 
-
+	vec4 eyePos = { 0, 0, 0, 1 };
 	// Half-vector between Li and Lo.
 	vec3 Lh = normalize(Li + data.Lo);
 
@@ -370,6 +381,14 @@ vec3 CalculateDirectLight(vec3 Li, vec3 Lradiance, SurfaceData data)
 
 }
 
+vec4 ClipToView( vec4 clip )
+{
+    // View space position.
+    vec4 view = inverse(projection) * clip;
+    // Perspective projection.
+    view = view / view.w;
+    return view;
+}
 
 void main()
 {
@@ -396,8 +415,10 @@ void main()
 	data.roughness = roughness;
 	data.metalness = metalness;
 
+	vec3 eyePos = { 0, 0, 0 };
+
 	// Outgoing light direction (vector from world-space fragment position to the "eye").
-	vec3 Lo = normalize(cameraPosition - vPosition);
+	vec3 Lo = normalize(eyePos - vs_in.vPositionVS);
 	data.Lo = Lo;
 
 	// Get current fragment's normal and transform to world space.
@@ -418,8 +439,7 @@ void main()
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
 
-	uvec2 location = uvec2(gl_FragCoord.xy);
-	uvec2 tileIndex = location / uvec2(16, 16);
+	uvec2 tileIndex = uvec2(floor(gl_FragCoord.xy / vec2(16, 16)));
 
 	//Point Lights
 	uvec3 pointLightGrid = texture(uPointLightGrid, tileIndex).xyz;

@@ -20,6 +20,16 @@ namespace Polyboid
 		m_sData->m_CurrentWorld = world;
 	}
 
+	void GameStatics::SetWindowOffset(const glm::vec2& offset)
+	{
+		m_sData->windowOffset = offset;
+	}
+
+	glm::vec2 GameStatics::GetWindowOffset()
+	{
+		return  m_sData->windowOffset;
+	}
+
 	Ref<World>& GameStatics::GetCurrentWorld()
 	{
 		

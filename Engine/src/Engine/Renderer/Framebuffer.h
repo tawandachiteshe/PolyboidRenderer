@@ -122,6 +122,7 @@ namespace Polyboid
 		uint32_t GetID() { return m_ID; }
 		Framebuffer(const FramebufferSettings& settings);
 		void Blit(const Ref<Framebuffer>& src, uint32_t halfWidth, uint32_t halfHeight, uint32_t attachmentIndex);
+		void Blit(uint32_t src, uint32_t halfWidth, uint32_t halfHeight, uint32_t attachmentIndex);
 		void ClearColor(const glm::vec4& color);
 		void ClearDepthStencil(float depthValue, uint8_t stencilValue);
 

@@ -363,9 +363,9 @@ void main()
     float fMaxDepth = uintBitsToFloat( uMaxDepth );
 
     // Convert depth values to view space.
-    float        minDepthVS = ClipToView( vec4( 0.0, 0.0, fMinDepth, 1.0 ) ).z;
-    float        maxDepthVS = ClipToView( vec4( 0.0, 0.0, fMaxDepth, 1.0 ) ).z;
-    float        nearClipVS = ClipToView( vec4( 0.0, 0.0, 0.0, 1.0 ) ).z;
+    float minDepthVS = ClipToView( vec4( 0.0, 0.0, fMinDepth, 1.0 ) ).z;
+    float maxDepthVS = ClipToView( vec4( 0.0, 0.0, fMaxDepth, 1.0 ) ).z;
+    float nearClipVS = ClipToView( vec4( 0.0, 0.0, 0.0, 1.0 ) ).z;
  
     // Clipping plane for minimum depth value 
     // (used for testing lights within the bounds of opaque geometry).

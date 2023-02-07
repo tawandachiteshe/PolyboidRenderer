@@ -150,7 +150,6 @@ namespace Polyboid
 
 		 auto pos = ImGui::GetWindowPos();
 
-
 		if (m_CurrentGameObject != nullptr)
 		{
 			ImGuizmo::SetOrthographic(false);
