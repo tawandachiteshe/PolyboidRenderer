@@ -417,3 +417,6 @@ bin
 *.sln.iml
 *.lib
 PolyEditor/assimp-vc143-mt.dll
+PolyEditor/BoidProfile-Runtime.json
+PolyEditor/BoidProfile-Shutdown.json
+PolyEditor/BoidProfile-Startup.json
