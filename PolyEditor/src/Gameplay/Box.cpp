@@ -3,7 +3,6 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine/Engine/ECS/Components.h"
-#include "Engine/Engine/Gameplay/World.h"
 
 namespace Polyboid
 {

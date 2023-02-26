@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	class RenderAPI;
 	class EditorCamera;
 
 
@@ -59,11 +60,13 @@ namespace Polyboid
 		}
 	};
 
-
+	using Render2DShaderType = std::pair<Ref<Shader>, Ref<Shader>>;
 
 	class Renderer2D
 	{
 	private:
+
+	
 
 		static void PrepareQuads();
 		static void PrepareCircles();
@@ -72,17 +75,20 @@ namespace Polyboid
 		static void PrepareCircleForRendering();
 		static void PrepareLineForRendering();
 
+		//This is an internal thing it won't load your custom shaders
+		static Render2DShaderType  LoadShader(const std::string& shaderName);
+
 		static void ResetQuads();
 		static void ResetCircles();
 		static void ResetLines();
 
 	public:
-		static void Init();
+		static void Init(const Ref<RenderAPI>& context);
 		static void BeginDraw(const Ref<Camera>& camera);
 		static void DebugWindow();
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color = glm::vec4{ 1.0f });
 
-		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color = glm::vec4( 1.0f ), float thickness = 0, float fade = 0);
+		static void DrawCircle(const glm::mat4& transform, const glm::vec4& color = glm::vec4( 1.0f ), float thickness = .5f, float fade = 0);
 		static void DrawLine(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color = glm::vec4(1.0f), float thickness = 0.1f);
 		static void DrawRect(const glm::vec3& pos, const glm::vec3& size, const glm::vec4& color = glm::vec4{1.0f}, float thickness = 0.1f);
 		static  void DrawRect(const glm::mat4& transform, const glm::vec4& color = glm::vec4(1.0f));

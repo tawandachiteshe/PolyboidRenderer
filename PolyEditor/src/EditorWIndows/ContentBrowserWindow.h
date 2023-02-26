@@ -19,11 +19,6 @@ namespace Polyboid
 
 	private:
 
-		std::vector<std::future<void>> m_Futures;
-		void CheckIfMeshIsLoaded();
-
-		int OnCreateFolder(ImGuiInputTextCallbackData* data);
-
 		// Inherited via EditorWindow
 		virtual void RenderImgui() override;
 

@@ -36,9 +36,6 @@ namespace Polyboid
 		ImGuizmo::OPERATION m_GizmoOperation = ImGuizmo::TRANSLATE;
 		ImGuizmo::MODE m_GizmoMode = ImGuizmo::LOCAL;
 
-		glm::vec2 m_ViewportBounds[2];
-		glm::vec2 m_ViewportSize;
-
 		void OnGameObjectSelected(const Event& event);
 		void OnGameObjectDeleted(const Event& event);
 
@@ -48,7 +45,7 @@ namespace Polyboid
 		virtual void Update(float ts) override;
 
 	public:
-		void OnRender(float dt) override;
+		void OnRender() override;
 	};
 
 }

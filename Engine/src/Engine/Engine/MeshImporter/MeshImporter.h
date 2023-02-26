@@ -35,36 +35,11 @@ namespace Polyboid
 		float meshIdx;
 	};
 
-	
 
-	struct RendererMeshData
-	{
-
-		//data we want so farrr..
-
-		RendererMeshData() = default;
-		std::vector<RendererVertex> vertices;
-		std::vector<uint32_t> Indices;
-		AABB BoundingBox;
-
-		
-	};
-
-
-	using MeshData = std::map<Ref<Material>, std::vector<RendererMeshData>>;
-	using MeshDataRenderer = std::map<Ref<Material>, RendererMeshData>;
-	using RenderData = std::map<Ref<Material>, Ref<VertexBufferArray>>;
 	
 	class MeshImporter
 	{
-	private:
-		static  RendererMeshData GetMesh(const aiMesh* mesh, uint32_t meshIdx);
-		static  void ProcessNode(aiNode* node, const aiScene* scene, MeshData& meshesData, const std::filesystem::path& path);
-		
 
-	public:
-		static MeshData Read(const std::filesystem::path& path);
-		static MeshDataRenderer ReadForRendering(const std::filesystem::path& path);
 
 	};
 	

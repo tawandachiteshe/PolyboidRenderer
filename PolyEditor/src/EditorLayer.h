@@ -6,7 +6,6 @@
 
 #include "Editor/EditorCamera.h"
 #include "Engine/Engine/Base.h"
-#include "Engine/Engine/Gameplay/World.h"
 
 
 namespace Polyboid 
@@ -22,7 +21,6 @@ namespace Polyboid
 		bool m_PlayMode = false;
 		void OnEditorEnterPlayMode(const Event& event);
 		void OnEditorExitPlayMode(const Event& event);
-		Ref<World> m_World;
 
 	public:
 
@@ -31,7 +29,7 @@ namespace Polyboid
 		void OnAttach() override;
 		void OnUpdate(float dt) override;
 		void OnImguiRender() override;
-		void OnRender(float dt) override;
+		void OnRender() override;
 	};
 
 	

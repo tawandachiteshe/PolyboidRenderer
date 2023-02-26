@@ -1,23 +1,32 @@
 ﻿#pragma once
 #include "Application.h"
-#include "Debug/Profiler.h"
+
+
+#include "optick.config.h"
+#include "optick.h"
+
 
 extern Polyboid::Application* Polyboid::CreateApplication();
 
 
 int main(int argc, char** argv)
 {
-    POLYBOID_PROFILE_BEGIN_SESSION("Startup", "BoidProfile-Startup.json");
+ //    OPTICK_APP("Polyboid Engine");
+ //
+	// OPTICK_SET_MEMORY_ALLOCATOR(
+ //            [](size_t size) -> void* { return operator new(size); },
+ //            [](void* p) { operator delete(p); },
+ //            []() { /* Do some TLS initialization here if needed */ }
+ //    );
+
+
     Polyboid::Application *app = Polyboid::CreateApplication();
-    POLYBOID_PROFILE_END_SESSION();
-
-    POLYBOID_PROFILE_BEGIN_SESSION("RunTime", "BoidProfile-Runtime.json");
     app->Run();
-    POLYBOID_PROFILE_END_SESSION();
-
-
-    POLYBOID_PROFILE_BEGIN_SESSION("Shutdown", "BoidProfile-Shutdown.json");
 	delete app;
-    POLYBOID_PROFILE_END_SESSION();
+
+
+
+    //OPTICK_SHUTDOWN();
+
     
 }

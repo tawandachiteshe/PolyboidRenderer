@@ -1,0 +1,30 @@
+{
+    "entryPoints": [
+        {
+            "mode": "frag",
+            "name": "main"
+        }
+    ],
+    "inputs": [
+        {
+            "location": 0,
+            "name": "vPosition",
+            "type": "vec3"
+        }
+    ],
+    "outputs": [
+        {
+            "location": 0,
+            "name": "FragColor",
+            "type": "vec4"
+        }
+    ],
+    "textures": [
+        {
+            "binding": 0,
+            "name": "skybox",
+            "set": 0,
+            "type": "samplerCube"
+        }
+    ]
+}

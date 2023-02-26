@@ -1,0 +1,669 @@
+{
+    "entryPoints": [
+        {
+            "mode": "frag",
+            "name": "main"
+        }
+    ],
+    "inputs": [
+        {
+            "location": 0,
+            "name": "VS_OUT",
+            "type": "_676"
+        }
+    ],
+    "outputs": [
+        {
+            "location": 0,
+            "name": "FragColor",
+            "type": "vec4"
+        }
+    ],
+    "ssbos": [
+        {
+            "binding": 2,
+            "block_size": 0,
+            "name": "PointLights",
+            "readonly": true,
+            "set": 0,
+            "type": "_223"
+        },
+        {
+            "binding": 4,
+            "block_size": 0,
+            "name": "DirLights",
+            "readonly": true,
+            "set": 0,
+            "type": "_307"
+        },
+        {
+            "binding": 3,
+            "block_size": 0,
+            "name": "SpotLights",
+            "readonly": true,
+            "set": 0,
+            "type": "_357"
+        },
+        {
+            "binding": 1,
+            "block_size": 0,
+            "name": "Materials",
+            "readonly": true,
+            "set": 0,
+            "type": "_638"
+        },
+        {
+            "binding": 6,
+            "block_size": 0,
+            "name": "LightIndexList",
+            "set": 0,
+            "type": "_929"
+        },
+        {
+            "binding": 5,
+            "block_size": 12,
+            "name": "LightCountSSBO",
+            "set": 0,
+            "type": "_1143"
+        }
+    ],
+    "textures": [
+        {
+            "array": [
+                5
+            ],
+            "array_size_is_literal": [
+                true
+            ],
+            "binding": 0,
+            "name": "uTextures",
+            "set": 0,
+            "type": "sampler2D"
+        },
+        {
+            "binding": 6,
+            "name": "uPointLightGrid",
+            "set": 0,
+            "type": "usampler2D"
+        },
+        {
+            "binding": 7,
+            "name": "uSpotLightGrid",
+            "set": 0,
+            "type": "usampler2D"
+        },
+        {
+            "binding": 8,
+            "name": "uDirLightGrid",
+            "set": 0,
+            "type": "usampler2D"
+        },
+        {
+            "binding": 30,
+            "name": "uIrradianceTex",
+            "set": 0,
+            "type": "samplerCube"
+        },
+        {
+            "binding": 28,
+            "name": "uPrefilterTex",
+            "set": 0,
+            "type": "samplerCube"
+        },
+        {
+            "binding": 29,
+            "name": "uBrdfLUTtex",
+            "set": 0,
+            "type": "sampler2D"
+        },
+        {
+            "binding": 31,
+            "name": "uEnvTex",
+            "set": 0,
+            "type": "samplerCube"
+        }
+    ],
+    "types": {
+        "_1140": {
+            "members": [
+                {
+                    "matrix_stride": 16,
+                    "name": "projection",
+                    "offset": 0,
+                    "type": "mat4"
+                },
+                {
+                    "matrix_stride": 16,
+                    "name": "view",
+                    "offset": 64,
+                    "type": "mat4"
+                },
+                {
+                    "name": "cameraPosition",
+                    "offset": 128,
+                    "type": "vec3"
+                },
+                {
+                    "matrix_stride": 16,
+                    "name": "transform",
+                    "offset": 144,
+                    "type": "mat4"
+                }
+            ],
+            "name": "CameraBuffer"
+        },
+        "_1143": {
+            "members": [
+                {
+                    "name": "lightCount",
+                    "offset": 0,
+                    "type": "_927"
+                }
+            ],
+            "name": "LightCountSSBO"
+        },
+        "_221": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Position",
+                    "offset": 0,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "PositionVS",
+                    "offset": 12,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Color",
+                    "offset": 24,
+                    "type": "float"
+                },
+                {
+                    "name": "Distance",
+                    "offset": 36,
+                    "type": "float"
+                },
+                {
+                    "name": "Energy",
+                    "offset": 40,
+                    "type": "float"
+                },
+                {
+                    "name": "Enabled",
+                    "offset": 44,
+                    "type": "uint"
+                }
+            ],
+            "name": "PointLight"
+        },
+        "_223": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 48,
+                    "name": "in_PointLights",
+                    "offset": 0,
+                    "type": "_221"
+                }
+            ],
+            "name": "PointLights"
+        },
+        "_305": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Direction",
+                    "offset": 0,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "DirectionVS",
+                    "offset": 12,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Color",
+                    "offset": 24,
+                    "type": "float"
+                },
+                {
+                    "name": "Energy",
+                    "offset": 36,
+                    "type": "float"
+                },
+                {
+                    "name": "Enabled",
+                    "offset": 40,
+                    "type": "uint"
+                }
+            ],
+            "name": "DirectionalLight"
+        },
+        "_307": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 44,
+                    "name": "in_DirLights",
+                    "offset": 0,
+                    "type": "_305"
+                }
+            ],
+            "name": "DirLights"
+        },
+        "_355": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Position",
+                    "offset": 0,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "PositionVS",
+                    "offset": 12,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Direction",
+                    "offset": 24,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "DirectionVS",
+                    "offset": 36,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Color",
+                    "offset": 48,
+                    "type": "float"
+                },
+                {
+                    "name": "InnerAngle",
+                    "offset": 60,
+                    "type": "float"
+                },
+                {
+                    "name": "OuterAngle",
+                    "offset": 64,
+                    "type": "float"
+                },
+                {
+                    "name": "Distance",
+                    "offset": 68,
+                    "type": "float"
+                },
+                {
+                    "name": "Energy",
+                    "offset": 72,
+                    "type": "float"
+                },
+                {
+                    "name": "Enabled",
+                    "offset": 76,
+                    "type": "uint"
+                }
+            ],
+            "name": "SpotLight"
+        },
+        "_357": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 80,
+                    "name": "in_SpotLights",
+                    "offset": 0,
+                    "type": "_355"
+                }
+            ],
+            "name": "SpotLights"
+        },
+        "_405": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "Position",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "PositionVS",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "Direction",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "DirectionVS",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "Color",
+                    "type": "float"
+                },
+                {
+                    "name": "InnerAngle",
+                    "type": "float"
+                },
+                {
+                    "name": "OuterAngle",
+                    "type": "float"
+                },
+                {
+                    "name": "Distance",
+                    "type": "float"
+                },
+                {
+                    "name": "Energy",
+                    "type": "float"
+                },
+                {
+                    "name": "Enabled",
+                    "type": "bool"
+                }
+            ],
+            "name": "SpotLight"
+        },
+        "_636": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "Albedo",
+                    "offset": 0,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "AO",
+                    "offset": 12,
+                    "type": "float"
+                },
+                {
+                    "name": "Metallic",
+                    "offset": 24,
+                    "type": "float"
+                },
+                {
+                    "name": "Roughness",
+                    "offset": 28,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        4
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "textures",
+                    "offset": 32,
+                    "type": "int"
+                }
+            ],
+            "name": "MaterialData"
+        },
+        "_638": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 48,
+                    "name": "in_Materials",
+                    "offset": 0,
+                    "type": "_636"
+                }
+            ],
+            "name": "Materials"
+        },
+        "_676": {
+            "members": [
+                {
+                    "name": "vTangentVS",
+                    "type": "vec3"
+                },
+                {
+                    "name": "vBinormalVS",
+                    "type": "vec3"
+                },
+                {
+                    "name": "vNormalVS",
+                    "type": "vec3"
+                },
+                {
+                    "name": "vUV",
+                    "type": "vec2"
+                },
+                {
+                    "name": "vPositionWS",
+                    "type": "vec3"
+                },
+                {
+                    "name": "vPositionVS",
+                    "type": "vec4"
+                },
+                {
+                    "name": "model",
+                    "type": "mat4"
+                }
+            ],
+            "name": "VS_OUT"
+        },
+        "_91": {
+            "members": [
+                {
+                    "name": "Lo",
+                    "type": "vec3"
+                },
+                {
+                    "name": "N",
+                    "type": "vec3"
+                },
+                {
+                    "name": "F0",
+                    "type": "vec3"
+                },
+                {
+                    "name": "roughness",
+                    "type": "float"
+                },
+                {
+                    "name": "cosLo",
+                    "type": "float"
+                },
+                {
+                    "name": "metalness",
+                    "type": "float"
+                },
+                {
+                    "name": "albedo",
+                    "type": "vec3"
+                }
+            ],
+            "name": "SurfaceData"
+        },
+        "_927": {
+            "members": [
+                {
+                    "name": "Point",
+                    "offset": 0,
+                    "type": "uint"
+                },
+                {
+                    "name": "Spot",
+                    "offset": 4,
+                    "type": "uint"
+                },
+                {
+                    "name": "Dir",
+                    "offset": 8,
+                    "type": "uint"
+                }
+            ],
+            "name": "LightCount"
+        },
+        "_929": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 12,
+                    "name": "lightListIndex",
+                    "offset": 0,
+                    "type": "_927"
+                }
+            ],
+            "name": "LightIndexList"
+        }
+    },
+    "ubos": [
+        {
+            "binding": 0,
+            "block_size": 208,
+            "name": "CameraBuffer",
+            "set": 0,
+            "type": "_1140"
+        }
+    ]
+}

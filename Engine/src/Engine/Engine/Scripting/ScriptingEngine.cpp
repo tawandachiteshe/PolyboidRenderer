@@ -81,14 +81,15 @@ namespace Polyboid
 		if (false)
 			mono_debug_domain_create(s_Data->RootDomain);
 
-		// mono_thread_set_main(mono_thread_current());
+		mono_thread_set_main(mono_thread_current());
 
 		s_Data->Classes.reserve(100);
 	}
 
 	void ScriptingEngine::InitAppDomain()
 	{
-		s_Data->AppDomain = mono_domain_create_appdomain("PolyboidAppDomain", nullptr);
+		char* appDomainName = "PolyboidAppDomain";
+		s_Data->AppDomain = mono_domain_create_appdomain(appDomainName, nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 	}
 
@@ -125,6 +126,8 @@ namespace Polyboid
 	{
 		InitInternalCalls();
 
+
+		//TODO: Make this project related
 		s_Data->EngineAssembly = LoadAssembly("Resources/Scripts/PolyboidManaged.dll");
 		s_Data->AppAssembly = LoadAssembly("Project/Binaries/Sandbox.dll");
 
@@ -229,7 +232,6 @@ namespace Polyboid
 		InitAppDomain();
 
 		LoadAssemblies();
-
 
 	}
 

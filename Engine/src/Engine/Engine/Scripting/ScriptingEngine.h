@@ -100,6 +100,11 @@ namespace Polyboid
 		std::unordered_map<std::string, std::vector<std::pair<std::string, ScriptingType>>> ClassFields;
 	};
 
+	struct ScriptSettings
+	{
+		bool MonoDebug = false;
+	};
+
 	class ScriptingEngine
 	{
 	private:
@@ -107,6 +112,7 @@ namespace Polyboid
 		static Unique<ScriptingData> s_Data;
 
 		static void InitMono();
+
 
 		static void InitAppDomain();
 
@@ -121,6 +127,9 @@ namespace Polyboid
 		
 
 	public:
+
+
+		static void Init();
 
 		static void ReloadAssembly();
 
@@ -258,7 +267,7 @@ namespace Polyboid
 		}
 
 
-		static void Init();
+		
 	};
 
 	template<>

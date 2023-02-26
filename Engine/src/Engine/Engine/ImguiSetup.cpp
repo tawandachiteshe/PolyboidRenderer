@@ -8,7 +8,6 @@
 #include "ImGuizmo.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "Debug/Profiler.h"
 #include "GLFW/glfw3.h"
 
 
@@ -22,9 +21,10 @@ namespace Polyboid
 
     static ImguiData s_Data;
 
-    void Imgui::Init()
+    //TODO make this api agnostic
+    void Imgui::Init(const std::any& window)
     {
-        POLYBOID_PROFILE_FUNCTION();
+        
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -71,8 +71,8 @@ namespace Polyboid
             style.ChildRounding = 0.0f;
         }
 
-        ImGui_ImplGlfw_InitForOpenGL(Application::Get()->GetWindow()->GetNativeWindow(), true);
-        ImGui_ImplOpenGL3_Init("#version 150");
+        ImGui_ImplGlfw_InitForOpenGL(std::any_cast<GLFWwindow*>(window), true);
+        ImGui_ImplOpenGL3_Init("#version 450");
 
       
       
@@ -80,7 +80,7 @@ namespace Polyboid
 
     void Imgui::Begin()
     {
-        POLYBOID_PROFILE_FUNCTION();
+
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
@@ -89,8 +89,7 @@ namespace Polyboid
     }
 
     void Imgui::End()
-    {
-        POLYBOID_PROFILE_FUNCTION();
+	{
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         if ((*s_Data.io).ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -104,7 +103,6 @@ namespace Polyboid
 
     void Imgui::ShutDown()
     {
-        POLYBOID_PROFILE_FUNCTION();
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

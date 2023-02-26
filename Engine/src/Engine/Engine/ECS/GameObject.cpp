@@ -1,6 +1,7 @@
 ﻿#include "boidpch.h"
 #include "GameObject.h"
 
+#include "Components.h"
 #include "Engine/Engine/Scripting/ScriptingEngine.h"
 
 

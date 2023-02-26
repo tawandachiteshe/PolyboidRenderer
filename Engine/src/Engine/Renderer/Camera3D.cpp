@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine/Engine/Input.h"
-#include "Engine/Engine/Debug/Profiler.h"
+
 #include "GLFW/glfw3.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
@@ -14,7 +14,7 @@ namespace Polyboid
 {
     Camera3D::Camera3D(uint32_t width, uint32_t height) : m_Width(width), m_Height(height)
     {
-        POLYBOID_PROFILE_FUNCTION();
+  
         auto cameraDirection = glm::normalize(m_Position - m_Target);
         auto up = glm::vec3(0.0f, 1.0f, 0.0f);
         auto cameraRight = glm::normalize(glm::cross(up, cameraDirection));
@@ -28,7 +28,7 @@ namespace Polyboid
 
     void Camera3D::SetZoomAmount(float dir)
     {
-        POLYBOID_PROFILE_FUNCTION();
+
         m_Fov -= dir * 2.f;
 
         if (m_Fov < 1.0f)
@@ -46,7 +46,7 @@ namespace Polyboid
 
     void Camera3D::ReCalculateViewMat()
     {
-        POLYBOID_PROFILE_FUNCTION();
+ 
         m_Aspect = static_cast<float>(m_Width) / static_cast<float>(m_Height);
         auto center = m_Position + m_Front;
 
@@ -59,7 +59,6 @@ namespace Polyboid
 
     void Camera3D::Update(float deltaTime)
     {
-        POLYBOID_PROFILE_FUNCTION();
         if (Input::KeyPressed(KeyCodes::W))
         {
             m_Position += m_Speed * m_Front * deltaTime;
@@ -96,7 +95,7 @@ namespace Polyboid
     
     void Camera3D::OnMouseMove()
     {
-        POLYBOID_PROFILE_FUNCTION();
+
         auto mousePosX = Input::GetMouseX();
         auto mousePosY = Input::GetMouseY();
 
@@ -146,7 +145,7 @@ namespace Polyboid
 
     void Camera3D::OnKeyEvent(KeyCodes codes, KeyAction action)
     {
-        POLYBOID_PROFILE_FUNCTION();
+
         if (action == KeyAction::PRESS)
         {
             if (codes == KeyCodes::LEFT_ALT)
@@ -167,7 +166,6 @@ namespace Polyboid
 
     void Camera3D::OnWindowResize(uint32_t width, uint32_t height)
     {
-        POLYBOID_PROFILE_FUNCTION();
         m_Aspect = static_cast<float>(width) / static_cast<float>(height);
     }
 }

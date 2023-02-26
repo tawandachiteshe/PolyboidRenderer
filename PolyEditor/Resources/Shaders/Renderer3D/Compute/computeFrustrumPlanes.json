@@ -1,0 +1,131 @@
+{
+    "entryPoints": [
+        {
+            "mode": "comp",
+            "name": "main",
+            "workgroup_size": [
+                16,
+                16,
+                1
+            ],
+            "workgroup_size_is_spec_constant_id": [
+                false,
+                false,
+                false
+            ]
+        }
+    ],
+    "ssbos": [
+        {
+            "binding": 0,
+            "block_size": 0,
+            "name": "Frustums",
+            "set": 0,
+            "type": "_263"
+        }
+    ],
+    "types": {
+        "_10": {
+            "members": [
+                {
+                    "name": "Normal",
+                    "type": "vec3"
+                },
+                {
+                    "name": "distanceFromOrigin",
+                    "type": "float"
+                }
+            ],
+            "name": "Plane"
+        },
+        "_197": {
+            "members": [
+                {
+                    "array": [
+                        4
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "planes",
+                    "type": "_10"
+                }
+            ],
+            "name": "Frustum"
+        },
+        "_259": {
+            "members": [
+                {
+                    "name": "Normal",
+                    "offset": 0,
+                    "type": "vec3"
+                },
+                {
+                    "name": "distanceFromOrigin",
+                    "offset": 12,
+                    "type": "float"
+                }
+            ],
+            "name": "Plane"
+        },
+        "_261": {
+            "members": [
+                {
+                    "array": [
+                        4
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 16,
+                    "name": "planes",
+                    "offset": 0,
+                    "type": "_259"
+                }
+            ],
+            "name": "Frustum"
+        },
+        "_263": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 64,
+                    "name": "out_Frustums",
+                    "offset": 0,
+                    "type": "_261"
+                }
+            ],
+            "name": "Frustums"
+        },
+        "_56": {
+            "members": [
+                {
+                    "matrix_stride": 16,
+                    "name": "uInverseProjection",
+                    "offset": 0,
+                    "type": "mat4"
+                },
+                {
+                    "name": "uScreenDimensions",
+                    "offset": 64,
+                    "type": "vec2"
+                }
+            ],
+            "name": "CameraScreenData"
+        }
+    },
+    "ubos": [
+        {
+            "binding": 0,
+            "block_size": 72,
+            "name": "CameraScreenData",
+            "set": 0,
+            "type": "_56"
+        }
+    ]
+}

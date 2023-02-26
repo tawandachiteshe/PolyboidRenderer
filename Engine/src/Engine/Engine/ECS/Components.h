@@ -7,7 +7,6 @@
 #include "glm/gtx/rotate_normalized_axis.hpp"
 #include "glm/gtx/transform.hpp"
 #include "Engine/Engine/Base.h"
-#include "spdlog/spdlog.h"
 
 namespace Polyboid
 {
@@ -126,50 +125,50 @@ namespace Polyboid
     };
 
 
-    struct LightComponent
+
+    struct DirectionLightComponent
     {
+
         glm::vec4 color = glm::vec4{ 1.0f };
         LightType type = LightType::Directional;
-
-        LightComponent(const glm::vec4& color) : color(color) {}
-        LightComponent() = default;
-        LightComponent(const LightComponent& shape) = default;
-
-    };
-
-    struct DirectionLightComponent : LightComponent
-    {
-        glm::vec3 direction = { 0, 1, 0};
+        bool Enabled = false;
         float Energy = 2.0;
+        glm::vec3 direction = { 0, 1, 0};
+      
 
-        DirectionLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        DirectionLightComponent(const glm::vec4& _color) : color(_color) {}
         DirectionLightComponent() = default;
         DirectionLightComponent(const DirectionLightComponent& shape) = default;
     };
 
-    struct SpotLightComponent : LightComponent
+    struct SpotLightComponent
     {
+        glm::vec4 color = glm::vec4{ 1.0f };
+        LightType type = LightType::Spot;
+        bool Enabled = false;
+        float Energy = 2.0;
         glm::vec3 direction = { 0, 1, 0 };
         float InnerAngle = 45.0f;
         float OuterAngle = 2.5f;
-        float Distance = 1.5;
-        float Energy = 2.0;
+        float Distance = 62.5;
 
-        SpotLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        SpotLightComponent(const glm::vec4& _color) : color(_color) {}
         SpotLightComponent() = default;
         SpotLightComponent(const SpotLightComponent& shape) = default;
 
     };
 
 
-    struct PointLightComponent : LightComponent
+    struct PointLightComponent
     {
 
-        float Distance = 1.5;
+        float Distance = 65.0f;
+        glm::vec4 color = glm::vec4{ 1.0f };
+        LightType type = LightType::Point;
+        bool Enabled = false;
         float Energy = 2.0;
-        
 
-        PointLightComponent(const glm::vec4& _color) : LightComponent(_color) {}
+        PointLightComponent(const glm::vec4& _color) : color(_color) {}
         PointLightComponent() = default;
         PointLightComponent(const PointLightComponent& shape) = default;
 

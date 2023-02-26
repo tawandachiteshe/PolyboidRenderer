@@ -3,7 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine/Engine/Base.h"
-#include "Engine/Engine/Gameplay/World.h"
+#include "Engine/Engine/World//World.h"
 #include "entt/entt.hpp"
 
 namespace Polyboid

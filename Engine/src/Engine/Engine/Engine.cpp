@@ -1,57 +1,55 @@
 #include "boidpch.h"
 #include "Engine.h"
 
+#include "Serializer.h"
+#include "Debug/Timer.h"
+#include "Engine/Renderer/Framebuffer.h"
+#include "Engine/Renderer/Renderer.h"
+#include "Scripting/ScriptingEngine.h"
+#include "Shaders/ShaderCompiler.h"
+#include "nlohmann/json.hpp"
+#include "taskflow/taskflow.hpp"
+#include "hashpp/hashpp.h"
+
+#include <pods/pods.h>
+#include <pods/msgpack.h>
+#include <pods/streams.h>
+
+#include "Engine/Renderer/Renderer2D.h"
+#include "Registry/ShaderRegistry.h"
 
 namespace Polyboid
 {
 	Unique<EngineSettings> Engine::s_Data = std::make_unique<EngineSettings>();
 
-	void Engine::SetCurrentRenderBuffer(const Ref<Renderbuffer>& framebuffer)
+
+	void Engine::Init()
 	{
-		s_Data->m_MainRenderbuffer = framebuffer;
+		ScriptingEngine::Init();
+		
+
 	}
 
-	Ref<Renderbuffer>& Engine::GetCurrentRenderBuffer()
+	void Engine::InitRenderer(const Ref<RenderAPI>& context)
 	{
-		return s_Data->m_MainRenderbuffer;
+		ShaderRegistry::Init();
+
+		Renderer::Init(context);
+		Renderer2D::Init(context);
+
 	}
 
-	void Engine::SetCurrentTexture(const Ref<Texture>& framebuffer)
+
+	void Engine::CreateWorld(const std::string& name)
 	{
-		s_Data->m_RenderBufferTexture = framebuffer;
 	}
 
-	Ref<Texture>& Engine::GetCurrentTexture()
+	void Engine::SaveWorld(const std::string& path)
 	{
-		return s_Data->m_RenderBufferTexture;
 	}
 
-	void Engine::SetCurrentFrameBuffer(const Ref<Framebuffer>& framebuffer)
+	Ref<World> Engine::LoadWorld(const std::string& path)
 	{
-		s_Data->m_CurrentFrameBuffer = framebuffer;
-	}
-
-	Ref<Framebuffer>& Engine::GetCurrentFrameBuffer()
-	{
-		return s_Data->m_CurrentFrameBuffer;
-	}
-
-	void Engine::SetMainFramebuffer(const Ref<Framebuffer>& framebuffer)
-	{
-		s_Data->m_MainFrameBuffer = framebuffer;
-	}
-
-	Ref<Framebuffer>& Engine::GetMainFrameBuffer()
-	{
-		return s_Data->m_MainFrameBuffer;
-	}
-
-	Ref<World> Engine::CreateWorld(std::string& name)
-	{
-
-		auto world = std::make_shared<World>(name);
-		s_Data->m_Worlds.emplace_back(world);
-
-		return world;
+		return nullptr;
 	}
 }

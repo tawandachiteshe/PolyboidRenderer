@@ -1,0 +1,129 @@
+{
+    "entryPoints": [
+        {
+            "mode": "vert",
+            "name": "main"
+        }
+    ],
+    "inputs": [
+        {
+            "location": 0,
+            "name": "aWorldPosition",
+            "type": "vec3"
+        },
+        {
+            "location": 1,
+            "name": "aLocalPosition",
+            "type": "vec3"
+        },
+        {
+            "location": 2,
+            "name": "aColor",
+            "type": "vec4"
+        },
+        {
+            "location": 3,
+            "name": "aThickness",
+            "type": "float"
+        },
+        {
+            "location": 4,
+            "name": "aFade",
+            "type": "float"
+        }
+    ],
+    "outputs": [
+        {
+            "location": 0,
+            "name": "VS_OUT",
+            "type": "_40"
+        }
+    ],
+    "types": {
+        "_12": {
+            "members": [
+                {
+                    "name": "gl_Position",
+                    "type": "vec4"
+                },
+                {
+                    "name": "gl_PointSize",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        1
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "gl_ClipDistance",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        1
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "gl_CullDistance",
+                    "type": "float"
+                }
+            ],
+            "name": "gl_PerVertex"
+        },
+        "_19": {
+            "members": [
+                {
+                    "matrix_stride": 16,
+                    "name": "projection",
+                    "offset": 0,
+                    "type": "mat4"
+                },
+                {
+                    "matrix_stride": 16,
+                    "name": "view",
+                    "offset": 64,
+                    "type": "mat4"
+                },
+                {
+                    "name": "pos",
+                    "offset": 128,
+                    "type": "vec3"
+                }
+            ],
+            "name": "CameraBuffer"
+        },
+        "_40": {
+            "members": [
+                {
+                    "name": "vLocalPosition",
+                    "type": "vec3"
+                },
+                {
+                    "name": "vColor",
+                    "type": "vec4"
+                },
+                {
+                    "name": "vThickness",
+                    "type": "float"
+                },
+                {
+                    "name": "vFade",
+                    "type": "float"
+                }
+            ],
+            "name": "VS_OUT"
+        }
+    },
+    "ubos": [
+        {
+            "binding": 0,
+            "block_size": 140,
+            "name": "CameraBuffer",
+            "set": 0,
+            "type": "_19"
+        }
+    ]
+}

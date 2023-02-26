@@ -4,215 +4,179 @@
 #include "Application.h"
 #include <spdlog/spdlog.h>
 
-#include "PolyboidWindow.h"
+#include "Engine.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/Swapchain.h"
-#include <GLFW/glfw3.h>
 
-#include "AssetManager.h"
 #include "ImguiSetup.h"
-#include "ECS/ECSManager.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
-#include "Debug/Timer.h"
-#include "Events/EventSystem.h"
+#include "Engine/Renderer/CommandList/RenderCommand.h"
+#include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
-#include "Scripting/ScriptingEngine.h"
-#include "Engine/Renderer/Context.h"
+#include "GLFW/glfw3.h"
 
 
 namespace Polyboid
 {
+	Application* Application::s_Instance = nullptr;
 
-    Application* Application::s_Instance = nullptr;
+	Application::Application(const ApplicationSettings& settings) : m_Settings(settings)
+	{
+		OPTICK_EVENT("Polyboid App init");
+		spdlog::info("App init");
 
-    Application::Application()
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        
-        spdlog::info("App init");
+		Init(settings);
 
-        s_Instance = this;
-        
-        m_Window = PolyboidWindow::MakeWindow(m_AppData.windowSpecs);
-      
-        m_IsRunning = true;
+		s_Instance = this;
+	}
 
-       
-        ECSManager::Init();
-        ScriptingEngine::Init();
-        AssetManager::Init();
+	Application::Application()
+	{
+		OPTICK_EVENT("Polyboid App init");
+		spdlog::info("App init");
 
-        //multiple overides maybe but is it efficieant and maintainable;;
+		Init(m_Settings);
 
-
-        EventSystem::Bind(EventType::WINDOW_CLOSE, BIND_EVENT(OnWindowsCloseEvent));
-        EventSystem::Bind(EventType::WINDOW_RESIZE, BIND_EVENT(OnWindowResizeEvent));
-        
-
-    }
-
-    Application::~Application()
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        ShutDown();
-    }
+		s_Instance = this;
+	}
 
 
-    void Application::SubmitToRenderThread(const std::function<void()>& function)
-    {
-        m_RenderThreadQueue.push_back(function);
-    }
+	void Application::Init(const ApplicationSettings& settings)
+	{
+		//Init Windows
+		WindowSettings mainWindowSettings(true,
+		                                  settings.WindowWidth,
+		                                  settings.WindowHeight,
+		                                  settings.ApplicationName);
 
-    void Application::RenderThreadQueue()
-    {
-        std::scoped_lock lock(m_RenderMutex);
+		m_MainWindow = Window::Create(mainWindowSettings);
 
-	    for (auto& func : m_RenderThreadQueue)
-	    {
-            func();
-	    }
+		WindowSettings gameWindowSettings(false,
+		                                  settings.WindowWidth,
+		                                  settings.WindowHeight,
+		                                  settings.ApplicationName);
+		gameWindowSettings.IsVisible = false;
+		gameWindowSettings.WindowShareHandle = m_MainWindow->GetNativeWindow();
 
-        m_RenderThreadQueue.clear();
-    }
+		m_GameWindow = Window::Create(gameWindowSettings);
 
-    void Application::OnWindowResizeEvent(const Event& event)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        const auto _event = CastEventAs<WindowResizeEvent>(event);
+		m_Running = true;
 
-        m_AppData.windowSpecs.Height = _event.GetHeight();
-        m_AppData.windowSpecs.Width = _event.GetWidth();
-    }
+		//multiple overides maybe but is it efficieant and maintainable;;
+		m_MainWindow->SetEventCallback(BIND_EVENT(Application::OnEvent));
+		m_GameWindow->SetEventCallback([](const Event& event)
+		{
+		});
+	}
 
-    void Application::OnWindowsCloseEvent(const Event& event)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        m_IsRunning = false;
-    }
-
-    void Application::AddLayer(Layer* layer)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        m_Layers.AddLayer(layer);
-    }
-
-    void Application::ShutDown()
-    {
-        POLYBOID_PROFILE_FUNCTION();
-
-        ScriptingEngine::ShutDown();
-       
-    }
-
-    void Application::Run()
-    {
-        POLYBOID_PROFILE_FUNCTION();
-
-        std::thread renderThread([&]()
-            {
-                Render();
-            });
+	Application::~Application()
+	{
+		ShutDown();
+	}
 
 
-        double lastTime = glfwGetTime();
-        int nbFrames = 0;
+	void Application::OnEvent(const Event& event)
+	{
+		EventDispatcher dispatcher(event);
+		dispatcher.Bind<WindowCloseEvent>(BIND_EVENT(Application::OnWindowsCloseEvent));
+		dispatcher.Bind<WindowResizeEvent>(BIND_EVENT(Application::OnWindowResizeEvent));
+	}
 
-        while (m_IsRunning)
-        {
+	void Application::OnWindowResizeEvent(const WindowResizeEvent& event)
+	{
+		m_Settings.WindowHeight = event.GetHeight();
+		m_Settings.WindowWidth = event.GetWidth();
+	}
 
-            double currentTime = glfwGetTime();
-            nbFrames++;
-            if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
-                // printf and reset timer
-                stats.GameTimeMs = 1000.0 / double(nbFrames);
-                nbFrames = 0;
-                lastTime += 1.0;
-            }
+	void Application::OnWindowsCloseEvent(const WindowCloseEvent& event)
+	{
+		m_Running = false;
+	}
 
+	void Application::AddLayer(Layer* layer)
+	{
+		m_Layers.AddLayer(layer);
+	}
 
-            const double currentFrame = glfwGetTime();
-            stats.m_GameTime = currentFrame - stats.m_LastGameFrame;
-            stats.m_LastGameFrame = currentFrame;
+	void Application::ShutDown()
+	{
+	}
 
-            // update here.....
+	void Application::Run()
+	{
+		OPTICK_THREAD("Main Thread")
+		m_RenderThread = std::thread([&]()
+		{
+			Render();
+		});
 
-            {
-                POLYBOID_PROFILE_SCOPE("Update");
-
-                for (auto layer : m_Layers)
-                {
-                    layer->OnUpdate(stats.m_GameTime);
-                }
-            }
-
-            m_Window->PollEvents();
-
-
-        }
-
-        renderThread.detach();
-    }
-
-    void Application::Render()
-    {
+		Engine::Init();
 
 
-        const auto context = Context::MakeContext();
-        const auto nativeWindow = m_Window->GetNativeWindow();
+		while (m_Running)
+		{
+			OPTICK_FRAME("Main Frame")
 
-        context->MakeCurrent(nativeWindow);
+			const double currentFrame = glfwGetTime();
+			double m_GameTime = currentFrame - m_LastFrameTime;
+			m_LastFrameTime = currentFrame;
 
-        m_Swapchain = Swapchain::MakeSwapChain(nativeWindow);
-        m_Swapchain->SetVsync(true);
 
-      
-        Imgui::Init();
-    	Renderer::Init();
+			// update here.....
+			for (auto layer : m_Layers)
+			{
+				layer->OnUpdate(static_cast<float>(m_GameTime));
+			}
 
-        double lastTime = glfwGetTime();
-        int nbFrames = 0;
 
-        while (m_IsRunning)
-        {
+			m_GameWindow->PollEvents();
+		}
 
-            const double currentFrame = glfwGetTime();
-            stats.m_RenderTime = currentFrame - stats.m_LastRenderFrame;
-            stats.m_LastRenderFrame = currentFrame;
+		m_RenderThread.join();
+	}
 
-            double currentTime = glfwGetTime();
-            nbFrames++;
-            if (currentTime - lastTime >= 1.0) { // If last prinf() was more than 1 sec ago
-                // printf and reset timer
-                stats.RenderTimeMs = 1000.0 / double(nbFrames);
-                nbFrames = 0;
-                lastTime += 1.0;
-            }
+	void Application::Render()
+	{
+		OPTICK_THREAD("Render Thread")
 
-            RenderThreadQueue();
+		const auto nativeWindow = m_MainWindow->GetNativeWindow();
+		m_RenderAPI = RenderAPI::Create(RenderAPIType::Opengl, nativeWindow);
+		const auto swapChain = m_RenderAPI->CreateSwapChain(nativeWindow);
+		swapChain->SetVsync(true);
+		RenderCommand::Init(m_RenderAPI);
 
-            for (auto layer : m_Layers)
-            {
-                layer->OnRender(stats.m_RenderTime);
-            }
+		Imgui::Init(nativeWindow);
+		Engine::InitRenderer(m_RenderAPI);
 
-        	Imgui::Begin();
-		    
-		    //imgui here....
-		    for (auto layer : m_Layers)
-		    {
-		        layer->OnImguiRender();
-		    }
-		    
-		    Imgui::End();
 
-            m_Swapchain->SwapBuffers();
+		while (m_Running)
+		{
+			OPTICK_FRAME("Render Frame")
 
-            
-        }
+			for (const auto layer : m_Layers)
+			{
+				layer->OnRender();
+			}
 
-        Imgui::ShutDown();
-		Renderer2D::Shutdown();
-        
-    }
+
+			Renderer::WaitAndRender();
+
+			Imgui::Begin();
+
+			//imgui here....
+			for (const auto layer : m_Layers)
+			{
+				layer->OnImguiRender();
+			}
+
+			Imgui::End();
+
+
+			swapChain->SwapBuffers();
+			m_MainWindow->PollEvents();
+		}
+
+		Imgui::ShutDown();
+	}
 }

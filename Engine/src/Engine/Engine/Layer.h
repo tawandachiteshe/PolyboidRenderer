@@ -12,7 +12,7 @@ namespace Polyboid
 		virtual void OnDetach() {}
 		virtual void OnImguiRender() {}
 		virtual void OnUpdate(float dt){}
-		virtual void OnRender(float dt) {}
+		virtual void OnRender() {}
 
 		virtual ~Layer() {};
 		virtual std::string GetName() { return m_Name; }

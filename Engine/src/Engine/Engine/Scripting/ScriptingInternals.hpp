@@ -4,6 +4,7 @@
 
 #define ADD_MONO_INTERNAL_CALL(x) mono_add_internal_call(std::string("Polyboid.Internals::").append(std::string(#x)).c_str(), x)
 #include "Engine/Engine/Input.h"
+#include "Engine/Engine/ECS/Components.h"
 #include "Engine/Engine/ECS/GameObject.h"
 #include "glm/vec3.hpp"
 

@@ -2,195 +2,99 @@
 
 #include "Renderer.h"
 
-#include <spdlog/spdlog.h>
-
-#include "FrustumCulling.h"
-#include "Material.h"
+#include "Framebuffer.h"
+#include "PipelineState.h"
 #include "RenderAPI.h"
-#include "RenderCommand.h"
-#include "Renderer2D.h"
-#include "ShaderBufferStorage.h"
-#include "Texture2D.h"
-#include "UniformBuffer.h"
-#include "Engine/Engine/AssetManager.h"
-#include "Engine/Engine/Gameplay/GameStatics.h"
-#include "Engine/Engine/Math/Math.h"
-#include "glad/glad.h"
-#include "glm/vec4.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#include "RenderTarget.h"
+#include "CommandList/RenderCommand.h"
+#include "CommandList/Commands/RenderCommands.h"
+#include "Engine/Engine/Engine.h"
+
 
 namespace Polyboid
 {
 
-    Unique<RendererStorage> Renderer::s_RenderStorage = std::make_unique<RendererStorage>();
-    Unique<RenderAPI> Renderer::s_RenderApi = std::make_unique<RenderAPI>();
+	Unique<RendererStorage> Renderer::s_Data = nullptr;
+
+
+    //TODO: Manage lifetimes of these
+
+    void Renderer::Init(const Ref<RenderAPI>& context) {
+      
+        RenderCommand::Init(context);
+		s_Data = std::make_unique<RendererStorage>();
+        
+
+
+		//Add default render targets
+		ClearSettings clearSettings;
+		clearSettings.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
+		RenderTargetSettings rtSettings;
+        rtSettings.Width = 1600;
+		rtSettings.Height = 900;
+		rtSettings.TextureAttachments = {
+			{ TextureAttachmentSlot::DepthStencil, TextureSizedInternalFormat::Depth24Stencil8 },
+			{ TextureAttachmentSlot::Color0, TextureSizedInternalFormat::RGBA8 }
+		};
+
+        s_Data->m_DefaultRenderTarget = context->CreateRenderTarget(rtSettings);
+		s_Data->m_DefaultPipelineState = context->CreatePipelineState();
+
+    }
     
-    void Renderer::Init() {
-
-        POLYBOID_PROFILE_FUNCTION();
-
-        RenderAPI::Init();
-        Renderer2D::Init();
-        s_RenderStorage->m_CameraDataUB = UniformBuffer::MakeUniformBuffer(140);
-        s_RenderStorage->m_MaterialStorage = ShaderBufferStorage::Make(sizeof(MaterialData) * 128);
-    }
-
-    void Renderer::Clear(const ClearMode& mode)
-    {
-        RenderAPI::Clear(mode);
-    }
-
-    void Renderer::SetClearColor(const glm::vec4& color)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        RenderAPI::SetClearColor(color);
-    }
-
-
-    void Renderer::Submit(const Ref<VertexBufferArray>& va, const Ref<Shader>& shader, const glm::mat4& transform )
-    {
-        POLYBOID_PROFILE_FUNCTION();
-
-        if (va != nullptr)
-        {
-            shader->Bind();
-            va->Bind();
-            shader->SetMat4("uTransform", transform);
-
-            if (va->GetIndicesCount() > 0)
-            {
-                RenderCommand::DrawIndexed(va->GetIndicesCount());
-            }
-            else
-            {
-                //RenderCommand::DrawIndexed(va->GetIndexBuffer()->GetCount());
-            }
-
-           
-        }
-
-    }
-
-    void Renderer::Submit(const std::vector<Ref<VertexBufferArray>>& vas, const Ref<Shader>& shader,
-	    const glm::mat4& transform)
-    {
-	    for (auto& va : vas)
-	    {
-            Submit(va, shader, transform);
-	    }
-    }
-
-
-    void Renderer::Submit(const RenderData& renderData, const Ref<Shader>& shader,
-	    const glm::mat4& transform)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-        shader->Bind();
-
-        uint32_t materialOffset = 0;
-        int32_t materialIndex = 0;
-        shader->Bind();
-    	for (auto& materialVA : renderData)
-        {
-
-        	auto& [material, vertexBufferBB] = materialVA;
-            AssetManager::GetTexture(material->mDiffuseTexture)->Bind(0);
-            AssetManager::GetTexture(material->mNormalsTexture)->Bind(1);
-            AssetManager::GetTexture(material->mMetallicTexture)->Bind(2);
-
-            shader->SetInt("uMaterialIndex", 0);
-
-            s_RenderStorage->m_CameraDataUB->Bind(0);
-            s_RenderStorage->m_MaterialStorage->Bind(1);
-            s_RenderStorage->m_MaterialStorage->SetData(&material->GetData(), sizeof(MaterialData), materialOffset);
-
-
-            auto& va = vertexBufferBB;
-
-
-            Submit(va, shader, transform);
-
-            materialOffset += sizeof(MaterialData);
-            materialIndex++;
-
-     
-        }
-
-    }
-
-
-
+    
     void Renderer::BeginDraw(const Ref<Camera>& camera)
     {
-        POLYBOID_PROFILE_FUNCTION();
-
-        CameraData data = {};
-        data.Projection = camera->GetProjection();
-        data.View = camera->GetView();
-    	data.CameraPosition = camera->GetPosition();
-
-
-        s_RenderStorage->m_CameraDataUB->SetData(&data, sizeof(data));
 
     }
 
     void Renderer::EndDraw()
     {
-        POLYBOID_PROFILE_FUNCTION();
-    }
-
-    void Renderer::EnableDepthMask()
-    {
-        glDepthMask(GL_TRUE);
-    }
-
-    void Renderer::DisableDepthMask()
-    {
-        glDepthMask(GL_FALSE);
-    }
-
-    void Renderer::CullMode(const Polyboid::CullMode& mode)
-    {
-	    switch (mode)
-	    {
-	    case CullMode::Front:
-            RenderAPI::CullFront();
-            break;
-	    case CullMode::Back:
-            RenderAPI::CullBack();
-            break;
-	    case CullMode::FrontBack:
-            RenderAPI::CullFrontBack();
-            break;
-	    case CullMode::None:
-            RenderAPI::CullNone();
-            break;
-	    }
-    }
-
-
-    void Renderer::DrawIndexed(uint32_t _count, uint32_t elementCount)
-    {
-        POLYBOID_PROFILE_FUNCTION();
-       
-        s_RenderStorage->m_Shader->Bind();
-        s_RenderStorage->m_VA->Bind();
-
-       
-        const auto count = s_RenderStorage->m_VA->GetIndexBuffer()->GetCount();
-        const auto countIf = static_cast<GLsizei>(_count == 0 ? count : _count);
-
-        RenderAPI::DrawIndexed(countIf, 4);
        
     }
 
-    void Renderer::CreateViewPort(const glm::vec2& viewportSize)
+    void Renderer::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
     {
-        POLYBOID_PROFILE_FUNCTION();
-
-        RenderAPI::CreateViewport(viewportSize);
+        RenderCommand::AddCommand(ALLOC_COMMAND(DrawIndexedCommand, count, primitive));
     }
 
-    
-    
+    void Renderer::DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive)
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(DrawArraysCommand, primitive, vertexCount));
+    }
+
+    void Renderer::SetPipelineState(const Ref<PipelineState>& pipelineState)
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(PipelineStateCommand, pipelineState));
+    }
+
+    void Renderer::ClearDefaultRenderTarget(const ClearSettings& settings)
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(ClearRenderTargetCommand, s_Data->m_DefaultRenderTarget, settings));
+    }
+
+    void Renderer::BeginDefaultRenderPass()
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderPassCommand, s_Data->m_DefaultRenderTarget));
+    }
+
+    void Renderer::EndDefaultRenderPass()
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_DefaultRenderTarget));
+    }
+
+    Ref<RenderTarget> Renderer::GetDefaultRenderTarget()
+    {
+        return s_Data->m_DefaultRenderTarget;
+    }
+
+    Ref<PipelineState> Renderer::GetDefaultPipeline()
+    {
+        return s_Data->m_DefaultPipelineState;
+    }
+
+    void Renderer::WaitAndRender()
+    {
+		RenderCommand::WaitAndRender();
+    }
 }

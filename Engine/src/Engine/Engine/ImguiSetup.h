@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <any>
 
 namespace Polyboid
 {
@@ -7,7 +8,7 @@ namespace Polyboid
     {
 
     public:
-        static void Init();
+        static void Init(const std::any& window);
         static void Begin();
         static void End();
         static void ShutDown();

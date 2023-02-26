@@ -7,13 +7,34 @@
 
 namespace Polyboid
 {
+	enum class SerializerItemType
+	{
+		Int,
+
+	};
+
+	struct SerializerItem
+	{
+		uint32_t offset;
+		uint32_t size;
+	};
+
+	struct SerializerSettings
+	{
+		uint32_t arrayCount;
+		uint32_t valuesType;
+	};
+
 	class Serializer
 	{
 	private:
 		std::vector<char> m_Bytes;
+		SerializerSettings settings;
 	public:
 		Serializer() = default;
 		Serializer(const std::vector<char>& bytes) : m_Bytes(bytes) {}
+
+		std::vector<char>& GetBytes() { return  m_Bytes; }
 
 		void Write(const std::string& filePath)
 		{
@@ -85,10 +106,11 @@ namespace Polyboid
 			auto typeSize = sizeof(value);
 
 			char* bytes = (char*)&value;
-			for (int i = 0; i < typeSize; ++i)
+			for (size_t i = 0; i < typeSize; ++i)
 			{
 				m_Bytes.push_back(bytes[i]);
 			}
+
 
 		}
 
@@ -99,7 +121,7 @@ namespace Polyboid
 			for (auto& value : values)
 			{
 				char* bytes = (char*)&value;
-				for (int i = 0; i < typeSize; ++i)
+				for (size_t i = 0; i < typeSize; ++i)
 				{
 					m_Bytes.push_back(bytes[i]);
 				}

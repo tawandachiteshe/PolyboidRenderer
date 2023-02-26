@@ -1,21 +1,21 @@
 #pragma once
 #include <cstdint>
-#include <memory>
 
 
 namespace Polyboid {
+	
 	class UniformBuffer
 	{
-	private:
-		uint32_t m_ID;
 	public:
-		UniformBuffer(uint32_t size, uint32_t binding);
-		void SetData(const void* data, uint32_t size, uint32_t offset = 0);
-		~UniformBuffer();
-		void Bind(uint32_t uint);
+		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
+		virtual  ~UniformBuffer() = default;
 
-		static std::shared_ptr<UniformBuffer> MakeUniformBuffer(uint32_t size, uint32_t binding = 0);
-	};
+		//Debugging stuff idk.... Im testing new systems
+		virtual uint32_t GetBindingSlot() = 0;
+		virtual uint32_t GetDataSize() = 0;
+	}
+
+	;
 }
 
 

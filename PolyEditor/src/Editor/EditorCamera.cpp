@@ -5,7 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Engine/Engine/Input.h"
-#include "Engine/Engine/Events/EventSystem.h"
+#include "Engine/Engine/Events/EventDispatcher.h"
 #include "Engine/Engine/Events/MouseEvents.h"
 
 namespace Polyboid 
@@ -15,7 +15,6 @@ namespace Polyboid
 	Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip))
 	{
 		UpdateView();
-		EventSystem::Bind(EventType::MOUSE_SCROLL, BIND_EVENT(OnMouseScroll));
 	}
 
 	void EditorCamera::UpdateProjection()

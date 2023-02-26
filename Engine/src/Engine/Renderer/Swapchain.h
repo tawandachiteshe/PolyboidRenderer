@@ -1,19 +1,20 @@
 ﻿#pragma once
-#include "Engine/Engine/PolyboidWindow.h"
+#include <any>
+
+#include "Engine/Engine/Base.h"
+
 
 namespace Polyboid
 {
     class Swapchain
     {
-    private:
-        GLFWwindow* m_Window;
-       
     public:
-        Swapchain(GLFWwindow* window);
-        void SwapBuffers();
-        void SetVsync(bool vsync);
-        static std::shared_ptr<Swapchain> MakeSwapChain(GLFWwindow* window);
-    
+        virtual void SwapBuffers() = 0;
+        virtual void SetVsync(bool vsync)= 0;
+        virtual ~Swapchain() = default;
+
+        //TODO: Make it robust
+        static Ref<Swapchain> Create(const std::any& window);
     };
 
 }

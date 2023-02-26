@@ -1,0 +1,192 @@
+{
+    "entryPoints": [
+        {
+            "mode": "frag",
+            "name": "main"
+        }
+    ],
+    "inputs": [
+        {
+            "location": 0,
+            "name": "vPosition",
+            "type": "vec3"
+        }
+    ],
+    "outputs": [
+        {
+            "location": 0,
+            "name": "FragColor",
+            "type": "vec4"
+        }
+    ],
+    "textures": [
+        {
+            "binding": 0,
+            "name": "hdr",
+            "set": 0,
+            "type": "sampler2D"
+        }
+    ]
+}osition",
+            "type": "vec3"
+        }
+    ],
+    "ssbos": [
+        {
+            "binding": 0,
+            "block_size": 0,
+            "name": "Vertices",
+            "readonly": true,
+            "set": 0,
+            "type": "_25"
+        }
+    ],
+    "types": {
+        "_23": {
+            "members": [
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "sPosition",
+                    "offset": 0,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "sNormal",
+                    "offset": 12,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        2
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "sUV",
+                    "offset": 24,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "sTangents",
+                    "offset": 32,
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        3
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 4,
+                    "name": "sBitagents",
+                    "offset": 44,
+                    "type": "float"
+                },
+                {
+                    "name": "sMeshIndex",
+                    "offset": 56,
+                    "type": "float"
+                }
+            ],
+            "name": "Vertex"
+        },
+        "_25": {
+            "members": [
+                {
+                    "array": [
+                        0
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "array_stride": 60,
+                    "name": "in_Vertices",
+                    "offset": 0,
+                    "type": "_23"
+                }
+            ],
+            "name": "Vertices"
+        },
+        "_54": {
+            "members": [
+                {
+                    "name": "gl_Position",
+                    "type": "vec4"
+                },
+                {
+                    "name": "gl_PointSize",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        1
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "gl_ClipDistance",
+                    "type": "float"
+                },
+                {
+                    "array": [
+                        1
+                    ],
+                    "array_size_is_literal": [
+                        true
+                    ],
+                    "name": "gl_CullDistance",
+                    "type": "float"
+                }
+            ],
+            "name": "gl_PerVertex"
+        },
+        "_58": {
+            "members": [
+                {
+                    "matrix_stride": 16,
+                    "name": "projection",
+                    "offset": 0,
+                    "type": "mat4"
+                },
+                {
+                    "matrix_stride": 16,
+                    "name": "view",
+                    "offset": 64,
+                    "type": "mat4"
+                }
+            ],
+            "name": "CameraData"
+        }
+    },
+    "ubos": [
+        {
+            "binding": 0,
+            "block_size": 128,
+            "name": "CameraData",
+            "set": 0,
+            "type": "_58"
+        }
+    ]
+}

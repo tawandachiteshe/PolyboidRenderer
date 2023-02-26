@@ -10,20 +10,28 @@ project "Engine"
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
+    VULKAN_SDK = os.getenv("VULKAN_SDK")
 
     includedirs
     {
         "src",
         "Vendor/spdlog/include",
-        "Vendor/glm",
+        "Vendor/msgpack/include",
         "Vendor/glfw/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
         "Vendor/assimp/include",
+        "Vendor/Optick/include",
+        "Vendor/hashpp/include",
         "Vendor/mono/include",
-        "Vendor/spirv/include",
         "Vendor/entt",
         "Vendor/imgui/src",
+        "Vendor/json/include",
+        "Vendor/siglot/include",
+        "Vendor/taskflow",
+        "Vendor/file_watcher",
+        "%{VULKAN_SDK}/Include",
+        "Vendor/pods/include",
     }
 
     dependson
@@ -35,6 +43,8 @@ project "Engine"
 	{
 		"_CRT_SECURE_NO_WARNINGS",
 		"GLFW_INCLUDE_NONE",
+        "PODS_BIG_ENDIAN",
+        "MSGPACK_NO_BOOST"
 	}
 
     links
@@ -56,15 +66,35 @@ project "Engine"
         "src/**.h", 
         "src/**.c",
         "src/**.cpp",
-        "src/**.hpp",
-        "Vendor/glm/glm/**.hpp",
-        "Vendor/glm/glm/**.inl",
+        "src/**.hpp"
     }
 
     filter "configurations:Debug"
        defines { "DEBUG" }
        symbols "On"
+
+       links
+       {
+           "%{VULKAN_SDK}/Lib/shaderc_shared.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-cored.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-glsld.lib",
+           "%{VULKAN_SDK}/Lib/glslangd.lib",
+           "%{VULKAN_SDK}/Lib/SPIRV-Toolsd.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-reflectd.lib",
+           "Vendor/Optick/lib/x64/debug/OptickCore.lib"
+       }
  
     filter "configurations:Release"
        defines { "NDEBUG" }
        optimize "On"
+
+       links
+       {
+           "%{VULKAN_SDK}/Lib/shaderc_shared.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-core.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-glsl.lib",
+           "%{VULKAN_SDK}/Lib/glslang.lib",
+           "%{VULKAN_SDK}/Lib/SPIRV-Tools.lib",
+           "%{VULKAN_SDK}/Lib/spirv-cross-reflect.lib",
+           "Vendor/Optick/lib/x64/Release/OptickCore.lib"
+       }

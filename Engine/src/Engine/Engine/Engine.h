@@ -1,47 +1,34 @@
 #pragma once
-#include "Gameplay/World.h"
+#include "World/World.h"
 
 
 namespace Polyboid
 {
-
-	//Change Setttings n shit here
+	class RenderAPI;
+	class RenderTarget;
 
 	struct EngineSettings
 	{
-		std::vector<Ref<World>> m_Worlds;
-		Ref<Framebuffer> m_MainFrameBuffer;
-		Ref<Framebuffer> m_CurrentFrameBuffer;
-
-
-		Ref<Renderbuffer> m_MainRenderbuffer;
-		Ref<Texture> m_RenderBufferTexture;
-
+		std::vector<World> m_Worlds{};
 	};
 
+
+	//For mananaging system and settings
 	class Engine
 	{
-	private:
+	public:
+
+		static void Init();
+		static void InitRenderer(const Ref<RenderAPI>& context);
+		static void CreateWorld(const std::string& name);
+
+		static void SaveWorld(const std::string& path);
+		static Ref<World> LoadWorld(const std::string& path);
+		
 
 		static  Unique<EngineSettings> s_Data;
 
 	public:
-
-
-		static void SetCurrentRenderBuffer(const Ref<Renderbuffer>& framebuffer);
-		static  Ref<Renderbuffer>& GetCurrentRenderBuffer();
-
-		static void SetCurrentTexture(const Ref<Texture>& framebuffer);
-		static  Ref<Texture>& GetCurrentTexture();
-		
-		static void SetCurrentFrameBuffer(const Ref<Framebuffer>& framebuffer);
-		static  Ref<Framebuffer>& GetCurrentFrameBuffer();
-
-		static void SetMainFramebuffer(const Ref<Framebuffer>& framebuffer);
-		static  Ref<Framebuffer>& GetMainFrameBuffer();
-
-
-		static  Ref<World> CreateWorld(std::string& name);
 		
 	};
 	

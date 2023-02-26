@@ -1,71 +1,72 @@
 ﻿#pragma once
 
-#include "PolyboidWindow.h"
-#include "KeyCodes.h"
 #include "Engine/Renderer/Swapchain.h"
 #include <Engine/Engine/LayerContainer.h>
+
+#include "Window.h"
+#include "Events/WindowEvent.h"
+#include <thread>
+#include <mutex>
+
+#define ALLOC_APP(Klass, appName, ...) static auto* appName = new Klass(##__VA_ARGS__);
 
 
 int main(int argc, char** argv);
 namespace Polyboid
 {
-    struct ApplicationData
+	class RenderAPI;
+
+	struct ApplicationSettings
     {
-        ApplicationData() = default;
-        WindowSpecs windowSpecs = {};
-        ApplicationData(WindowSpecs specs): windowSpecs(std::move(specs)){}
-        
+        uint32_t WindowWidth = 1600;
+        uint32_t WindowHeight = 900;
+        std::string ApplicationName = "Polyboid";
     };
 
-    struct ApplicationStats
-    {
-        double m_GameTime = 0.0;
-        double m_LastGameFrame = 0.0;
-        double m_RenderTime = 0.0;
-        double m_LastRenderFrame = 0.0;
-
-        double RenderTimeMs = 0;
-        double GameTimeMs = 0;
-    };
     
     class Application
     {
+    private:
+        Application(const ApplicationSettings& settings);
     public:
         Application();
+        void Init(const ApplicationSettings& settings);
         virtual ~Application();
 
-		std::unique_ptr<PolyboidWindow>& GetWindow() { return m_Window; }
-    	static Application* Get() { return s_Instance; }
-        ApplicationData& GetAppData() { return  m_AppData; }
-        WindowSpecs& GetWindowSpecs() { return m_AppData.windowSpecs; }
-        ApplicationStats& GetStats() { return stats; }
-        void SubmitToRenderThread(const std::function<void()>& function);
-        void RenderThreadQueue();
+		Unique<Window>& GetWindow() { return m_GameWindow; }
+        Ref<RenderAPI>& GetRenderAPI() { return m_RenderAPI; }
+
+    	static Application& Get() { return *s_Instance; }
+        ApplicationSettings& GetAppSettings() { return  m_Settings; }
 
         
     protected:
-        
-        ApplicationData m_AppData = WindowSpecs(1280, 800, "Polyboid");
-    	void OnWindowResizeEvent(const Event& event);
-    	void OnWindowsCloseEvent(const Event& event);
+
+        Unique<Window> m_MainWindow = nullptr;
+        Unique<Window> m_GameWindow = nullptr;
+        Ref<RenderAPI> m_RenderAPI = nullptr;
+
+        ApplicationSettings m_Settings;
+        void OnEvent(const Event& event);
+    	void OnWindowResizeEvent(const WindowResizeEvent& event);
+    	void OnWindowsCloseEvent(const WindowCloseEvent& event);
         void AddLayer(Layer* layer);
 
 
     private:
-      
+
+        std::thread m_RenderThread;
         LayerContainer m_Layers;
-        std::unique_ptr<PolyboidWindow> m_Window;
-        std::shared_ptr<Swapchain> m_Swapchain;
+
         void Run();
         void Render();
-        bool m_IsRunning = false;
         static void ShutDown();
-        ApplicationStats stats {};
+        std::atomic_bool m_Running = false;
 
-        std::vector<std::function<void()>> m_RenderThreadQueue;
+        double m_LastFrameTime = 0.0;
+
         std::mutex m_RenderMutex;
-
-   
+        std::mutex m_MainMutex;
 
     private:
         static Application* s_Instance;
@@ -74,8 +75,6 @@ namespace Polyboid
        
     
     };
-
-
 
     Application* CreateApplication();
 }

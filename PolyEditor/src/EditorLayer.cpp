@@ -1,18 +1,13 @@
 #include "EditorLayer.h"
 #include <imgui.h>
 
-#include "Editor/Resource.h"
-#include "Editor/WorldSerializer.h"
-#include "Editor/Events/EditorEvents.h"
 #include "EditorWIndows/ContentBrowserWindow.h"
 #include "EditorWIndows/DetailsWindow.h"
 #include "EditorWIndows/ViewportWindow.h"
 #include "EditorWIndows/WorldOutlinerWindow.h"
 #include "EditorWIndows/GameObjectPlacer.h"
 #include "Engine/Engine/Application.h"
-#include "Engine/Engine/Events/EventSystem.h"
-#include "Engine/Engine/Gameplay/GameStatics.h"
-#include "Gameplay/Box.h"
+#include "Engine/Engine/Events/EventDispatcher.h"
 
 //temp solution temp
 #include <Windows.h>
@@ -20,14 +15,16 @@
 
 
 #define GLFW_EXPOSE_NATIVE_WIN32
+#include <filesystem>
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
 #include "Editor/Editor.h"
 #include "EditorWIndows/StatsWindow.h"
 #include "Engine/Engine/Engine.h"
-#include "Engine/Engine/Scripting/ScriptingEngine.h"
-
+#include "Engine/Renderer/CommandList/RenderCommand.h"
+#include "Engine/Renderer/CommandList/Commands/RenderCommands.h"
+#include "Engine/Renderer/RenderTarget.h"
 
 namespace Polyboid
 {
@@ -43,7 +40,7 @@ namespace Polyboid
         CHAR currentDir[256] = { 0 };
         ZeroMemory(&ofn, sizeof(OPENFILENAME));
         ofn.lStructSize = sizeof(OPENFILENAME);
-        ofn.hwndOwner = glfwGetWin32Window((Application::Get()->GetWindow()->GetNativeWindow()));
+        //ofn.hwndOwner = glfwGetWin32Window((Application::Get().GetWindow()->GetNativeWindow()));
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         if (GetCurrentDirectoryA(256, currentDir))
@@ -66,7 +63,7 @@ namespace Polyboid
         CHAR currentDir[256] = { 0 };
         ZeroMemory(&ofn, sizeof(OPENFILENAME));
         ofn.lStructSize = sizeof(OPENFILENAME);
-        ofn.hwndOwner = glfwGetWin32Window((Application::Get()->GetWindow()->GetNativeWindow()));
+       // ofn.hwndOwner = glfwGetWin32Window((Application::Get()->GetWindow()->GetNativeWindow()));
         ofn.lpstrFile = szFile;
         ofn.nMaxFile = sizeof(szFile);
         if (GetCurrentDirectoryA(256, currentDir))
@@ -178,12 +175,6 @@ namespace Polyboid
                         std::filesystem::path path = pathDialog;
                         auto stem = path.stem();
                         std::string worldName = stem.string();
-                        EventSystem::GetDispatcher()->Dispatch(GameObjectOutlineClick(nullptr));
-                        auto world = Engine::CreateWorld(worldName);
-                        Editor::SetCurrentWorldMapPath(path.string());
-                        Editor::SetCurrentWorldName(worldName);
-
-                        GameStatics::SetCurrentWorld(world);
 					}
                 }
 
@@ -195,14 +186,14 @@ namespace Polyboid
                     if (!pathDialog.empty())
                     {
 
-                        WorldSerializer::Serialize(pathDialog);
+                        //WorldSerializer::Serialize(pathDialog);
                     }
                 }
 
                 if(ImGui::MenuItem("Save World", "Ctrl + S"))
                 {
                     //temp solution
-                    WorldSerializer::Serialize(Editor::GetCurrentWorldMapPath());
+                   // WorldSerializer::Serialize(Editor::GetCurrentWorldMapPath());
                 }
 
                 if (ImGui::MenuItem("Load World", "Ctrl + O"))
@@ -212,28 +203,27 @@ namespace Polyboid
 
                     if (!str.empty())
                     {
-                        EventSystem::GetDispatcher()->Dispatch(GameObjectOutlineClick(nullptr));
-                        WorldSerializer::Deserialize(str);
+                        //WorldSerializer::Deserialize(str);
                     }
 
 	              
                 }
 
-                if (ImGui::MenuItem("Reload C#", "Ctrl + R"))
-                {
-
-                    for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
-                    {
-                        gameObject->ClearScripts();
-                    }
-
-                    ScriptingEngine::ReloadAssembly();
-
-                    for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
-                    {
-                        gameObject->ReAttachScripts();
-                    }
-                }
+                // if (ImGui::MenuItem("Reload C#", "Ctrl + R"))
+                // {
+                //
+                //     for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
+                //     {
+                //         gameObject->ClearScripts();
+                //     }
+                //
+                //     ScriptingEngine::ReloadAssembly();
+                //
+                //     for (auto gameObject : GameStatics::GetCurrentWorld()->GetGameObjects())
+                //     {
+                //         gameObject->ReAttachScripts();
+                //     }
+                // }
 
                 if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
                     *p_open = false;
@@ -258,27 +248,9 @@ namespace Polyboid
 
     EditorLayer::EditorLayer(const std::string& name)
     {
-
         //float fov, float aspectRatio, float nearClip, float farClip
 
         m_Name = name;
-
-        auto app = Application::Get();
-        auto& appdata = app->GetAppData();
-
-        auto aspect = appdata.windowSpecs.GetAspectRatio();
-
-        float fov = 45.0f;
-
-        Application::Get()->SubmitToRenderThread([]()
-            {
-        	Resource::Init();
-        });
-       
-
-        m_World = std::make_shared<World>("untitled");
-    	GameStatics::SetCurrentWorld(m_World);
-        m_World->InitRenderer();
 
     }
 
@@ -290,18 +262,13 @@ namespace Polyboid
         AddWindow(new GameObjectPlacer("GameObject placer"));
         AddWindow(new DetailsWindow("Details"));
         AddWindow(new StatsWindow());
-
-        EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_ENTER, BIND_EVENT(OnEditorEnterPlayMode));
-        EventSystem::Bind(EventType::ON_EDITOR_PLAY_MODE_EXIT, BIND_EVENT(OnEditorExitPlayMode));
-
-        
 	}
 
 	void EditorLayer::OnUpdate(float dt)
 	{
 		if (m_PlayMode)
 		{
-            m_World->OnUpdate(dt);
+            //m_World->OnUpdate(dt);
 		}
         
         for (auto window : m_Windows)
@@ -315,13 +282,13 @@ namespace Polyboid
     {
         spdlog::info("Entered Playmode");
 
-        m_World->OnBeginPlay();
+        //m_World->OnBeginPlay();
     }
 
     void EditorLayer::OnEditorExitPlayMode(const Event& event)
     {
         spdlog::info("Exited Playmode");
-        m_World->OnEndPlay();
+        //m_World->OnEndPlay();
     }
 
 
@@ -340,13 +307,13 @@ namespace Polyboid
 
     }
 
-    void EditorLayer::OnRender(float dt)
+    void EditorLayer::OnRender()
     {
-	    Layer::OnRender(dt);
+
+
         for (auto window : m_Windows)
         {
-            window->OnRender(dt);
-
+            window->OnRender();
         }
 
 
