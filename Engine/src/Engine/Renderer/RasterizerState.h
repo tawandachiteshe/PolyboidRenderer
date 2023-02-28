@@ -77,6 +77,9 @@ namespace Polyboid
         virtual void SetPointSize(float size) = 0;
         virtual float GetPointSize() = 0;
 
+        //Opengl only
+        virtual void Reset() {}
+
         
         virtual  ~RasterizerState() = default;
     };

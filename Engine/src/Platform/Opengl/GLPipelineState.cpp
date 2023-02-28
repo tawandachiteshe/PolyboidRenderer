@@ -124,6 +124,8 @@ namespace Polyboid
 	    {
             m_VertexBufferArray->Bind();
 	    }
+
+        m_RasterizerState.Bind();
         
         glBindProgramPipeline(m_Handle);
     }

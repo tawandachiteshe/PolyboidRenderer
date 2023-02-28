@@ -12,6 +12,7 @@
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Engine/ECS/Components.h"
+#include "Engine/Engine/ECS/GameObject.h"
 #include <tuple>
 
 #include "Engine/Renderer/WorldRendererLegacy.h"

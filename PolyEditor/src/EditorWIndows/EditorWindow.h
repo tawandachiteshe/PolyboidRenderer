@@ -4,6 +4,7 @@
 
 namespace Polyboid 
 {
+	class Event;
 	// window data maybe
 	// entity compontnt systeam data
 	// maybe camera data but for hwa????
@@ -21,6 +22,7 @@ namespace Polyboid
 		virtual void RenderImgui() = 0;
 		virtual void Update(float ts) = 0;
 		virtual void OnRender() {}
+		virtual void OnEvent(Event& event) {}
 
 		virtual ~EditorWindow() = default;
 

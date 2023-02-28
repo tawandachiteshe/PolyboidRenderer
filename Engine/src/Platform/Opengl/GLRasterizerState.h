@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "Engine/Renderer/RasterizerState.h"
+#include <vector>
 
 namespace Polyboid
 {
@@ -68,6 +69,8 @@ namespace Polyboid
         float GetPointSize() override;
 
         virtual void Bind();
+        virtual void UnBind();
+
         
         ~GLRasterizerState() override = default;
     };

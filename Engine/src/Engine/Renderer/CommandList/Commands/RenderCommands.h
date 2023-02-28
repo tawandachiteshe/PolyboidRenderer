@@ -93,4 +93,18 @@ namespace Polyboid
 		void Execute() override;
 	};
 
+	class PushUniformBufferCommand :public Command
+	{
+	public:
+		Ref<PipelineState> m_State;
+		const void* m_Data;
+		uint32_t m_DataSize;
+		std::string m_Name;
+
+		PushUniformBufferCommand(const Ref<PipelineState>& pipeLine, const std::string& name, const void* data, uint32_t dataSize);
+
+		void Execute() override;
+		~PushUniformBufferCommand() override = default;
+	};
+
 }

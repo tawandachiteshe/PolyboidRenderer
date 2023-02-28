@@ -3,16 +3,16 @@
 #include <string>
 
 #include <entt/entt.hpp>
-
 #include "GameStatics.h"
-#include "Engine/Engine/ECS/GameObject.h"
+#include "Engine/Engine/ECS/Components.h"
 
 namespace Polyboid
 {
+	class GameObject;
+
 	class UUID;
 	class WorldRenderer;
 	class Shader;
-	class GameObject;
 
 	template<typename T, typename ... Args>
 	class TGameObject : public T
@@ -56,38 +56,6 @@ namespace Polyboid
 		GameObject* FindGameObjectByName(const std::string& name);
 		GameObject* FindGameObjectByID(const UUID& id);
 		std::vector<GameObject*> FindGameObjectsByName(const std::string& name);
-
-		template<typename Class>
-		TGameObject<Class>* CreateGameObject(const std::string& name = "GameObject", uint64_t uuid = 0)
-		{
-			
-			auto id = CreateEntityID();
-			auto* gameObjectClass = new TGameObject<Class>();
-			gameObjectClass->SetID(id);
-
-			gameObjectClass->SetWorld(GameStatics::GetCurrentWorld());
-
-			//default components here
-			gameObjectClass->AddComponent<TagComponent>(name);
-			gameObjectClass->AddComponent<TransformComponent>();
-
-			if (uuid != 0)
-			{
-				gameObjectClass->AddComponent<IDComponent>(uuid);
-			}
-			else
-			{
-				gameObjectClass->AddComponent<IDComponent>();
-			}
-
-			gameObjectClass->OnCreate();
-
-
-			m_GameObjects.emplace_back(gameObjectClass);
-
-
-			return gameObjectClass;
-		}
 
 		GameObject* CreateGameObject(const std::string& name = "GameObject", uint64_t id = 0);
 		

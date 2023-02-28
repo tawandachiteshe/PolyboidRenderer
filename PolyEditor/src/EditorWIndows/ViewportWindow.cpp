@@ -5,10 +5,12 @@
 #include "Editor/EditorCamera.h"
 #include "Engine/Engine/Events/EventDispatcher.h"
 #include "Engine/Engine/Engine.h"
+#include "Engine/Engine/Input.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/RenderTarget.h"
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 namespace Polyboid
 {
@@ -29,18 +31,6 @@ namespace Polyboid
 	{
 	}
 
-	static bool DidWindowSizeChange(const ImVec2& a, const ImVec2& b)
-	{
-		auto xDiff = b.x - a.x;
-		auto yDiff = b.y - a.y;
-
-		return yDiff || xDiff;
-	}
-
-	static bool boolIsNotZero(const ImVec2& v)
-	{
-		return (v.x && v.y);
-	}
 
 	void ViewportWindow::OnGameObjectSelected(const Event& event)
 	{
@@ -62,7 +52,7 @@ namespace Polyboid
 		const auto colorTexture = mainRenderTarget->GetTexture(TextureAttachmentSlot::Color0);
 		const auto windowSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image((ImTextureID)colorTexture->GetHandle(), windowSize);
+		ImGui::Image((ImTextureID)colorTexture->GetHandle(), windowSize, {1.0f, 1.0f}, {0.0f, 0.0f});
 
 		ImGui::End();
 
@@ -72,15 +62,47 @@ namespace Polyboid
 
 	void ViewportWindow::Update(float ts)
 	{
+		static  float dt = 0.0;
+		if (dt > 0.01f)
+		{
+			
+			m_ViewportCamera->OnUpdate(ts);
+			m_ViewportCamera->SetEnableInput(true);
+			dt = 0;
+		}
+		else
+		{
+			dt += ts;
+			
+		}
 
+
+	}
+
+	void ViewportWindow::OnEvent(Event& event)
+	{
+		EventDispatcher dispatcher(event);
+		dispatcher.Bind<MouseScrollEvent>(BIND_EVENT(m_ViewportCamera->OnMouseScroll));
 	}
 
 	void ViewportWindow::OnRender()
 	{
+
+
+		//spdlog::info("Mouse x: {} y: {}", Input::GetMouseX(), Input::GetMouseY());
+
 		Renderer2D::BeginDraw(m_ViewportCamera);
 
-		//Renderer2D::DrawQuad(glm::mat4(1.0f));
-		Renderer2D::DrawCircle(glm::mat4(1.0f));
+		glm::mat4 pos = glm::translate(glm::mat4(1.0f), { 0.0, 1.5f, 0.0 });
+		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), { 0.0, 2.5f, 0.0 });
+
+
+
+		Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
+		Renderer2D::DrawCube(pos2);
+		Renderer2D::DrawCircle(pos);
+		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});
+		
 
 		Renderer2D::EndDraw();
 	}

@@ -13,6 +13,7 @@
 
 namespace Polyboid
 {
+	class MouseScrollEvent;
 	class GameObject;
 	class EditorCamera;
 
@@ -27,7 +28,7 @@ namespace Polyboid
 
 		ImVec2 m_LastViewportWindowSize = { 0.0f, 0.0f };
 		ImVec2 m_WindowOffset = { 0, 0 };
-
+		
 
 	private:
 		GameObject* m_CurrentGameObject = nullptr;
@@ -43,6 +44,8 @@ namespace Polyboid
 		virtual void RenderImgui() override;
 
 		virtual void Update(float ts) override;
+
+		void OnEvent(Event& event) override;
 
 	public:
 		void OnRender() override;

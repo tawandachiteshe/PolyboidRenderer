@@ -1,7 +1,7 @@
 project "Engine"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 	staticruntime "off"
 
     pchheader "boidpch.h"
@@ -31,7 +31,7 @@ project "Engine"
         "Vendor/taskflow",
         "Vendor/file_watcher",
         "%{VULKAN_SDK}/Include",
-        "Vendor/pods/include",
+        "Vendor/yalantinglibs/include",
     }
 
     dependson
@@ -42,9 +42,7 @@ project "Engine"
     defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
-		"GLFW_INCLUDE_NONE",
-        "PODS_BIG_ENDIAN",
-        "MSGPACK_NO_BOOST"
+		"GLFW_INCLUDE_NONE"
 	}
 
     links

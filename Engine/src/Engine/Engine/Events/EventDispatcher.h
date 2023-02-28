@@ -1,8 +1,10 @@
 ﻿#pragma once
+#include <any>
 #include <functional>
 #include <spdlog/spdlog.h>
 
 #include "Event.h"
+#include "MouseEvents.h"
 #include "Engine/Engine/Base.h"
 
 namespace Polyboid
@@ -13,31 +15,29 @@ namespace Polyboid
     {
     private:
         EventType m_Type;
-        Event m_Event;
-        
+        Event& m_Event;
+
+        std::unordered_map<EventType, std::any> m_EventCallBacks;
+
     public:
 
-        EventDispatcher(const Event& event);
+        EventDispatcher(Event& event);
 
-        template<typename TEventType>
-        void Bind(const std::function<void(const TEventType& event)>& fun);
+        template<typename T, typename F>
+        void Bind(const F& fun);
         
     };
 
-    template <typename TEventType>
-    void EventDispatcher::Bind(const std::function<void(const TEventType& event)>& fun)
+    template<typename T, typename F>
+    void EventDispatcher::Bind(const F& fun)
     {
-        switch (m_Type)
+        m_EventCallBacks[m_Type] = fun;
+
+        if (m_Type == T::GetStaticType())
         {
-        case EventType::NONE: break;
-        case EventType::KEY: break;
-        case EventType::MOUSE: break;
-        case EventType::WINDOW_CLOSE: fun(CastEventAs<TEventType>(m_Event)); break;
-        case EventType::WINDOW_RESIZE: break;
-        case EventType::FRAME_BUFFER_RESIZE: break;
-        case EventType::MOUSE_SCROLL: break;
-        default: ;
+            fun(static_cast<T&>(m_Event));
         }
+       
         
     }
 }

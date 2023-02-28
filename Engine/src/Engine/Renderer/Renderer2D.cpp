@@ -1,6 +1,9 @@
 #include "boidpch.h"
 
 #include "Renderer2D.h"
+
+#include <mutex>
+
 #include "RenderAPI.h"
 #include "imgui.h"
 #include <glm/glm.hpp>
@@ -11,9 +14,11 @@
 
 #include "FrustumCulling.h"
 #include "PipelineState.h"
+#include "RasterizerState.h"
 #include "Renderer.h"
 #include "VertexBufferArray.h"
 #include "CommandList/RenderCommand.h"
+#include "CommandList/Commands/RenderCommands.h"
 #include "Engine/Engine/Registry/ShaderRegistry.h"
 
 
@@ -43,6 +48,8 @@ namespace Polyboid
 
 		std::vector<QuadVertex> QuadVerticesData;
 		uint32_t quadIndexCount = 0;
+
+		Ref<PipelineState> QuadPipelineState;
 	};
 
 	struct LineData
@@ -62,6 +69,8 @@ namespace Polyboid
 		LineVertex lineVerts[4];
 
 		uint32_t LineIndexCount = 0;
+
+		Ref<PipelineState> LinePipelineState;
 	};
 
 	struct CircleData
@@ -85,6 +94,7 @@ namespace Polyboid
 
 
 		std::vector<CircleVertex> CircleVerticesData;
+		Ref<PipelineState> CirclePipelineState;
 
 		uint32_t circleIndexCount = 0;
 	};
@@ -93,6 +103,10 @@ namespace Polyboid
 	{
 		Ref<UniformBuffer> m_CameraUB;
 		Ref<RenderAPI> m_Context;
+		Ref<Camera> m_Renderer2DCamera;
+		std::mutex m_CameraDataMutex;
+
+		Renderer2D::Renderer2DCameraData* m_CameraData = new Renderer2D::Renderer2DCameraData;
 	};
 
 	static Renderer2DData s_RenderData;
@@ -151,6 +165,8 @@ namespace Polyboid
 		s_QuadData.quadVerts[3] = {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}};
 
 		s_QuadData.shaders = LoadShader("rendererQuad");
+
+		s_QuadData.QuadPipelineState = context->CreatePipelineState();
 	}
 
 
@@ -209,6 +225,7 @@ namespace Polyboid
 		s_CircleData.circleVerts[3] = {{-0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, 1.0f};
 
 		s_CircleData.shaders = LoadShader("rendererCircle");
+		s_CircleData.CirclePipelineState = context->CreatePipelineState();
 	}
 
 	void Renderer2D::PrepareLines()
@@ -238,6 +255,8 @@ namespace Polyboid
 		s_LineData.lineVerts[1] = {{0.5f, -0.5f, 0.0f}, glm::vec4{1.0f}};
 		s_LineData.lineVerts[2] = {{-0.5f, -0.5f, 0.0f}, glm::vec4{1.0f}};
 		s_LineData.lineVerts[3] = {{-0.5f, 0.5f, 0.0f}, glm::vec4{1.0f}};
+
+		s_LineData.LinePipelineState = context->CreatePipelineState();
 	}
 
 	void Renderer2D::PrepareQuadsForRendering()
@@ -247,19 +266,33 @@ namespace Polyboid
 			uint32_t vertexSize = sizeof(QuadVertex) * s_QuadData.quadOffset;
 			s_QuadData.QuadVertexBuffer->SetData(s_QuadData.QuadVerticesData.data(), vertexSize);
 
-			auto pipeLine = Renderer::GetDefaultPipeline();
+			auto pipeLine = s_QuadData.QuadPipelineState;
 
 			auto& [vert, frag] = s_QuadData.shaders;
 
 			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
 
+
 			pipeLine->SetShader(vert);
 			pipeLine->SetShader(frag);
+
 			const auto count = s_QuadData.quadIndexCount;
 			s_QuadData.QuadVertexBufferArray->SetIndexCount(count);
 			pipeLine->SetVertexArray(s_QuadData.QuadVertexBufferArray);
 
+			Viewport viewPort;
+			viewPort.X = 0;
+			viewPort.Y = 0;
+			viewPort.Height = 900;
+			viewPort.Width = 1600;
+			pipeLine->GetRasterizerState().SetViewport(viewPort);
+
 			Renderer::SetPipelineState(pipeLine);
+
+			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
+			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
+			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
+			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
 			Renderer::DrawIndexed(count);
 		}
@@ -270,7 +303,7 @@ namespace Polyboid
 	{
 		if (s_CircleData.circleCount)
 		{
-			auto pipeLine = Renderer::GetDefaultPipeline();
+			auto pipeLine = s_CircleData.CirclePipelineState;
 
 			const uint32_t vertexSize = sizeof(CircleVertex) * s_CircleData.circleOffset;
 			s_CircleData.CircleVertexBuffer->SetData(s_CircleData.CircleVerticesData.data(), vertexSize);
@@ -278,23 +311,28 @@ namespace Polyboid
 			auto& [vert, frag] = s_CircleData.shaders;
 
 			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
-
 			pipeLine->SetShader(vert);
 			pipeLine->SetShader(frag);
 
-			//s_CircleData.shader->Bind();
 			const auto count = s_CircleData.circleIndexCount;
 			s_CircleData.CircleVertexBufferArray->SetIndexCount(count);
 			pipeLine->SetVertexArray(s_CircleData.CircleVertexBufferArray);
 
+			Viewport viewPort;
+			viewPort.X = 0;
+			viewPort.Y = 0;
+			viewPort.Height = 900;
+			viewPort.Width = 1600;
+			pipeLine->GetRasterizerState().SetViewport(viewPort);
+
 			Renderer::SetPipelineState(pipeLine);
+
+			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
+			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
+			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
+			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
+
 			Renderer::DrawIndexed(count);
-
-			//s_CircleData.CircleVertexBufferArray->GetIndexBuffer()->Bind();
-
-			// glDisable(GL_CULL_FACE);
-			// RenderAPI::DrawIndexed(count, 4);
-			// glEnable(GL_CULL_FACE);
 		}
 	}
 
@@ -302,10 +340,11 @@ namespace Polyboid
 	{
 		if (s_LineData.lineCount)
 		{
-			auto pipeLine = Renderer::GetDefaultPipeline();
-			auto& [vert, frag] = s_CircleData.shaders;
+			auto pipeLine = s_LineData.LinePipelineState;
+			auto& [vert, frag] = s_LineData.shaders;
 
 			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
+
 
 			pipeLine->SetShader(vert);
 			pipeLine->SetShader(frag);
@@ -315,13 +354,21 @@ namespace Polyboid
 			s_LineData.LineVertexBuffer->SetData(s_LineData.LineVerticesData.data(), vertexSize);
 			pipeLine->SetVertexArray(s_LineData.LineVertexBufferArray);
 
-			pipeLine->SetVertexArray(s_LineData.LineVertexBufferArray);
-
+			Viewport viewPort;
+			viewPort.X = 0;
+			viewPort.Y = 0;
+			viewPort.Height = 900;
+			viewPort.Width = 1600;
+			pipeLine->GetRasterizerState().SetViewport(viewPort);
+			pipeLine->GetRasterizerState().SetLineWidth(3.0f);
 			Renderer::SetPipelineState(pipeLine);
-			Renderer::DrawArrays(s_LineData.LineIndexCount);
-			// glDisable(GL_CULL_FACE);
-			// RenderAPI::DrawLines(s_LineData.lineCount);
-			// glEnable(GL_CULL_FACE);
+
+			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
+			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
+			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
+			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
+
+			Renderer::DrawArrays(s_LineData.lineCount);
 		}
 	}
 
@@ -348,15 +395,13 @@ namespace Polyboid
 
 
 		//temp solution
-		s_RenderData.m_CameraUB = context->CreateUniformBuffer((sizeof(glm::mat4) * 2) + sizeof(glm::vec3), 0);
+		s_RenderData.m_CameraUB = context->CreateUniformBuffer(sizeof(Renderer2DCameraData), 0);
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetPosition()), sizeof(glm::vec3), 128);
 
+		s_RenderData.m_Renderer2DCamera = camera;
 		//s_RenderData.m_CameraUB->Bind(0);
 	}
 
@@ -368,6 +413,7 @@ namespace Polyboid
 	{
 		Renderer::BeginDefaultRenderPass();
 		Renderer::ClearDefaultRenderTarget({{0.2f, 0.2f, 0.2f, 1.0f}});
+
 
 		PrepareQuadsForRendering();
 		PrepareCircleForRendering();
@@ -409,6 +455,7 @@ namespace Polyboid
 
 	void Renderer2D::Shutdown()
 	{
+		delete s_RenderData.m_CameraData;
 		if (!s_QuadData.QuadVerticesData.empty())
 		{
 			s_QuadData.QuadVerticesData.clear();

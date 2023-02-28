@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "shaderc/shaderc.hpp"
-#include <pods/pods.h>
 
 namespace Polyboid
 {
@@ -14,11 +13,6 @@ namespace Polyboid
         uint32_t Binding = 0;
         uint32_t Set = 0;
         std::string Name;
-
-        PODS_SERIALIZABLE(
-            PODS_MDR(Binding),
-            PODS_MDR(Set),
-            PODS_MDR(Name))
 
 
         //Vulkan only
@@ -35,14 +29,6 @@ namespace Polyboid
         bool isReadOnly = false;
         uint32_t blockSize = 0;
 
-        PODS_SERIALIZABLE(
-            PODS_MDR(Binding),
-            PODS_MDR(Set),
-            PODS_MDR(Name),
-            PODS_MDR(isReadOnly),
-            PODS_MDR(blockSize)
-        )
-
 	};
 
 	struct UniformBufferInfo
@@ -52,12 +38,6 @@ namespace Polyboid
         std::string Name;
         uint32_t blockSize = 0;
 
-        PODS_SERIALIZABLE(
-            PODS_MDR(Binding),
-            PODS_MDR(Set),
-            PODS_MDR(Name),
-            PODS_MDR(blockSize)
-        )
 	};
 
 	// struct ReflectionInfo
@@ -71,14 +51,6 @@ namespace Polyboid
         std::map<std::string, ShaderImageInfo> textures;
         std::map<std::string, ShaderStorageInfo> ssbos;
         std::map<std::string, UniformBufferInfo> ubos;
-
-        PODS_SERIALIZABLE(
-            PODS_MDR(images),
-            PODS_MDR(textures),
-            PODS_MDR(ssbos),
-            PODS_MDR(ubos)
-        )
-
 	};
 
 	struct ShaderBinaryAndInfo
@@ -91,15 +63,6 @@ namespace Polyboid
         std::vector<uint32_t> Spirv;
         ReflectionInfo reflectionInfo;
 
-
-        PODS_SERIALIZABLE(
-            PODS_MDR(Spirv),
-            PODS_MDR(type),
-            PODS_MDR(shaderReflect),
-            PODS_MDR(spirvChecksum),
-            PODS_MDR(reflectionInfo),
-            PODS_MDR(filePath)
-        )
 	};
 
     class ShaderCompiler

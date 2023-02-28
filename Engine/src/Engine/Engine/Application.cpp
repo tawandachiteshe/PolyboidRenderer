@@ -52,22 +52,11 @@ namespace Polyboid
 
 		m_MainWindow = Window::Create(mainWindowSettings);
 
-		WindowSettings gameWindowSettings(false,
-		                                  settings.WindowWidth,
-		                                  settings.WindowHeight,
-		                                  settings.ApplicationName);
-		gameWindowSettings.IsVisible = false;
-		gameWindowSettings.WindowShareHandle = m_MainWindow->GetNativeWindow();
-
-		m_GameWindow = Window::Create(gameWindowSettings);
-
+	
 		m_Running = true;
 
 		//multiple overides maybe but is it efficieant and maintainable;;
 		m_MainWindow->SetEventCallback(BIND_EVENT(Application::OnEvent));
-		m_GameWindow->SetEventCallback([](const Event& event)
-		{
-		});
 	}
 
 	Application::~Application()
@@ -76,22 +65,30 @@ namespace Polyboid
 	}
 
 
-	void Application::OnEvent(const Event& event)
+	void Application::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
+		
 		dispatcher.Bind<WindowCloseEvent>(BIND_EVENT(Application::OnWindowsCloseEvent));
 		dispatcher.Bind<WindowResizeEvent>(BIND_EVENT(Application::OnWindowResizeEvent));
+
+		for (const auto& layer : m_Layers)
+		{
+			layer->OnEvent(event);
+		}
+
 	}
 
-	void Application::OnWindowResizeEvent(const WindowResizeEvent& event)
+	void Application::OnWindowResizeEvent(WindowResizeEvent& event)
 	{
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
 	}
 
-	void Application::OnWindowsCloseEvent(const WindowCloseEvent& event)
+	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
 	{
 		m_Running = false;
+		spdlog::info("Window close event: {}", (uint32_t)event.GetType());
 	}
 
 	void Application::AddLayer(Layer* layer)
@@ -129,8 +126,10 @@ namespace Polyboid
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
+			m_MainWindow->PollEvents();
 
-			m_GameWindow->PollEvents();
+			m_ShouldRender = true;
+			
 		}
 
 		m_RenderThread.join();
@@ -159,8 +158,12 @@ namespace Polyboid
 				layer->OnRender();
 			}
 
+			
+			if (m_ShouldRender)
+			{
+				Renderer::WaitAndRender();
+			}
 
-			Renderer::WaitAndRender();
 
 			Imgui::Begin();
 
@@ -174,7 +177,8 @@ namespace Polyboid
 
 
 			swapChain->SwapBuffers();
-			m_MainWindow->PollEvents();
+
+			m_ShouldRender = false;
 		}
 
 		Imgui::ShutDown();

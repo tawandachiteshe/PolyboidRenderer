@@ -22,6 +22,8 @@ namespace Polyboid
 		void OnEditorEnterPlayMode(const Event& event);
 		void OnEditorExitPlayMode(const Event& event);
 
+
+
 	public:
 
 
@@ -30,6 +32,10 @@ namespace Polyboid
 		void OnUpdate(float dt) override;
 		void OnImguiRender() override;
 		void OnRender() override;
+
+		void OnEvent(Event& event) override;
+
+		~EditorLayer() override = default;
 	};
 
 	

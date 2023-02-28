@@ -22,10 +22,7 @@ namespace Polyboid
 	Application* CreateApplication()
 	{
 		ApplicationSettings settings;
-
-		ALLOC_APP(EditorApp, app)
-
-
+		CREATE_APPLICATION(EditorApp, app)
 		return app;
 	}
 }

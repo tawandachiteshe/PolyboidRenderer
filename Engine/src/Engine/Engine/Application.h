@@ -1,81 +1,76 @@
 ﻿#pragma once
 
-#include "Engine/Renderer/Swapchain.h"
+
 #include <Engine/Engine/LayerContainer.h>
 
 #include "Window.h"
 #include "Events/WindowEvent.h"
 #include <thread>
-#include <mutex>
+#include <string>
 
-#define ALLOC_APP(Klass, appName, ...) static auto* appName = new Klass(##__VA_ARGS__);
 
+#define CREATE_APPLICATION(Klass, variableName, ...)  static auto* variableName = new Klass(##__VA_ARGS__);					
+    
 
 int main(int argc, char** argv);
+
 namespace Polyboid
 {
 	class RenderAPI;
 
 	struct ApplicationSettings
-    {
-        uint32_t WindowWidth = 1600;
-        uint32_t WindowHeight = 900;
-        std::string ApplicationName = "Polyboid";
-    };
-
-    
-    class Application
-    {
-    private:
-        Application(const ApplicationSettings& settings);
-    public:
-        Application();
-        void Init(const ApplicationSettings& settings);
-        virtual ~Application();
-
-		Unique<Window>& GetWindow() { return m_GameWindow; }
-        Ref<RenderAPI>& GetRenderAPI() { return m_RenderAPI; }
-
-    	static Application& Get() { return *s_Instance; }
-        ApplicationSettings& GetAppSettings() { return  m_Settings; }
-
-        
-    protected:
-
-        Unique<Window> m_MainWindow = nullptr;
-        Unique<Window> m_GameWindow = nullptr;
-        Ref<RenderAPI> m_RenderAPI = nullptr;
-
-        ApplicationSettings m_Settings;
-        void OnEvent(const Event& event);
-    	void OnWindowResizeEvent(const WindowResizeEvent& event);
-    	void OnWindowsCloseEvent(const WindowCloseEvent& event);
-        void AddLayer(Layer* layer);
+	{
+		uint32_t WindowWidth = 1600;
+		uint32_t WindowHeight = 900;
+		std::string ApplicationName = "Polyboid";
+	};
 
 
-    private:
+	class Application
+	{
+	private:
+		Application(const ApplicationSettings& settings);
+	public:
+		Application();
+		void Init(const ApplicationSettings& settings);
+		virtual ~Application();
 
-        std::thread m_RenderThread;
-        LayerContainer m_Layers;
+		Unique<Window>& GetWindow() { return m_MainWindow; }
+		Ref<RenderAPI>& GetRenderAPI() { return m_RenderAPI; }
 
-        void Run();
-        void Render();
-        static void ShutDown();
-        std::atomic_bool m_Running = false;
+		static Application& Get() { return *s_Instance; }
+		ApplicationSettings& GetAppSettings() { return m_Settings; }
 
-        double m_LastFrameTime = 0.0;
 
-        std::mutex m_RenderMutex;
-        std::mutex m_MainMutex;
+	protected:
+		Unique<Window> m_MainWindow = nullptr;
+		Ref<RenderAPI> m_RenderAPI = nullptr;
 
-    private:
-        static Application* s_Instance;
-        friend int ::main(int argc, char** argv);
-        
-       
-    
-    };
+		ApplicationSettings m_Settings;
+		void OnEvent(Event& event);
+		void OnWindowResizeEvent(WindowResizeEvent& event);
+		void OnWindowsCloseEvent(WindowCloseEvent& event);
+		void AddLayer(Layer* layer);
 
-    Application* CreateApplication();
+
+	private:
+		std::thread m_RenderThread;
+		LayerContainer m_Layers;
+
+		void Run();
+		void Render();
+		static void ShutDown();
+		std::atomic_bool m_Running = false;
+		std::atomic_bool m_ShouldRender = true;
+
+		double m_LastFrameTime = 0.0;
+
+	private:
+		static Application* s_Instance;
+		friend int ::main(int argc, char** argv);
+	};
+
+
+	Application* CreateApplication();
+
 }
-

@@ -1,6 +1,9 @@
 ﻿#include "boidpch.h"
 #include "WindowsWindow.h"
 
+#include <spdlog/spdlog.h>
+
+#include "Engine/Engine/Events/MouseEvents.h"
 #include "Engine/Engine/Events/WindowEvent.h"
 
 
@@ -67,8 +70,17 @@ namespace Polyboid
         glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* window)
         {
             auto& data = GetWindowData(window);
-            const WindowCloseEvent windowClose;
+        	WindowCloseEvent windowClose;
             data.EventCallback(windowClose);
+        });
+
+        glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xoffset, double yoffsets)
+        {
+        	auto& data = GetWindowData(window);
+      
+        	MouseScrollEvent event(static_cast<float>(yoffsets));
+            data.EventCallback(event);
+
         });
         
     }

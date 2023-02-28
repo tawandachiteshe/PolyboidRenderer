@@ -29,7 +29,7 @@ namespace Polyboid
 		}
 		else
 		{
-			m_Red = GetWorld()->CreateGameObject<Square>("Red");
+			
 		}
 
 		

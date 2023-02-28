@@ -16,6 +16,8 @@ namespace Polyboid
 		MOUSE_SCROLL,
 	};
 
+#define ADD_STATIC_TYPE(type) static EventType GetStaticType() { return EventType::type; }
+
 	class Event
 	{
 	protected:
@@ -27,7 +29,7 @@ namespace Polyboid
 		virtual ~Event() = default;
 	};
 
-	using EventFn = std::function<void(const Event& event)>;
+	using EventFn = std::function<void(Event& event)>;
 
 }
 

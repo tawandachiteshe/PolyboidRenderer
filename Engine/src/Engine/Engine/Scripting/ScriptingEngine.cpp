@@ -88,8 +88,8 @@ namespace Polyboid
 
 	void ScriptingEngine::InitAppDomain()
 	{
-		char* appDomainName = "PolyboidAppDomain";
-		s_Data->AppDomain = mono_domain_create_appdomain(appDomainName, nullptr);
+		const char* appDomainName = "PolyboidAppDomain";
+		s_Data->AppDomain = mono_domain_create_appdomain(const_cast<char*>(appDomainName), nullptr);
 		mono_domain_set(s_Data->AppDomain, true);
 	}
 
@@ -260,6 +260,11 @@ namespace Polyboid
 	MonoClass* ScriptingEngine::FindClass(const std::string& fullName)
 	{
 		return s_Data->MonoClasses.at(fullName);
+	}
+
+	void* ScriptingEngine::UnboxObject(MonoObject* object)
+	{
+		return mono_object_unbox(object);
 	}
 
 	MonoObject* ScriptingEngine::CreateMonoClassInstance(MonoClass* klass, bool callDefaultConstructor)
@@ -593,6 +598,21 @@ namespace Polyboid
 	const char* ScriptingEngine::GetMonoClassFieldTypeName(MonoType* type)
 	{
 		return mono_type_get_name(type);
+	}
+
+	void* ScriptingEngine::GetMethodThunk(MonoMethod* method)
+	{
+		return mono_method_get_unmanaged_thunk(method);
+	}
+
+	void ScriptingEngine::SetPropertyValue(MonoProperty* prop, void* obj, void** params, MonoObject** exc)
+	{
+		mono_property_set_value(prop, obj, params, exc);
+	}
+
+	MonoObject* ScriptingEngine::GetPropertyValue(MonoProperty* prop, void* obj, void** params, MonoObject** exc)
+	{
+		return mono_property_get_value(prop, obj, params, exc);
 	}
 
 	void* ScriptingEngine::GetFunctionPointer(MonoObject* instance, const std::string& name, int paramCount)

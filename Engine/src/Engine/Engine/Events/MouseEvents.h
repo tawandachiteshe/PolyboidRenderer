@@ -9,12 +9,17 @@ namespace Polyboid
 	private:
 		float m_Yoffset;
 	public:
-		MouseScrollEvent(float yOffset): m_Yoffset(yOffset)
+		MouseScrollEvent(const float yOffset): m_Yoffset(yOffset)
 		{
 			m_Type = EventType::MOUSE_SCROLL;
 		}
 
-		float GetYoffset() { return m_Yoffset; }
+		float GetYoffset() const
+		{
+			return m_Yoffset;
+		}
+
+		ADD_STATIC_TYPE(MOUSE_SCROLL)
 	};
 
 }

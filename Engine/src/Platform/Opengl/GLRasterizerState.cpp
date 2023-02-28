@@ -182,9 +182,7 @@ namespace Polyboid
                 glEnable(GL_CULL_FACE);
                 glCullFace(GetOpenGlCullFaceMode(m_CullMode));
             }
-        
-            glPolygonMode(GL_FRONT, GetOpenGlFillMode(m_FrontFaceFillMode));
-            glPolygonMode(GL_BACK, GetOpenGlFillMode(m_BackFaceFillMode));
+
 
             glLineWidth(m_LineWidth);
             glPointSize(m_PointSize);
@@ -262,5 +260,14 @@ namespace Polyboid
             m_ScissorRectsDirty = false;
         }
         
+    }
+
+    void GLRasterizerState::UnBind()
+    {
+        glDisable(GL_CULL_FACE);
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        glCullFace(GL_BACK);
+        glLineWidth(1.0f);
+       
     }
 }

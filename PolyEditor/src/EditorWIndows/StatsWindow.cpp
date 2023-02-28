@@ -12,7 +12,9 @@ namespace Polyboid
 	{
 		ImGui::Begin(m_Name.c_str());
 
-		ImGui::Text("Frame rate %.1f", ImGui::GetIO().Framerate);
+		auto frameRate = ImGui::GetIO().Framerate;
+
+		ImGui::Text("Frame rate %f", (1.0f / frameRate));
 		
 
 		ImGui::End();

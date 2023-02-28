@@ -33,14 +33,12 @@ namespace Polyboid
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
 
-	void EditorCamera::OnMouseScroll(const Event& e)
+	void EditorCamera::OnMouseScroll(MouseScrollEvent& e)
 	{
-		auto mouseScollEvent = CastEventAs<MouseScrollEvent>(e);
-
 
 		if (m_EnableInput)
 		{
-			float delta = mouseScollEvent.GetYoffset() * 0.1f;
+			float delta = e.GetYoffset() * 0.1f;
 			MouseZoom(delta);
 			UpdateView();
 		}

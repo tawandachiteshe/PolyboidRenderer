@@ -24,11 +24,12 @@ namespace Polyboid
 
 #define CPP_TO_MONO(x) &x
 
+	class ScriptingEngine;
 
 	template<typename T>
 	T CastMonoResultAs(MonoObject* result)
 	{
-		return *static_cast<T*>(mono_object_unbox(result));
+		return *static_cast<T*>(ScriptingEngine::UnboxObject(result));
 	}
 
 	enum class ScriptingType
@@ -140,6 +141,7 @@ namespace Polyboid
 		static MonoString* ToMonoString(const std::string& str);
 		static MonoImage* GetMonoImage(MonoAssembly* assembly);
 		static MonoClass* FindClass(const std::string& fullName);
+		static void* UnboxObject(MonoObject* object);
 		static MonoAssembly* GetAppAssembly() {
 			return s_Data->AppAssembly;
 		}
@@ -167,7 +169,9 @@ namespace Polyboid
 		static const char* GetMonoClassFieldName(MonoClassField* field);
 		static MonoType* GetMonoClassFieldType(MonoClassField* field);
 		static const char* GetMonoClassFieldTypeName(MonoType* type);
-
+		static  void* GetMethodThunk(MonoMethod* method);
+		static void SetPropertyValue(MonoProperty* prop, void* obj, void** params, MonoObject** exc);
+		static MonoObject* GetPropertyValue(MonoProperty* prop, void* obj, void** params, MonoObject** exc);
 
 
 		//templelates here
@@ -176,7 +180,7 @@ namespace Polyboid
 		template<typename T>
 		static  std::function<T> GetFunctionPointer(MonoMethod* method)
 		{
-			return static_cast<std::function<T>>(mono_method_get_unmanaged_thunk(method));
+			return static_cast<std::function<T>>(GetMethodThunk(method));
 		}
 
 		
@@ -196,7 +200,7 @@ namespace Polyboid
 			if (params.size() > 0)
 			{
 				std::vector<void*> paramsArray(params);
-				mono_property_set_value(property, instance, paramsArray.data(), nullptr);
+				SetPropertyValue(property, instance, paramsArray.data(), nullptr);
 			}
 
 		}
@@ -214,11 +218,11 @@ namespace Polyboid
 			if (params.size() > 0)
 			{
 				std::vector<void*> paramsArray(params);
-				auto value = mono_property_get_value(property, instance, paramsArray.data(), nullptr);
+				auto value = GetPropertyValue(property, instance, paramsArray.data(), nullptr);
 				return  CastMonoResultAs<T>(value);
 			}
 
-			auto value = mono_property_get_value(property, instance, nullptr, nullptr);
+			auto value = GetPropertyValue(property, instance, nullptr, nullptr);
 			return  CastMonoResultAs<T>(value);
 
 		}

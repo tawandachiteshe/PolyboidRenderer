@@ -66,8 +66,6 @@ namespace Polyboid
 	{
 	private:
 
-	
-
 		static void PrepareQuads();
 		static void PrepareCircles();
 		static void PrepareLines();
@@ -83,6 +81,14 @@ namespace Polyboid
 		static void ResetLines();
 
 	public:
+		struct Renderer2DCameraData
+		{
+			Renderer2DCameraData() = default;
+			glm::mat4 projection;
+			glm::mat4 view;
+			glm::vec3 pos;
+		};
+
 		static void Init(const Ref<RenderAPI>& context);
 		static void BeginDraw(const Ref<Camera>& camera);
 		static void DebugWindow();

@@ -15,22 +15,10 @@
 #include "nlohmann/json.hpp"
 #include "hashpp/hashpp.h"
 
-#include <pods/pods.h>
-#include <pods/msgpack.h>
-#include <pods/streams.h>
-#include "msgpack.hpp"
+#include <struct_pack/struct_pack.hpp>
 
 namespace Polyboid
 {
-	struct ShaderCacheInfo
-	{
-		std::vector<uint32_t> Spirv;
-
-
-		PODS_SERIALIZABLE(
-			PODS_MDR(Spirv)
-		)
-	};
 
 	shaderc_shader_kind GetShaderKindFromExt(const std::string& shaderExt)
 	{
@@ -311,32 +299,28 @@ namespace Polyboid
 		tf::Taskflow taskflow;
 
 		Timer t;
+		std::mutex mapMutex;
 
 
 		if (std::filesystem::exists(cachePath))
 		{
 			taskflow.for_each(shaderBinaries.cbegin(), shaderBinaries.cend(), [&](const auto& entry)
-			{
-				auto& [path, shaderInfo] = entry;
-				std::filesystem::path fileSystemPath = path;
-				auto filename = fileSystemPath.stem();
-				auto fileExt = fileSystemPath.extension();
-				auto cacheExtension = ".spv";
-
-				auto cacheFilePath = (cachePath / (filename.string() + cacheExtension + fileExt.string())).
-					generic_string();
-
-				std::ofstream outStream(cacheFilePath, std::ios::binary | std::ios::out);
-				pods::OutputStream out(outStream);
-
-				
-				pods::MsgPackSerializer<decltype(out)> serializer(out);
-				if (serializer.save(shaderInfo) == pods::Error::NoError)
 				{
-				}
+					std::scoped_lock lock(mapMutex);
+					auto& [path, shaderInfo] = entry;
+					std::filesystem::path fileSystemPath = path;
+					auto filename = fileSystemPath.stem();
+					auto fileExt = fileSystemPath.extension();
+					auto cacheExtension = ".spv";
 
+					auto cacheFilePath = (cachePath / (filename.string() + cacheExtension + fileExt.string())).
+						generic_string();
 
-				outStream.close();
+					std::ofstream outStream(cacheFilePath, std::ios::binary | std::ios::out);
+
+					struct_pack::serialize_to(outStream, shaderInfo);
+
+					outStream.close();
 			});
 		}
 
@@ -355,6 +339,7 @@ namespace Polyboid
 		tf::Taskflow taskflow;
 
 		Timer t;
+
 		std::vector<std::string> cacheFilePaths;
 		for (auto& entry : std::filesystem::directory_iterator(cachePath))
 		{
@@ -365,24 +350,30 @@ namespace Polyboid
 		shaderMap.reserve(cacheFilePaths.size());
 
 		taskflow.for_each(cacheFilePaths.begin(), cacheFilePaths.end(), [&](std::string& file)
-		{
+			{
+
 
 			std::filesystem::path fileSystemPath = file;
-			ShaderBinaryAndInfo binaryInfo;
+			
 
 			std::ifstream buffer(file, std::ios::binary | std::ios::in);
+			std::vector<char> contents((std::istreambuf_iterator<char>(buffer)),
+				std::istreambuf_iterator<char>());
 
 
-			pods::InputStream in(buffer);
-			pods::MsgPackDeserializer<decltype(in)> deserializer(in);
+			ShaderBinaryAndInfo binaryInfo;
+			auto result = struct_pack::deserialize_to(binaryInfo, contents);
 
-			auto error = deserializer.load(binaryInfo);
-
-			if (error == pods::Error::NoError)
+			if (result == struct_pack::errc::ok)
 			{
 				shaderMap[binaryInfo.filePath] = binaryInfo;
 			}
+			else
+			{
+				spdlog::critical("Error failed to load file: {}", file);
+			}
 
+			
 			buffer.close();
 			
 		});

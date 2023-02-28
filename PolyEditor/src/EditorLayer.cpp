@@ -298,7 +298,7 @@ namespace Polyboid
         EditorDockSpaceUI(&initDockSpace);
 
 
-        for (auto window : m_Windows)
+        for (const auto window : m_Windows)
         {
             window->RenderImgui();
             static auto open = false;
@@ -311,11 +311,19 @@ namespace Polyboid
     {
 
 
-        for (auto window : m_Windows)
+        for (const auto window : m_Windows)
         {
             window->OnRender();
         }
 
 
+    }
+
+    void EditorLayer::OnEvent(Event& event)
+    {
+        for(const auto window : m_Windows)
+        {
+            window->OnEvent(event);
+        }
     }
 }
