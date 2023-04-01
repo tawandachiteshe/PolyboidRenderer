@@ -3,18 +3,19 @@
 
 #include <spdlog/fmt/bundled/core.h>
 
+#include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/PipelineState.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 
 
 namespace Polyboid
 {
-	void Command::SetContext(const Ref<RenderAPI>& context)
+	void Command::SetContext(const Ref<CommandBuffer>& context)
 	{
 		m_Context = context;
 	}
 
-	ClearRenderTargetCommand::ClearRenderTargetCommand(const Ref<RenderTarget>& renderTarget,
+	ClearRenderTargetCommand::ClearRenderTargetCommand(const Ref<RenderPass>& renderTarget,
 	                                                   const ClearSettings& clearSettings): m_State(renderTarget), m_ClearSettings(clearSettings)
 	{
 	}
@@ -31,7 +32,7 @@ namespace Polyboid
 	void DrawIndexedCommand::Execute()
 	{
 
-		m_Context->DrawIndexed(m_PrimitiveType, IndexDataType::UnsignedInt, m_Count);
+		//m_Context->DrawIndexed(m_PrimitiveType, IndexDataType::UnsignedInt, m_Count);
 	}
 
 	DrawIndexedCommand::~DrawIndexedCommand()
@@ -46,7 +47,7 @@ namespace Polyboid
 	void DrawArraysCommand::Execute()
 	{
 
-		m_Context->DrawArrays(m_PrimitiveType, m_VertexCount);
+		//m_Context->DrawArrays(m_PrimitiveType, m_VertexCount);
 	}
 
 
@@ -59,22 +60,47 @@ namespace Polyboid
 		m_State->Bind();
 	}
 
-	BeginRenderPassCommand::BeginRenderPassCommand(const Ref<RenderTarget>& renderTarget): m_RenderTarget(renderTarget)
+	BeginRenderPassCommand::BeginRenderPassCommand(const Ref<RenderPass>& renderTarget): m_RenderTarget(renderTarget)
 	{
 	}
 
 	void BeginRenderPassCommand::Execute()
 	{
 		m_Context->BeginRenderPass(m_RenderTarget);
+		//m_Context->BeginRenderPass(m_RenderTarget);
 	}
 
-	EndRenderPassCommand::EndRenderPassCommand(const Ref<RenderTarget>& renderTarget) : m_RenderTarget(renderTarget)
+	ClearRenderPassCommand::ClearRenderPassCommand(const Ref<RenderPass>& renderTarget, ClearSettings settings): m_RenderTarget(renderTarget), m_Settings(settings)
+	{
+	}
+
+	void ClearRenderPassCommand::Execute()
+	{
+		m_RenderTarget->Clear(m_Settings);
+	}
+
+	EndRenderPassCommand::EndRenderPassCommand(const Ref<RenderPass>& renderTarget) : m_RenderTarget(renderTarget)
 	{
 	}
 
 	void EndRenderPassCommand::Execute()
 	{
-		m_Context->EndRenderPass(m_RenderTarget);
+		m_Context->EndRenderPass();
+	}
+
+	void BeginRenderCommand::Execute()
+	{
+		m_Context->Begin();
+	}
+
+	void RenderImguiCommand::Execute()
+	{
+		
+	}
+
+	void EndRenderCommand::Execute()
+	{
+		m_Context->End();
 	}
 
 	PushUniformBufferCommand::PushUniformBufferCommand(const Ref<PipelineState>& pipeLine, const std::string& name ,const void* data, uint32_t dataSize):

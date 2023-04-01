@@ -7,7 +7,7 @@ namespace Polyboid
 {
     struct RenderbufferSettings
     {
-        TextureSizedInternalFormat format = TextureSizedInternalFormat::RGBA8;
+        EngineGraphicsFormats format = EngineGraphicsFormats::RGBA8;
         uint32_t width = 0;
         uint32_t height = 0;
     };

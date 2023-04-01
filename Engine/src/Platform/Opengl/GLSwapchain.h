@@ -11,6 +11,9 @@ namespace Polyboid
         GLSwapchain(const std::any& window);
         void SwapBuffers() override;
         void SetVsync(bool vsync) override;
+        ~GLSwapchain() override;
+        void Resize(uint32_t width, uint32_t height) override;
+        Ref<RenderPass> GetDefaultRenderPass() override;
     };
 
 }

@@ -26,11 +26,19 @@ namespace Polyboid
                 __debugbreak();
             }
         }
-        
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+        if (settings.NoApi)
+        {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        }
+        else
+        {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        }
+  
 
         if (settings.IsVisible)
         {
@@ -82,6 +90,26 @@ namespace Polyboid
             data.EventCallback(event);
 
         });
+
+        glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
+        {
+                auto& data = GetWindowData(window);
+
+		        WindowResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+		        data.EventCallback(event);
+        });
+
+        glfwSetWindowMaximizeCallback(m_Handle, [](GLFWwindow* window, int maximazed)
+            {
+	            if (maximazed)
+	            {
+                    spdlog::info("Window Maximized");
+	            }
+	            else
+	            {
+                    spdlog::info("Window minimized");
+	            }
+            });
         
     }
 

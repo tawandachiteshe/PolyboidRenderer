@@ -37,6 +37,8 @@ namespace Polyboid
 	struct FramebufferSettings
 	{
 		std::vector<TextureAttachmentSlot> attachmentSlots;
+		std::vector<Ref<Texture>> textures;
+
 		uint32_t width = 0;
 		uint32_t height = 0;
 	};
@@ -55,6 +57,8 @@ namespace Polyboid
 		
 		virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
 		virtual void Clear(const ClearSettings& settings) = 0;
+
+		virtual void ReSize(uint32_t width, uint32_t height) =0;
 
 		static  Ref<Framebuffer> Create(const FramebufferSettings& settings);
 		

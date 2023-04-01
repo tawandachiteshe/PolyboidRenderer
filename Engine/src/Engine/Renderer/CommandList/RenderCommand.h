@@ -2,21 +2,28 @@
 #include "Engine/Engine/Base.h"
 
 
+namespace vk
+{
+	class CommandBuffer;
+}
+
 namespace Polyboid
 {
 
 #define   ALLOC_COMMAND(Klass, ...) std::make_shared<Klass>(__VA_ARGS__)
 
-	class RenderTarget;
+	class RenderPass;
 	class PipelineState;
 	class Command;
 	class RenderAPI;
+	class CommandBuffer;
 
 
 	struct RenderCommandData
 	{
-		Ref<RenderAPI> m_Context;
+		RenderAPI* m_Context;
 		std::vector<Ref<Command>> m_Commands;
+		Ref<CommandBuffer> m_CommandBuffer;
 	};
 
 
@@ -25,9 +32,10 @@ namespace Polyboid
 	private:
 		static Unique<RenderCommandData> s_Data;
 	public:
-		static void Init(const Ref<RenderAPI>& context);
+		static void Init(RenderAPI* context);
 		static void AddCommand(const Ref<Command>& renderCommand);
 		static void WaitAndRender();
+		static Ref<CommandBuffer> GetCommandBuffer() { return s_Data->m_CommandBuffer; }
 	};
 
 }

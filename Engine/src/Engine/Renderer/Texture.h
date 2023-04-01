@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <any>
+
 #include "Engine/Engine/Base.h"
 
 
@@ -50,7 +52,7 @@ namespace Polyboid
     };
 
 
-    enum class TextureSizedInternalFormat
+    enum class EngineGraphicsFormats
     {
         R8,
         R8UI,
@@ -80,8 +82,12 @@ namespace Polyboid
         RGB32UI,
         RGB32I,
         RGBA8,
+        BGRA8,
         RGBA8UI,
         RGBA8I,
+        BGRA8I,
+        BGRA8ISrgb,
+        BGRA8U,
         RGBA16F,
         RGBA16UI,
         RGBA16I,
@@ -102,17 +108,27 @@ namespace Polyboid
         Write,
         ReadWrite
     };
+
+    enum class TextureUsage
+    {
+	    Swapchain,
+        Attachment,
+        Sampling
+    };
     
     struct TextureSettings
     {
         TextureFormat textureFormat = TextureFormat::RGBA;
-        TextureSizedInternalFormat sizedFormat = TextureSizedInternalFormat::RGBA8;
+        EngineGraphicsFormats sizedFormat = EngineGraphicsFormats::RGBA8;
         TextureDataType textureData = TextureDataType::UnsignedByte;
         TextureFilterMode filterMode = TextureFilterMode::Linear;
         TextureWrapMode wrapMode = TextureWrapMode::Repeat;
         bool generateMips = false;
         bool multiSample = false;
+
+        TextureUsage usage = TextureUsage::Sampling;
         uint32_t sampleCount = 4;
+        uint32_t mipCount = 1;
 
         uint32_t Width = 0;
         uint32_t Height = 0;
@@ -121,7 +137,7 @@ namespace Polyboid
 
     struct TextureBufferSpecification
     {
-        TextureSizedInternalFormat sizedFormat = TextureSizedInternalFormat::RGBA8;
+        EngineGraphicsFormats sizedFormat = EngineGraphicsFormats::RGBA8;
         TextureAccess access = TextureAccess::ReadWrite;
         bool attachShaderStorage = false;
         uint32_t ssboBufferSlot = 0;
@@ -136,7 +152,8 @@ namespace Polyboid
 
         virtual void Bind(uint32_t slot = 0) = 0;
         virtual void UnBind() = 0;
-        virtual uint32_t GetHandle() = 0;
+        virtual std::any GetHandle() = 0;
+
 
         virtual void SetData(const void* data, uint32_t size) = 0;
 

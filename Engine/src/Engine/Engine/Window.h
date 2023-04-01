@@ -13,6 +13,7 @@ namespace Polyboid
         uint32_t Width = 0;
         uint32_t Height = 0;
         bool IsVisible = true;
+        bool NoApi = false;
         std::any WindowShareHandle;
         std::string WindowTitle;
 

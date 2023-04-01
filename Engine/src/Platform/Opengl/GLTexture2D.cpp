@@ -58,7 +58,7 @@ namespace Polyboid
         }
     }
 
-    uint32_t GLTexture2D::GetHandle()
+    std::any GLTexture2D::GetHandle()
     {
         return m_Handle;
     }

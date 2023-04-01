@@ -27,4 +27,17 @@ namespace Polyboid
             glfwSwapInterval(1);
         }
     }
+
+    GLSwapchain::~GLSwapchain()
+    {
+    }
+
+    void GLSwapchain::Resize(uint32_t width, uint32_t height)
+    {
+    }
+
+    Ref<RenderPass> GLSwapchain::GetDefaultRenderPass()
+    {
+        return nullptr;
+    }
 }

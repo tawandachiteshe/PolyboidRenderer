@@ -4,6 +4,7 @@
 
 #include "optick.config.h"
 #include "optick.h"
+#include "Debug/Logger.h"
 
 
 extern Polyboid::Application* Polyboid::CreateApplication();
@@ -11,16 +12,11 @@ extern Polyboid::Application* Polyboid::CreateApplication();
 
 int main(int argc, char** argv)
 {
- //    OPTICK_APP("Polyboid Engine");
- //
-	// OPTICK_SET_MEMORY_ALLOCATOR(
- //            [](size_t size) -> void* { return operator new(size); },
- //            [](void* p) { operator delete(p); },
- //            []() { /* Do some TLS initialization here if needed */ }
- //    );
 
-
+    Polyboid::Logger::Init();
+    Polyboid::Logger::GetLogger()->info("Loagger init");
     Polyboid::Application *app = Polyboid::CreateApplication();
+
     app->Run();
 	delete app;
 

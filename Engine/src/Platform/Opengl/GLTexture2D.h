@@ -15,7 +15,7 @@ namespace Polyboid
 
         GLTexture2D(const TextureSettings& settings);
         GLTexture2D(const void* data, const TextureSettings& settings);
-        uint32_t GetHandle() override;
+        std::any GetHandle() override;
 
         void SetData(const void* data, uint32_t size) override;
         void Bind(uint32_t slot) override;

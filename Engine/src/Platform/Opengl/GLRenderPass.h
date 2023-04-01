@@ -1,19 +1,22 @@
 ﻿#pragma once
 #include "GLFramebuffer.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderPass.h"
 
 
 namespace Polyboid
 {
-    class GLRenderTarget : public RenderTarget
+    class GLRenderPass : public RenderPass
     {
     private:
         Ref<GLFramebuffer> m_Framebuffer;
-        RenderTargetSettings m_Settings;
+        RenderPassSettings m_Settings;
     public:
 
-        GLRenderTarget(const RenderTargetSettings& settings);
-        
+        GLRenderPass(const RenderPassSettings& settings);
+        void SetFramebuffer(const Ref<Framebuffer>& framebuffer) override;
+        Ref<Framebuffer> GetFramebuffer() override;
+
+
         void AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture) override;
         Ref<Texture> GetTexture(TextureAttachmentSlot attachment) override;
         void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
@@ -24,7 +27,7 @@ namespace Polyboid
         virtual void Bind();
         virtual void UnBind();
 
-        ~GLRenderTarget() override = default;
+        ~GLRenderPass() override = default;
     };
 
 }

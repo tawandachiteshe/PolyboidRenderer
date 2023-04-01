@@ -2,7 +2,7 @@
 #include "Shader.h"
 #include <map>
 
-#include "RenderTarget.h"
+#include "RenderPass.h"
 
 
 namespace Polyboid

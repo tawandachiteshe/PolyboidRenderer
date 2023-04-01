@@ -3,7 +3,7 @@
 
 #include "PipelineState.h"
 #include "RenderAPI.h"
-#include "RenderTarget.h"
+#include "RenderPass.h"
 
 namespace Polyboid
 {

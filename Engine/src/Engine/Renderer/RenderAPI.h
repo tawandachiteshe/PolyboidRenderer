@@ -8,12 +8,13 @@
 #include <glm/vec3.hpp>
 
 #include "Engine/Engine/Base.h"
-
+#include "Swapchain.h"
 
 namespace Polyboid
 {
-	struct RenderTargetSettings;
-	class RenderTarget;
+	class CommandList;
+	struct RenderPassSettings;
+	class RenderPass;
 	struct ClearSettings;
 	class Swapchain;
 	class PipelineState;
@@ -61,14 +62,20 @@ namespace Polyboid
 
 	class RenderAPI
 	{
+	private:
+		static RenderAPI* s_RenderAPI;
+
 	public:
 
 		virtual Ref<Texture> CreateTexture2D(const TextureSettings& settings) = 0;
+		virtual Ref<Texture> CreateTexture2D(const std::any& handle) = 0;
 		virtual Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) = 0;
 		virtual Ref<SamplerState> CreateSampler(const SamplerSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings) = 0;
+		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings, const Ref<RenderPass>& renderPass) = 0;
 		virtual Ref<Renderbuffer> CreateRenderBuffer(const RenderbufferSettings& settings) = 0;
-
+		virtual void BeginFrame() = 0;
+		virtual void EndFrame() = 0;
 
 		virtual Ref<UniformBuffer> CreateUniformBuffer(uint32_t size, uint32_t binding) = 0;
 		virtual Ref<IndexBuffer> CreateIndexBuffer(const IndexDataType& type, uint32_t count, const std::variant<uint32_t*, uint16_t*>& data) = 0;
@@ -77,24 +84,18 @@ namespace Polyboid
 
 		virtual Ref<VertexBufferArray> CreateVertexBufferArray() = 0;
 		virtual Ref<PipelineState> CreatePipelineState() = 0;
-		virtual Ref<Swapchain> CreateSwapChain(const std::any& window) = 0;
-		virtual Ref<RenderTarget> CreateRenderTarget(const RenderTargetSettings& settings) = 0;
-
-		virtual void BeginRenderPass(const Ref<RenderTarget>& renderTarget) = 0;
-		virtual void EndRenderPass(const Ref<RenderTarget>& renderTarget) = 0;
-
-		
-
-		virtual void DrawIndexed(const PrimitiveType& primitiveType, const IndexDataType& indexDataType, uint32_t count) = 0;
-		virtual void DrawArrays(const PrimitiveType& primitiveType, uint32_t vertexCount) = 0;
-		virtual void Dispatch(const glm::uvec3& groups) = 0;
+		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
+		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
+		virtual Ref<CommandList> CreateCommandList() = 0;
 
 		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;
 
 		virtual RenderAPIType GetRenderAPIType() = 0;
+		virtual RenderAPIType GetRenderAPIType() const = 0;
 		virtual ~RenderAPI() = default;
 
-		static Ref<RenderAPI> Create(const RenderAPIType& renderType, const std::any& nativeWindow);
+		static RenderAPI* Create(const RenderAPIType& renderType, const std::any& nativeWindow);
+		static RenderAPI* Get();
 	};
 
 

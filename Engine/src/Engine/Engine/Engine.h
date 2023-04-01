@@ -5,7 +5,7 @@
 namespace Polyboid
 {
 	class RenderAPI;
-	class RenderTarget;
+	class RenderPass;
 
 	struct EngineSettings
 	{
@@ -19,7 +19,7 @@ namespace Polyboid
 	public:
 
 		static void Init();
-		static void InitRenderer(const Ref<RenderAPI>& context);
+		static void InitRenderer(RenderAPI* context);
 		static void CreateWorld(const std::string& name);
 
 		static void SaveWorld(const std::string& path);

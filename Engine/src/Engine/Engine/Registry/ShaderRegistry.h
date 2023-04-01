@@ -23,7 +23,7 @@ namespace Polyboid
     public:
 
 
-        static void Init();
+        static void Init(RenderAPI* context);
 
         static bool Exist(const std::string& path);
 

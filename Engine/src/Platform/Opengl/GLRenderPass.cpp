@@ -1,10 +1,10 @@
 ﻿#include "boidpch.h"
-#include "GLRenderTarget.h"
+#include "GLRenderPass.h"
 
 
 namespace Polyboid
 {
-    GLRenderTarget::GLRenderTarget(const RenderTargetSettings& settings): m_Settings(settings)
+    GLRenderPass::GLRenderPass(const RenderPassSettings& settings): m_Settings(settings)
     {
         FramebufferSettings framebufferSettings;
         framebufferSettings.height = settings.Height;
@@ -25,36 +25,47 @@ namespace Polyboid
 
     }
 
-    void GLRenderTarget::AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture)
+    void GLRenderPass::SetFramebuffer(const Ref<Framebuffer>& framebuffer)
+    {
+        m_Framebuffer = std::reinterpret_pointer_cast<GLFramebuffer>(framebuffer);
+    }
+
+    Ref<Framebuffer> GLRenderPass::GetFramebuffer()
+    {
+        return  m_Framebuffer;
+    }
+
+
+    void GLRenderPass::AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture)
     {
         m_Framebuffer->AttachTexture(texture, attachment);
     }
 
-    Ref<Texture> GLRenderTarget::GetTexture(TextureAttachmentSlot attachment)
+    Ref<Texture> GLRenderPass::GetTexture(TextureAttachmentSlot attachment)
     {
         return m_Framebuffer->GetTexture(attachment);
     }
 
-    void GLRenderTarget::Clear(TextureAttachmentSlot attachment, const ClearSettings& settings)
+    void GLRenderPass::Clear(TextureAttachmentSlot attachment, const ClearSettings& settings)
     {
         m_Framebuffer->Clear(attachment, settings);
     }
 
-    void GLRenderTarget::Clear(const ClearSettings& settings)
+    void GLRenderPass::Clear(const ClearSettings& settings)
     {
         m_Framebuffer->Clear(settings);
     }
 
-    void GLRenderTarget::GenerateMipMaps()
+    void GLRenderPass::GenerateMipMaps()
     {
     }
 
-    void GLRenderTarget::Bind()
+    void GLRenderPass::Bind()
     {
         m_Framebuffer->Bind();
     }
 
-    void GLRenderTarget::UnBind()
+    void GLRenderPass::UnBind()
     {
         m_Framebuffer->UnBind();
     }

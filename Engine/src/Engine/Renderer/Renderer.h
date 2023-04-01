@@ -8,6 +8,7 @@
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
 #include "glm/matrix.hpp"
+#include <Engine/Renderer/RenderPass.h>
 
 namespace Polyboid
 {
@@ -18,9 +19,10 @@ namespace Polyboid
 
 	struct RendererStorage
     {
-        Ref<RenderTarget> m_DefaultRenderTarget;
+        Ref<RenderPass> m_CurrentRenderPass;
         Ref<PipelineState> m_DefaultPipelineState;
         RendererStorage() = default;
+		RenderAPI* m_Context = nullptr;
     };
 	
     
@@ -32,18 +34,23 @@ namespace Polyboid
 	 
 
     public:
-        static void Init(const Ref<RenderAPI>& context);
+        static void Init(RenderAPI* context);
         static void BeginDraw(const Ref<Camera>& camera);
         static void EndDraw();
+        static void BeginCommands();
+        static void EndCommands();
+        static void BeginFrame();
+        static void EndFrame();
+
+        static void ClearRenderPass(ClearSettings settings = {});
 
         static void DrawIndexed(uint32_t count, const PrimitiveType& primitive = PrimitiveType::Triangles);
         static void DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive = PrimitiveType::Lines);
         static void SetPipelineState(const Ref<PipelineState>& pipelineState);
-        static void ClearDefaultRenderTarget(const ClearSettings& settings);
-        static void BeginDefaultRenderPass();
-        static void EndDefaultRenderPass();
+        static void BeginRenderPass(const Ref<RenderPass>& renderPass);
+        static void EndRenderPass();
 
-        static Ref<RenderTarget> GetDefaultRenderTarget();
+        static Ref<RenderPass> GetDefaultRenderTarget();
         static Ref<PipelineState> GetDefaultPipeline();
         
         static void WaitAndRender();

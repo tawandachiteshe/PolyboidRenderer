@@ -48,7 +48,7 @@ void main() {
 
 	//mat4(mat3(view))
 
-	gl_Position = projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexID), 1.0f);
+	gl_Position = projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
 
-	vPosition = getPosition(gl_VertexID);
+	vPosition = getPosition(gl_VertexIndex);
 }

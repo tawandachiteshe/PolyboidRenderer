@@ -31,8 +31,8 @@ namespace Polyboid
 
     Ref<Shader> Shader::Create(const ShaderBinaryAndInfo& info)
     {
-        auto& renderApi = Application::Get().GetRenderAPI();
-        auto renderApiType = renderApi->GetRenderAPIType();
+        const auto renderApi = Application::Get().GetRenderAPI();
+        const auto renderApiType = renderApi->GetRenderAPIType();
 
         switch (renderApiType)
         {

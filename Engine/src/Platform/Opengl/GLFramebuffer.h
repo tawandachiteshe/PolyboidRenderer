@@ -29,6 +29,8 @@ namespace Polyboid
 		virtual void Bind();
 		virtual void UnBind();
 
+		void ReSize(uint32_t width, uint32_t height) override;
+
 		virtual Ref<Texture> GetTexture(TextureAttachmentSlot slot);
 
 		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;

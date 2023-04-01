@@ -8,7 +8,7 @@
 #include "Engine/Engine/Input.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/Renderer2D.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderPass.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 
@@ -52,7 +52,7 @@ namespace Polyboid
 		const auto colorTexture = mainRenderTarget->GetTexture(TextureAttachmentSlot::Color0);
 		const auto windowSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image((ImTextureID)colorTexture->GetHandle(), windowSize, {1.0f, 1.0f}, {0.0f, 0.0f});
+		ImGui::Image(std::any_cast<ImTextureID>(colorTexture->GetHandle()), windowSize, {1.0f, 1.0f}, {0.0f, 0.0f});
 
 		ImGui::End();
 

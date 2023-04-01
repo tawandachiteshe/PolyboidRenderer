@@ -5,16 +5,20 @@
 
 #include "Engine/Engine/Application.h"
 #include "Platform/Opengl/GLRenderAPI.h"
+#include "Platform/Vulkan/VkRenderAPI.h"
 
 namespace Polyboid
 {
 
-	Ref<RenderAPI> RenderAPI::Create(const RenderAPIType& renderType, const std::any& nativeWindow)
+	RenderAPI* RenderAPI::s_RenderAPI = nullptr;
+
+	RenderAPI* RenderAPI::Create(const RenderAPIType& renderType, const std::any& nativeWindow)
 	{
+		static RenderAPI* renderApi = nullptr;
 		switch (renderType)
 		{
-		case RenderAPIType::Opengl: return std::make_shared<GLRenderAPI>(nativeWindow);
-		case RenderAPIType::Vulkan: 
+		case RenderAPIType::Opengl: renderApi = new GLRenderAPI(nativeWindow); s_RenderAPI = renderApi; return renderApi;
+		case RenderAPIType::Vulkan: renderApi = new VkRenderAPI(nativeWindow); s_RenderAPI = renderApi; return renderApi;
 		case RenderAPIType::Metal:  
 		case RenderAPIType::Dx11:
 		case RenderAPIType::Dx12:
@@ -24,5 +28,16 @@ namespace Polyboid
 
 		__debugbreak();
 		return nullptr;
+	}
+
+	RenderAPI* RenderAPI::Get()
+	{
+		if (s_RenderAPI)
+		{
+
+			__debugbreak();
+		}
+
+		return s_RenderAPI;
 	}
 }

@@ -89,7 +89,7 @@ namespace Polyboid
 			glm::vec3 pos;
 		};
 
-		static void Init(const Ref<RenderAPI>& context);
+		static void Init(RenderAPI* context);
 		static void BeginDraw(const Ref<Camera>& camera);
 		static void DebugWindow();
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color = glm::vec4{ 1.0f });

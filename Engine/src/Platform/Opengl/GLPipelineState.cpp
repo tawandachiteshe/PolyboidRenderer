@@ -2,7 +2,7 @@
 #include "GLPipelineState.h"
 #include "GLShader.h"
 #include "GLRasterizerState.h"
-#include "GLRenderTarget.h"
+#include "GLRenderPass.h"
 
 #include "Engine/Renderer/Shader.h"
 #include "Engine/Renderer/RasterizerState.h"

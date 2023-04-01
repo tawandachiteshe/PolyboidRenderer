@@ -9,7 +9,7 @@ layout(location = 0) in VS_OUT {
 	vec2 vUV;
 } vs_in; 
 
-layout(location = 0) uniform sampler2D uTexture;
+layout(binding = 0) uniform sampler2D uTexture;
 
 
 void main() {

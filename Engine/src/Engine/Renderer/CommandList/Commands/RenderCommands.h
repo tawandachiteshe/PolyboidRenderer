@@ -2,11 +2,12 @@
 #include <glm/vec4.hpp>
 
 #include "Engine/Engine/Base.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderPass.h"
 
 
 namespace Polyboid
 {
+	class CommandBuffer;
 	enum class PrimitiveType;
 	class VertexBufferArray;
 	class PipelineState;
@@ -15,8 +16,8 @@ namespace Polyboid
 	class Command
 	{
 	protected:
-		Ref<RenderAPI> m_Context;
-		void SetContext(const Ref<RenderAPI>& context);
+		Ref<CommandBuffer> m_Context;
+		void SetContext(const Ref<CommandBuffer>& context);
 	public:
 
 		virtual void Execute() = 0;
@@ -29,11 +30,11 @@ namespace Polyboid
 	class ClearRenderTargetCommand : public Command
 	{
 	private:
-		Ref<RenderTarget> m_State;
+		Ref<RenderPass> m_State;
 		ClearSettings m_ClearSettings;
 	public:
 
-		ClearRenderTargetCommand(const Ref<RenderTarget>& renderTarget, const ClearSettings& clearSettings);
+		ClearRenderTargetCommand(const Ref<RenderPass>& renderTarget, const ClearSettings& clearSettings);
 		void Execute() override;
 		~ClearRenderTargetCommand() override = default;
 	};
@@ -77,9 +78,20 @@ namespace Polyboid
 	class BeginRenderPassCommand : public Command
 	{
 	private:
-		Ref<RenderTarget> m_RenderTarget;
+		Ref<RenderPass> m_RenderTarget;
 	public:
-		BeginRenderPassCommand(const Ref<RenderTarget>& renderTarget);
+		BeginRenderPassCommand(const Ref<RenderPass>& renderTarget);
+		void Execute() override;
+	};
+
+
+	class ClearRenderPassCommand : public Command
+	{
+	private:
+		Ref<RenderPass> m_RenderTarget;
+		ClearSettings m_Settings;
+	public:
+		ClearRenderPassCommand(const Ref<RenderPass>& renderTarget, ClearSettings settings);
 		void Execute() override;
 	};
 
@@ -87,11 +99,34 @@ namespace Polyboid
 	class EndRenderPassCommand :public Command
 	{
 	private:
-		Ref<RenderTarget> m_RenderTarget;
+		Ref<RenderPass> m_RenderTarget;
 	public:
-		EndRenderPassCommand(const Ref<RenderTarget>& renderTarget);
+		EndRenderPassCommand(const Ref<RenderPass>& renderTarget);
 		void Execute() override;
 	};
+
+	class BeginRenderCommand : public Command
+	{
+	public:
+		void Execute() override;
+		~BeginRenderCommand() override = default;
+	};
+
+	class RenderImguiCommand : public Command
+	{
+	public:
+		void Execute() override;
+		~RenderImguiCommand() override = default;
+	};
+
+
+	class EndRenderCommand : public Command
+	{
+	public:
+		void Execute() override;
+		~EndRenderCommand() override = default;
+	};
+
 
 	class PushUniformBufferCommand :public Command
 	{

@@ -10,7 +10,7 @@
 #include "GLIndexBuffer.h"
 #include "GLPipelineState.h"
 #include "GLRenderbuffer.h"
-#include "GLRenderTarget.h"
+#include "GLRenderPass.h"
 #include "GLSamplerState.h"
 #include "GLSwapchain.h"
 #include "GLVertexBuffer.h"
@@ -81,7 +81,15 @@ namespace Polyboid
     }
 
 
-    GLRenderAPI::GLRenderAPI(const std::any& windowHandle)
+    void GLRenderAPI::BeginFrame()
+    {
+    }
+
+    void GLRenderAPI::EndFrame()
+    {
+    }
+
+    GLRenderAPI::GLRenderAPI(const std::any& windowHandle): m_Window(windowHandle)
     {
         glfwMakeContextCurrent(std::any_cast<GLFWwindow*>(windowHandle));
         int isInit = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
@@ -112,21 +120,26 @@ namespace Polyboid
         
     }
 
-    void GLRenderAPI::DrawIndexed(const PrimitiveType& primitiveType, const IndexDataType& indexDataType,
-        uint32_t count)
+    Ref<CommandList> GLRenderAPI::CreateCommandList()
     {
-        glDrawElements(ConvertToOpenGL(primitiveType), count, ConvertToOpenGL(indexDataType), nullptr);
+        return nullptr;
     }
 
-    void GLRenderAPI::DrawArrays(const PrimitiveType& primitiveType, uint32_t vertexCount)
-    {
-        glDrawArrays(ConvertToOpenGL(primitiveType), 0, vertexCount);
-    }
-
-    void GLRenderAPI::Dispatch(const glm::uvec3& groups)
-    {
-        glDispatchCompute(groups.x, groups.y, groups.z);
-    }
+    // void GLRenderAPI::DrawIndexed(const PrimitiveType& primitiveType, const IndexDataType& indexDataType,
+    //                               uint32_t count)
+    // {
+    //     glDrawElements(ConvertToOpenGL(primitiveType), count, ConvertToOpenGL(indexDataType), nullptr);
+    // }
+    //
+    // void GLRenderAPI::DrawArrays(const PrimitiveType& primitiveType, uint32_t vertexCount)
+    // {
+    //     glDrawArrays(ConvertToOpenGL(primitiveType), 0, vertexCount);
+    // }
+    //
+    // void GLRenderAPI::Dispatch(const glm::uvec3& groups)
+    // {
+    //     glDispatchCompute(groups.x, groups.y, groups.z);
+    // }
 
     Ref<Texture> GLRenderAPI::CreateTexture2D(const TextureSettings& settings)
     {
@@ -152,6 +165,17 @@ namespace Polyboid
 	    const std::variant<uint32_t*, uint16_t*>& data)
     {
         return std::make_shared<GLIndexBuffer>(type, count, data);
+    }
+
+    Ref<Texture> GLRenderAPI::CreateTexture2D(const std::any& handle)
+    {
+        return nullptr;
+    }
+
+    Ref<Framebuffer> GLRenderAPI::CreateFrameBuffer(const FramebufferSettings& settings,
+	    const Ref<RenderPass>& renderPass)
+    {
+        return nullptr;
     }
 
     Ref<SamplerState> GLRenderAPI::CreateSampler(const SamplerSettings& settings)
@@ -185,30 +209,30 @@ namespace Polyboid
         return API_ALLOC(GLPipelineState);
     }
 
-    Ref<Swapchain> GLRenderAPI::CreateSwapChain(const std::any& window)
+    Ref<Swapchain> GLRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
     {
-        return API_ALLOC(GLSwapchain, window);
+        return API_ALLOC(GLSwapchain, m_Window);
     }
 
-    Ref<RenderTarget> GLRenderAPI::CreateRenderTarget(const RenderTargetSettings& settings)
+    Ref<RenderPass> GLRenderAPI::CreateRenderPass(const RenderPassSettings& settings)
     {
-        return API_ALLOC(GLRenderTarget, settings);
+        return API_ALLOC(GLRenderPass, settings);
     }
 
-    void GLRenderAPI::BeginRenderPass(const Ref<RenderTarget>& renderTarget)
-    {
-        const auto glRT = std::reinterpret_pointer_cast<GLRenderTarget>(renderTarget);
-
-        glRT->Bind();
-
-    }
-
-    void GLRenderAPI::EndRenderPass(const Ref<RenderTarget>& renderTarget)
-    {
-        const auto glRT = std::reinterpret_pointer_cast<GLRenderTarget>(renderTarget);
-
-        glRT->UnBind();
-    }
+    // void GLRenderAPI::BeginRenderPass(const Ref<RenderPass>& renderTarget)
+    // {
+    //     const auto glRT = std::reinterpret_pointer_cast<GLRenderPass>(renderTarget);
+    //
+    //     glRT->Bind();
+    //
+    // }
+    //
+    // void GLRenderAPI::EndRenderPass(const Ref<RenderPass>& renderTarget)
+    // {
+    //     const auto glRT = std::reinterpret_pointer_cast<GLRenderPass>(renderTarget);
+    //
+    //     glRT->UnBind();
+    // }
 
     RenderAPIType GLRenderAPI::GetRenderAPIType()
     {
@@ -216,4 +240,12 @@ namespace Polyboid
         return RenderAPIType::Opengl;
     }
 
+    RenderAPIType GLRenderAPI::GetRenderAPIType() const
+    {
+        return RenderAPIType::Opengl;
+    }
+
+    GLRenderAPI::~GLRenderAPI()
+    {
+    }
 }

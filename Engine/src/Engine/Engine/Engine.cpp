@@ -26,15 +26,6 @@ namespace Polyboid
 
 	}
 
-	void Engine::InitRenderer(const Ref<RenderAPI>& context)
-	{
-		ShaderRegistry::Init();
-
-		Renderer::Init(context);
-		Renderer2D::Init(context);
-
-	}
-
 
 	void Engine::CreateWorld(const std::string& name)
 	{

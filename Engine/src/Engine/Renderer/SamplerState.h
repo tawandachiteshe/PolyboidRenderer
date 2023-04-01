@@ -26,7 +26,8 @@ namespace Polyboid
         Repeat,
         ClampToEdge,
         MirroredRepeat,
-        MirrorClampToEdge
+        MirrorClampToEdge,
+        ClampToBorder
     };
 
     enum class CompareFunction

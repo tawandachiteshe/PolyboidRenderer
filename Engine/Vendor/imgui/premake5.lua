@@ -6,6 +6,8 @@ project "imgui"
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
     
+    VULKAN_SDK = os.getenv("VULKAN_SDK")
+    
     files
     {
         "src/**"
@@ -15,7 +17,8 @@ project "imgui"
     {
         "src",
         "%{wks.location}/Engine/Vendor/glfw/include",
-        "%{wks.location}/Engine/Vendor/glad/include"
+        "%{wks.location}/Engine/Vendor/glad/include",
+        "%{VULKAN_SDK}/Include",
     }
     
     filter "system:windows"

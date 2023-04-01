@@ -7,7 +7,7 @@
 
 namespace Polyboid
 {
-	class GLRenderTarget;
+	class GLRenderPass;
 
 	class GLPipelineState : public PipelineState
     {
@@ -18,7 +18,7 @@ namespace Polyboid
         GLBlendState m_BlendState;
         GLRasterizerState m_RasterizerState;
         GLDepthStencilState m_DepthStencilState;
-        Ref<GLRenderTarget> m_RenderTarget;
+        Ref<GLRenderPass> m_RenderTarget;
         Ref<VertexBufferArray> m_VertexBufferArray;
         
         

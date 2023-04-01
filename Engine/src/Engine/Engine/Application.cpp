@@ -11,10 +11,13 @@
 #include "ImguiSetup.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
+#include "imgui.h"
+#include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
+#include "Registry/ShaderRegistry.h"
 
 
 namespace Polyboid
@@ -49,6 +52,7 @@ namespace Polyboid
 		                                  settings.WindowWidth,
 		                                  settings.WindowHeight,
 		                                  settings.ApplicationName);
+		mainWindowSettings.NoApi = true;
 
 		m_MainWindow = Window::Create(mainWindowSettings);
 
@@ -57,11 +61,15 @@ namespace Polyboid
 
 		//multiple overides maybe but is it efficieant and maintainable;;
 		m_MainWindow->SetEventCallback(BIND_EVENT(Application::OnEvent));
+
+		const auto nativeWindow = m_MainWindow->GetNativeWindow();
+		m_RenderAPI = RenderAPI::Create(RenderAPIType::Vulkan, nativeWindow);
 	}
 
 	Application::~Application()
 	{
 		ShutDown();
+		delete m_RenderAPI;
 	}
 
 
@@ -83,6 +91,7 @@ namespace Polyboid
 	{
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
+		m_Swapchain->Resize(event.GetWidth(), event.GetHeight());
 	}
 
 	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
@@ -98,6 +107,7 @@ namespace Polyboid
 
 	void Application::ShutDown()
 	{
+		Imgui::ShutDown();
 	}
 
 	void Application::Run()
@@ -139,48 +149,55 @@ namespace Polyboid
 	{
 		OPTICK_THREAD("Render Thread")
 
-		const auto nativeWindow = m_MainWindow->GetNativeWindow();
-		m_RenderAPI = RenderAPI::Create(RenderAPIType::Opengl, nativeWindow);
-		const auto swapChain = m_RenderAPI->CreateSwapChain(nativeWindow);
-		swapChain->SetVsync(true);
-		RenderCommand::Init(m_RenderAPI);
+	
+		Renderer::Init(m_RenderAPI);
+		ShaderRegistry::Init(m_RenderAPI);
 
-		Imgui::Init(nativeWindow);
-		Engine::InitRenderer(m_RenderAPI);
+		
 
+		SwapchainSettings settings{};
+		settings.Width = m_Settings.WindowWidth;
+		settings.Height = m_Settings.WindowHeight;
+		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
+		
+
+		m_Swapchain = m_RenderAPI->CreateSwapChain(settings);
+		m_RenderAPI->CreateTexture2D({ .sizedFormat = EngineGraphicsFormats::Depth24Stencil8, .Width = 1600, .Height = 900 });
+
+		Imgui::Init(m_MainWindow->GetNativeWindow());
 
 		while (m_Running)
 		{
 			OPTICK_FRAME("Render Frame")
 
-			for (const auto layer : m_Layers)
-			{
-				layer->OnRender();
-			}
 
-			
-			if (m_ShouldRender)
-			{
-				Renderer::WaitAndRender();
-			}
+			m_MainWindow->PollEvents();
+
+
+
+			Renderer::BeginFrame();
+			Renderer::BeginCommands();
+			Renderer::BeginRenderPass(m_Swapchain->GetDefaultRenderPass());
+			Renderer::ClearRenderPass(glm::vec4(1, 0, 0, 1));
 
 
 			Imgui::Begin();
-
-			//imgui here....
-			for (const auto layer : m_Layers)
-			{
-				layer->OnImguiRender();
-			}
-
+			ImGui::ShowDemoWindow();
 			Imgui::End();
+			/// <summary>
+			///
+			/// </summary>
+
+			Renderer::EndRenderPass();
+			Renderer::EndCommands();
+			Renderer::WaitAndRender();
+			m_Swapchain->SwapBuffers();
+			Renderer::EndFrame();
 
 
-			swapChain->SwapBuffers();
+	
 
-			m_ShouldRender = false;
 		}
 
-		Imgui::ShutDown();
 	}
 }

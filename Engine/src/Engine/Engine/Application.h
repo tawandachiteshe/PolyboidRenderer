@@ -16,6 +16,8 @@ int main(int argc, char** argv);
 
 namespace Polyboid
 {
+	class RenderPass;
+	class Swapchain;
 	class RenderAPI;
 
 	struct ApplicationSettings
@@ -36,15 +38,16 @@ namespace Polyboid
 		virtual ~Application();
 
 		Unique<Window>& GetWindow() { return m_MainWindow; }
-		Ref<RenderAPI>& GetRenderAPI() { return m_RenderAPI; }
 
 		static Application& Get() { return *s_Instance; }
 		ApplicationSettings& GetAppSettings() { return m_Settings; }
+		Ref<Swapchain> GetSwapchain() const { return m_Swapchain; }
+		RenderAPI* GetRenderAPI() const { return  m_RenderAPI; }
 
 
 	protected:
 		Unique<Window> m_MainWindow = nullptr;
-		Ref<RenderAPI> m_RenderAPI = nullptr;
+		RenderAPI* m_RenderAPI = nullptr;
 
 		ApplicationSettings m_Settings;
 		void OnEvent(Event& event);
@@ -56,6 +59,8 @@ namespace Polyboid
 	private:
 		std::thread m_RenderThread;
 		LayerContainer m_Layers;
+		Ref<Swapchain> m_Swapchain;
+		
 
 		void Run();
 		void Render();

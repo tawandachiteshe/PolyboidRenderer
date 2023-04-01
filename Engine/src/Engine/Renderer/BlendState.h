@@ -57,6 +57,8 @@ namespace Polyboid
         OrInverted
     };
 
+
+
     struct BlendMode
     {
         bool BlendEnabled = false;

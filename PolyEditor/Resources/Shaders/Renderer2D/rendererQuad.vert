@@ -15,6 +15,10 @@ layout (std140, binding = 0) uniform CameraBuffer {
 };
 
 
+layout(push_constant) uniform uPushConstant {
+  float time;
+} pc;
+
 
 layout(location = 0) out VS_OUT {
 	vec4 vColor; 

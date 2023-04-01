@@ -3,7 +3,7 @@
 
 #include "GLRenderbuffer.h"
 #include "GLTexture2D.h"
-#include "Engine/Renderer/RenderTarget.h"
+#include "Engine/Renderer/RenderPass.h"
 #include "glad/glad.h"
 #include "glm/gtc/type_ptr.inl"
 
@@ -183,6 +183,10 @@ namespace Polyboid
     void GLFramebuffer::UnBind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void GLFramebuffer::ReSize(uint32_t width, uint32_t height)
+    {
     }
 
     Ref<Texture> GLFramebuffer::GetTexture(TextureAttachmentSlot slot)

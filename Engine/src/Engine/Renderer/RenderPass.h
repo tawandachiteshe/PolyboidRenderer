@@ -6,7 +6,8 @@
 
 namespace Polyboid
 {
-    class Texture;
+	class Swapchain;
+	class Texture;
     
 
     enum class ClearFlags : uint8_t
@@ -31,26 +32,37 @@ namespace Polyboid
         
     };
 
-    struct RenderTargetTextureAttachment
+    enum class RenderPassType
     {
-        TextureAttachmentSlot slot;
-        TextureSizedInternalFormat format;
+	    Present,
+        ColorAttachment,
+        Copy
     };
 
-    struct RenderTargetSettings
+    struct RenderPassTextureAttachment
+    {
+        TextureAttachmentSlot slot;
+        EngineGraphicsFormats format;
+    };
+
+    struct RenderPassSettings
     {
 
         //Maybe add more textures here. IDK still working on it
         
         uint32_t Width = 0;
         uint32_t Height = 0;
-        std::vector<RenderTargetTextureAttachment> TextureAttachments;
+        RenderPassType type = RenderPassType::Present;
+        std::vector<RenderPassTextureAttachment> TextureAttachments;
     };
     
-    class RenderTarget
+    class RenderPass
     {
     public:
-        
+
+        virtual void SetFramebuffer(const Ref<Framebuffer>& framebuffer) = 0;
+        virtual Ref<Framebuffer> GetFramebuffer() = 0;
+
         virtual void AttachTexture( TextureAttachmentSlot attachment, Ref<Texture> texture ) = 0;
         virtual Ref<Texture> GetTexture( TextureAttachmentSlot attachment ) = 0;
 
@@ -58,7 +70,7 @@ namespace Polyboid
         virtual void Clear(const ClearSettings& settings) = 0;
         virtual void GenerateMipMaps() = 0;
 
-        virtual ~RenderTarget() = default; 
+        virtual ~RenderPass() = default; 
 
     };
 

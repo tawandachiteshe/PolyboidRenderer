@@ -5,7 +5,7 @@
 #include "Framebuffer.h"
 #include "PipelineState.h"
 #include "RenderAPI.h"
-#include "RenderTarget.h"
+#include "RenderPass.h"
 #include "CommandList/RenderCommand.h"
 #include "CommandList/Commands/RenderCommands.h"
 #include "Engine/Engine/Engine.h"
@@ -19,26 +19,11 @@ namespace Polyboid
 
     //TODO: Manage lifetimes of these
 
-    void Renderer::Init(const Ref<RenderAPI>& context) {
+    void Renderer::Init(RenderAPI* context) {
       
         RenderCommand::Init(context);
 		s_Data = std::make_unique<RendererStorage>();
-        
-
-
-		//Add default render targets
-		ClearSettings clearSettings;
-		clearSettings.color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
-		RenderTargetSettings rtSettings;
-        rtSettings.Width = 1600;
-		rtSettings.Height = 900;
-		rtSettings.TextureAttachments = {
-			{ TextureAttachmentSlot::DepthStencil, TextureSizedInternalFormat::Depth24Stencil8 },
-			{ TextureAttachmentSlot::Color0, TextureSizedInternalFormat::RGBA8 }
-		};
-
-        s_Data->m_DefaultRenderTarget = context->CreateRenderTarget(rtSettings);
-		s_Data->m_DefaultPipelineState = context->CreatePipelineState();
+        s_Data->m_Context = context;
 
     }
     
@@ -51,6 +36,31 @@ namespace Polyboid
     void Renderer::EndDraw()
     {
        
+    }
+
+    void Renderer::BeginCommands()
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderCommand));
+    }
+
+    void Renderer::EndCommands()
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderCommand));
+    }
+
+    void Renderer::BeginFrame()
+    {
+        s_Data->m_Context->BeginFrame();
+    }
+
+    void Renderer::EndFrame()
+    {
+        s_Data->m_Context->EndFrame();
+    }
+
+    void Renderer::ClearRenderPass(ClearSettings settings)
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(ClearRenderPassCommand, s_Data->m_CurrentRenderPass, settings));
     }
 
     void Renderer::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
@@ -68,24 +78,21 @@ namespace Polyboid
         RenderCommand::AddCommand(ALLOC_COMMAND(PipelineStateCommand, pipelineState));
     }
 
-    void Renderer::ClearDefaultRenderTarget(const ClearSettings& settings)
+
+    void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(ClearRenderTargetCommand, s_Data->m_DefaultRenderTarget, settings));
+        s_Data->m_CurrentRenderPass = renderPass;
+        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderPassCommand, s_Data->m_CurrentRenderPass));
     }
 
-    void Renderer::BeginDefaultRenderPass()
+    void Renderer::EndRenderPass()
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderPassCommand, s_Data->m_DefaultRenderTarget));
+        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_CurrentRenderPass));
     }
 
-    void Renderer::EndDefaultRenderPass()
+    Ref<RenderPass> Renderer::GetDefaultRenderTarget()
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_DefaultRenderTarget));
-    }
-
-    Ref<RenderTarget> Renderer::GetDefaultRenderTarget()
-    {
-        return s_Data->m_DefaultRenderTarget;
+        return s_Data->m_CurrentRenderPass;
     }
 
     Ref<PipelineState> Renderer::GetDefaultPipeline()

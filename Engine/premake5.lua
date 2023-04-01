@@ -42,6 +42,7 @@ project "Engine"
     defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
+        "VULKAN_HPP_NO_EXCEPTIONS",
 		"GLFW_INCLUDE_NONE"
 	}
 
@@ -79,7 +80,10 @@ project "Engine"
            "%{VULKAN_SDK}/Lib/glslangd.lib",
            "%{VULKAN_SDK}/Lib/SPIRV-Toolsd.lib",
            "%{VULKAN_SDK}/Lib/spirv-cross-reflectd.lib",
+           "%{VULKAN_SDK}/Lib/vulkan-1.lib",
+           "%{VULKAN_SDK}/Lib/VkLayer_utils.lib",
            "Vendor/Optick/lib/x64/debug/OptickCore.lib"
+          
        }
  
     filter "configurations:Release"
@@ -94,5 +98,8 @@ project "Engine"
            "%{VULKAN_SDK}/Lib/glslang.lib",
            "%{VULKAN_SDK}/Lib/SPIRV-Tools.lib",
            "%{VULKAN_SDK}/Lib/spirv-cross-reflect.lib",
+           "%{VULKAN_SDK}/Lib/vulkan-1.lib",
+           "%{VULKAN_SDK}/Lib/VkLayer_utils.lib",
            "Vendor/Optick/lib/x64/Release/OptickCore.lib"
+        
        }

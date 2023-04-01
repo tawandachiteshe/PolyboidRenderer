@@ -20,6 +20,9 @@
 namespace Polyboid
 {
 
+
+	Ref<ShaderCompiler::ShaderCompilerData> ShaderCompiler::s_Data = nullptr;
+
 	shaderc_shader_kind GetShaderKindFromExt(const std::string& shaderExt)
 	{
 		if (shaderExt == ".vert")
@@ -59,6 +62,12 @@ namespace Polyboid
 	}
 
 
+	void ShaderCompiler::Init(const RenderAPI* context, const std::string& includePath)
+	{
+		static auto data = std::make_shared<ShaderCompilerData>(context, includePath);
+		s_Data = data;
+	}
+
 	ShaderBinaryAndInfo ShaderCompiler::Compile(const std::filesystem::path& path, const std::string& rootPath)
 	{
 		tf::Executor executor;
@@ -72,28 +81,9 @@ namespace Polyboid
 		std::string contents((std::istreambuf_iterator<char>(shaderFile)),
 		                     std::istreambuf_iterator<char>());
 
-		//Render API here for shader stuff
+		auto& compiler = s_Data->m_Compiler;
+		auto& options = s_Data->m_Options;
 
-		shaderc::Compiler compiler;
-		shaderc::CompileOptions options;
-
-		//TODO: Make this an option
-		//options.SetSourceLanguage(shaderc_source_language::shaderc_source_language_hlsl);
-
-		//For now i support only opengl
-		//TODO: make this api agnostic
-		options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_opengl, 0);
-
-		//TODO: make this in more robust
-		options.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
-		//only for vulkan
-		//options.SetTargetSpirv(shaderc_targe)
-		options.SetGenerateDebugInfo();
-
-
-		std::unique_ptr<shaderc::CompileOptions::IncluderInterface> includer = std::make_unique<
-			ShadercIncluder>(rootPath);
-		options.SetIncluder(std::move(includer));
 
 		shaderc::PreprocessedSourceCompilationResult preResults;
 		executor.async([&]()
@@ -152,13 +142,14 @@ namespace Polyboid
 			auto res = reflection.get_shader_resources();
 			auto reflectionJson = reflection.compile();
 
+
 			//Reflect(reflectionJson, info);
 			info.shaderReflect = reflectionJson;
 			info.spirvChecksum = SpirvCheckSum(shaderSpv);
 
 			Reflect(reflectionJson, info.reflectionInfo);
 
-			//auto allDumpData = reflectionJson.dump(4);
+		
 		}
 
 		return info;
@@ -166,6 +157,7 @@ namespace Polyboid
 
 	void ShaderCompiler::Reflect(const std::string& shaderReflectJson, ReflectionInfo& info)
 	{
+
 		auto reflectionJson = nlohmann::json::parse(shaderReflectJson);
 
 		if (reflectionJson.contains("images"))
@@ -181,6 +173,21 @@ namespace Polyboid
 				imageInfo.Set = image["set"].get<uint32_t>();
 
 				info.images[imageInfo.Name] = imageInfo;
+			}
+		}
+
+
+		if (reflectionJson.contains("push_constants"))
+		{
+			auto constants = reflectionJson["push_constants"];
+
+			for (auto& pushContants : constants)
+			{
+				//TODO: add format
+				PushConstantInfo pushConstantInfo;
+				pushConstantInfo.Name = pushContants["name"].get<std::string>();
+
+				info.pushConstants[pushConstantInfo.Name] = pushConstantInfo;
 			}
 		}
 

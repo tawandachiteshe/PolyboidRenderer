@@ -102,7 +102,7 @@ namespace Polyboid
 	struct Renderer2DData
 	{
 		Ref<UniformBuffer> m_CameraUB;
-		Ref<RenderAPI> m_Context;
+		RenderAPI* m_Context;
 		Ref<Camera> m_Renderer2DCamera;
 		std::mutex m_CameraDataMutex;
 
@@ -116,7 +116,7 @@ namespace Polyboid
 
 	void Renderer2D::PrepareQuads()
 	{
-		const auto& context = s_RenderData.m_Context;
+		 auto context = s_RenderData.m_Context;
 
 		s_QuadData.QuadVertexBufferArray = context->CreateVertexBufferArray();
 
@@ -385,7 +385,7 @@ namespace Polyboid
 	}
 
 
-	void Renderer2D::Init(const Ref<RenderAPI>& context)
+	void Renderer2D::Init(RenderAPI* context)
 	{
 		s_RenderData.m_Context = context;
 
@@ -411,16 +411,9 @@ namespace Polyboid
 
 	void Renderer2D::EndDraw()
 	{
-		Renderer::BeginDefaultRenderPass();
-		Renderer::ClearDefaultRenderTarget({{0.2f, 0.2f, 0.2f, 1.0f}});
-
-
 		PrepareQuadsForRendering();
 		PrepareCircleForRendering();
 		PrepareLineForRendering();
-
-		Renderer::EndDefaultRenderPass();
-
 
 		Reset();
 	}

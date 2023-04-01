@@ -5,7 +5,7 @@ namespace Polyboid
 {
 	class PipelineState;
 	class RenderAPI;
-	class RenderTarget;
+	class RenderPass;
 
 	class WorldRenderer
 	{

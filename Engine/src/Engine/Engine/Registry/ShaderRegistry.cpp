@@ -22,8 +22,11 @@ namespace Polyboid
 	static const std::filesystem::path shaderCache = "Resources/.Cache/Shaders";
 
 
-	void ShaderRegistry::Init()
+	void ShaderRegistry::Init(RenderAPI* context)
 	{
+
+		ShaderCompiler::Init(context, shaderPath.generic_string());
+
 		if (!std::filesystem::exists(cacheFolder))
 		{
 			std::filesystem::create_directory(cacheFolder);
