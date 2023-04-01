@@ -6,6 +6,7 @@
 
 namespace Polyboid
 {
+	class VulkanTexture2D;
 	class RenderPass;
 	class VulkanRenderPass;
 	class VulkanFramebuffer;
@@ -21,6 +22,7 @@ namespace Polyboid
 		std::vector<vk::Image> m_SwapchainImages;
 		std::vector<vk::ImageView> m_SwapChainImageViews;
 		std::vector<Ref<Texture>> m_Textures;
+		Ref<VulkanTexture2D> m_DepthTexture;
 		VkRenderAPI* m_Context;
 		SwapchainSettings m_Settings;
 		Ref<VulkanRenderPass> m_RenderPass;

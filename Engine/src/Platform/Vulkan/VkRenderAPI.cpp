@@ -267,6 +267,10 @@ namespace Polyboid
 		m_SyncObjects->Destroy(device);
 		result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");
+
+		char* stats;
+		vmaBuildStatsString(m_Allocator->GetAllocator(), &stats, true);
+
 		m_Allocator->Destroy();
 		device.destroy();
 		instance.destroySurfaceKHR(*m_Surface);

@@ -87,18 +87,18 @@ namespace Polyboid
 
 		renderPassInfo.renderArea.offset = vk::Offset2D{0, 0};
 		renderPassInfo.renderArea.extent = vk::Extent2D{ vkRenderpass->m_Settings.Width, vkRenderpass->m_Settings.Height };
-		vk::ClearValue clearValue;
+		std::array<vk::ClearValue, 2> clearValues;
 
 		auto clearSettings = vkRenderpass->GetClearSettings();
 
-		clearValue.color.float32[0] = clearSettings.color.x;
-		clearValue.color.float32[1] = clearSettings.color.y;
-		clearValue.color.float32[2] = clearSettings.color.z;
-		clearValue.color.float32[3] = clearSettings.color.w;
+		clearValues[0].color.float32[0] = clearSettings.color.x;
+		clearValues[0].color.float32[1] = clearSettings.color.y;
+		clearValues[0].color.float32[2] = clearSettings.color.z;
+		clearValues[0].color.float32[3] = clearSettings.color.w;
 		
 
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearValue;
+		renderPassInfo.clearValueCount = clearValues.size();
+		renderPassInfo.pClearValues = clearValues.data();
 
 		m_CommandBuffer[m_Context->m_CurrentFrame].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		

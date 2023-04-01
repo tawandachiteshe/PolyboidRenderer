@@ -162,7 +162,7 @@ namespace Polyboid
 		
 
 		m_Swapchain = m_RenderAPI->CreateSwapChain(settings);
-		m_RenderAPI->CreateTexture2D({ .sizedFormat = EngineGraphicsFormats::Depth24Stencil8, .Width = 1600, .Height = 900 });
+		//m_RenderAPI->CreateTexture2D({ .sizedFormat = EngineGraphicsFormats::Depth24Stencil8, .Width = 1600, .Height = 900 });
 
 		Imgui::Init(m_MainWindow->GetNativeWindow());
 
@@ -182,6 +182,13 @@ namespace Polyboid
 
 
 			Imgui::Begin();
+
+			// update here.....
+			for (auto layer : m_Layers)
+			{
+				layer->OnImguiRender();
+			}
+
 			ImGui::ShowDemoWindow();
 			Imgui::End();
 			/// <summary>

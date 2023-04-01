@@ -12,7 +12,8 @@ namespace Polyboid
 	public:
 
 		operator VmaAllocator() const { return m_Allocator; }
-
+		
+		VmaAllocator GetAllocator() { return m_Allocator; }
 		explicit VulkanAllocator(const VkRenderAPI* context);
 		void Destroy();
 
