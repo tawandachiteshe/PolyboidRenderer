@@ -35,7 +35,6 @@ namespace Polyboid
 
 	void VulkanAllocator::Destroy()
 	{
-		
 		vmaDestroyAllocator(m_Allocator);
 	}
 }

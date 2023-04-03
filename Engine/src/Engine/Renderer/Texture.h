@@ -112,8 +112,7 @@ namespace Polyboid
     enum class TextureUsage
     {
 	    Swapchain,
-        ColorAttachment,
-        DepthAttachment,
+        Attachment,
         Sampling
     };
     

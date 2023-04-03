@@ -2,8 +2,6 @@
 #include "Engine/Renderer/Texture.h"
 #include <vulkan/vulkan.hpp>
 
-#include "Utils/VulkanAllocator.h"
-
 namespace Polyboid
 {
 	class VkRenderAPI;
@@ -12,17 +10,14 @@ namespace Polyboid
 	{
 
 	private:
-		vk::Image m_Image = nullptr;
-		vk::ImageView m_View = nullptr;
-		const VkRenderAPI* m_Context = nullptr;
-		TextureSettings m_Settings;
-		VmaAllocation m_Allocation;
+		vk::Image m_Image;
+		vk::ImageView m_View;
 
 	public:
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings);
 		VulkanTexture2D(const std::any& handle);
 
-		virtual  void Destroy(VkRenderAPI* context = nullptr);
+		void Destroy();
 
 		void Bind(uint32_t slot) override;
 		void UnBind() override;

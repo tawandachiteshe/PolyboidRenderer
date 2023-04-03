@@ -260,24 +260,15 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto device = renderAPI->GetDevice()->GetDevice();
-            auto result = device.waitIdle();
+            auto result = renderAPI->GetDevice()->GetDevice().waitIdle();
             vk::resultCheck(result, "Failed to wait");
-
-            auto cmdBuffer = s_Data.m_ImguiCommandBuffer;
-        	delete cmdBuffer;
-
-
-            auto cmdlist = s_Data.m_CommandList;
-            cmdlist->Destroy(device);
-            delete cmdlist;
 
             ImGui_ImplVulkan_Shutdown();
         }
        
         ImGui_ImplGlfw_Shutdown();
+        
+        
         ImGui::DestroyContext();
-
-       
     }
 }

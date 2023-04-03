@@ -220,21 +220,12 @@ namespace Polyboid
 		renderPassSettings.type = RenderPassType::Present;
 		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
 
-		TextureSettings depthTexture{};
-		depthTexture.Width = createInfo.imageExtent.width;
-		depthTexture.Height = createInfo.imageExtent.height;
-		depthTexture.usage = TextureUsage::DepthAttachment;
-		depthTexture.sizedFormat = EngineGraphicsFormats::Depth24Stencil8;
-		
-
-		m_DepthTexture = std::make_shared<VulkanTexture2D>(m_Context, depthTexture);
-
 		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
 		count = 0;
 		for (const auto& texture : m_Textures)
 		{
 			FramebufferSettings framebufferSettings;
-			framebufferSettings.textures = { texture, m_DepthTexture };
+			framebufferSettings.textures = { texture };
 			framebufferSettings.height = createInfo.imageExtent.height;
 			framebufferSettings.width = createInfo.imageExtent.width;
 			framebufferSettings.attachmentSlots = { { TextureAttachmentSlot::Color0  } };
@@ -289,16 +280,13 @@ namespace Polyboid
 
 	void VkSwapChain::Destroy(vk::Device device)
 	{
-
-		for (const auto& texture : m_Textures)
+		for (const auto& view : m_SwapChainImageViews)
 		{
-			auto vkTexture = std::reinterpret_pointer_cast<VulkanTexture2D>(texture);
-			vkTexture->Destroy(m_Context);
+			device.destroyImageView(view);
 		}
 
 
 		m_SwapChainImageViews.clear();
-		m_DepthTexture->Destroy();
 
 		
 		device.destroySwapchainKHR(m_Swapchain);

@@ -52,7 +52,7 @@ namespace Polyboid
 		const auto colorTexture = mainRenderTarget->GetTexture(TextureAttachmentSlot::Color0);
 		const auto windowSize = ImGui::GetContentRegionAvail();
 
-		//ImGui::Image(std::any_cast<ImTextureID>(colorTexture->GetHandle()), windowSize, {1.0f, 1.0f}, {0.0f, 0.0f});
+		ImGui::Image(std::any_cast<ImTextureID>(colorTexture->GetHandle()), windowSize, {1.0f, 1.0f}, {0.0f, 0.0f});
 
 		ImGui::End();
 

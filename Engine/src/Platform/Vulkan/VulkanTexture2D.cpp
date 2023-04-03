@@ -11,7 +11,7 @@
 
 namespace Polyboid
 {
-	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings): m_Context(context), m_Settings(settings)
+	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings)
 	{
 
 		vk::Device device = (*context->GetDevice());
@@ -45,9 +45,8 @@ namespace Polyboid
 		switch (settings.usage)
 		{
 		case TextureUsage::Swapchain: break;
-		case TextureUsage::DepthAttachment:createInfo.usage = eDepthStencilAttachment; break;
-		case TextureUsage::ColorAttachment: createInfo.usage = eColorAttachment; break;
-		case TextureUsage::Sampling: createInfo.usage = eSampled; break;
+		case TextureUsage::Attachment:createInfo.usage = eColorAttachment | eDepthStencilAttachment; break;
+		case TextureUsage::Sampling: createInfo.usage = eSampled | eTransferDst; break;
 		}
 
 		createInfo.sharingMode = vk::SharingMode::eExclusive;
@@ -57,6 +56,7 @@ namespace Polyboid
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 		allocInfo.priority = 1.0f;
 		VmaAllocation allocation;
 
@@ -64,94 +64,17 @@ namespace Polyboid
 		vk::Image::NativeType vulkanImage;
 		vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
 
-		m_Allocation = allocation;
-
-		m_Image = vulkanImage;
-
-		vk::ImageViewCreateInfo imageViewCreateInfo{};
-		imageViewCreateInfo.image = m_Image;
-		imageViewCreateInfo.format = createInfo.format;
-		imageViewCreateInfo.components.r = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.g = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.b = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.components.a = vk::ComponentSwizzle::eIdentity;
-		imageViewCreateInfo.viewType = vk::ImageViewType::e2D;
-		switch (createInfo.format)
-		{
-		case vk::Format::eD24UnormS8Uint:
-		case vk::Format::eD16UnormS8Uint:
-		case vk::Format::eD32SfloatS8Uint:
-			imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
-			break;
-		case vk::Format::eD16Unorm:
-		case vk::Format::eD32Sfloat:
-			imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eDepth;
-			break;
-			default:
-				imageViewCreateInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-		}
-		
-		imageViewCreateInfo.subresourceRange.layerCount = 1;
-		imageViewCreateInfo.subresourceRange.levelCount = 1;
-		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
-		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
-		auto[res, view] = device.createImageView(imageViewCreateInfo);
-
-		vk::resultCheck(res, "Failed to create image view");
-
-		m_View = view;
-
-
 		// char* stats = nullptr;
 		// vmaBuildStatsString(allocator, &stats, true);
 		//
 		// vmaFreeStatsString(allocator, stats);
 
-		
+		vmaDestroyImage(allocator, vulkanImage, allocation);
 
 	}
 
-	void VulkanTexture2D::Destroy(VkRenderAPI* context)
+	void VulkanTexture2D::Destroy()
 	{
-		if (context)
-		{
-
-			vk::Device device = (*context->GetDevice());
-			VmaAllocator allocator = (*context->GetAllocator());
-
-			if (m_Image != vk::Image(nullptr))
-			{
-
-				vmaDestroyImage(allocator, m_Image, m_Allocation);
-			}
-
-			if (m_View != vk::ImageView(nullptr))
-			{
-				device.destroyImageView(m_View);
-			}
-
-		}
-		else
-		{
-
-			vk::Device device = (*m_Context->GetDevice());
-			VmaAllocator allocator = (*m_Context->GetAllocator());
-
-			if (m_View != vk::ImageView(nullptr))
-			{
-				device.destroyImageView(m_View);
-			}
-
-
-			if (m_Image != vk::Image(nullptr))
-			{
-				
-				vmaDestroyImage(allocator, m_Image, m_Allocation);
-			}
-
-		
-		}
-	
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::any& handle)

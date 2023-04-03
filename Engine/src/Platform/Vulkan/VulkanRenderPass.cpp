@@ -21,9 +21,9 @@ namespace Polyboid
 		return m_Framebuffer;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings): m_Settings(
-		settings)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings): m_Settings(settings)
 	{
+
 		vk::Device device = (*context->GetDevice());
 
 		uint32_t count = 0;
@@ -33,6 +33,7 @@ namespace Polyboid
 
 		for (auto& attachment : settings.TextureAttachments)
 		{
+
 			vk::AttachmentDescription attachmentDescription{};
 			attachmentDescription.format = Utils::ConvertToVulkanFormat(attachment.format);
 			attachmentDescription.samples = vk::SampleCountFlagBits::e1;
@@ -46,11 +47,9 @@ namespace Polyboid
 
 			switch (settings.type)
 			{
-			case RenderPassType::Present: attachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-				break;
+			case RenderPassType::Present: attachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR; break;
 			case RenderPassType::ColorAttachment: break;
-			case RenderPassType::Copy: attachmentDescription.finalLayout = vk::ImageLayout::eTransferDstOptimal;
-				break;
+			case RenderPassType::Copy: attachmentDescription.finalLayout = vk::ImageLayout::eTransferDstOptimal; break;
 			}
 
 
@@ -64,54 +63,20 @@ namespace Polyboid
 			count++;
 		}
 
-		auto depthAttachment = vk::AttachmentDescription()
-		                       .setFormat(vk::Format::eD24UnormS8Uint)
-		                       .setSamples(vk::SampleCountFlagBits::e1)
-		                       .setLoadOp(vk::AttachmentLoadOp::eClear)
-		                       .setStoreOp(vk::AttachmentStoreOp::eDontCare)
-		                       .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-		                       .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-		                       .setInitialLayout(vk::ImageLayout::eUndefined)
-		                       .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-		vk::AttachmentReference depthAttachmentRef{};
-		depthAttachmentRef.attachment = count;
-		depthAttachmentRef.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
-
-
-		attachmentments.push_back(depthAttachment);
-		count += 1;
-
 
 		vk::SubpassDescription subpass{};
 		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
 		subpass.colorAttachmentCount = static_cast<uint32_t>(attachmentmentsRefs.size());
 		subpass.pColorAttachments = attachmentmentsRefs.data();
-		subpass.pDepthStencilAttachment = &depthAttachmentRef;
+		
 
-		vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eEarlyFragmentTests |
-			vk::PipelineStageFlagBits::eLateFragmentTests;
-
-		std::array<vk::SubpassDependency, 2> const dependencies = {
-			
-			vk::SubpassDependency() // Image layout transition
-			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-			.setDstSubpass(0)
-			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setSrcAccessMask(vk::AccessFlagBits())
-			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
-			.setDependencyFlags(vk::DependencyFlags()),
-			vk::SubpassDependency() // Depth buffer is shared between swapchain images
-			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-			.setDstSubpass(0)
-			.setSrcStageMask(stages)
-			.setDstStageMask(stages)
-			.setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite)
-			.setDstAccessMask(
-				vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite)
-			.setDependencyFlags(vk::DependencyFlags())
-		};
+		vk::SubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		dependency.dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+		dependency.srcAccessMask = vk::AccessFlagBits::eNone;
+		dependency.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
 
 
 		vk::RenderPassCreateInfo renderPassInfo{};
@@ -120,17 +85,22 @@ namespace Polyboid
 		renderPassInfo.pAttachments = attachmentments.data();
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = dependencies.size();
-		renderPassInfo.pDependencies = dependencies.data();
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
 
 		auto [result, renderpass] = device.createRenderPass(renderPassInfo);
 		vk::resultCheck(result, "Failed to create render pass");
 		m_RenderPass = renderpass;
+
+
 	}
 
 	void VulkanRenderPass::Destroy(vk::Device device)
 	{
+	
 		device.destroyRenderPass(m_RenderPass);
+		
+		
 	}
 
 
