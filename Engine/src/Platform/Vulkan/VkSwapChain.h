@@ -25,7 +25,6 @@ namespace Polyboid
 		SwapchainSettings m_Settings;
 		Ref<VulkanRenderPass> m_RenderPass;
 
-		std::vector<Ref<VulkanFramebuffer>> m_SwapchainBuffers;
 		bool m_Resize = false;
 
 		vk::Semaphore m_ImageAvailableSemaphore;
@@ -39,7 +38,7 @@ namespace Polyboid
 		VkSwapChain(VkRenderAPI* context, const SwapchainSettings& settings);
 		Ref<RenderPass> GetDefaultRenderPass() override;
 		std::vector<Ref<Texture>>& GetTextures() { return m_Textures; }
-		std::vector<Ref<VulkanFramebuffer>>& GetSwapbuffers() { return m_SwapchainBuffers; }
+	
 
 		void BeginFrame();
 

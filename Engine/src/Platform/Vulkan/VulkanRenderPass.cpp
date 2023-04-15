@@ -21,9 +21,10 @@ namespace Polyboid
 		return m_Framebuffer;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings): m_Settings(settings)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings):
+		m_Settings(settings), m_Context(context)
 	{
-
+		m_Framebuffers.reserve(settings.Textures.size());
 		vk::Device device = (*context->GetDevice());
 
 		uint32_t count = 0;
@@ -92,6 +93,30 @@ namespace Polyboid
 		vk::resultCheck(result, "Failed to create render pass");
 		m_RenderPass = renderpass;
 
+		count = 0;
+		for (const auto& texture : m_Settings.Textures)
+		{
+			FramebufferSettings framebufferSettings;
+			framebufferSettings.textures = { texture };
+			framebufferSettings.height = settings.Height;
+			framebufferSettings.width = settings.Width;
+			framebufferSettings.attachmentSlots = { { TextureAttachmentSlot::Color0  }, };
+
+			
+			Ref<VulkanFramebuffer> framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, this);
+			m_Framebuffers.push_back(framebuffer);
+
+			count++;
+
+		}
+
+
+		m_ColorValue.float32[0] = m_ClearSettings.color.x;
+		m_ColorValue.float32[1] = m_ClearSettings.color.y;
+		m_ColorValue.float32[2] = m_ClearSettings.color.z;
+		m_ColorValue.float32[3] = m_ClearSettings.color.w;
+
+		m_ClearValues[0] = m_ColorValue;
 
 	}
 
@@ -99,7 +124,14 @@ namespace Polyboid
 	{
 	
 		device.destroyRenderPass(m_RenderPass);
-		
+		for (auto& frameBuffer : m_Framebuffers)
+		{
+			if (m_Settings.IsSwapchainRenderPass)
+			{
+				frameBuffer->Destroy(device);
+			}
+			
+		}
 		
 	}
 
@@ -121,6 +153,13 @@ namespace Polyboid
 	void VulkanRenderPass::Clear(const ClearSettings& settings)
 	{
 		m_ClearSettings = settings;
+
+		m_ColorValue.float32[0] = settings.color.x;
+		m_ColorValue.float32[1] = settings.color.y;
+		m_ColorValue.float32[2] = settings.color.z;
+		m_ColorValue.float32[3] = settings.color.w;
+
+		m_ClearValues[0] = m_ColorValue;
 	}
 
 	ClearSettings VulkanRenderPass::GetClearSettings()
@@ -134,5 +173,35 @@ namespace Polyboid
 
 	VulkanRenderPass::~VulkanRenderPass()
 	{
+	}
+
+	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo()
+	{
+
+		m_RenderPassBeginInfo.sType = vk::StructureType::eRenderPassBeginInfo;
+
+		if (m_Settings.type == RenderPassType::Present)
+		{
+			m_RenderPassBeginInfo.renderPass = m_RenderPass;
+			const uint32_t frameIndex = m_Context->m_SwapchainImageIndex;
+			m_RenderPassBeginInfo.framebuffer = m_Framebuffers[frameIndex]->m_Framebuffer;
+		}
+		else
+		{
+			auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(m_Framebuffer);
+			m_RenderPassBeginInfo.renderPass = m_RenderPass;
+			m_RenderPassBeginInfo.framebuffer = vkFramebuffer->m_Framebuffer;
+		}
+
+		m_RenderPassBeginInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
+		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{ m_Settings.Width, m_Settings.Height };
+
+		
+
+		m_RenderPassBeginInfo.clearValueCount = 1;
+		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();
+
+		return m_RenderPassBeginInfo;
+
 	}
 }

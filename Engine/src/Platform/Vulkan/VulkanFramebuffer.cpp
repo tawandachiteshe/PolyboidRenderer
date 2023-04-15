@@ -11,7 +11,7 @@ namespace Polyboid
 {
 	void VulkanFramebuffer::Init(const VkRenderAPI* context, const FramebufferSettings& settings)
 	{
-		if (m_RenderPass)
+		if (m_RenderPassPtr)
 		{
 			vk::Device device = (*m_Context->GetDevice());
 			std::vector<vk::ImageView> attachments;
@@ -22,7 +22,7 @@ namespace Polyboid
 
 			vk::FramebufferCreateInfo createInfo;
 			createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
-			createInfo.renderPass = m_RenderPass->m_RenderPass;
+			createInfo.renderPass = m_RenderPassPtr->m_RenderPass;
 			createInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
 			createInfo.height = m_Settings.height;
 			createInfo.width = m_Settings.width;
@@ -48,14 +48,11 @@ namespace Polyboid
 
 	}
 
+
 	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings,
-		const Ref<RenderPass>& renderPass) : m_Settings(settings),
-		                                     m_Context(context),
-		                                     m_RenderPass(std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass))
+		RenderPass* renderPass): m_RenderPassPtr(reinterpret_cast<VulkanRenderPass*>(renderPass)), m_Settings(settings), m_Context(context)
 	{
-
-		Init(context, settings);
-
+		Init(context, m_Settings);
 	}
 
 

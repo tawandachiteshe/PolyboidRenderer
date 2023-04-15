@@ -67,39 +67,8 @@ namespace Polyboid
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass>& renderPass)
 	{
 
-		
 		auto vkRenderpass = std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass);
-		vk::RenderPassBeginInfo renderPassInfo{};
-		renderPassInfo.sType = vk::StructureType::eRenderPassBeginInfo;
-
-		if (vkRenderpass->m_Settings.type == RenderPassType::Present)
-		{
-			auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(Application::Get().GetSwapchain());
-			renderPassInfo.renderPass = vkRenderpass->m_RenderPass;
-			renderPassInfo.framebuffer = vkSwapchain->GetSwapbuffers()[m_Context->m_SwapchainImageIndex]->m_Framebuffer;
-		}
-		else
-		{
-			auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(renderPass->GetFramebuffer());
-			renderPassInfo.renderPass = vkRenderpass->m_RenderPass;
-			renderPassInfo.framebuffer = vkFramebuffer->m_Framebuffer;
-		}
-
-		renderPassInfo.renderArea.offset = vk::Offset2D{0, 0};
-		renderPassInfo.renderArea.extent = vk::Extent2D{ vkRenderpass->m_Settings.Width, vkRenderpass->m_Settings.Height };
-		vk::ClearValue clearValue;
-
-		auto clearSettings = vkRenderpass->GetClearSettings();
-
-		clearValue.color.float32[0] = clearSettings.color.x;
-		clearValue.color.float32[1] = clearSettings.color.y;
-		clearValue.color.float32[2] = clearSettings.color.z;
-		clearValue.color.float32[3] = clearSettings.color.w;
-		
-
-		renderPassInfo.clearValueCount = 1;
-		renderPassInfo.pClearValues = &clearValue;
-
+		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo();
 		m_CommandBuffer[m_Context->m_CurrentFrame].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		
 	}

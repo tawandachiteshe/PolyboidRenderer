@@ -75,6 +75,7 @@ namespace Polyboid
 
 	void VulkanTexture2D::Destroy()
 	{
+		
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const std::any& handle)

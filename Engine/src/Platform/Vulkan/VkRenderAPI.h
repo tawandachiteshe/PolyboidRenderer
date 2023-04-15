@@ -94,5 +94,6 @@ namespace Polyboid
 
 		friend class VkSwapChain;
 		friend class VulkanCommandBuffer;
+		friend class VulkanRenderPass;
 	};
 }

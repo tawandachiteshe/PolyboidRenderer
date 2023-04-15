@@ -185,7 +185,6 @@ namespace Polyboid
 
 		m_SwapChainImageViews.resize(m_SwapchainImages.size());
 		m_Textures.resize(m_SwapchainImages.size());
-		m_SwapchainBuffers.resize(m_SwapchainImages.size());
 
 		//Abstract this to something cool
 		count = 0;
@@ -219,24 +218,10 @@ namespace Polyboid
 		renderPassSettings.Height = createInfo.imageExtent.height;
 		renderPassSettings.type = RenderPassType::Present;
 		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
+		renderPassSettings.Textures = m_Textures;
 
 		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
-		count = 0;
-		for (const auto& texture : m_Textures)
-		{
-			FramebufferSettings framebufferSettings;
-			framebufferSettings.textures = { texture };
-			framebufferSettings.height = createInfo.imageExtent.height;
-			framebufferSettings.width = createInfo.imageExtent.width;
-			framebufferSettings.attachmentSlots = { { TextureAttachmentSlot::Color0  } };
-
-
-			Ref<VulkanFramebuffer> framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, m_RenderPass);
-			m_SwapchainBuffers[count] = framebuffer;
-
-			count++;
-			
-		}
+		
 	}
 
 	void VkSwapChain::Init()
@@ -293,12 +278,7 @@ namespace Polyboid
 		
 
 		m_RenderPass->Destroy(device);
-		for (const auto& element : m_SwapchainBuffers)
-		{
-			element->Destroy(device);
-		}
 
-		m_SwapchainBuffers.clear();
 		
 	}
 

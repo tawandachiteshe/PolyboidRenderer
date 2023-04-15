@@ -259,9 +259,13 @@ namespace Polyboid
 
         if (type == RenderAPIType::Vulkan)
         {
+           
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto result = renderAPI->GetDevice()->GetDevice().waitIdle();
+            auto device = renderAPI->GetDevice()->GetDevice();
+            auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
+            s_Data.m_CommandList->Destroy(device);
+
 
             ImGui_ImplVulkan_Shutdown();
         }

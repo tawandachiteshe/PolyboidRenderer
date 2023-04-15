@@ -17,7 +17,7 @@ namespace Polyboid
 		const VkRenderAPI* m_Context = nullptr;
 		IndexDataType m_IndexType;
 		uint32_t m_Count = 0;
-		VmaAllocation m_Allocation;
+		VmaAllocation m_Allocation{};
 
 	public:
 

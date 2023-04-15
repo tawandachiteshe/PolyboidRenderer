@@ -54,6 +54,8 @@ namespace Polyboid
         uint32_t Height = 0;
         RenderPassType type = RenderPassType::Present;
         std::vector<RenderPassTextureAttachment> TextureAttachments;
+        std::vector<Ref<Texture>> Textures;
+        bool IsSwapchainRenderPass = true;
     };
     
     class RenderPass

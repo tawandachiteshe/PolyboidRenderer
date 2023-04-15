@@ -14,15 +14,15 @@ namespace Polyboid
 	private:
 		vk::Framebuffer m_Framebuffer;
 		FramebufferSettings m_Settings;
-		const VkRenderAPI* m_Context;
-		Ref<VulkanRenderPass> m_RenderPass = nullptr;
+		const VkRenderAPI* m_Context{};
+		VulkanRenderPass* m_RenderPassPtr = nullptr;
 
 		void Init(const VkRenderAPI* context, const FramebufferSettings& settings);
 
 	public:
 		void Destroy(vk::Device device);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings);
-		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, const Ref<RenderPass>& renderPass);
+		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, RenderPass* renderPass);
 
 		void AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot) override;
 		void AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot) override;
@@ -34,6 +34,7 @@ namespace Polyboid
 		void ReSize(uint32_t width, uint32_t height) override;
 
 		friend class VulkanCommandBuffer;
+		friend class VulkanRenderPass;
 	};
 
 }

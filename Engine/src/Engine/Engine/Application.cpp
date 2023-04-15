@@ -182,6 +182,13 @@ namespace Polyboid
 
 
 			Imgui::Begin();
+
+			for (auto layer : m_Layers)
+			{
+				layer->OnImguiRender();
+			}
+
+
 			ImGui::ShowDemoWindow();
 			Imgui::End();
 			/// <summary>

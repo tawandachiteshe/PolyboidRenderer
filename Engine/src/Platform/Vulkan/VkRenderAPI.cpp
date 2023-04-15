@@ -110,11 +110,11 @@ namespace Polyboid
 	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const FramebufferSettings& settings,
 	                                                const Ref<RenderPass>& renderPass)
 	{
-		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, settings, renderPass)
+		//auto framebuffer = ALLOC_API(VulkanFramebuffer, this, settings, renderPass)
 
-		m_Framebuffers.push_back(framebuffer);
+		//m_Framebuffers.push_back(framebuffer);
 
-		return framebuffer;
+		return nullptr;
 	}
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings)
