@@ -34,11 +34,16 @@ namespace Polyboid
 		DepthStencil
 	};
 
+	struct TextureAttachment
+	{
+		TextureAttachmentSlot slot;
+		EngineGraphicsFormats format;
+	};
+
 	struct FramebufferSettings
 	{
-		std::vector<TextureAttachmentSlot> attachmentSlots;
-		std::vector<Ref<Texture>> textures;
-
+		std::vector<TextureAttachment> attachmentSlots;
+		bool IsSwapChainUsage = true;
 		uint32_t width = 0;
 		uint32_t height = 0;
 	};

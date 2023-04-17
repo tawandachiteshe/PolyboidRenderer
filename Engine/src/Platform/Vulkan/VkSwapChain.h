@@ -6,6 +6,7 @@
 
 namespace Polyboid
 {
+	class VulkanTexture2D;
 	class RenderPass;
 	class VulkanRenderPass;
 	class VulkanFramebuffer;
@@ -14,16 +15,17 @@ namespace Polyboid
 	class VkSwapChain : public Swapchain
 	{
 	private:
+		static vk::SwapchainKHR s_Swapchain;
 		vk::SurfaceCapabilitiesKHR m_Capabilities;
 		std::vector<vk::SurfaceFormatKHR> m_Formats;
 		std::vector<vk::PresentModeKHR> m_PresentModes;
-		vk::SwapchainKHR m_Swapchain;
+		vk::SwapchainKHR m_Swapchain = nullptr;
 		std::vector<vk::Image> m_SwapchainImages;
-		std::vector<vk::ImageView> m_SwapChainImageViews;
-		std::vector<Ref<Texture>> m_Textures;
 		VkRenderAPI* m_Context;
 		SwapchainSettings m_Settings;
-		Ref<VulkanRenderPass> m_RenderPass;
+		Ref<VulkanRenderPass> m_RenderPass = nullptr;
+
+		
 
 		bool m_Resize = false;
 
@@ -34,11 +36,12 @@ namespace Polyboid
 
 		void Init();
 
+
 		operator vk::SwapchainKHR() const { return m_Swapchain; }
 		VkSwapChain(VkRenderAPI* context, const SwapchainSettings& settings);
+		static std::vector<Ref<VulkanTexture2D>> CreateSwapchainTextures(EngineGraphicsFormats imageFormat = EngineGraphicsFormats::BGRA8U);
+
 		Ref<RenderPass> GetDefaultRenderPass() override;
-		std::vector<Ref<Texture>>& GetTextures() { return m_Textures; }
-	
 
 		void BeginFrame();
 

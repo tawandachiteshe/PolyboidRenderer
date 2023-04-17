@@ -12,10 +12,11 @@ namespace Polyboid
 	private:
 		vk::Image m_Image;
 		vk::ImageView m_View;
+		const VkRenderAPI* m_Context = nullptr;
 
 	public:
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings);
-		VulkanTexture2D(const std::any& handle);
+		VulkanTexture2D(const VkRenderAPI* context, const std::any& handle);
 
 		void Destroy();
 

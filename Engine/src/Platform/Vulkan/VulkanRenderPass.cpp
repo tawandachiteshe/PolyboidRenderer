@@ -13,7 +13,7 @@ namespace Polyboid
 	void VulkanRenderPass::SetFramebuffer(const Ref<Framebuffer>& framebuffer)
 	{
 		auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(framebuffer);
-		m_Framebuffer = framebuffer;
+		m_Framebuffer = vkFramebuffer;
 	}
 
 	Ref<Framebuffer> VulkanRenderPass::GetFramebuffer()
@@ -24,7 +24,6 @@ namespace Polyboid
 	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings):
 		m_Settings(settings), m_Context(context)
 	{
-		m_Framebuffers.reserve(settings.Textures.size());
 		vk::Device device = (*context->GetDevice());
 
 		uint32_t count = 0;
@@ -93,23 +92,15 @@ namespace Polyboid
 		vk::resultCheck(result, "Failed to create render pass");
 		m_RenderPass = renderpass;
 
-		count = 0;
-		for (const auto& texture : m_Settings.Textures)
-		{
-			FramebufferSettings framebufferSettings;
-			framebufferSettings.textures = { texture };
-			framebufferSettings.height = settings.Height;
-			framebufferSettings.width = settings.Width;
-			framebufferSettings.attachmentSlots = { { TextureAttachmentSlot::Color0  }, };
 
-			
-			Ref<VulkanFramebuffer> framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, this);
-			m_Framebuffers.push_back(framebuffer);
+		FramebufferSettings framebufferSettings;
+		framebufferSettings.height = settings.Height;
+		framebufferSettings.width = settings.Width;
+		framebufferSettings.attachmentSlots = m_Settings.TextureAttachments;
+		framebufferSettings.IsSwapChainUsage = settings.IsSwapchainRenderPass;
 
-			count++;
-
-		}
-
+		m_Framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, this);
+	
 
 		m_ColorValue.float32[0] = m_ClearSettings.color.x;
 		m_ColorValue.float32[1] = m_ClearSettings.color.y;
@@ -124,15 +115,7 @@ namespace Polyboid
 	{
 	
 		device.destroyRenderPass(m_RenderPass);
-		for (auto& frameBuffer : m_Framebuffers)
-		{
-			if (m_Settings.IsSwapchainRenderPass)
-			{
-				frameBuffer->Destroy(device);
-			}
-			
-		}
-		
+		m_Framebuffer->Destroy(device);
 	}
 
 
@@ -184,19 +167,18 @@ namespace Polyboid
 		{
 			m_RenderPassBeginInfo.renderPass = m_RenderPass;
 			const uint32_t frameIndex = m_Context->m_SwapchainImageIndex;
-			m_RenderPassBeginInfo.framebuffer = m_Framebuffers[frameIndex]->m_Framebuffer;
+			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle(frameIndex);
 		}
 		else
 		{
 			auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(m_Framebuffer);
 			m_RenderPassBeginInfo.renderPass = m_RenderPass;
-			m_RenderPassBeginInfo.framebuffer = vkFramebuffer->m_Framebuffer;
+			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle();
 		}
 
 		m_RenderPassBeginInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
 		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{ m_Settings.Width, m_Settings.Height };
 
-		
 
 		m_RenderPassBeginInfo.clearValueCount = 1;
 		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();

@@ -7,15 +7,20 @@
 
 namespace Polyboid
 {
+	class VulkanTexture2D;
 	class VkRenderAPI;
 
 	class VulkanFramebuffer : public Framebuffer
 	{
 	private:
-		vk::Framebuffer m_Framebuffer;
+
+		std::vector<vk::Framebuffer> m_FrameBuffers;
+
 		FramebufferSettings m_Settings;
 		const VkRenderAPI* m_Context{};
 		VulkanRenderPass* m_RenderPassPtr = nullptr;
+		std::unordered_map<TextureAttachmentSlot, Ref<VulkanTexture2D>> m_AttachmentTextures;
+		std::vector<Ref<VulkanTexture2D>> m_Textures;
 
 		void Init(const VkRenderAPI* context, const FramebufferSettings& settings);
 
@@ -23,6 +28,8 @@ namespace Polyboid
 		void Destroy(vk::Device device);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, RenderPass* renderPass);
+
+		virtual vk::Framebuffer GetFramebufferHandle(uint32_t index = 0);
 
 		void AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot) override;
 		void AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot) override;

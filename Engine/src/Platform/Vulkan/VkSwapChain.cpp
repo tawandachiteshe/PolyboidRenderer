@@ -16,10 +16,13 @@
 
 #include "VulkanFramebuffer.h"
 #include "VulkanTexture2D.h"
+#include "Engine/Engine/Application.h"
 #include "Engine/Renderer/Framebuffer.h"
 
 namespace Polyboid
 {
+
+	vk::SwapchainKHR VkSwapChain::s_Swapchain = nullptr;
 
 	VkExtent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
@@ -46,11 +49,15 @@ namespace Polyboid
 	void VkSwapChain::Init(VkRenderAPI* context, const SwapchainSettings& settings)
 	{
 
+		
+
 		vk::PhysicalDevice physicalDevice = (*context->GetPhysicalDevice());
 		vk::Device device = (*context->GetDevice());
 		vk::SurfaceKHR surface = (*context->GetSurface());
 		auto indices = context->GetPhysicalDevice()->GetFamilyIndices();
 		uint32_t queueFamilyIndices[] = { indices.GraphicsFamily.value(), indices.PresentFamily.value() };
+
+		Destroy(device);
 
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(m_Context->GetWindow()), &width, &height);
@@ -66,13 +73,6 @@ namespace Polyboid
 			spdlog::error("Error failed to wait for device");
 			__debugbreak();
 		}
-
-		if (m_Textures.size() > 0)
-		{
-			Destroy(device);
-		}
-		
-
 
 		
 		auto[capResults, capabilities] =  physicalDevice.getSurfaceCapabilitiesKHR(surface);
@@ -175,50 +175,16 @@ namespace Polyboid
 		auto[swapChainResult, swapchain] = device.createSwapchainKHR(createInfo);
 		vk::resultCheck(swapChainResult, "Failed to create result");
 		m_Swapchain = swapchain;
+		s_Swapchain = swapchain;
 
 		spdlog::info("Successfully created a swapchain!");
 
-
-		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(m_Swapchain);
-		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
-		m_SwapchainImages = swapchainImages;
-
-		m_SwapChainImageViews.resize(m_SwapchainImages.size());
-		m_Textures.resize(m_SwapchainImages.size());
-
-		//Abstract this to something cool
-		count = 0;
-		for (auto& m_SwapchainImage : m_SwapchainImages)
-		{
-
-			vk::ImageViewCreateInfo createViewInfo;
-			createViewInfo.flags = vk::ImageViewCreateFlags();
-			createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
-			createViewInfo.viewType = vk::ImageViewType::e2D;
-			createViewInfo.format = swapChainFormat;
-			createViewInfo.image = m_SwapchainImage;
-			createViewInfo.components = vk::ComponentMapping();
-			createViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-			createViewInfo.subresourceRange.baseMipLevel = 0;
-			createViewInfo.subresourceRange.levelCount = 1;
-			createViewInfo.subresourceRange.baseArrayLayer = 0;
-			createViewInfo.subresourceRange.layerCount = 1;
-
-			auto [createViewResult, view] = device.createImageView(createViewInfo);
-			vk::resultCheck(createViewResult, "Failed to create image view");
-			m_SwapChainImageViews[count] = view;
-
-			m_Textures[count] = std::make_shared<VulkanTexture2D>(view);
-
-			count++;
-		}
 
 		RenderPassSettings renderPassSettings;
 		renderPassSettings.Width = createInfo.imageExtent.width;
 		renderPassSettings.Height = createInfo.imageExtent.height;
 		renderPassSettings.type = RenderPassType::Present;
 		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
-		renderPassSettings.Textures = m_Textures;
 
 		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
 		
@@ -233,6 +199,62 @@ namespace Polyboid
 	{
 
 		Init(context, settings);
+	}
+
+	std::vector<Ref<VulkanTexture2D>> VkSwapChain::CreateSwapchainTextures(EngineGraphicsFormats imageFormat)
+	{
+
+		vk::Format swapchainImageFormat = vk::Format::eB8G8R8A8Unorm;
+
+		switch (imageFormat)
+		{
+		case EngineGraphicsFormats::BGRA8U:
+			swapchainImageFormat = vk::Format::eB8G8R8A8Unorm;
+			break;
+			default:
+				break;
+		}
+		
+
+		const auto api = dynamic_cast<VkRenderAPI*>(Application::Get().GetRenderAPI());
+		const auto engineDevice = api->GetDevice();
+		const auto device = engineDevice->GetDevice();
+
+
+		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(s_Swapchain);
+		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
+		std::vector<Ref<VulkanTexture2D>> textures;
+		textures.resize(swapchainImages.size());
+
+		//Abstract this to something cool
+		int count = 0;
+		for (auto& swapchainImage : swapchainImages)
+		{
+
+			vk::ImageViewCreateInfo createViewInfo;
+			createViewInfo.flags = vk::ImageViewCreateFlags();
+			createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
+			createViewInfo.viewType = vk::ImageViewType::e2D;
+			createViewInfo.format = swapchainImageFormat;
+			createViewInfo.image = swapchainImage;
+			createViewInfo.components = vk::ComponentMapping();
+			createViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+			createViewInfo.subresourceRange.baseMipLevel = 0;
+			createViewInfo.subresourceRange.levelCount = 1;
+			createViewInfo.subresourceRange.baseArrayLayer = 0;
+			createViewInfo.subresourceRange.layerCount = 1;
+
+			auto [createViewResult, view] = device.createImageView(createViewInfo);
+			vk::resultCheck(createViewResult, "Failed to create image view");
+
+			textures[count] = std::make_shared<VulkanTexture2D>(api, view);
+
+			count++;
+		}
+
+
+		return textures;
+
 	}
 
 	Ref<RenderPass> VkSwapChain::GetDefaultRenderPass()
@@ -265,20 +287,22 @@ namespace Polyboid
 
 	void VkSwapChain::Destroy(vk::Device device)
 	{
-		for (const auto& view : m_SwapChainImageViews)
+		auto result = device.waitIdle();
+
+		vk::resultCheck(result, "Failed to wait");
+
+		if (m_Swapchain)
 		{
-			device.destroyImageView(view);
+			device.destroySwapchainKHR(m_Swapchain);
+			m_Swapchain = nullptr;
 		}
-
-
-		m_SwapChainImageViews.clear();
-
-		
-		device.destroySwapchainKHR(m_Swapchain);
 		
 
-		m_RenderPass->Destroy(device);
-
+		if (m_RenderPass)
+		{
+			m_RenderPass->Destroy(device);
+			m_RenderPass = nullptr;
+		}
 		
 	}
 

@@ -13,8 +13,7 @@ namespace Polyboid
 		vk::RenderPass m_RenderPass = nullptr;
 		ClearSettings m_ClearSettings;
 		RenderPassSettings m_Settings;
-		Ref <Framebuffer> m_Framebuffer;
-		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
+		Ref <VulkanFramebuffer> m_Framebuffer;
 		Ref<Swapchain> m_Swapchain;
 		vk::RenderPassBeginInfo m_RenderPassBeginInfo{};
 		vk::ClearColorValue m_ColorValue;
@@ -29,7 +28,6 @@ namespace Polyboid
 
 		VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings);
 		void Destroy(vk::Device device);
-		std::vector<Ref<VulkanFramebuffer>>& GetFramebuffers() { return m_Framebuffers; }
 
 		void AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture) override;
 		Ref<Texture> GetTexture(TextureAttachmentSlot attachment) override;

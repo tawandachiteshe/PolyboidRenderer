@@ -39,12 +39,6 @@ namespace Polyboid
         Copy
     };
 
-    struct RenderPassTextureAttachment
-    {
-        TextureAttachmentSlot slot;
-        EngineGraphicsFormats format;
-    };
-
     struct RenderPassSettings
     {
 
@@ -53,8 +47,7 @@ namespace Polyboid
         uint32_t Width = 0;
         uint32_t Height = 0;
         RenderPassType type = RenderPassType::Present;
-        std::vector<RenderPassTextureAttachment> TextureAttachments;
-        std::vector<Ref<Texture>> Textures;
+        std::vector<TextureAttachment> TextureAttachments;
         bool IsSwapchainRenderPass = true;
     };
     

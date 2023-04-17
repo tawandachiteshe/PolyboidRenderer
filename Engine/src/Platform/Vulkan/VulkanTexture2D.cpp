@@ -11,7 +11,7 @@
 
 namespace Polyboid
 {
-	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings)
+	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings): m_Context(context)
 	{
 
 		vk::Device device = (*context->GetDevice());
@@ -75,10 +75,15 @@ namespace Polyboid
 
 	void VulkanTexture2D::Destroy()
 	{
-		
+
+		vk::Device device = (*m_Context->GetDevice());
+		if (m_View != vk::ImageView(nullptr))
+		{
+			device.destroyImageView(m_View);
+		}
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const std::any& handle)
+	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const std::any& handle): m_Context(context)
 	{
 		m_View = std::any_cast<vk::ImageView>(handle);
 	}

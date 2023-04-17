@@ -127,7 +127,7 @@ namespace Polyboid
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const std::any& handle)
 	{
-		return ALLOC_API(VulkanTexture2D, handle);
+		return ALLOC_API(VulkanTexture2D, this, handle);
 	}
 
 	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void** data, const TextureSettings& settings)
