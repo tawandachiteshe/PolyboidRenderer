@@ -9,6 +9,7 @@ namespace vk
 
 namespace Polyboid
 {
+	class CommandList;
 
 #define   ALLOC_COMMAND(Klass, ...) std::make_shared<Klass>(__VA_ARGS__)
 
@@ -23,7 +24,7 @@ namespace Polyboid
 	{
 		RenderAPI* m_Context;
 		std::vector<Ref<Command>> m_Commands;
-		Ref<CommandBuffer> m_CommandBuffer;
+		std::vector<Ref<CommandList>> m_CommandLists;
 	};
 
 
@@ -32,10 +33,11 @@ namespace Polyboid
 	private:
 		static Unique<RenderCommandData> s_Data;
 	public:
+		static void SetCommandLists(const std::vector<Ref<CommandList>>& cmdList);
 		static void Init(RenderAPI* context);
 		static void AddCommand(const Ref<Command>& renderCommand);
 		static void WaitAndRender();
-		static Ref<CommandBuffer> GetCommandBuffer() { return s_Data->m_CommandBuffer; }
+
 	};
 
 }

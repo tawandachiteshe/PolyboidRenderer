@@ -45,6 +45,7 @@ namespace Polyboid
 		RenderAPI* GetRenderAPI() const { return  m_RenderAPI; }
 
 
+
 	protected:
 		Unique<Window> m_MainWindow = nullptr;
 		RenderAPI* m_RenderAPI = nullptr;
@@ -64,7 +65,7 @@ namespace Polyboid
 
 		void Run();
 		void Render();
-		static void ShutDown();
+		void ShutDown();
 		std::atomic_bool m_Running = false;
 		std::atomic_bool m_ShouldRender = true;
 

@@ -29,9 +29,10 @@ namespace Polyboid
         virtual ~Swapchain() = default;
         virtual void Resize(uint32_t width = 0, uint32_t height = 0) = 0;
         virtual Ref<RenderPass> GetDefaultRenderPass() = 0;
+        virtual void Invalidate() = 0;
 
         //TODO: Make it robust
-        static Ref<Swapchain> Create(const std::any& window);
+        static Ref<Swapchain> Create(const SwapchainSettings& settings);
     };
 
 }

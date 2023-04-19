@@ -132,6 +132,9 @@ namespace Polyboid
 
         uint32_t Width = 0;
         uint32_t Height = 0;
+
+        std::string path;
+
     };
 
 

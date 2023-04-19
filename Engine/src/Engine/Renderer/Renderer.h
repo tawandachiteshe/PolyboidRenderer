@@ -23,6 +23,8 @@ namespace Polyboid
         Ref<PipelineState> m_DefaultPipelineState;
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
+        std::atomic_uint32_t m_CurrentFrame = 0;
+        uint32_t m_MaxFramesInFlight = 3;
     };
 	
     
@@ -36,8 +38,10 @@ namespace Polyboid
     public:
         static void Init(RenderAPI* context);
         static void BeginDraw(const Ref<Camera>& camera);
+        static void SetMaxFramesInFlight(uint32_t frames);
+        static std::atomic_uint32_t& GetCurrentFrame();
         static void EndDraw();
-        static void BeginCommands();
+        static void BeginCommands(const std::vector<Ref<CommandList>>& cmdList);
         static void EndCommands();
         static void BeginFrame();
         static void EndFrame();
@@ -49,6 +53,7 @@ namespace Polyboid
         static void SetPipelineState(const Ref<PipelineState>& pipelineState);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass);
         static void EndRenderPass();
+        static void SubmitSwapChain(const Ref<Swapchain>& swapchain);
 
         static Ref<RenderPass> GetDefaultRenderTarget();
         static Ref<PipelineState> GetDefaultPipeline();

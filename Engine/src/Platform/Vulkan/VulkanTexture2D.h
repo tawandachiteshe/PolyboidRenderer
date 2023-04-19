@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Engine/Renderer/Texture.h"
 #include <vulkan/vulkan.hpp>
+#include <vma/vk_mem_alloc.h>
 
 namespace Polyboid
 {
@@ -11,12 +12,13 @@ namespace Polyboid
 
 	private:
 		vk::Image m_Image;
-		vk::ImageView m_View;
+		vk::ImageView m_View = nullptr;
 		const VkRenderAPI* m_Context = nullptr;
+		VmaAllocation m_ImageMemory;
 
 	public:
-		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings);
-		VulkanTexture2D(const VkRenderAPI* context, const std::any& handle);
+		VulkanTexture2D(const VkRenderAPI* context, const void* data, const TextureSettings& settings);
+		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const std::any& imageHandle);
 
 		void Destroy();
 

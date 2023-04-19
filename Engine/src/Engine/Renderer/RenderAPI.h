@@ -74,8 +74,6 @@ namespace Polyboid
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings, const Ref<RenderPass>& renderPass) = 0;
 		virtual Ref<Renderbuffer> CreateRenderBuffer(const RenderbufferSettings& settings) = 0;
-		virtual void BeginFrame() = 0;
-		virtual void EndFrame() = 0;
 
 		virtual Ref<UniformBuffer> CreateUniformBuffer(uint32_t size, uint32_t binding) = 0;
 		virtual Ref<IndexBuffer> CreateIndexBuffer(const IndexDataType& type, uint32_t count, const std::variant<uint32_t*, uint16_t*>& data) = 0;
@@ -86,7 +84,8 @@ namespace Polyboid
 		virtual Ref<PipelineState> CreatePipelineState() = 0;
 		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
-		virtual Ref<CommandList> CreateCommandList() = 0;
+		virtual Ref<CommandList> CreateCommandList(bool canPresent = false) = 0;
+		
 
 		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;
 

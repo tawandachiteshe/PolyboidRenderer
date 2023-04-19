@@ -32,15 +32,6 @@ namespace Polyboid
 		return m_Surface;
 	}
 
-	Ref<VulkanSyncObjects> VkRenderAPI::GetSyncObjects() const
-	{
-		return m_SyncObjects;
-	}
-
-	void VkRenderAPI::SetSwapchainIndex(uint32_t index)
-	{
-		m_SwapchainImageIndex = index;
-	}
 
 	VkRenderAPI::VkRenderAPI(const std::any& window): m_Window(window)
 	{
@@ -52,51 +43,9 @@ namespace Polyboid
 
 		m_Allocator = std::make_shared<VulkanAllocator>(this);
 
-		m_SyncObjects = ALLOC_API(VulkanSyncObjects, this, MAX_FRAMES_INFLIGHT);
 		m_DescPool = ALLOC_API(VulkanDescriptorPool, this);
 	}
 
-	void VkRenderAPI::BeginFrame()
-	{
-		vk::Device device = (*m_Device);
-
-
-		auto inflightFence = m_SyncObjects->GetFences()[m_CurrentFrame];
-
-
-		vk::Result result = device.waitForFences(1, &inflightFence, true, std::numeric_limits<uint64_t>::max());
-
-		if (result != vk::Result::eSuccess)
-		{
-			spdlog::error("Waiting for fence failed");
-			__debugbreak();
-		}
-
-
-		for (const auto& swapchain : m_Swapchains)
-		{
-			swapchain->BeginFrame();
-		}
-
-		result = device.resetFences(1, &inflightFence);
-		if (result != vk::Result::eSuccess)
-		{
-			spdlog::error("Reset fence failed");
-			__debugbreak();
-		}
-	}
-
-	void VkRenderAPI::EndFrame()
-	{
-		if (m_CurrentFrame < MAX_FRAMES_INFLIGHT - 1)
-		{
-			++m_CurrentFrame;
-		}
-		else
-		{
-			m_CurrentFrame = 0;
-		}
-	}
 
 	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const FramebufferSettings& settings)
 	{
@@ -119,7 +68,7 @@ namespace Polyboid
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings)
 	{
-		auto texture = ALLOC_API(VulkanTexture2D, this, settings);
+		auto texture = ALLOC_API(VulkanTexture2D, this, nullptr, settings);
 		m_Textures2D.push_back(texture);
 
 		return texture;
@@ -127,7 +76,7 @@ namespace Polyboid
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const std::any& handle)
 	{
-		return ALLOC_API(VulkanTexture2D, this, handle);
+		return nullptr;
 	}
 
 	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void** data, const TextureSettings& settings)
@@ -181,9 +130,9 @@ namespace Polyboid
 		return nullptr;
 	}
 
-	Ref<CommandList> VkRenderAPI::CreateCommandList()
+	Ref<CommandList> VkRenderAPI::CreateCommandList(bool canPresent)
 	{
-		auto vulkanCommandList = ALLOC_API(VulkanCommandList, this);
+		auto vulkanCommandList = ALLOC_API(VulkanCommandList, this, canPresent);
 
 		m_CommandLists.push_back(vulkanCommandList);
 
@@ -247,6 +196,11 @@ namespace Polyboid
 			vtx->Destroy();
 		}
 
+		for (const auto& texture : m_Textures2D)
+		{
+			texture->Destroy();
+		}
+
 		for (const auto& idx : m_IndexBuffers)
 		{
 			idx->Destroy();
@@ -264,7 +218,6 @@ namespace Polyboid
 
 		m_DescPool->Destroy();
 
-		m_SyncObjects->Destroy(device);
 		result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");
 		m_Allocator->Destroy();

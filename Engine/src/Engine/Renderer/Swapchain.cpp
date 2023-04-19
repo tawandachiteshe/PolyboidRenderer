@@ -2,15 +2,16 @@
 
 #include "Swapchain.h"
 
-#include "Platform/Opengl/GLSwapchain.h"
+#include "RenderAPI.h"
+#include "Engine/Engine/Application.h"
 
 
 namespace Polyboid
 {
     //Quick impl to test things out
-    Ref<Swapchain> Swapchain::Create(const std::any& window)
+    Ref<Swapchain> Swapchain::Create(const SwapchainSettings& settings)
     {
-        return std::make_shared<GLSwapchain>(window);
+        return Application::Get().GetRenderAPI()->CreateSwapChain(settings);
     }
 }
 

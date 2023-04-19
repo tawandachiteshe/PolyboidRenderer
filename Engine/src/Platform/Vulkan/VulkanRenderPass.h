@@ -37,7 +37,7 @@ namespace Polyboid
 		void GenerateMipMaps() override;
 		~VulkanRenderPass() override;
 
-		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo();
+		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo(uint32_t imageIndex);
 
 		friend class VulkanFramebuffer;
 		friend class VulkanCommandBuffer;

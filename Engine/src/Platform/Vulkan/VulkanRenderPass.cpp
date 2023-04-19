@@ -158,7 +158,7 @@ namespace Polyboid
 	{
 	}
 
-	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo()
+	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo(uint32_t imageIndex)
 	{
 
 		m_RenderPassBeginInfo.sType = vk::StructureType::eRenderPassBeginInfo;
@@ -166,8 +166,7 @@ namespace Polyboid
 		if (m_Settings.type == RenderPassType::Present)
 		{
 			m_RenderPassBeginInfo.renderPass = m_RenderPass;
-			const uint32_t frameIndex = m_Context->m_SwapchainImageIndex;
-			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle(frameIndex);
+			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle(imageIndex);
 		}
 		else
 		{

@@ -8,8 +8,10 @@
 #include "VkRenderAPI.h"
 #include "VkSwapChain.h"
 #include "VulkanCommandList.h"
+#include "VulkanFence.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanRenderPass.h"
+#include "VulkanSemaphore.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/ImguiSetup.h"
 #include "vulkan/vulkan.hpp"
@@ -17,11 +19,16 @@
 
 namespace Polyboid
 {
+	void VulkanCommandBuffer::Destroy(const vk::Device& device)
+	{
+		m_Fence->Destroy();
+		m_ImageSemaphore->Destroy();
+		m_RenderSemaphore->Destroy();
+	}
 
 	VulkanCommandBuffer::VulkanCommandBuffer(const VkRenderAPI* context, const VulkanCommandList* commands): m_Context(context), m_CommandList(commands)
 	{
 
-		m_CommandBuffer.resize(m_Context->MAX_FRAMES_INFLIGHT);
 
 		vk::Device device = *context->GetDevice();
 
@@ -29,11 +36,16 @@ namespace Polyboid
 		allocInfo.sType = vk::StructureType::eCommandBufferAllocateInfo;
 		allocInfo.commandPool = commands->m_CommandList;
 		allocInfo.level = vk::CommandBufferLevel::ePrimary;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffer.size());
+		allocInfo.commandBufferCount = 1;
 
 		auto [result, commandbuffer] = device.allocateCommandBuffers(allocInfo);
 		vk::resultCheck(result, "Failed to  alloc command buffer");
-		m_CommandBuffer = commandbuffer;
+		m_CommandBuffer = commandbuffer.at(0);
+
+		m_Fence = std::make_shared<VulkanFence>(m_Context);
+		m_ImageSemaphore = std::make_shared<VulkanSemaphore>(m_Context);
+		m_RenderSemaphore = std::make_shared<VulkanSemaphore>(m_Context);
+
 
 	}
 
@@ -41,7 +53,21 @@ namespace Polyboid
 	{
 		vk::Device device = *m_Context->GetDevice();
 
-		vk::Result result = m_CommandBuffer[m_Context->m_CurrentFrame].reset();
+
+		auto inflightFence = std::any_cast<vk::Fence>(m_Fence->GetHandle());
+
+
+		vk::Result result = device.waitForFences(1, &inflightFence, true, std::numeric_limits<uint64_t>::max());
+		
+
+		if (result != vk::Result::eSuccess)
+		{
+			spdlog::error("Waiting for fence failed");
+			__debugbreak();
+		}
+
+
+		result = m_CommandBuffer.reset();
 		vk::resultCheck(result, "Failed to reset command buffer");
 
 		vk::CommandBufferBeginInfo beginInfo{};
@@ -49,7 +75,7 @@ namespace Polyboid
 		beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 		beginInfo.pInheritanceInfo = nullptr;
 
-		result = m_CommandBuffer[m_Context->m_CurrentFrame].begin(beginInfo);
+		result = m_CommandBuffer.begin(beginInfo);
 		vk::resultCheck(result, "Failed to begin command buffer");
 
 		
@@ -57,10 +83,7 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::End()
 	{
-		vk::CommandBuffer::NativeType cmd = m_CommandBuffer[m_Context->m_CurrentFrame];
-		
-
-		 auto result = m_CommandBuffer[m_Context->m_CurrentFrame].end();
+		 auto result = m_CommandBuffer.end();
 		 vk::resultCheck(result, "Failed to end command buffer");
 	}
 
@@ -68,34 +91,31 @@ namespace Polyboid
 	{
 
 		auto vkRenderpass = std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass);
-		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo();
-		m_CommandBuffer[m_Context->m_CurrentFrame].beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
+		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo(m_SwapchainCurrentImageIndex);
+		m_CommandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		
 	}
 
 	void VulkanCommandBuffer::EndRenderPass()
 	{
-		m_CommandBuffer[m_Context->m_CurrentFrame].endRenderPass();
+		m_CommandBuffer.endRenderPass();
 	}
 
-	void VulkanCommandBuffer::WaitAndRender()
+	void VulkanCommandBuffer::SubmitAndRender()
 	{
 		vk::SubmitInfo submitInfo{};
-		auto imageSemaphore = m_Context->GetSyncObjects()->GetImageSemaphores()[m_Context->m_CurrentFrame];
-		auto fence = m_Context->GetSyncObjects()->GetFences()[m_Context->m_CurrentFrame];
-		auto renderSemaphore = m_Context->GetSyncObjects()->GetRenderSemaphores()[m_Context->m_CurrentFrame];
-		auto graphicsQueue = m_Context->GetDevice()->GetGraphicsQueue();
+		auto imageSemaphore = std::any_cast<vk::Semaphore>(m_ImageSemaphore->GetHandle());
+		auto fence = std::any_cast<vk::Fence>(m_Fence->GetHandle());
+		auto renderSemaphore = std::any_cast<vk::Semaphore>(m_RenderSemaphore->GetHandle());
+		auto graphicsQueue = m_CommandList->m_GraphicsQueue;
 
-		Imgui::ImguiData& data = Imgui::GetData();
-
-		const vk::CommandBuffer buffers[] = {m_CommandBuffer[m_Context->m_CurrentFrame], data.m_ImguiCommandBuffer->GetCommandBuffers()[m_Context->m_CurrentFrame]};
 
 		vk::PipelineStageFlags waitStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
 		submitInfo.pWaitSemaphores = &imageSemaphore;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.commandBufferCount = 2;
-		submitInfo.pCommandBuffers = buffers;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_CommandBuffer;
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &renderSemaphore;
 
@@ -108,6 +128,75 @@ namespace Polyboid
 			__debugbreak();
 		}
 
+	}
+
+	void VulkanCommandBuffer::SubmitSwapchain(const Ref<Swapchain>& swapchain)
+	{
+		m_Swapchain = std::reinterpret_pointer_cast<VkSwapChain>(swapchain);
+
+		vk::Device device = *m_Context->GetDevice();
+		auto imageSemaphore = std::any_cast<vk::Semaphore>(m_ImageSemaphore->GetHandle());
+
+		auto ImageResult = device.acquireNextImageKHR(m_Swapchain->GetSwapchain(), std::numeric_limits<uint64_t>::max(), imageSemaphore);
+		m_SwapchainCurrentImageIndex = ImageResult.value;
+
+		if (ImageResult.result == vk::Result::eErrorOutOfDateKHR)
+		{
+			m_Swapchain->Invalidate();
+			return;
+		}
+
+		if (ImageResult.result != vk::Result::eSuccess || ImageResult.result == vk::Result::eSuboptimalKHR)
+		{
+			spdlog::error("Swapchain not great??");
+			__debugbreak();
+		}
+
+		auto fence = std::any_cast<vk::Fence>(m_Fence->GetHandle());
+		auto result = device.resetFences(1, &fence);
+		if (result != vk::Result::eSuccess)
+		{
+			spdlog::error("Reset fence failed");
+			__debugbreak();
+		}
+	}
+
+	void VulkanCommandBuffer::SubmitAndPresent()
+	{
+
+		auto renderSemaphore = std::any_cast<vk::Semaphore>(m_RenderSemaphore->GetHandle());
+		uint32_t imageIndex = m_SwapchainCurrentImageIndex;
+		vk::Result presentResult = vk::Result::eSuccess;
+
+		auto swapChain = m_Swapchain->GetSwapchain();
+
+
+		vk::PresentInfoKHR presentInfo{};
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &renderSemaphore;
+		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pSwapchains = &swapChain;
+		presentInfo.pResults = &presentResult;
+		presentInfo.swapchainCount = 1;
+
+		auto result = m_CommandList->m_PresentQueue.presentKHR(&presentInfo);
+
+
+		if (presentResult == vk::Result::eErrorOutOfDateKHR) {
+
+			m_Swapchain->Invalidate();
+		}
+		else if (result != vk::Result::eSuccess && result == vk::Result::eSuboptimalKHR)
+		{
+			spdlog::error("Failed to present");
+			__debugbreak();
+		}
+
+	}
+
+	std::any VulkanCommandBuffer::GetHandle()
+	{
+		return m_CommandBuffer;
 	}
 
 	VulkanCommandBuffer::~VulkanCommandBuffer()

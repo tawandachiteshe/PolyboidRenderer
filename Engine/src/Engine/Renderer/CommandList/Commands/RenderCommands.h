@@ -39,6 +39,17 @@ namespace Polyboid
 		~ClearRenderTargetCommand() override = default;
 	};
 
+	class SubmitSwapChainCommand : public Command
+	{
+		Ref<Swapchain> m_Swapchain;
+
+	public:
+
+		SubmitSwapChainCommand(const Ref<Swapchain>& swapchain);
+		void Execute() override;
+		~SubmitSwapChainCommand() override;
+	};
+
 	class DrawIndexedCommand : public Command
 	{
 	private:

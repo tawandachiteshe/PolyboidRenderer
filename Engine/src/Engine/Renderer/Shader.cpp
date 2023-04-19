@@ -6,7 +6,6 @@
 #include "Renderer.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Base.h"
-#include "Platform/Opengl/GLShader.h"
 
 
 namespace Polyboid
@@ -18,7 +17,7 @@ namespace Polyboid
 
         switch (renderApi)
         {
-        case RenderAPIType::Opengl: return  std::make_shared<GLShader>(shader, shaderSoucePath);
+        case RenderAPIType::Opengl:
         case RenderAPIType::Vulkan: 
         case RenderAPIType::Metal: 
         case RenderAPIType::Dx11: 
@@ -36,7 +35,7 @@ namespace Polyboid
 
         switch (renderApiType)
         {
-        case RenderAPIType::Opengl: return  std::make_shared<GLShader>(info);
+        case RenderAPIType::Opengl:
         case RenderAPIType::Vulkan:
         case RenderAPIType::Metal:
         case RenderAPIType::Dx11:

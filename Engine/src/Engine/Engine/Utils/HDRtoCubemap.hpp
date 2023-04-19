@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include "CubeMapFace.hpp"
+#include "Engine/Engine/Base.h"
 #include "glm/ext/scalar_common.hpp"
 
 #include "glm/ext/scalar_constants.hpp"

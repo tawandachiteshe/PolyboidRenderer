@@ -230,28 +230,11 @@ namespace Polyboid
 		int count = 0;
 		for (auto& swapchainImage : swapchainImages)
 		{
-
-			vk::ImageViewCreateInfo createViewInfo;
-			createViewInfo.flags = vk::ImageViewCreateFlags();
-			createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
-			createViewInfo.viewType = vk::ImageViewType::e2D;
-			createViewInfo.format = swapchainImageFormat;
-			createViewInfo.image = swapchainImage;
-			createViewInfo.components = vk::ComponentMapping();
-			createViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-			createViewInfo.subresourceRange.baseMipLevel = 0;
-			createViewInfo.subresourceRange.levelCount = 1;
-			createViewInfo.subresourceRange.baseArrayLayer = 0;
-			createViewInfo.subresourceRange.layerCount = 1;
-
-			auto [createViewResult, view] = device.createImageView(createViewInfo);
-			vk::resultCheck(createViewResult, "Failed to create image view");
-
-			textures[count] = std::make_shared<VulkanTexture2D>(api, view);
-
+			TextureSettings settings;
+			settings.sizedFormat = imageFormat;
+			textures[count] = std::make_shared<VulkanTexture2D>(api, settings, swapchainImage);
 			count++;
 		}
-
 
 		return textures;
 
@@ -265,23 +248,7 @@ namespace Polyboid
 	void VkSwapChain::BeginFrame()
 	{
 
-		vk::Device device = *m_Context->GetDevice();
-		auto imageSemaphore = m_Context->GetSyncObjects()->GetImageSemaphores()[m_Context->m_CurrentFrame];
-
-		auto result = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore);
-		m_Context->m_SwapchainImageIndex = result.value;
-
-		if (result.result == vk::Result::eErrorOutOfDateKHR)
-		{
-			Init(m_Context, m_Settings);
-			return;
-		}
-
-		if (result.result != vk::Result::eSuccess || result.result == vk::Result::eSuboptimalKHR)
-		{
-			spdlog::error("Swapchain not great??");
-			__debugbreak();
-		}
+	
 
 	}
 
@@ -311,35 +278,13 @@ namespace Polyboid
 		m_Resize = true;
 	}
 
+	void VkSwapChain::Invalidate()
+	{
+	}
+
 	void VkSwapChain::SwapBuffers()
 	{
 
-		vk::Queue queue = m_Context->GetDevice()->GetPresentQueue();
-		auto renderSemaphore = m_Context->GetSyncObjects()->GetRenderSemaphores()[m_Context->m_CurrentFrame];
-		uint32_t imageIndex = m_Context->m_SwapchainImageIndex;
-		vk::Result presentResult = vk::Result::eSuccess;
-	
-
-		vk::PresentInfoKHR presentInfo{};
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &renderSemaphore;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pSwapchains = &m_Swapchain;
-		presentInfo.pResults = &presentResult;
-		presentInfo.swapchainCount = 1;
-
-		auto result = queue.presentKHR(&presentInfo);
-
-
-		if (presentResult == vk::Result::eErrorOutOfDateKHR){
-
-			Init(m_Context, m_Settings);
-		}
-		else if (result != vk::Result::eSuccess && result == vk::Result::eSuboptimalKHR)
-		{
-			spdlog::error("Failed to present");
-			__debugbreak();
-		}
 	}
 
 	void VkSwapChain::SetVsync(bool vsync)

@@ -25,6 +25,19 @@ namespace Polyboid
 		m_State->Clear(m_ClearSettings);
 	}
 
+	SubmitSwapChainCommand::SubmitSwapChainCommand(const Ref<Swapchain>& swapchain): m_Swapchain(swapchain)
+	{
+	}
+
+	void SubmitSwapChainCommand::Execute()
+	{
+		m_Context->SubmitSwapchain(m_Swapchain);
+	}
+
+	SubmitSwapChainCommand::~SubmitSwapChainCommand()
+	{
+	}
+
 	DrawIndexedCommand::DrawIndexedCommand(uint32_t count, const PrimitiveType& type): m_Count(count), m_PrimitiveType(type)
 	{
 	}

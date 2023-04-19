@@ -33,13 +33,24 @@ namespace Polyboid
 
     }
 
+    void Renderer::SetMaxFramesInFlight(uint32_t frames)
+    {
+        s_Data->m_MaxFramesInFlight = frames;
+    }
+
+    std::atomic_uint32_t& Renderer::GetCurrentFrame()
+    {
+        return s_Data->m_CurrentFrame;
+    }
+
     void Renderer::EndDraw()
     {
        
     }
 
-    void Renderer::BeginCommands()
+    void Renderer::BeginCommands(const std::vector<Ref<CommandList>>& cmdList)
     {
+        RenderCommand::SetCommandLists(cmdList);
         RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderCommand));
     }
 
@@ -50,12 +61,14 @@ namespace Polyboid
 
     void Renderer::BeginFrame()
     {
-        s_Data->m_Context->BeginFrame();
+       
     }
 
     void Renderer::EndFrame()
     {
-        s_Data->m_Context->EndFrame();
+        auto& frame = s_Data->m_CurrentFrame;
+        auto& maxFrames = s_Data->m_MaxFramesInFlight;
+        frame += frame % maxFrames;
     }
 
     void Renderer::ClearRenderPass(ClearSettings settings)
@@ -88,6 +101,11 @@ namespace Polyboid
     void Renderer::EndRenderPass()
     {
         RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_CurrentRenderPass));
+    }
+
+    void Renderer::SubmitSwapChain(const Ref<Swapchain>& swapchain)
+    {
+        RenderCommand::AddCommand(ALLOC_COMMAND(SubmitSwapChainCommand, swapchain));
     }
 
     Ref<RenderPass> Renderer::GetDefaultRenderTarget()

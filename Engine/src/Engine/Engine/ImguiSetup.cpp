@@ -13,6 +13,7 @@
 #include "Engine/Renderer/RenderAPI.h"
 #include "GLFW/glfw3.h"
 #include "imgui_impl_vulkan.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
@@ -111,8 +112,9 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            s_Data.m_CommandList = new VulkanCommandList(renderAPI);
-            s_Data.m_ImguiCommandBuffer = new VulkanCommandBuffer(renderAPI, s_Data.m_CommandList);
+            s_Data.m_CommandList = new VulkanCommandList(renderAPI, false);
+            s_Data.m_CommandList->CreateCommandBuffers(3);
+
             auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(app.GetSwapchain()->GetDefaultRenderPass());
   
 
@@ -137,11 +139,11 @@ namespace Polyboid
 
             // Upload Fonts
             {
-                auto cmd = s_Data.m_ImguiCommandBuffer;
+                auto cmd = s_Data.m_CommandList->GetCommandBufferAt(0);
 
 
-
-                VkCommandBuffer command_buffer = cmd->GetCommandBuffers()[0];
+                vk::CommandBuffer cmdbuffer = std::any_cast<vk::CommandBuffer>(cmd->GetHandle());
+                VkCommandBuffer command_buffer = cmdbuffer;
 
                 VkCommandBufferBeginInfo begin_info = {};
                 begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -188,8 +190,12 @@ namespace Polyboid
         {
 
             auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(app.GetSwapchain()->GetDefaultRenderPass());
-            s_Data.m_ImguiCommandBuffer->Begin();
-            s_Data.m_ImguiCommandBuffer->BeginRenderPass(renderPass);
+            auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
+            auto& frame = Renderer::GetCurrentFrame();
+
+
+            s_Data.m_CommandList->GetCommandBufferAt(frame)->Begin();
+            s_Data.m_CommandList->GetCommandBufferAt(frame)->BeginRenderPass(renderPass);
 
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -215,15 +221,18 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto cmd = s_Data.m_ImguiCommandBuffer;
-            auto& frame = renderAPI->GetCurrentFrame();
+            auto cmd = s_Data.m_CommandList;
+            
+            auto& frame = Renderer::GetCurrentFrame();
 
-            VkCommandBuffer command_buffer = cmd->GetCommandBuffers()[frame];
+
+            auto cmdBuffer = cmd->GetCommandBufferAt(frame);
+
+            VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
 
-            cmd->EndRenderPass();
-            cmd->End();
-
+            cmdBuffer->EndRenderPass();
+            cmdBuffer->End();
 
         }
 

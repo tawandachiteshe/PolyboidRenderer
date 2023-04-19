@@ -22,8 +22,7 @@ namespace Polyboid
         {
             ImGuiIO* io = nullptr;
             GLFWwindow* window;
-            VulkanCommandBuffer* m_ImguiCommandBuffer = nullptr;
-            VulkanCommandList* m_CommandList = nullptr;
+        	VulkanCommandList* m_CommandList = nullptr;
             uint32_t swapChainImage = 0;
 
         };

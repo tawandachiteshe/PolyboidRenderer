@@ -25,7 +25,6 @@ namespace Polyboid
 		SwapchainSettings m_Settings;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
 
-		
 
 		bool m_Resize = false;
 
@@ -48,6 +47,10 @@ namespace Polyboid
 		void Destroy(vk::Device device);
 
 		void Resize(uint32_t width, uint32_t height) override;
+
+		void Invalidate() override;
+
+		vk::SwapchainKHR GetSwapchain() { return m_Swapchain; }
 
 
 		void SwapBuffers() override;

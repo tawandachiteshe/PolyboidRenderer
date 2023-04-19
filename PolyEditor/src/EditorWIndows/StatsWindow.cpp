@@ -14,7 +14,8 @@ namespace Polyboid
 
 		auto frameRate = ImGui::GetIO().Framerate;
 
-		ImGui::Text("Frame rate %f", (1.0f / frameRate));
+		ImGui::Text("Frame time %f", 1.0f / frameRate);
+		ImGui::Text("Frame rate %f", frameRate);
 		
 
 		ImGui::End();

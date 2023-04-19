@@ -4,7 +4,6 @@
 #include <intrin.h>
 
 #include "Engine/Engine/Application.h"
-#include "Platform/Opengl/GLRenderAPI.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
 
 namespace Polyboid
@@ -17,8 +16,8 @@ namespace Polyboid
 		static RenderAPI* renderApi = nullptr;
 		switch (renderType)
 		{
-		case RenderAPIType::Opengl: renderApi = new GLRenderAPI(nativeWindow); s_RenderAPI = renderApi; return renderApi;
 		case RenderAPIType::Vulkan: renderApi = new VkRenderAPI(nativeWindow); s_RenderAPI = renderApi; return renderApi;
+		case RenderAPIType::Opengl:
 		case RenderAPIType::Metal:  
 		case RenderAPIType::Dx11:
 		case RenderAPIType::Dx12:

@@ -39,16 +39,12 @@ namespace Polyboid
 		Ref<VulkanDevice> m_Device;
 		Ref<VulkanSurfaceKHR> m_Surface;
 		Ref<VulkanAllocator> m_Allocator;
-		Ref<VulkanSyncObjects> m_SyncObjects;
 		Ref<VulkanDescriptorPool> m_DescPool;
 		std::any m_Window;
-		std::atomic<uint32_t> m_SwapchainImageIndex = 0;
-		std::atomic<uint32_t> m_CurrentFrame = 0;
-		uint32_t MAX_FRAMES_INFLIGHT = 3;
+
 
 	public:
 
-		std::atomic<uint32_t>& GetCurrentFrame() { return m_CurrentFrame; }
 		//Vulkan specific
 		Ref<VulkanDescriptorPool> GetPool() const { return m_DescPool; }
 		[[nodiscard]] Ref<VkInstance> GetInstance() const { return  m_Instance; }
@@ -57,13 +53,9 @@ namespace Polyboid
 		[[nodiscard]] Ref<VulkanDevice> GetDevice() const;
 		[[nodiscard]] std::any GetWindow() const { return m_Window; }
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
-		[[nodiscard]] Ref<VulkanSyncObjects> GetSyncObjects() const;
-		void SetSwapchainIndex(uint32_t index);
+
 
 		VkRenderAPI(const std::any& window);
-
-		void BeginFrame() override;
-		void EndFrame() override;
 
 		Ref<Framebuffer>
 		CreateFrameBuffer(const FramebufferSettings& settings) override;
@@ -74,6 +66,7 @@ namespace Polyboid
 		Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) override;
 		Ref<SamplerState> CreateSampler(const SamplerSettings& settings) override;
 
+
 		Ref<Renderbuffer> CreateRenderBuffer(const RenderbufferSettings& settings) override;
 		Ref<UniformBuffer> CreateUniformBuffer(uint32_t size, uint32_t binding) override;
 		Ref<IndexBuffer> CreateIndexBuffer(const IndexDataType& type, uint32_t count,
@@ -82,7 +75,7 @@ namespace Polyboid
 		Ref<VertexBuffer> CreateVertexBuffer(const void* data, uint32_t dataSize) override;
 		Ref<VertexBuffer> CreateVertexBuffer(uint32_t dataSize) override;
 		Ref<VertexBufferArray> CreateVertexBufferArray() override;
-		Ref<CommandList> CreateCommandList() override;
+		Ref<CommandList> CreateCommandList(bool canPresent) override;
 
 		Ref<PipelineState> CreatePipelineState() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;
@@ -91,6 +84,8 @@ namespace Polyboid
 		RenderAPIType GetRenderAPIType() override;
 		RenderAPIType GetRenderAPIType() const override;
 		~VkRenderAPI() override;
+
+
 
 		friend class VkSwapChain;
 		friend class VulkanCommandBuffer;

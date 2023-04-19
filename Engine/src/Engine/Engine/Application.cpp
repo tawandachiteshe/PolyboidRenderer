@@ -12,6 +12,7 @@
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
 #include "imgui.h"
+#include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Events/EventDispatcher.h"
@@ -33,6 +34,7 @@ namespace Polyboid
 
 		s_Instance = this;
 	}
+
 
 	Application::Application()
 	{
@@ -69,7 +71,7 @@ namespace Polyboid
 	Application::~Application()
 	{
 		ShutDown();
-		delete m_RenderAPI;
+		
 	}
 
 
@@ -108,6 +110,7 @@ namespace Polyboid
 	void Application::ShutDown()
 	{
 		Imgui::ShutDown();
+		delete m_RenderAPI;
 	}
 
 	void Application::Run()
@@ -145,6 +148,7 @@ namespace Polyboid
 		m_RenderThread.join();
 	}
 
+
 	void Application::Render()
 	{
 		OPTICK_THREAD("Render Thread")
@@ -161,10 +165,19 @@ namespace Polyboid
 		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
 		
 
-		m_Swapchain = m_RenderAPI->CreateSwapChain(settings);
-		m_RenderAPI->CreateTexture2D({ .sizedFormat = EngineGraphicsFormats::Depth24Stencil8, .Width = 1600, .Height = 900 });
+		m_Swapchain = Swapchain::Create(settings);
+		//auto texture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .Width = 1600, .Height = 900, .path = "Assets/Textures/checker.jpg"});
+		auto mainCmdList = CommandList::Create(true);
+		mainCmdList->CreateCommandBuffers(3);
+
+		
+
 
 		Imgui::Init(m_MainWindow->GetNativeWindow());
+
+		auto imguiCmdList = Imgui::GetData().m_CommandList;
+		CommandList* imguiRef = reinterpret_cast<CommandList*>(imguiCmdList);
+
 
 		while (m_Running)
 		{
@@ -176,7 +189,10 @@ namespace Polyboid
 
 
 			Renderer::BeginFrame();
-			Renderer::BeginCommands();
+
+			//Imgui
+			Renderer::BeginCommands({mainCmdList});
+			Renderer::SubmitSwapChain(m_Swapchain);
 			Renderer::BeginRenderPass(m_Swapchain->GetDefaultRenderPass());
 			Renderer::ClearRenderPass(glm::vec4(1, 0, 0, 1));
 
@@ -189,16 +205,13 @@ namespace Polyboid
 			}
 
 
-			ImGui::ShowDemoWindow();
 			Imgui::End();
-			/// <summary>
-			///
-			/// </summary>
+
 
 			Renderer::EndRenderPass();
 			Renderer::EndCommands();
 			Renderer::WaitAndRender();
-			m_Swapchain->SwapBuffers();
+
 			Renderer::EndFrame();
 
 

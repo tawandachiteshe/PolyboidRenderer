@@ -10,7 +10,7 @@
 extern Polyboid::Application* Polyboid::CreateApplication();
 
 
-int main(int argc, char** argv)
+ int main(int argc, char** argv)
 {
 
     Polyboid::Logger::Init();
