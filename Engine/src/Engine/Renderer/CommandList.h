@@ -17,11 +17,9 @@ namespace Polyboid
 
 		virtual void Begin() = 0;
 		virtual void End() = 0;
-		virtual void BeginRenderPass(const Ref<RenderPass>& renderPass) = 0;
+		virtual void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) = 0;
 		virtual void EndRenderPass() = 0;
-		virtual void SubmitAndRender() = 0;
-		virtual void SubmitSwapchain(const Ref<Swapchain>& swapchain) = 0;
-		virtual void SubmitAndPresent() = 0;
+		virtual void Reset() = 0;
 		virtual std::any GetHandle() = 0;
 
 
@@ -38,7 +36,6 @@ namespace Polyboid
 
 		virtual void CreateCommandBuffers(uint32_t count = 1) = 0;
 		virtual Ref<CommandBuffer> GetCommandBufferAt(uint32_t index = 0) = 0;
-		virtual bool CanPresent() = 0;
 		virtual ~CommandList() = default;
 
 		static Ref<CommandList> Create(bool canPresent = false);

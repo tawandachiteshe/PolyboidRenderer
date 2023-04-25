@@ -6,6 +6,10 @@
 
 namespace Polyboid
 {
+	class VulkanCommandList;
+	class VulkanCommandBuffer;
+	class VulkanFence;
+	class VulkanSemaphore;
 	class VulkanTexture2D;
 	class RenderPass;
 	class VulkanRenderPass;
@@ -21,14 +25,17 @@ namespace Polyboid
 		std::vector<vk::PresentModeKHR> m_PresentModes;
 		vk::SwapchainKHR m_Swapchain = nullptr;
 		std::vector<vk::Image> m_SwapchainImages;
-		VkRenderAPI* m_Context;
+		VkRenderAPI* m_Context = nullptr;
 		SwapchainSettings m_Settings;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
+		uint32_t m_SwapchainCurrentImageIndex = 0;
+		std::vector<Ref<VulkanTexture2D>> m_Textures;
+		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
+		vk::Queue m_PresentQueue;
 
 
 		bool m_Resize = false;
 
-		vk::Semaphore m_ImageAvailableSemaphore;
 		void Init(VkRenderAPI* context, const SwapchainSettings& settings);
 
 	public:
@@ -42,18 +49,17 @@ namespace Polyboid
 
 		Ref<RenderPass> GetDefaultRenderPass() override;
 
-		void BeginFrame();
-
 		void Destroy(vk::Device device);
 
 		void Resize(uint32_t width, uint32_t height) override;
 
-		void Invalidate() override;
+		vk::SwapchainKHR GetVulkanSwapChain() { return m_Swapchain; }
 
-		vk::SwapchainKHR GetSwapchain() { return m_Swapchain; }
+		void Present(const Ref<Semaphore>& renderSemaphore) override;
 
 
-		void SwapBuffers() override;
+		uint32_t GetImageIndex(const Ref<Semaphore>& imageSemaphore) override;
+		virtual  Ref<VulkanFramebuffer> GetCurrentFramebuffer();
 		void SetVsync(bool vsync) override;
 		~VkSwapChain() override;
 	};

@@ -7,6 +7,7 @@
 
 namespace Polyboid
 {
+	class Semaphore;
 	class RenderPass;
 	//We support only srbg
 
@@ -24,12 +25,12 @@ namespace Polyboid
     class Swapchain
     {
     public:
-        virtual void SwapBuffers() = 0;
+        virtual uint32_t GetImageIndex(const Ref<Semaphore>& imageSemaphore) = 0;
+        virtual void Present(const Ref<Semaphore>& renderSemaphore) = 0;
         virtual void SetVsync(bool vsync)= 0;
         virtual ~Swapchain() = default;
         virtual void Resize(uint32_t width = 0, uint32_t height = 0) = 0;
         virtual Ref<RenderPass> GetDefaultRenderPass() = 0;
-        virtual void Invalidate() = 0;
 
         //TODO: Make it robust
         static Ref<Swapchain> Create(const SwapchainSettings& settings);

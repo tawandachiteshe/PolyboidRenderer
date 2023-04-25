@@ -93,7 +93,7 @@ namespace Polyboid
 	{
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
-		m_Swapchain->Resize(event.GetWidth(), event.GetHeight());
+		//Renderer::Resize();
 	}
 
 	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
@@ -154,18 +154,11 @@ namespace Polyboid
 		OPTICK_THREAD("Render Thread")
 
 	
-		Renderer::Init(m_RenderAPI);
+		Renderer::Init(m_RenderAPI, m_Settings);
 		ShaderRegistry::Init(m_RenderAPI);
 
 		
 
-		SwapchainSettings settings{};
-		settings.Width = m_Settings.WindowWidth;
-		settings.Height = m_Settings.WindowHeight;
-		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
-		
-
-		m_Swapchain = Swapchain::Create(settings);
 		//auto texture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .Width = 1600, .Height = 900, .path = "Assets/Textures/checker.jpg"});
 		auto mainCmdList = CommandList::Create(true);
 		mainCmdList->CreateCommandBuffers(3);
@@ -177,7 +170,8 @@ namespace Polyboid
 
 		auto imguiCmdList = Imgui::GetData().m_CommandList;
 		CommandList* imguiRef = reinterpret_cast<CommandList*>(imguiCmdList);
-
+		Ref<CommandList> imguiPtr;
+		imguiPtr.reset(imguiRef);
 
 		while (m_Running)
 		{
@@ -192,32 +186,31 @@ namespace Polyboid
 
 			//Imgui
 			Renderer::BeginCommands({mainCmdList});
-			Renderer::SubmitSwapChain(m_Swapchain);
-			Renderer::BeginRenderPass(m_Swapchain->GetDefaultRenderPass());
+			Renderer::BeginRenderPass(Renderer::GetSwapChain()->GetDefaultRenderPass());
 			Renderer::ClearRenderPass(glm::vec4(1, 0, 0, 1));
 
 
 			Imgui::Begin();
-
+			
 			for (auto layer : m_Layers)
 			{
 				layer->OnImguiRender();
 			}
-
-
+			
+			
 			Imgui::End();
 
 
 			Renderer::EndRenderPass();
 			Renderer::EndCommands();
-			Renderer::WaitAndRender();
-
 			Renderer::EndFrame();
 
 
 	
 
 		}
+
+		imguiPtr.reset();
 
 	}
 }

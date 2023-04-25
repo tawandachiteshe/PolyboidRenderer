@@ -2,12 +2,15 @@
 
 #include "Renderer.h"
 
+#include "CommandList.h"
 #include "Framebuffer.h"
 #include "PipelineState.h"
 #include "RenderAPI.h"
 #include "RenderPass.h"
+#include "SyncObjects.h"
 #include "CommandList/RenderCommand.h"
 #include "CommandList/Commands/RenderCommands.h"
+#include "Engine/Engine/Application.h"
 #include "Engine/Engine/Engine.h"
 
 
@@ -19,11 +22,33 @@ namespace Polyboid
 
     //TODO: Manage lifetimes of these
 
-    void Renderer::Init(RenderAPI* context) {
+
+    Ref<Swapchain> Renderer::GetSwapChain()
+    {
+        return s_Data->m_Swapchain;
+    }
+
+    void Renderer::Init(RenderAPI* context, const ApplicationSettings& appSettings) {
       
         RenderCommand::Init(context);
 		s_Data = std::make_unique<RendererStorage>();
         s_Data->m_Context = context;
+        
+
+        SwapchainSettings settings{};
+        settings.Width = appSettings.WindowWidth;
+        settings.Height = appSettings.WindowHeight;
+        settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
+
+        s_Data->m_Swapchain = Swapchain::Create(settings);
+
+        for (uint32_t i = 0; i < s_Data->m_MaxFramesInFlight; ++i)
+        {
+            s_Data->m_InFlightFences.push_back(Fence::Create());
+            s_Data->m_ImagesSemaphores.push_back(Semaphore::Create());
+            s_Data->m_RenderSemaphores.push_back(Semaphore::Create());
+        }
+
 
     }
     
@@ -48,10 +73,15 @@ namespace Polyboid
        
     }
 
-    void Renderer::BeginCommands(const std::vector<Ref<CommandList>>& cmdList)
+    void Renderer::BeginCommands(const std::vector<Ref<CommandList>>& cmdLists)
     {
-        RenderCommand::SetCommandLists(cmdList);
-        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderCommand));
+        
+        RenderCommand::SetCommandLists(cmdLists);
+        // for (auto& cmdList : cmdLists)
+        // {
+        //     cmdList->GetCommandBufferAt(s_Data->m_CurrentFrame)->Reset();
+        // }
+    	RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderCommand));
     }
 
     void Renderer::EndCommands()
@@ -61,14 +91,26 @@ namespace Polyboid
 
     void Renderer::BeginFrame()
     {
-       
+        auto& frame = s_Data->m_CurrentFrame;
+
+        s_Data->m_InFlightFences[frame]->WaitAndReset();
+        const auto& imageFence = s_Data->m_ImagesSemaphores[frame];
+        s_Data->m_ImageIndex = s_Data->m_Swapchain->GetImageIndex(imageFence);
     }
 
     void Renderer::EndFrame()
     {
         auto& frame = s_Data->m_CurrentFrame;
+        auto& inFlightFence = s_Data->m_InFlightFences[frame];
+        auto& imageSemaphore = s_Data->m_ImagesSemaphores[frame];
+        auto& renderSemaphore = s_Data->m_RenderSemaphores[frame];
+
+        RenderCommand::WaitAndRender(imageSemaphore, renderSemaphore, inFlightFence);
+
+        s_Data->m_Swapchain->Present(renderSemaphore);
+
         auto& maxFrames = s_Data->m_MaxFramesInFlight;
-        frame += frame % maxFrames;
+        frame = (frame + 1) % maxFrames;
     }
 
     void Renderer::ClearRenderPass(ClearSettings settings)
@@ -103,10 +145,6 @@ namespace Polyboid
         RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_CurrentRenderPass));
     }
 
-    void Renderer::SubmitSwapChain(const Ref<Swapchain>& swapchain)
-    {
-        RenderCommand::AddCommand(ALLOC_COMMAND(SubmitSwapChainCommand, swapchain));
-    }
 
     Ref<RenderPass> Renderer::GetDefaultRenderTarget()
     {
@@ -120,6 +158,6 @@ namespace Polyboid
 
     void Renderer::WaitAndRender()
     {
-		RenderCommand::WaitAndRender();
+		
     }
 }

@@ -1,6 +1,8 @@
 ﻿#include "boidpch.h"
 #include "VulkanCommandList.h"
 
+#include <spdlog/spdlog.h>
+
 #include "VkRenderAPI.h"
 #include "VulkanCommandBuffer.h"
 #include "Engine/Renderer/Renderer.h"
@@ -52,11 +54,6 @@ namespace Polyboid
 	Ref<CommandBuffer> VulkanCommandList::GetCommandBufferAt(uint32_t index)
 	{
 		return m_CommandBuffers.at(index);
-	}
-
-	bool VulkanCommandList::CanPresent()
-	{
-		return m_CanPresent;
 	}
 
 

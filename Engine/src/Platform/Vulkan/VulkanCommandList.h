@@ -25,8 +25,8 @@ namespace Polyboid
 		VulkanCommandList(const VkRenderAPI* context, bool canPresent);
 		void CreateCommandBuffers(uint32_t count) override;
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
-		bool CanPresent() override;
 
+		
 		~VulkanCommandList() override;
 
 		friend class VulkanCommandBuffer;

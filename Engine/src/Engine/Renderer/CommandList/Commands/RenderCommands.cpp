@@ -3,9 +3,12 @@
 
 #include <spdlog/fmt/bundled/core.h>
 
+#include "Engine/Engine/Application.h"
 #include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
+#include "Platform/Vulkan/VkSwapChain.h"
 
 
 namespace Polyboid
@@ -25,18 +28,7 @@ namespace Polyboid
 		m_State->Clear(m_ClearSettings);
 	}
 
-	SubmitSwapChainCommand::SubmitSwapChainCommand(const Ref<Swapchain>& swapchain): m_Swapchain(swapchain)
-	{
-	}
 
-	void SubmitSwapChainCommand::Execute()
-	{
-		m_Context->SubmitSwapchain(m_Swapchain);
-	}
-
-	SubmitSwapChainCommand::~SubmitSwapChainCommand()
-	{
-	}
 
 	DrawIndexedCommand::DrawIndexedCommand(uint32_t count, const PrimitiveType& type): m_Count(count), m_PrimitiveType(type)
 	{
@@ -79,7 +71,12 @@ namespace Polyboid
 
 	void BeginRenderPassCommand::Execute()
 	{
-		m_Context->BeginRenderPass(m_RenderTarget);
+		auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(Renderer::GetSwapChain());
+
+		auto vkFramebuffer = vkSwapchain->GetCurrentFramebuffer();
+		auto framebuffer = std::reinterpret_pointer_cast<Framebuffer>(vkFramebuffer);
+
+		m_Context->BeginRenderPass(m_RenderTarget, framebuffer);
 		//m_Context->BeginRenderPass(m_RenderTarget);
 	}
 

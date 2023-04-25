@@ -29,15 +29,13 @@ namespace Polyboid
 		VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings);
 		void Destroy(vk::Device device);
 
-		void AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture) override;
-		Ref<Texture> GetTexture(TextureAttachmentSlot attachment) override;
 		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
 		void Clear(const ClearSettings& settings) override;
 		ClearSettings GetClearSettings();
-		void GenerateMipMaps() override;
+
 		~VulkanRenderPass() override;
 
-		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo(uint32_t imageIndex);
+		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo(Ref <VulkanFramebuffer>& framebuffer);
 
 		friend class VulkanFramebuffer;
 		friend class VulkanCommandBuffer;

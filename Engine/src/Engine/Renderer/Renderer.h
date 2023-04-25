@@ -12,6 +12,8 @@
 
 namespace Polyboid
 {
+	struct ApplicationSettings;
+	class Fence;
 	class Material;
 	class UniformBuffer;
 	class RenderAPI;
@@ -21,10 +23,17 @@ namespace Polyboid
     {
         Ref<RenderPass> m_CurrentRenderPass;
         Ref<PipelineState> m_DefaultPipelineState;
+        Ref<Swapchain> m_Swapchain;
+
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
         std::atomic_uint32_t m_CurrentFrame = 0;
         uint32_t m_MaxFramesInFlight = 3;
+        uint32_t m_ImageIndex = 0;
+
+        std::vector<Ref<Fence>> m_InFlightFences;
+        std::vector<Ref<Semaphore>> m_ImagesSemaphores;
+        std::vector<Ref<Semaphore>> m_RenderSemaphores;
     };
 	
     
@@ -36,7 +45,9 @@ namespace Polyboid
 	 
 
     public:
-        static void Init(RenderAPI* context);
+        static Ref<Swapchain> GetSwapChain();
+
+    	static void Init(RenderAPI* context, const ApplicationSettings& settings);
         static void BeginDraw(const Ref<Camera>& camera);
         static void SetMaxFramesInFlight(uint32_t frames);
         static std::atomic_uint32_t& GetCurrentFrame();
@@ -53,7 +64,6 @@ namespace Polyboid
         static void SetPipelineState(const Ref<PipelineState>& pipelineState);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass);
         static void EndRenderPass();
-        static void SubmitSwapChain(const Ref<Swapchain>& swapchain);
 
         static Ref<RenderPass> GetDefaultRenderTarget();
         static Ref<PipelineState> GetDefaultPipeline();

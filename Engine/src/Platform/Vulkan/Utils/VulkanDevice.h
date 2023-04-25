@@ -15,7 +15,7 @@ namespace Polyboid
 		vk::Queue m_GraphicsQueue;
 		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
 	public:
-		vk::Device& GetDevice() { return m_Device; }
+		vk::Device& GetVulkanDevice() { return m_Device; }
 		operator vk::Device() const { return m_Device; }
 		operator vk::Device()  { return m_Device; }
 

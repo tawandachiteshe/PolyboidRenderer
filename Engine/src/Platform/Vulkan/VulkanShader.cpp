@@ -12,7 +12,7 @@ namespace Polyboid
 		std::move(info))
 	{
 
-		auto device = context->GetDevice()->GetDevice();
+		auto device = context->GetDevice()->GetVulkanDevice();
 		auto pool = context->GetPool()->GetPool();
 
 		vk::ShaderModuleCreateInfo createInfo;

@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <any>
 
+#include "Engine/Engine/Base.h"
+
 namespace Polyboid
 {
 
@@ -10,13 +12,18 @@ namespace Polyboid
 		virtual  std::any GetHandle() = 0;
 		virtual ~Semaphore() {}
 
+		static Ref<Semaphore> Create();
+
 	};
 
 	class Fence
 	{
 	public:
 		virtual  std::any GetHandle() = 0;
+		virtual void WaitAndReset() = 0;
 		virtual ~Fence() {}
+
+		static Ref<Fence> Create();
 	};
 
 

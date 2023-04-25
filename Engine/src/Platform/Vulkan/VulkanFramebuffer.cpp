@@ -14,60 +14,31 @@ namespace Polyboid
 {
 	void VulkanFramebuffer::Init(const VkRenderAPI* context, const FramebufferSettings& settings)
 	{
+		auto device = context->GetDevice()->GetVulkanDevice();
+
+
 		if (m_RenderPassPtr)
 		{
-			vk::Device device = (*m_Context->GetDevice());
-			std::vector<vk::ImageView> frameBufferImages;
-			m_FrameBuffers.resize(1);
+			std::vector<vk::ImageView> imageViews;
 
-			if (settings.IsSwapChainUsage)
+			for (auto textures : m_Textures)
 			{
-				m_Textures = VkSwapChain::CreateSwapchainTextures();
-
-				m_FrameBuffers.resize(m_Textures.size());
-				for (const auto& texture : m_Textures)
-				{
-					frameBufferImages.push_back(std::any_cast<vk::ImageView>(texture->GetHandle()));
-				}
-
-			}
-			else
-			{
-				for (auto textureSlot : settings.attachmentSlots)
-				{
-
-					TextureSettings textureSettings{};
-					textureSettings.Width = settings.width;
-					textureSettings.Height = settings.height;
-					textureSettings.sizedFormat = textureSlot.format;
-					VkRenderAPI* api = const_cast<VkRenderAPI*>(context);
-					m_AttachmentTextures[textureSlot.slot] = std::reinterpret_pointer_cast<VulkanTexture2D>(api->CreateTexture2D(textureSettings));
-				}
+				imageViews.push_back(std::any_cast<vk::ImageView>(textures->GetHandle()));
 			}
 
+			vk::FramebufferCreateInfo createInfo;
+			createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
+			createInfo.renderPass = m_RenderPassPtr->m_RenderPass;
+			createInfo.attachmentCount = static_cast<uint32_t>(imageViews.size());
+			createInfo.height = settings.height;
+			createInfo.width = settings.width;
+			createInfo.pAttachments = imageViews.data();
+			createInfo.layers = 1;
 
-			int count = 0;
-			for (auto view : frameBufferImages)
-			{
-				vk::ImageView imageView = view;
+			auto [result, framebuffer] = device.createFramebuffer(createInfo);
+			vk::resultCheck(result, "Failed to create framebuffer");
 
-				vk::FramebufferCreateInfo createInfo;
-				createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
-				createInfo.renderPass = m_RenderPassPtr->m_RenderPass;
-				createInfo.attachmentCount = 1;
-				createInfo.height = m_Settings.height;
-				createInfo.width = m_Settings.width;
-				createInfo.pAttachments = &imageView;
-				createInfo.layers = 1;
-
-
-				auto [result, framebuffer] = device.createFramebuffer(createInfo);
-				vk::resultCheck(result, "Failed to create framebuffer");
-
-				m_FrameBuffers[count] = framebuffer;
-				count++;
-			}
-		
+			m_FrameBuffer = framebuffer;
 		}
 	
 	}
@@ -80,16 +51,7 @@ namespace Polyboid
 			texture->Destroy();
 		}
 
-
-		for (auto framebuffer : m_FrameBuffers)
-		{
-			device.destroyFramebuffer(framebuffer);
-			m_FrameBuffers.clear();
-		}
-
-	
-
-		
+		device.destroyFramebuffer(m_FrameBuffer);
 	}
 
 	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings):
@@ -99,30 +61,19 @@ namespace Polyboid
 	}
 
 
+
 	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings,
-		RenderPass* renderPass): m_Settings(settings), m_Context(context),
-		                         m_RenderPassPtr(reinterpret_cast<VulkanRenderPass*>(renderPass))
+		const VulkanRenderPass* renderPass, std::vector<Ref<VulkanTexture2D>>& textures): m_Context(context),
+		m_RenderPassPtr(renderPass), m_Textures(textures)
 	{
-		Init(context, m_Settings);
+		Init(context, settings);
 	}
 
-	vk::Framebuffer VulkanFramebuffer::GetFramebufferHandle(uint32_t index)
+	vk::Framebuffer VulkanFramebuffer::GetFramebufferHandle()
 	{
-		return m_FrameBuffers.at(index);
+		return m_FrameBuffer;
 	}
 
-
-	void VulkanFramebuffer::AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot)
-	{
-	}
-
-	void VulkanFramebuffer::AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot)
-	{
-	}
-
-	void VulkanFramebuffer::AttachTexture3D(const Ref<Texture3D>& texture, const TextureAttachmentSlot& slot)
-	{
-	}
 
 	VulkanFramebuffer::~VulkanFramebuffer()
 	{
@@ -150,4 +101,6 @@ namespace Polyboid
 
 		Init(m_Context, m_Settings);
 	}
+
+	
 }

@@ -61,7 +61,7 @@ namespace Polyboid
 		: m_Context(context), m_Settings(samplerSettings)
 	{
 
-		auto device = context->GetDevice()->GetDevice();
+		auto device = context->GetDevice()->GetVulkanDevice();
 
 		vk::SamplerCreateInfo createInfo;
 		createInfo.borderColor = vk::BorderColor::eFloatOpaqueBlack;

@@ -14,11 +14,11 @@ namespace Polyboid
 	{
 	private:
 
-		std::vector<vk::Framebuffer> m_FrameBuffers;
+		vk::Framebuffer m_FrameBuffer;
 
 		FramebufferSettings m_Settings;
 		const VkRenderAPI* m_Context{};
-		VulkanRenderPass* m_RenderPassPtr = nullptr;
+		const VulkanRenderPass* m_RenderPassPtr = nullptr;
 		std::unordered_map<TextureAttachmentSlot, Ref<VulkanTexture2D>> m_AttachmentTextures;
 		std::vector<Ref<VulkanTexture2D>> m_Textures;
 
@@ -27,13 +27,12 @@ namespace Polyboid
 	public:
 		void Destroy(vk::Device device);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings);
-		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, RenderPass* renderPass);
+		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, const VulkanRenderPass* renderPass, std::vector<Ref<VulkanTexture2D>>& textures);
 
-		virtual vk::Framebuffer GetFramebufferHandle(uint32_t index = 0);
 
-		void AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot) override;
-		void AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot) override;
-		void AttachTexture3D(const Ref<Texture3D>& texture, const TextureAttachmentSlot& slot) override;
+		virtual vk::Framebuffer GetFramebufferHandle();
+
+
 		~VulkanFramebuffer() override;
 		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
 		void Clear(const ClearSettings& settings) override;

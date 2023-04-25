@@ -5,9 +5,11 @@
 
 #include "VkSwapChain.h"
 #include "VulkanCommandList.h"
+#include "VulkanFence.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanIndexBuffer.h"
 #include "VulkanRenderPass.h"
+#include "VulkanSemaphore.h"
 #include "VulkanTexture2D.h"
 #include "VulkanVertexBuffer.h"
 #include "Utils/VkDebugMessenger.h"
@@ -161,6 +163,25 @@ namespace Polyboid
 		return renderPass;
 	}
 
+	Ref<Fence> VkRenderAPI::CreateGraphicsFence()
+	{
+		auto fence = ALLOC_API(VulkanFence, this);
+
+		m_Fences.push_back(fence);
+
+		return fence;
+
+	}
+
+	Ref<Semaphore> VkRenderAPI::CreateGraphicsSemaphore()
+	{
+
+		auto semaphore = ALLOC_API(VulkanSemaphore, this);
+		m_Semaphores.push_back(semaphore);
+
+		return semaphore;
+	}
+
 
 	RenderAPIType VkRenderAPI::GetRenderAPIType()
 	{
@@ -188,6 +209,16 @@ namespace Polyboid
 		for (const auto& renderPass : m_RenderPasses)
 		{
 			renderPass->Destroy(device);
+		}
+
+		for (auto& fence : m_Fences)
+		{
+			fence->Destroy();
+		}
+
+		for (auto& semaphore : m_Semaphores)
+		{
+			semaphore->Destroy();
 		}
 
 

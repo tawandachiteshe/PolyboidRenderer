@@ -9,7 +9,7 @@ namespace Polyboid
 {
 	VulkanDescriptorPool::VulkanDescriptorPool(const VkRenderAPI* m_Context): m_Context(m_Context)
 	{
-        auto device = m_Context->GetDevice()->GetDevice();
+        auto device = m_Context->GetDevice()->GetVulkanDevice();
 
         vk::DescriptorPoolSize pool_sizes[] =
         {
@@ -42,6 +42,6 @@ namespace Polyboid
 
 	void VulkanDescriptorPool::Destroy()
 	{
-		m_Context->GetDevice()->GetDevice().destroyDescriptorPool(m_Handle);
+		m_Context->GetDevice()->GetVulkanDevice().destroyDescriptorPool(m_Handle);
 	}
 }

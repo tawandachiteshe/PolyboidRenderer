@@ -12,7 +12,7 @@ namespace Polyboid
 {
 	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size): m_Context(context)
 	{
-		auto device = context->GetDevice()->GetDevice();
+		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator().get();
 		
 

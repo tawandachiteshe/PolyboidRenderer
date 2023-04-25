@@ -13,10 +13,11 @@ namespace Polyboid
 
 		vk::Fence m_Handle;
 		const VkRenderAPI* m_Context = nullptr;
+		vk::Device m_VulkanDevice;
 
 	public:
 		explicit VulkanFence(const VkRenderAPI* context);
-
+		void WaitAndReset() override;
 
 		virtual void Destroy();
 

@@ -52,12 +52,6 @@ namespace Polyboid
 	{
 	public:
 
-		virtual void AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot) = 0;
-
-		virtual void AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot) = 0;
-
-		virtual void AttachTexture3D(const Ref<Texture3D>& texture, const TextureAttachmentSlot& slot) = 0;
-
 		virtual ~Framebuffer() = default;
 		
 		virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;

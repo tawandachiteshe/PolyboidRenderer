@@ -9,6 +9,8 @@ namespace vk
 
 namespace Polyboid
 {
+	class Fence;
+	class Semaphore;
 	class CommandList;
 
 #define   ALLOC_COMMAND(Klass, ...) std::make_shared<Klass>(__VA_ARGS__)
@@ -22,7 +24,7 @@ namespace Polyboid
 
 	struct RenderCommandData
 	{
-		RenderAPI* m_Context;
+		RenderAPI* m_Context{};
 		std::vector<Ref<Command>> m_Commands;
 		std::vector<Ref<CommandList>> m_CommandLists;
 	};
@@ -36,7 +38,7 @@ namespace Polyboid
 		static void SetCommandLists(const std::vector<Ref<CommandList>>& cmdList);
 		static void Init(RenderAPI* context);
 		static void AddCommand(const Ref<Command>& renderCommand);
-		static void WaitAndRender();
+		static void WaitAndRender(const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight);
 
 	};
 

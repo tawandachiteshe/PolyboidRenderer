@@ -10,7 +10,7 @@ namespace Polyboid
 	Ref<CommandList> CommandList::Create(bool canPresent)
 	{
 
-		return Application::Get().GetRenderAPI()->CreateCommandList();
+		return Application::Get().GetRenderAPI()->CreateCommandList(canPresent);
 
 	}
 }

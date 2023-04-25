@@ -15,7 +15,7 @@ namespace Polyboid
 		uint32_t count): m_IndexType(type), m_Count(count)
 	{
 
-		auto device = context->GetDevice()->GetDevice();
+		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator();
 
 

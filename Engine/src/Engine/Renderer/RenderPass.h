@@ -57,13 +57,8 @@ namespace Polyboid
 
         virtual void SetFramebuffer(const Ref<Framebuffer>& framebuffer) = 0;
         virtual Ref<Framebuffer> GetFramebuffer() = 0;
-
-        virtual void AttachTexture( TextureAttachmentSlot attachment, Ref<Texture> texture ) = 0;
-        virtual Ref<Texture> GetTexture( TextureAttachmentSlot attachment ) = 0;
-
         virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
         virtual void Clear(const ClearSettings& settings) = 0;
-        virtual void GenerateMipMaps() = 0;
 
         virtual ~RenderPass() = default; 
 

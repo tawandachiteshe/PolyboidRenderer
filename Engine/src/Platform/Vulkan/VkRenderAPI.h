@@ -5,6 +5,9 @@
 
 namespace Polyboid
 {
+	class VulkanSemaphore;
+	class VulkanFence;
+	class Fence;
 	class VulkanDescriptorPool;
 	class VulkanVertexBuffer;
 	class VulkanIndexBuffer;
@@ -30,7 +33,9 @@ namespace Polyboid
 		std::vector<Ref<VulkanTexture2D>> m_Textures2D;
 		std::vector<Ref<VulkanIndexBuffer>> m_IndexBuffers;
 		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
- 
+		std::vector<Ref<VulkanFence>> m_Fences;
+		std::vector<Ref<VulkanSemaphore>> m_Semaphores;
+
 
 	private:
 		Ref<VkInstance> m_Instance;
@@ -46,7 +51,7 @@ namespace Polyboid
 	public:
 
 		//Vulkan specific
-		Ref<VulkanDescriptorPool> GetPool() const { return m_DescPool; }
+		[[nodiscard]] Ref<VulkanDescriptorPool> GetPool() const { return m_DescPool; }
 		[[nodiscard]] Ref<VkInstance> GetInstance() const { return  m_Instance; }
 		[[nodiscard]] Ref<VulkanPhysicalDevice> GetPhysicalDevice() const { return m_PhysicalDevice; }
 		[[nodiscard]] Ref<VulkanAllocator> GetAllocator() const { return m_Allocator; }
@@ -80,6 +85,9 @@ namespace Polyboid
 		Ref<PipelineState> CreatePipelineState() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;
 		Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) override;
+
+		Ref<Fence> CreateGraphicsFence() override;
+		Ref<Semaphore> CreateGraphicsSemaphore() override;
 
 		RenderAPIType GetRenderAPIType() override;
 		RenderAPIType GetRenderAPIType() const override;

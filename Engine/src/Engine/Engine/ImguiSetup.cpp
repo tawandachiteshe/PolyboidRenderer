@@ -115,7 +115,7 @@ namespace Polyboid
             s_Data.m_CommandList = new VulkanCommandList(renderAPI, false);
             s_Data.m_CommandList->CreateCommandBuffers(3);
 
-            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(app.GetSwapchain()->GetDefaultRenderPass());
+            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
   
 
             // Select Surface Format
@@ -125,7 +125,7 @@ namespace Polyboid
            
             init_info.Instance = renderAPI->GetInstance()->GetVKInstance();
             init_info.PhysicalDevice = renderAPI->GetPhysicalDevice()->GetPhysicalDevice();
-            init_info.Device = renderAPI->GetDevice()->GetDevice();
+            init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
             init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
             init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
             init_info.DescriptorPool = renderAPI->GetPool()->GetPool();
@@ -162,7 +162,7 @@ namespace Polyboid
                 err = vkQueueSubmit(renderAPI->GetDevice()->GetGraphicsQueue(), 1, &end_info, VK_NULL_HANDLE);
                 check_vk_result(err);
 
-                err = vkDeviceWaitIdle(renderAPI->GetDevice()->GetDevice());
+                err = vkDeviceWaitIdle(renderAPI->GetDevice()->GetVulkanDevice());
                 check_vk_result(err);
                 ImGui_ImplVulkan_DestroyFontUploadObjects();
             }
@@ -189,13 +189,16 @@ namespace Polyboid
         if (type ==  RenderAPIType::Vulkan)
         {
 
-            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(app.GetSwapchain()->GetDefaultRenderPass());
+            auto swapchain = Renderer::GetSwapChain();
+            auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(swapchain);
+            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(swapchain->GetDefaultRenderPass());
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
             auto& frame = Renderer::GetCurrentFrame();
 
+            auto framebuffer = std::reinterpret_pointer_cast<Framebuffer>(vkSwapchain->GetCurrentFramebuffer());
 
             s_Data.m_CommandList->GetCommandBufferAt(frame)->Begin();
-            s_Data.m_CommandList->GetCommandBufferAt(frame)->BeginRenderPass(renderPass);
+            s_Data.m_CommandList->GetCommandBufferAt(frame)->BeginRenderPass(renderPass, framebuffer);
 
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
@@ -270,7 +273,7 @@ namespace Polyboid
         {
            
             auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto device = renderAPI->GetDevice()->GetDevice();
+            auto device = renderAPI->GetDevice()->GetVulkanDevice();
             auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
             s_Data.m_CommandList->Destroy(device);

@@ -93,15 +93,6 @@ namespace Polyboid
 		m_RenderPass = renderpass;
 
 
-		FramebufferSettings framebufferSettings;
-		framebufferSettings.height = settings.Height;
-		framebufferSettings.width = settings.Width;
-		framebufferSettings.attachmentSlots = m_Settings.TextureAttachments;
-		framebufferSettings.IsSwapChainUsage = settings.IsSwapchainRenderPass;
-
-		m_Framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, this);
-	
-
 		m_ColorValue.float32[0] = m_ClearSettings.color.x;
 		m_ColorValue.float32[1] = m_ClearSettings.color.y;
 		m_ColorValue.float32[2] = m_ClearSettings.color.z;
@@ -115,19 +106,9 @@ namespace Polyboid
 	{
 	
 		device.destroyRenderPass(m_RenderPass);
-		m_Framebuffer->Destroy(device);
 	}
 
 
-	void VulkanRenderPass::AttachTexture(TextureAttachmentSlot attachment, Ref<Texture> texture)
-	{
-		vk::AttachmentDescription attachmentDescription{};
-	}
-
-	Ref<Texture> VulkanRenderPass::GetTexture(TextureAttachmentSlot attachment)
-	{
-		return nullptr;
-	}
 
 	void VulkanRenderPass::Clear(TextureAttachmentSlot attachment, const ClearSettings& settings)
 	{
@@ -150,35 +131,21 @@ namespace Polyboid
 		return m_ClearSettings;
 	}
 
-	void VulkanRenderPass::GenerateMipMaps()
-	{
-	}
+
 
 	VulkanRenderPass::~VulkanRenderPass()
 	{
 	}
 
-	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo(uint32_t imageIndex)
+	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo(Ref <VulkanFramebuffer>& framebuffer)
 	{
 
+		m_Framebuffer = framebuffer;
 		m_RenderPassBeginInfo.sType = vk::StructureType::eRenderPassBeginInfo;
-
-		if (m_Settings.type == RenderPassType::Present)
-		{
-			m_RenderPassBeginInfo.renderPass = m_RenderPass;
-			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle(imageIndex);
-		}
-		else
-		{
-			auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(m_Framebuffer);
-			m_RenderPassBeginInfo.renderPass = m_RenderPass;
-			m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle();
-		}
-
+		m_RenderPassBeginInfo.renderPass = m_RenderPass;
+		m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle();
 		m_RenderPassBeginInfo.renderArea.offset = vk::Offset2D{ 0, 0 };
 		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{ m_Settings.Width, m_Settings.Height };
-
-
 		m_RenderPassBeginInfo.clearValueCount = 1;
 		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();
 

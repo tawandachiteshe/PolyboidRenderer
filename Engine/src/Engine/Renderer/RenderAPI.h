@@ -12,6 +12,7 @@
 
 namespace Polyboid
 {
+	class Fence;
 	class CommandList;
 	struct RenderPassSettings;
 	class RenderPass;
@@ -85,6 +86,9 @@ namespace Polyboid
 		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
 		virtual Ref<CommandList> CreateCommandList(bool canPresent = false) = 0;
+
+		virtual Ref<Fence> CreateGraphicsFence() = 0;
+		virtual Ref<Semaphore> CreateGraphicsSemaphore() = 0;
 		
 
 		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;
