@@ -5,46 +5,56 @@
 
 namespace Polyboid
 {
-	class VulkanShaderStorageBuffer;
+	class VulkanShaderStorage;
 	class VulkanUniformBuffer;
 	class VulkanTexture3D;
 	class VulkanTexture2D;
 	class VkRenderAPI;
 
+	using DescWriteMap = std::map<uint32_t, std::map<uint32_t, vk::WriteDescriptorSet>>;
+
 	class VulkanShader : public Shader
 	{
 	private:
 		const  VkRenderAPI* m_Context = nullptr;
-		ShaderBinaryAndInfo m_ShaderInfo;
+		ShaderBinaryAndReflectionInfo m_ShaderInfo;
 		vk::ShaderModule m_ShaderModule;
 		vk::PipelineShaderStageCreateInfo m_ShaderStateInfo;
 		vk::DescriptorSetLayout m_Layout;
+		std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> m_ShaderBindings;
+		std::vector<vk::PushConstantRange> m_PushConstantRanges;
+		DescWriteMap m_DescWriteSet;
 
-		std::map<std::string, Ref<VulkanUniformBuffer>> m_UniformBuffers;
-		std::map<std::string, Ref<VulkanShaderStorageBuffer>> m_SSOBBuffers;
-		std::map<std::string, Ref<SamplerState>> m_Samplers;
-		std::map<std::string, Ref<VulkanTexture2D>> m_Textures2D;
-		std::map<std::string, Ref<VulkanTexture3D>> m_Textures3D;
-		std::map<std::string, Ref<SamplerState>> m_Images;
+		//
+		// std::map<std::string, Ref<VulkanUniformBuffer>> m_UniformBuffers;
+		// std::map<std::string, Ref<VulkanShaderStorage>> m_SSOBBuffers;
+		// std::map<std::string, Ref<SamplerState>> m_Samplers;
+		// std::map<std::string, Ref<VulkanTexture2D>> m_Textures2D;
+		// std::map<std::string, Ref<VulkanTexture3D>> m_Textures3D;
+		// std::map<std::string, Ref<SamplerState>> m_Images;
 
 	public:
-		explicit VulkanShader(const VkRenderAPI* context, ShaderBinaryAndInfo info);
+		explicit VulkanShader(const VkRenderAPI* context, ShaderBinaryAndReflectionInfo info);
+
+		virtual void Destroy();
+		virtual vk::PipelineShaderStageCreateInfo GetVulkanPipelineStageInfo();
+		virtual std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> GetVulkanDescriptorBindings();
+		virtual std::vector<vk::PushConstantRange> GetPushContantRange();
+		virtual DescWriteMap GetDescWriteMap();
 
 
 		~VulkanShader() override;
 		void Bind() const override;
 		void Unbind() const override;
-		void SetUniformBuffer(const std::string& name, const Ref<UniformBuffer>& value) override;
-		void SetShaderStorageBuffer(const std::string& name, const Ref<ShaderStorageBuffer>& value) override;
-		void SetSampler(const std::string& name, const Ref<SamplerState>& value) override;
-		void SetImage(const std::string& name, const Ref<SamplerState>& value) override;
-		void SetTexture2D(const std::string& name, const Ref<Texture>& value) override;
-		void SetTexture3D(const std::string& name, const Ref<Texture3D>& value) override;
-		[[nodiscard]] Ref<UniformBuffer> GetUniformBuffer(const std::string& name) const override;
-		[[nodiscard]] Ref<ShaderStorageBuffer> GetShaderStorageBuffer(const std::string& name) const override;
-		[[nodiscard]] Ref<SamplerState> GetSampler(const std::string& name) const override;
-		[[nodiscard]] Ref<SamplerState> GetImage(const std::string& name) const override;
+
+		ReflectionInfo GetShaderReflectionInfo() override;
+
 		[[nodiscard]] ShaderType GetType() override;
+		
+
+		virtual  vk::PipelineShaderStageCreateInfo GetVulkanInfo();
+
+
 	};
 
 }

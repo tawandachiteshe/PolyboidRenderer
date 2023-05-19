@@ -116,6 +116,10 @@ namespace Polyboid
 	VulkanBlendState::VulkanBlendState(): m_ConstBlend(0)
 	{
 		m_BlendModes.reserve(8);
+		BlendMode mode{};
+		mode.LogicOpEnabled = false;
+		mode.BlendEnabled = false;
+		m_BlendModes.push_back(mode);
 	}
 
 	void VulkanBlendState::SetBlendMode(const BlendMode& blendMode)
@@ -133,25 +137,6 @@ namespace Polyboid
 		return m_BlendModes;
 	}
 
-	//Used for aa AA
-	void VulkanBlendState::SetSampleMask(uint32_t sampleMask)
-	{
-		
-	}
-
-	uint32_t VulkanBlendState::GetSampleMask() const
-	{
-		return 0;
-	}
-
-	void VulkanBlendState::SetAlphaCoverage(bool enabled)
-	{
-	}
-
-	bool VulkanBlendState::GetAlphaCoverage() const
-	{
-		return false;
-	}
 
 	void VulkanBlendState::SetIndependentBlend(bool enabled)
 	{
@@ -178,13 +163,12 @@ namespace Polyboid
 
 
 
-	void VulkanBlendState::Bind()
+	vk::PipelineColorBlendStateCreateInfo VulkanBlendState::GetVulkanInfo()
 	{
 		if (m_Dirty)
 		{
 
 			m_CreateInfo.flags = vk::PipelineColorBlendStateCreateFlags();
-			m_CreateInfo.attachmentCount = static_cast<uint32_t>(m_BlendModes.size());
 			m_CreateInfo.blendConstants[0] = m_ConstBlend[0];
 			m_CreateInfo.blendConstants[1] = m_ConstBlend[1];
 			m_CreateInfo.blendConstants[2] = m_ConstBlend[2];
@@ -193,7 +177,7 @@ namespace Polyboid
 			m_CreateInfo.logicOp = ToVulkanLogicOP(m_BlendMode.LogicOp);
 
 
-			std::vector<vk::PipelineColorBlendAttachmentState> attachmentStates;
+			
 			for (auto& blendMode : m_BlendModes)
 			{
 
@@ -206,14 +190,19 @@ namespace Polyboid
 				attachmentState.srcAlphaBlendFactor = ToVkBlendFactor(blendMode.SrcAlphaFactor);
 				attachmentState.dstColorBlendFactor = ToVkBlendFactor(blendMode.DstFactor);
 				attachmentState.srcColorBlendFactor = ToVkBlendFactor(blendMode.SrcFactor);
-				attachmentStates.push_back(attachmentState);
+				m_AttachmentStates.push_back(attachmentState);
 
 			}
 
-			m_CreateInfo.pAttachments = attachmentStates.data();
+			m_CreateInfo.pAttachments = m_AttachmentStates.data();
+			m_CreateInfo.attachmentCount = static_cast<uint32_t>(m_AttachmentStates.size());
 
 
 			m_Dirty = false;
+
+			return m_CreateInfo;
 		}
+
+		return {};
 	}
 }

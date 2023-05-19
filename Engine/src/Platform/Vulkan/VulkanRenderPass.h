@@ -33,6 +33,8 @@ namespace Polyboid
 		void Clear(const ClearSettings& settings) override;
 		ClearSettings GetClearSettings();
 
+		RenderPassSettings& GetRenderPassSettings() override;
+
 		~VulkanRenderPass() override;
 
 		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo(Ref <VulkanFramebuffer>& framebuffer);

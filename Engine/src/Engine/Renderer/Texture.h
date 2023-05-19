@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <any>
 
+#include "Image2D.h"
 #include "Engine/Engine/Base.h"
 
 
@@ -109,12 +110,7 @@ namespace Polyboid
         ReadWrite
     };
 
-    enum class TextureUsage
-    {
-	    Swapchain,
-        Attachment,
-        Sampling
-    };
+ 
     
     struct TextureSettings
     {
@@ -126,8 +122,8 @@ namespace Polyboid
         bool generateMips = false;
         bool multiSample = false;
 
-        TextureUsage usage = TextureUsage::Sampling;
-        uint32_t sampleCount = 4;
+        ImageUsage usage = ImageUsage::Sampling;
+        uint32_t sampleCount = 1;
         uint32_t mipCount = 1;
 
         uint32_t Width = 0;
@@ -155,14 +151,19 @@ namespace Polyboid
 
         virtual void Bind(uint32_t slot = 0) = 0;
         virtual void UnBind() = 0;
-        virtual std::any GetHandle() = 0;
+        virtual std::any GetViewHandle() = 0;
+        virtual std::any GetSamplerHandle() = 0;
+
+
+        //Editor Only
+        virtual std::any GetImGuiTexture() = 0;
 
 
         virtual void SetData(const void* data, uint32_t size) = 0;
 
         virtual ~Texture() = default;
         static Ref<Texture> Create(const TextureSettings& settings);
-        static Ref<Texture> Create(const void* data, const TextureSettings& settings);
+        static Ref<Texture> Create(const TextureSettings& settings, const void* data);
     };
 
     class Texture3D

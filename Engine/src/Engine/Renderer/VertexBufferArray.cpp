@@ -6,5 +6,8 @@
 
 namespace Polyboid
 {
-   
+	Ref<VertexBufferArray> VertexBufferArray::Create()
+	{
+		return RenderAPI::Get()->CreateVertexBufferArray();
+	}
 }

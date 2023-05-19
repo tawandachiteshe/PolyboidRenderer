@@ -1,12 +1,13 @@
 ﻿#pragma once
+
+
 #include <vulkan/vulkan.hpp>
-
-#include "VulkanCommandList.h"
 #include "Engine/Renderer/CommandList.h"
-
+#include <any>
 
 namespace Polyboid
 {
+	class VulkanRenderPass;
 	class VkSwapChain;
 	class VulkanSemaphore;
 	class VulkanFence;
@@ -19,6 +20,7 @@ namespace Polyboid
 		vk::CommandBuffer m_CommandBuffer;
 		const CommandList* m_CommandList = nullptr;
 		const VkRenderAPI* m_Context;
+		Ref<VulkanRenderPass> m_RenderPass = nullptr;
 
 	public:
 
@@ -28,6 +30,23 @@ namespace Polyboid
 		void End() override;
 		void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) override;
 		void EndRenderPass() override;
+		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const Ref<IndexBuffer>& dstIndexBuffer) override;
+		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const Ref<VertexBuffer>& dstVtxBuffer) override;
+		void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) override;
+		void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) override;
+
+		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const IndexBuffer* dstIndexBuffer) override;
+		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) override;
+		void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) override;
+		void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) override;
+		void BindGraphicsPipeline(const Ref<PipelineState>& pipeline) override;
+
+		void SetViewPort(const Viewport& viewport) override;
+		void SetScissor(const Rect& rect) override;
+		
+		void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
+		void DrawIndexed(uint32_t count, const IndexDataType& type) override;
+		void DrawArrays(uint32_t count) override;
 
 		void Reset() override;
 
@@ -36,6 +55,7 @@ namespace Polyboid
 		~VulkanCommandBuffer() override;
 	};
 
-	
 }
+
+	
 

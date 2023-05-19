@@ -37,7 +37,7 @@ namespace Polyboid
 	{
 		switch (filter)
 		{
-		case MinFilterMode::Nearest: 
+		case MinFilterMode::Nearest:
 		case MinFilterMode::Linear:
 			__debugbreak();
 		case MinFilterMode::MipNearest: return vk::SamplerMipmapMode::eNearest;
@@ -70,7 +70,7 @@ namespace Polyboid
 		createInfo.addressModeW = ToVkSamplerMode(m_Settings.wrap);
 		createInfo.minFilter = toMinFilter(m_Settings.minFilter);
 		createInfo.magFilter = toMagFilter(m_Settings.magFilter);
-		createInfo.mipmapMode = toMipMapMode(m_Settings.minFilter);
+		createInfo.mipmapMode = toMipMapMode(m_Settings.mipModeFilter);
 
 		createInfo.anisotropyEnable = m_Settings.minFilter == MinFilterMode::Anisotropic;
 		createInfo.maxAnisotropy = 8.0f;
@@ -152,5 +152,15 @@ namespace Polyboid
 
 	VulkanSamplerState::~VulkanSamplerState()
 	{
+	}
+
+	void VulkanSamplerState::Destroy()
+	{
+		m_Context->GetDevice()->GetVulkanDevice().destroySampler(m_Handle);
+	}
+
+	std::any VulkanSamplerState::GetSamplerHandle()
+	{
+		return m_Handle;
 	}
 }

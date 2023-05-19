@@ -23,7 +23,7 @@ namespace Polyboid
 		const StencilMode& GetStencilMode() const override;
 		~VulkanDepthStencilState() override;
 
-		virtual void Bind();
+		virtual vk::PipelineDepthStencilStateCreateInfo GetVulkanInfo();
 
 	};
 

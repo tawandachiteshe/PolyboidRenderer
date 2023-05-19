@@ -28,8 +28,18 @@ namespace Polyboid
 
 	VulkanRasterizerState::VulkanRasterizerState()
 	{
-		m_Viewports.resize(8, Viewport());
-		m_ScissorRects.resize(8, Rect());
+
+		Viewport viewport{};
+		viewport.Width = 1600;
+		viewport.Height = 900;
+
+		m_Viewports.push_back(viewport);
+
+		Rect rect{};
+		rect.Width = 1600;
+		rect.Height = 900;
+
+		m_ScissorRects.push_back(rect);
 	}
 
 	void VulkanRasterizerState::SetFillMode(FillMode frontFace, FillMode backFace)
@@ -150,32 +160,31 @@ namespace Polyboid
 		RasterizerState::Reset();
 	}
 
-	void VulkanRasterizerState::Bind()
+
+	RasterizerVulkanInfo VulkanRasterizerState::GetVulkanInfo()
 	{
 		if (m_Dirty)
 		{
-			std::vector<vk::DynamicState> dynamicState = {
+			 m_DynamicStates = {
 				//Require version 1.3
 				//vk::DynamicState::eCullMode,
 				vk::DynamicState::eViewport,
-				vk::DynamicState::eScissor,
+				vk::DynamicState::eScissor
 			};
 
-			m_CreateStateInfo.pDynamicStates = dynamicState.data();
-			m_CreateStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicState.size());
+			m_Info.m_CreateDynamicStateInfo.pDynamicStates = m_DynamicStates.data();
+			m_Info.m_CreateDynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(m_DynamicStates.size());
 
-			m_CreateInfo.depthBiasEnable = m_DepthBias.depthBias > 0.0f;
-			m_CreateInfo.depthBiasConstantFactor = m_DepthBias.depthBias;
-			m_CreateInfo.depthBiasClamp = m_DepthBias.biasClamp;
-			m_CreateInfo.depthClampEnable = m_DepthBias.biasClamp > 0.0f;
-			m_CreateInfo.depthBiasSlopeFactor = m_DepthBias.slopeBias;
-			m_CreateInfo.lineWidth = m_LineWidth;
-			m_CreateInfo.polygonMode = ToVulkanPolygonMode(m_FrontFace);
-			m_CreateInfo.frontFace = ToVulkanFrontFace(m_FaceDirection);
-
-		
-
-			std::vector<vk::Viewport> vkViewports;
+			m_Info.m_CreateRasterizeInfo.depthBiasEnable = false;
+			m_Info.m_CreateRasterizeInfo.depthBiasConstantFactor = m_DepthBias.depthBias;
+			m_Info.m_CreateRasterizeInfo.depthBiasClamp = m_DepthBias.biasClamp;
+			m_Info.m_CreateRasterizeInfo.depthClampEnable = false;
+			m_Info.m_CreateRasterizeInfo.depthBiasSlopeFactor = m_DepthBias.slopeBias;
+			m_Info.m_CreateRasterizeInfo.lineWidth = m_LineWidth;
+			m_Info.m_CreateRasterizeInfo.cullMode = vk::CullModeFlagBits::eBack;
+			m_Info.m_CreateRasterizeInfo.polygonMode = ToVulkanPolygonMode(m_FrontFace);
+			m_Info.m_CreateRasterizeInfo.frontFace = ToVulkanFrontFace(m_FaceDirection);
+			m_Info.m_CreateRasterizeInfo.rasterizerDiscardEnable = false;
 
 			for (const auto& viewport : m_Viewports)
 			{
@@ -186,29 +195,33 @@ namespace Polyboid
 				vkViewport.y = viewport.Y;
 				vkViewport.minDepth = viewport.MinDepth;
 				vkViewport.maxDepth = viewport.MaxDepth;
-				vkViewports.emplace_back(vkViewport);
+				m_VkViewports.emplace_back(vkViewport);
 			}
 
-			m_ViewportCreateInfo.viewportCount = static_cast<uint32_t>(m_Viewports.size());
-			m_ViewportCreateInfo.pViewports = vkViewports.data();
+			m_Info.m_ViewportCreateInfo.viewportCount = static_cast<uint32_t>(m_Viewports.size());
+			m_Info.m_ViewportCreateInfo.pViewports = m_VkViewports.data();
 
-			std::vector<vk::Rect2D> vkScissors;
 			for (const auto& scissor : m_ScissorRects)
 			{
 				vk::Rect2D vkScissor;
-				vkScissor.extent.height = scissor.Height;
-				vkScissor.extent.width = scissor.Width;
-				vkScissor.offset.x = scissor.X;
-				vkScissor.offset.y = scissor.Y;
+				vkScissor.extent.height = static_cast<uint32_t>(scissor.Height);
+				vkScissor.extent.width = static_cast<uint32_t>(scissor.Width);
+				vkScissor.offset.x = static_cast<int32_t>(scissor.X);
+				vkScissor.offset.y = static_cast<int32_t>(scissor.Y);
 
-				vkScissors.emplace_back(vkScissor);
+				m_VkScissorRects.emplace_back(vkScissor);
 			}
 
 
-			m_ViewportCreateInfo.pScissors = vkScissors.data();
-			m_ViewportCreateInfo.scissorCount = static_cast<uint32_t>(m_ScissorRects.size());
+			m_Info.m_ViewportCreateInfo.pScissors = m_VkScissorRects.data();
+			m_Info.m_ViewportCreateInfo.scissorCount = static_cast<uint32_t>(m_ScissorRects.size());
+
 
 			m_Dirty = false;
+
+			return m_Info;
 		}
+
+		return {};
 	}
 }

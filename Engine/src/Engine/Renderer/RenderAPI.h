@@ -5,13 +5,17 @@
 #include <any>
 #include <cstdint>
 #include <variant>
-#include <glm/vec3.hpp>
 
+#include "Shader.h"
 #include "Engine/Engine/Base.h"
 #include "Swapchain.h"
 
 namespace Polyboid
 {
+	struct DescriptorSetPoolSettings;
+	class PipelineDescriptorSetPool;
+	struct CommandListSettings;
+	class CommandBuffer;
 	class Fence;
 	class CommandList;
 	struct RenderPassSettings;
@@ -68,12 +72,12 @@ namespace Polyboid
 
 	public:
 
-		virtual Ref<Texture> CreateTexture2D(const TextureSettings& settings) = 0;
+		virtual Ref<Texture> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) = 0;
 		virtual Ref<Texture> CreateTexture2D(const std::any& handle) = 0;
 		virtual Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) = 0;
 		virtual Ref<SamplerState> CreateSampler(const SamplerSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings) = 0;
-		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings, const Ref<RenderPass>& renderPass) = 0;
+		virtual Ref<Framebuffer> CreateFrameBuffer(const Ref<RenderPass>& renderPass) = 0;
 		virtual Ref<Renderbuffer> CreateRenderBuffer(const RenderbufferSettings& settings) = 0;
 
 		virtual Ref<UniformBuffer> CreateUniformBuffer(uint32_t size, uint32_t binding) = 0;
@@ -85,13 +89,20 @@ namespace Polyboid
 		virtual Ref<PipelineState> CreatePipelineState() = 0;
 		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
-		virtual Ref<CommandList> CreateCommandList(bool canPresent = false) = 0;
+		virtual Ref<CommandList> CreateCommandList(const CommandListSettings& settings) = 0;
+		virtual Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) = 0;
 
 		virtual Ref<Fence> CreateGraphicsFence() = 0;
 		virtual Ref<Semaphore> CreateGraphicsSemaphore() = 0;
-		
+		virtual Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) = 0;
+		virtual Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) = 0;
+
+		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
+		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList) = 0;
+
 
 		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;
+		virtual Ref<StorageBuffer> CreateStorageBuffer(uint32_t size) = 0;
 
 		virtual RenderAPIType GetRenderAPIType() = 0;
 		virtual RenderAPIType GetRenderAPIType() const = 0;

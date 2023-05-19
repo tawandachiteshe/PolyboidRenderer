@@ -1,8 +1,9 @@
 ﻿#include "boidpch.h"
+
+#include  <vulkan/vulkan.hpp>
+
 #include "VulkanCommandList.h"
-
 #include <spdlog/spdlog.h>
-
 #include "VkRenderAPI.h"
 #include "VulkanCommandBuffer.h"
 #include "Engine/Renderer/Renderer.h"
@@ -20,7 +21,7 @@ namespace Polyboid
 		device.destroyCommandPool(m_CommandList);
 	}
 
-	VulkanCommandList::VulkanCommandList(const VkRenderAPI* context, bool canPresent): m_Context(context), m_CanPresent(canPresent)
+	VulkanCommandList::VulkanCommandList(const VkRenderAPI* context, const CommandListSettings& settings): m_Context(context)
 	{
 
 		vk::Device device = *context->GetDevice();
@@ -39,17 +40,16 @@ namespace Polyboid
 		m_GraphicsQueue = context->GetDevice()->GetGraphicsQueue();
 		m_PresentQueue = context->GetDevice()->GetPresentQueue();
 
-	}
-
-	void VulkanCommandList::CreateCommandBuffers(uint32_t count)
-	{
-		for (uint32_t i = 0; i < count; ++i)
+		for (uint32_t i = 0; i < settings.ImageCount; ++i)
 		{
 			auto vulkanCommandBuffer = std::make_shared<VulkanCommandBuffer>(m_Context, this);
 			m_CommandBuffers.push_back(vulkanCommandBuffer);
 		}
 
+
 	}
+
+
 
 	Ref<CommandBuffer> VulkanCommandList::GetCommandBufferAt(uint32_t index)
 	{

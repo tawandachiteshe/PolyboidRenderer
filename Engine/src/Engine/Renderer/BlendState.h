@@ -87,12 +87,6 @@ namespace Polyboid
         virtual void SetBlendModes(const std::vector<BlendMode>& blendModes) = 0;
         virtual const std::vector<BlendMode>& GetBlendModes() const = 0;
 
-        virtual void SetSampleMask(uint32_t sampleMask) = 0;
-        virtual uint32_t GetSampleMask() const = 0;
-
-        virtual void SetAlphaCoverage(bool enabled) = 0;
-        virtual bool GetAlphaCoverage() const = 0;
-
         virtual void SetIndependentBlend(bool enabled) = 0;
         virtual bool GetIndependentBlend() const = 0;
 

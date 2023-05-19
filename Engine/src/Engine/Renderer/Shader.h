@@ -2,10 +2,8 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-
-#include "UniformBuffer.h"
 #include "Engine/Engine/Base.h"
-#include "glm/fwd.hpp"
+#include "Engine/Engine/Shaders/ShaderCompiler.h"
 
 
 namespace Polyboid
@@ -13,8 +11,8 @@ namespace Polyboid
 	class Texture3D;
 	class Texture;
 	class SamplerState;
-	class ShaderStorageBuffer;
-	struct ShaderBinaryAndInfo;
+	class StorageBuffer;
+	struct ShaderBinaryAndReflectionInfo;
 
 	enum class ShaderType : uint8_t
     {
@@ -50,6 +48,7 @@ namespace Polyboid
     }
 
     
+    
     class Shader
     {
     
@@ -59,24 +58,11 @@ namespace Polyboid
         
         virtual  void Bind() const = 0;
         virtual  void Unbind() const = 0;
+        virtual ReflectionInfo GetShaderReflectionInfo() = 0;
+        virtual ShaderType GetType() = 0;
         static  Ref<Shader> Create(const ShaderType& shader, const std::string& shaderSourcePath);
-        static  Ref<Shader> Create(const ShaderBinaryAndInfo& info);
+        static  Ref<Shader> Create(const ShaderBinaryAndReflectionInfo& info);
 
-        virtual void SetUniformBuffer(const std::string& name, const Ref<UniformBuffer>& value) = 0;
-        virtual void SetShaderStorageBuffer(const std::string& name, const Ref<ShaderStorageBuffer>& value) = 0;
-        virtual void SetSampler(const std::string& name, const Ref<SamplerState>& value) = 0;
-        virtual void SetImage(const std::string& name, const Ref<SamplerState>& value) = 0;
-        virtual void SetTexture2D(const std::string& name, const Ref<Texture>& value) = 0;
-        virtual void SetTexture3D(const std::string& name, const Ref<Texture3D>& value) = 0;
-
-        [[nodiscard]] virtual Ref<UniformBuffer> GetUniformBuffer(const std::string& name) const = 0;
-        [[nodiscard]] virtual Ref<ShaderStorageBuffer> GetShaderStorageBuffer(const std::string& name) const = 0;
-        [[nodiscard]] virtual Ref<SamplerState> GetSampler(const std::string& name) const = 0;
-        [[nodiscard]] virtual Ref<SamplerState> GetImage(const std::string& name) const = 0;
-        [[nodiscard]] virtual ShaderType GetType() = 0;
-
-  
-    
     };
 
 

@@ -7,7 +7,7 @@ namespace Polyboid
 	class VulkanIndexBuffer;
 	class VulkanVertexBuffer;
 
-	class VulkanVertexArray : public VertexBufferArray
+	class VulkanVertexBufferArray : public VertexBufferArray
 	{
 	private:
 		std::vector<vk::VertexInputBindingDescription> m_BindingDescriptions;
@@ -17,14 +17,18 @@ namespace Polyboid
 		Ref<VulkanIndexBuffer> m_IndexBuffer;
 
 	public:
+		VulkanVertexBufferArray() = default;
 		bool IsUsingVertexPulling() override;
 		void AddVertexBuffer(const Ref<VertexBuffer>& vbuffer) override;
 		void SetIndexBuffer(const Ref<IndexBuffer>& iBuffer) override;
-		void SetIndexBuffer(const Ref<ShaderStorageBuffer>& buffer, uint32_t count, const IndexDataType& type) override;
+		void SetIndexBuffer(const Ref<StorageBuffer>& buffer, uint32_t count, const IndexDataType& type) override;
 		IndexDataType GetIndexDataType() override;
 		uint32_t GetIndexCount() override;
 		void SetIndexCount(uint32_t count) override;
-		~VulkanVertexArray() override;
+		~VulkanVertexBufferArray() override;
+
+		virtual vk::PipelineVertexInputStateCreateInfo GetVulkanInfo();
+
 		void Bind() override;
 		void UnBind() override;
 	};

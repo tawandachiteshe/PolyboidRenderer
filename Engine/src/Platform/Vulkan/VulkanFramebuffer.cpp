@@ -12,7 +12,7 @@
 
 namespace Polyboid
 {
-	void VulkanFramebuffer::Init(const VkRenderAPI* context, const FramebufferSettings& settings)
+	void VulkanFramebuffer::SwapChainInit(const VkRenderAPI* context, const FramebufferSettings& settings)
 	{
 		auto device = context->GetDevice()->GetVulkanDevice();
 
@@ -23,7 +23,7 @@ namespace Polyboid
 
 			for (auto textures : m_Textures)
 			{
-				imageViews.push_back(std::any_cast<vk::ImageView>(textures->GetHandle()));
+				imageViews.push_back(std::any_cast<vk::ImageView>(textures->GetViewHandle()));
 			}
 
 			vk::FramebufferCreateInfo createInfo;
@@ -43,6 +43,44 @@ namespace Polyboid
 	
 	}
 
+	void VulkanFramebuffer::Init(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass)
+	{
+
+		auto device = context->GetDevice()->GetVulkanDevice();
+
+		std::vector<vk::ImageView> imageViews;
+		auto renderPassSettings = renderPass->GetRenderPassSettings();
+
+		for (auto& attachmentSlot : renderPassSettings.TextureAttachments)
+		{
+
+
+			TextureSettings attachmentSettings{};
+			attachmentSettings.Height = renderPassSettings.Height;
+			attachmentSettings.Width = renderPassSettings.Width;
+			attachmentSettings.sizedFormat = attachmentSlot.format;
+			attachmentSettings.usage = ImageUsage::ColorAttachmentSampling;
+
+			auto colorTexture = std::make_shared<VulkanTexture2D>(context, attachmentSettings);
+			imageViews.push_back(std::any_cast<vk::ImageView>(colorTexture->GetViewHandle()));
+			m_Textures.push_back(colorTexture);
+		}
+
+		vk::FramebufferCreateInfo createInfo;
+		createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
+		createInfo.renderPass = std::any_cast<vk::RenderPass>(renderPass->GetHandle());
+		createInfo.attachmentCount = static_cast<uint32_t>(imageViews.size());
+		createInfo.height = renderPassSettings.Height;
+		createInfo.width = renderPassSettings.Width;
+		createInfo.pAttachments = imageViews.data();
+		createInfo.layers = 1;
+
+		auto [result, framebuffer] = device.createFramebuffer(createInfo);
+		vk::resultCheck(result, "Failed to create framebuffer");
+		m_FrameBuffer = framebuffer;
+
+	}
+
 	void VulkanFramebuffer::Destroy(vk::Device device)
 	{
 
@@ -54,10 +92,10 @@ namespace Polyboid
 		device.destroyFramebuffer(m_FrameBuffer);
 	}
 
-	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings):
-		m_Settings(settings), m_Context(context)
+	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass):
+		m_Context(context)
 	{
-
+		Init(context, renderPass);
 	}
 
 
@@ -66,7 +104,7 @@ namespace Polyboid
 		const VulkanRenderPass* renderPass, std::vector<Ref<VulkanTexture2D>>& textures): m_Context(context),
 		m_RenderPassPtr(renderPass), m_Textures(textures)
 	{
-		Init(context, settings);
+		SwapChainInit(context, settings);
 	}
 
 	vk::Framebuffer VulkanFramebuffer::GetFramebufferHandle()
@@ -79,13 +117,16 @@ namespace Polyboid
 	{
 	}
 
-	void VulkanFramebuffer::Clear(TextureAttachmentSlot attachment, const ClearSettings& settings)
+	Ref<Texture> VulkanFramebuffer::GetColorAttachment(TextureAttachmentSlot attachment)
 	{
+		if (m_Textures.empty())
+		{
+			__debugbreak();
+		}
+
+		return m_Textures.at(static_cast<uint32_t>(attachment));
 	}
 
-	void VulkanFramebuffer::Clear(const ClearSettings& settings)
-	{
-	}
 
 	void VulkanFramebuffer::ReSize(uint32_t width, uint32_t height)
 	{
@@ -98,8 +139,7 @@ namespace Polyboid
 		m_Settings.height = height;
 		m_Settings.width = width;
 
-
-		Init(m_Context, m_Settings);
+		SwapChainInit(m_Context, m_Settings);
 	}
 
 	

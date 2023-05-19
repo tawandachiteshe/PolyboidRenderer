@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Renderer/Image2D.h"
 #include "Engine/Renderer/Texture.h"
 #include "vulkan/vulkan.hpp"
 #include "spdlog/spdlog.h"
@@ -13,7 +14,23 @@ namespace Polyboid
 {
 	namespace Utils
 	{
-		static vk::Format ConvertToVulkanFormat(EngineGraphicsFormats format)
+
+        inline static vk::ImageLayout ConvertToVulkanLayout(ImageLayout layout)
+        {
+	        switch (layout)
+	        {
+            case ImageLayout::ColorAttachmentOptimal: return vk::ImageLayout::eColorAttachmentOptimal;
+            case ImageLayout::TransferDstOptimal: return  vk::ImageLayout::eTransferDstOptimal;
+            case ImageLayout::DepthAttachmentOptimal: return vk::ImageLayout::eDepthAttachmentOptimal;
+            case ImageLayout::Undefined: return vk::ImageLayout::eUndefined;
+            case ImageLayout::ShaderReadOptimal: return vk::ImageLayout::eShaderReadOnlyOptimal;
+	        }
+
+            __debugbreak();
+	        return {};
+        }
+
+        inline static vk::Format ConvertToVulkanFormat(EngineGraphicsFormats format)
 		{
             switch (format)
             {

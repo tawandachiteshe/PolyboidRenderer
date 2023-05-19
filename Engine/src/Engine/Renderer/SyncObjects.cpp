@@ -8,13 +8,13 @@ namespace Polyboid
 {
 	Ref<Semaphore> Semaphore::Create()
 	{
-		auto renderAPi = Application::Get().GetRenderAPI();
+		auto renderAPi = RenderAPI::Get();
 		return  renderAPi->CreateGraphicsSemaphore();
 	}
 
 	Ref<Fence> Fence::Create()
 	{
-		auto renderAPi = Application::Get().GetRenderAPI();
+		auto renderAPi = RenderAPI::Get();
 		return renderAPi->CreateGraphicsFence();
 	}
 }

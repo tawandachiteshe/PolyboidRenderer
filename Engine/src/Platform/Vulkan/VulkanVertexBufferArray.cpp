@@ -1,5 +1,5 @@
 ﻿#include "boidpch.h"
-#include "VulkanVertexArray.h"
+#include "VulkanVertexBufferArray.h"
 
 #include "VulkanIndexBuffer.h"
 
@@ -34,12 +34,12 @@ namespace Polyboid
 		}
 	}
 
-	bool VulkanVertexArray::IsUsingVertexPulling()
+	bool VulkanVertexBufferArray::IsUsingVertexPulling()
 	{
 		return false;
 	}
 
-	void VulkanVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vbuffer)
+	void VulkanVertexBufferArray::AddVertexBuffer(const Ref<VertexBuffer>& vbuffer)
 	{
 
 		uint32_t size = m_VertexBuffers.size();
@@ -59,7 +59,7 @@ namespace Polyboid
 			vkLayout.binding = 0;
 			vkLayout.format = GetShaderDataType(element.Type);
 			vkLayout.offset = static_cast<uint32_t>(element.Offset);
-			vkLayout.location = 0;
+			vkLayout.location = count;
 			m_VkLayouts.push_back(vkLayout);
 			
 			count++;
@@ -79,41 +79,46 @@ namespace Polyboid
 
 	}
 
-	void VulkanVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& iBuffer)
+	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<IndexBuffer>& iBuffer)
 	{
 		m_IndexBuffer = std::reinterpret_pointer_cast<VulkanIndexBuffer>(iBuffer);
 	}
 
-	void VulkanVertexArray::SetIndexBuffer(const Ref<ShaderStorageBuffer>& buffer, uint32_t count,
+	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<StorageBuffer>& buffer, uint32_t count,
 		const IndexDataType& type)
 	{
 
 	}
 
-	IndexDataType VulkanVertexArray::GetIndexDataType()
+	IndexDataType VulkanVertexBufferArray::GetIndexDataType()
 	{
 		return IndexDataType::UnsignedInt;
 	}
 
-	uint32_t VulkanVertexArray::GetIndexCount()
+	uint32_t VulkanVertexBufferArray::GetIndexCount()
 	{
 		return m_IndexBuffer->GetCount();
 	}
 
-	void VulkanVertexArray::SetIndexCount(uint32_t count)
+	void VulkanVertexBufferArray::SetIndexCount(uint32_t count)
 	{
 		
 	}
 
-	VulkanVertexArray::~VulkanVertexArray()
+	VulkanVertexBufferArray::~VulkanVertexBufferArray()
 	{
 	}
 
-	void VulkanVertexArray::Bind()
+	vk::PipelineVertexInputStateCreateInfo VulkanVertexBufferArray::GetVulkanInfo()
+	{
+		return m_VertexInputInfo;
+	}
+
+	void VulkanVertexBufferArray::Bind()
 	{
 	}
 
-	void VulkanVertexArray::UnBind()
+	void VulkanVertexBufferArray::UnBind()
 	{
 	}
 }

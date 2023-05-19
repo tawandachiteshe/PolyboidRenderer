@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <any>
+
 #include "glm/vec4.hpp"
 
 
@@ -54,6 +56,7 @@ namespace Polyboid
     {
         MinFilterMode minFilter = MinFilterMode::Linear;
         MagFilterMode magFilter = MagFilterMode::Linear;
+        MinFilterMode mipModeFilter = MinFilterMode::MipLinear;
         TextureWrap wrap = TextureWrap::ClampToEdge;
         CompareFunction compFunction = CompareFunction::Less;
         TextureCompareMode compMode = TextureCompareMode::None;
@@ -82,6 +85,8 @@ namespace Polyboid
         
         virtual void Bind(uint32_t slot) = 0;
         virtual void UnBind() = 0;
+
+        virtual std::any GetSamplerHandle() = 0;
 
         virtual ~SamplerState() = default;
     

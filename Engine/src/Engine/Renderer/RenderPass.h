@@ -36,14 +36,15 @@ namespace Polyboid
     {
 	    Present,
         ColorAttachment,
-        Copy
+        Copy,
+        ShaderReadOnly
     };
 
     struct RenderPassSettings
     {
 
         //Maybe add more textures here. IDK still working on it
-        
+        std::string debugName = "default";
         uint32_t Width = 0;
         uint32_t Height = 0;
         RenderPassType type = RenderPassType::Present;
@@ -60,7 +61,11 @@ namespace Polyboid
         virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
         virtual void Clear(const ClearSettings& settings) = 0;
 
-        virtual ~RenderPass() = default; 
+        virtual ~RenderPass() = default;
+
+        virtual RenderPassSettings& GetRenderPassSettings() = 0;
+
+        static Ref<RenderPass> Create(const RenderPassSettings& settings);
 
     };
 

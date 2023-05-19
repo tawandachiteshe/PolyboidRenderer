@@ -24,6 +24,8 @@
 #include "Platform/Vulkan/Utils/VulkanPhysicalDevice.h"
 #include "Platform/Vulkan/Utils/VulkanSurfaceKHR.h"
 #include "Platform/Vulkan/VkSwapChain.h"
+#include "Platform/Vulkan/VulkanCommandList.h"
+#include "vulkan/vulkan_raii.hpp"
 
 
 namespace Polyboid
@@ -49,9 +51,7 @@ namespace Polyboid
     void Imgui::Init(const std::any& window)
     {
 
-        auto& app = Application::Get();
-        
-        IMGUI_CHECKVERSION();
+    	IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         
@@ -99,24 +99,19 @@ namespace Polyboid
         }
 
      
-        auto type = app.GetRenderAPI()->GetRenderAPIType();
+        auto type = RenderAPI::Get()->GetRenderAPIType();
 
         //g_MainWindowData.
-
-        if (type == RenderAPIType::Opengl)
-        {
-            ImGui_ImplGlfw_InitForOpenGL(std::any_cast<GLFWwindow*>(window), true);
-            ImGui_ImplOpenGL3_Init("#version 450");
-        }
+      
 
         if (type == RenderAPIType::Vulkan)
         {
-            auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            s_Data.m_CommandList = new VulkanCommandList(renderAPI, false);
-            s_Data.m_CommandList->CreateCommandBuffers(3);
+            auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
+            s_Data.m_CommandList = std::make_shared<VulkanCommandList>(renderAPI, CommandListSettings{3});
+            s_Data.cmdPool = std::make_shared<VulkanDescriptorPool>(renderAPI);
 
-            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
-  
+            s_Data.m_RenderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
+
 
             // Select Surface Format
             ImGui_ImplGlfw_InitForVulkan(std::any_cast<GLFWwindow*>(window), true);
@@ -128,18 +123,19 @@ namespace Polyboid
             init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
             init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
             init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
-            init_info.DescriptorPool = renderAPI->GetPool()->GetPool();
+            init_info.DescriptorPool = s_Data.cmdPool->GetPool();
             init_info.MinImageCount = 2;
             init_info.ImageCount = 3;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
             init_info.CheckVkResultFn = check_vk_result;
 
            
-            ImGui_ImplVulkan_Init(&init_info, renderPass->GetHandle());
+            ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());
 
             // Upload Fonts
             {
-                auto cmd = s_Data.m_CommandList->GetCommandBufferAt(0);
+                Ref<VulkanCommandList> uploadList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+                auto cmd = uploadList->GetCommandBufferAt(0);
 
 
                 vk::CommandBuffer cmdbuffer = std::any_cast<vk::CommandBuffer>(cmd->GetHandle());
@@ -165,6 +161,8 @@ namespace Polyboid
                 err = vkDeviceWaitIdle(renderAPI->GetDevice()->GetVulkanDevice());
                 check_vk_result(err);
                 ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+                uploadList->Destroy(renderAPI->GetDevice()->GetVulkanDevice());
             }
 
 
@@ -174,35 +172,14 @@ namespace Polyboid
 
     }
 
-    void Imgui::Begin()
+    void Imgui::Begin(const Ref<CommandList>& cmdList)
     {
+        s_Data.m_CommandList = std::reinterpret_pointer_cast<VulkanCommandList>(cmdList);
 
-        auto& app = Application::Get();
-        auto type = app.GetRenderAPI()->GetRenderAPIType();
+        ImGui_ImplGlfw_NewFrame();
+    	ImGui_ImplVulkan_NewFrame();
 
-        if (type == RenderAPIType::Opengl)
-        {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-        }
-
-        if (type ==  RenderAPIType::Vulkan)
-        {
-
-            auto swapchain = Renderer::GetSwapChain();
-            auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(swapchain);
-            auto renderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(swapchain->GetDefaultRenderPass());
-            auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto& frame = Renderer::GetCurrentFrame();
-
-            auto framebuffer = std::reinterpret_pointer_cast<Framebuffer>(vkSwapchain->GetCurrentFramebuffer());
-
-            s_Data.m_CommandList->GetCommandBufferAt(frame)->Begin();
-            s_Data.m_CommandList->GetCommandBufferAt(frame)->BeginRenderPass(renderPass, framebuffer);
-
-            ImGui_ImplVulkan_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-        }
+        
    
         ImGui::NewFrame();
         ImGuizmo::BeginFrame();
@@ -212,57 +189,26 @@ namespace Polyboid
     void Imgui::End()
 	{
         auto& app = Application::Get();
-        auto type = app.GetRenderAPI()->GetRenderAPIType();
 
         ImGui::Render();
 
-        if (type == RenderAPIType::Opengl)
-        {
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        }
-
-        if (type == RenderAPIType::Vulkan)
-        {
-            auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
-            auto cmd = s_Data.m_CommandList;
-            
-            auto& frame = Renderer::GetCurrentFrame();
-
-
-            auto cmdBuffer = cmd->GetCommandBufferAt(frame);
-
-            VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
-
-            cmdBuffer->EndRenderPass();
-            cmdBuffer->End();
-
-        }
-
+        auto cmd = s_Data.m_CommandList;
+        auto& frame = Renderer::GetCurrentFrame();
+        auto cmdBuffer = cmd->GetCommandBufferAt(frame);
+        VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
        
         if ((*s_Data.io).ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            GLFWwindow* backup_current_context = nullptr;
-	        if (type == RenderAPIType::Opengl)
-	        {
-                backup_current_context = glfwGetCurrentContext();
-	        }
-          
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
-            if (type == RenderAPIType::Opengl)
-            {
-                glfwMakeContextCurrent(backup_current_context);
-            }
-
-           
         }
     }
 
     void Imgui::ShutDown()
     {
-        auto& app = Application::Get();
-        auto type = app.GetRenderAPI()->GetRenderAPIType();
+        
+        auto type = RenderAPI::Get()->GetRenderAPIType();
 
         if (type == RenderAPIType::Opengl)
         {
@@ -272,11 +218,12 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
            
-            auto renderAPI = dynamic_cast<VkRenderAPI*>(app.GetRenderAPI());
+            auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
             auto device = renderAPI->GetDevice()->GetVulkanDevice();
             auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
-            s_Data.m_CommandList->Destroy(device);
+            // s_Data.m_CommandList->Destroy(device);
+            s_Data.cmdPool->Destroy();
 
 
             ImGui_ImplVulkan_Shutdown();

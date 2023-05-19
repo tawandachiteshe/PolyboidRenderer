@@ -8,12 +8,11 @@
 
 namespace Polyboid
 {
-	VulkanShader::VulkanShader(const VkRenderAPI* context, ShaderBinaryAndInfo info): m_Context(context), m_ShaderInfo(
+	VulkanShader::VulkanShader(const VkRenderAPI* context, ShaderBinaryAndReflectionInfo info): m_Context(context), m_ShaderInfo(
 		std::move(info))
 	{
 
 		auto device = context->GetDevice()->GetVulkanDevice();
-		auto pool = context->GetPool()->GetPool();
 
 		vk::ShaderModuleCreateInfo createInfo;
 		createInfo.codeSize = m_ShaderInfo.Spirv.size() * sizeof(uint32_t);
@@ -24,9 +23,6 @@ namespace Polyboid
 		vk::resultCheck(result, "Failed to create shader module");
 
 		m_ShaderModule = shaderModule;
-
-		
-
 		vk::PipelineShaderStageCreateInfo shaderStageInfo;
 		shaderStageInfo.module = m_ShaderModule;
 		shaderStageInfo.pName = "main";
@@ -41,29 +37,125 @@ namespace Polyboid
 		
 		m_ShaderStateInfo = shaderStageInfo;
 
+		const auto& ubos = m_ShaderInfo.reflectionInfo.ubos;
+		const auto& ssbos = m_ShaderInfo.reflectionInfo.ssbos;
+		const auto& textures = m_ShaderInfo.reflectionInfo.textures;
+		const auto& pushConstants = m_ShaderInfo.reflectionInfo.pushConstants;
 
-		vk::DescriptorSetLayoutCreateInfo setLayoutCreateInfo;
-		vk::DescriptorSetLayoutBinding binding;
-		binding.descriptorType = vk::DescriptorType::eUniformBuffer;
-		binding.pImmutableSamplers = nullptr;
-		binding.descriptorCount = 1;
-		binding.binding = 0;
-		binding.stageFlags = shaderStageInfo.stage;
+		for (auto& constant : pushConstants)
+		{
+			const auto& constantInfo = constant.second;
+			vk::PushConstantRange pushConstant{};
+			pushConstant.offset = 0;
+			pushConstant.stageFlags = shaderStageInfo.stage;
+			pushConstant.size = 128; //IDK man
 
+			m_PushConstantRanges.emplace_back(pushConstant);
+
+			//pushConstant.size = constantInfo.Name;
+			
+		}
+
+		for (auto& ubo : ubos)
+		{
+			auto& bufferInfo = ubo.second;
+			
+			vk::DescriptorSetLayoutBinding binding{};
+			binding.descriptorType = vk::DescriptorType::eUniformBuffer;
+			binding.descriptorCount = 1;
+			binding.stageFlags = m_ShaderStateInfo.stage;
+			binding.binding = bufferInfo.Binding;
+
+			vk::WriteDescriptorSet write{};
+			write.descriptorCount = 1;
+			write.dstArrayElement = 0;
+			write.pBufferInfo = nullptr;
+			write.pImageInfo = nullptr;
+			write.dstBinding = bufferInfo.Binding;
+			write.descriptorType = binding.descriptorType;
+
+			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
+			
+
+			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
+		}
+
+
+		for (auto& ssbo : ssbos)
+		{
+			auto& bufferInfo = ssbo.second;
+			vk::DescriptorSetLayoutBinding binding{};
+			binding.descriptorType = vk::DescriptorType::eStorageBuffer;
+			binding.descriptorCount = 1;
+			binding.stageFlags = m_ShaderStateInfo.stage;
+			binding.binding = bufferInfo.Binding;
+
+
+			vk::WriteDescriptorSet write{};
+			write.descriptorCount = 1;
+			write.dstArrayElement = 0;
+			write.pBufferInfo = nullptr;
+			write.pImageInfo = nullptr;
+			write.dstBinding = bufferInfo.Binding;
+			write.descriptorType = binding.descriptorType;
+
+			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
 		
-		setLayoutCreateInfo.bindingCount = 1;
-		setLayoutCreateInfo.pBindings = &binding;
-
-		auto[layoutResult, layout] = device.createDescriptorSetLayout(setLayoutCreateInfo);
-
-		vk::DescriptorSetAllocateInfo allocInfo;
-		allocInfo.descriptorPool = pool;
-		allocInfo.descriptorSetCount = 1;
-		allocInfo.pSetLayouts = &layout;
-
-		auto[allocResult, descriptorSets] = device.allocateDescriptorSets(allocInfo);
+			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
+		}
 
 
+		for (auto& texture : textures)
+		{
+			auto& bufferInfo = texture.second;
+			vk::DescriptorSetLayoutBinding binding{};
+			binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+			binding.descriptorCount = bufferInfo.arrayLength;
+			binding.stageFlags = m_ShaderStateInfo.stage;
+			binding.binding = bufferInfo.Binding;
+
+			vk::WriteDescriptorSet write{};
+			write.descriptorCount = bufferInfo.arrayLength;
+			write.dstArrayElement = 0;
+			write.pBufferInfo = nullptr;
+			write.pImageInfo = nullptr;
+			write.dstBinding = bufferInfo.Binding;
+			write.descriptorType = binding.descriptorType;
+
+			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
+
+			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
+		}
+
+
+	}
+
+
+	void VulkanShader::Destroy()
+	{
+		auto device = m_Context->GetDevice()->GetVulkanDevice();
+		device.destroyShaderModule(m_ShaderModule);
+
+	}
+
+	vk::PipelineShaderStageCreateInfo VulkanShader::GetVulkanPipelineStageInfo()
+	{
+		return m_ShaderStateInfo;
+	}
+
+	std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> VulkanShader::GetVulkanDescriptorBindings()
+	{
+		return m_ShaderBindings;
+	}
+
+	std::vector<vk::PushConstantRange> VulkanShader::GetPushContantRange()
+	{
+		return m_PushConstantRanges;
+	}
+
+	DescWriteMap VulkanShader::GetDescWriteMap()
+	{
+		return m_DescWriteSet;
 	}
 
 	VulkanShader::~VulkanShader()
@@ -78,73 +170,18 @@ namespace Polyboid
 	{
 	}
 
-	void VulkanShader::SetUniformBuffer(const std::string& name, const Ref<UniformBuffer>& value)
+	ReflectionInfo VulkanShader::GetShaderReflectionInfo()
 	{
-	}
-
-	void VulkanShader::SetShaderStorageBuffer(const std::string& name, const Ref<ShaderStorageBuffer>& value)
-	{
-	}
-
-	void VulkanShader::SetSampler(const std::string& name, const Ref<SamplerState>& value)
-	{
-	}
-
-	void VulkanShader::SetImage(const std::string& name, const Ref<SamplerState>& value)
-	{
-	}
-
-	void VulkanShader::SetTexture2D(const std::string& name, const Ref<Texture>& value)
-	{
-	}
-
-	void VulkanShader::SetTexture3D(const std::string& name, const Ref<Texture3D>& value)
-	{
-	}
-
-	Ref<UniformBuffer> VulkanShader::GetUniformBuffer(const std::string& name) const
-	{
-		if (m_UniformBuffers.contains(name))
-		{
-			return std::reinterpret_pointer_cast<UniformBuffer>(m_UniformBuffers.at(name));
-		}
-
-		return nullptr;
-	}
-
-	Ref<ShaderStorageBuffer> VulkanShader::GetShaderStorageBuffer(const std::string& name) const
-	{
-		if (m_SSOBBuffers.contains(name))
-		{
-			return std::reinterpret_pointer_cast<ShaderStorageBuffer>(m_SSOBBuffers.at(name));
-		}
-
-		return nullptr;
-	}
-
-	Ref<SamplerState> VulkanShader::GetSampler(const std::string& name) const
-	{
-		if (m_Samplers.contains(name))
-		{
-			return std::reinterpret_pointer_cast<SamplerState>(m_Samplers.at(name));
-		}
-
-		return nullptr;
-	}
-
-	Ref<SamplerState> VulkanShader::GetImage(const std::string& name) const
-	{
-
-		if (m_Images.contains(name))
-		{
-			return std::reinterpret_pointer_cast<SamplerState>(m_Images.at(name));
-		}
-
-		return nullptr;
+		return m_ShaderInfo.reflectionInfo;
 	}
 
 	ShaderType VulkanShader::GetType()
 	{
 		return static_cast<ShaderType>(m_ShaderInfo.type);
+	}
+
+	vk::PipelineShaderStageCreateInfo VulkanShader::GetVulkanInfo()
+	{
+		return m_ShaderStateInfo;
 	}
 }

@@ -18,6 +18,7 @@ namespace Polyboid
 		IndexDataType m_IndexType;
 		uint32_t m_Count = 0;
 		VmaAllocation m_Allocation{};
+		uint32_t m_Size = 0;
 
 	public:
 
@@ -29,6 +30,8 @@ namespace Polyboid
 		void Unbind() const override;
 		IndexDataType GetIndexDataType() override;
 		uint32_t GetCount() const override;
+		uint32_t GetSizeInBytes() const override;
+		std::any GetHandle() const override;
 
 		virtual void Destroy();
 	};

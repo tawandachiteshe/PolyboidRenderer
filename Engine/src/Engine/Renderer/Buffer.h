@@ -9,14 +9,15 @@ namespace Polyboid
 {
 	enum class IndexDataType;
 
-    class ShaderStorageBuffer
+    class StorageBuffer
     {
     public:
         virtual void Bind(uint32_t slot = 0) const = 0;
         virtual void Unbind() const = 0;
         virtual void SetData(const void* data, uint32_t sizeData, uint32_t offset = 0) = 0;
-        
-        virtual ~ShaderStorageBuffer() = default;
+        virtual std::any GetHandle() = 0;
+        virtual ~StorageBuffer() = default;
+        static Ref<StorageBuffer> Create(uint32_t size);
     };
 
 
@@ -114,6 +115,11 @@ namespace Polyboid
 
         virtual const BufferLayout& GetLayout() const = 0;
         virtual void SetLayout(const BufferLayout& layout) = 0;
+
+        virtual uint32_t GetSizeInBytes() const = 0;
+        virtual std::any GetHandle() const = 0;
+
+        static Ref<VertexBuffer> Create(const void* data, uint32_t size);
     };
 
     class IndexBuffer
@@ -123,10 +129,23 @@ namespace Polyboid
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
+        virtual uint32_t GetSizeInBytes() const = 0;
+        virtual std::any GetHandle() const = 0;
 
         virtual IndexDataType GetIndexDataType() = 0;
         virtual uint32_t GetCount() const = 0;
 
         static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
     };
+
+    class StagingBuffer
+    {
+    public:
+        virtual void SetData(const void* data) = 0;
+        virtual uint32_t GetSizeInBytes() = 0;
+        virtual std::any GetHandle() = 0;
+        virtual ~StagingBuffer() = default;
+
+    };
+
 }

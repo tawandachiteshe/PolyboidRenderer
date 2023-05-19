@@ -55,11 +55,9 @@ namespace Polyboid
 
 
 	private:
-		std::thread m_RenderThread;
 		LayerContainer m_Layers;
 
 		void Run();
-		void Render();
 		void ShutDown();
 		std::atomic_bool m_Running = false;
 		std::atomic_bool m_ShouldRender = true;

@@ -107,7 +107,7 @@ namespace Polyboid
 	{
 	}
 
-	void VulkanDepthStencilState::Bind()
+	vk::PipelineDepthStencilStateCreateInfo VulkanDepthStencilState::GetVulkanInfo()
 	{
 		if (m_Dirty)
 		{
@@ -117,6 +117,7 @@ namespace Polyboid
 			m_CreateInfo.depthBoundsTestEnable = m_DepthMode.DepthEnable;
 			m_CreateInfo.depthWriteEnable = m_DepthMode.DepthWriteMask == DepthWrite::Enable;
 			m_CreateInfo.depthCompareOp = depthFunctionToVkCompareOp(m_DepthMode.depthFunction);
+			m_CreateInfo.stencilTestEnable = false;
 
 			m_CreateInfo.stencilTestEnable = m_StencilMode.StencilEnabled;
 
@@ -143,7 +144,10 @@ namespace Polyboid
 			m_CreateInfo.back = back;
 
 			m_Dirty = false;
+
+			return m_CreateInfo;
 		}
 
+		return {};
 	}
 }

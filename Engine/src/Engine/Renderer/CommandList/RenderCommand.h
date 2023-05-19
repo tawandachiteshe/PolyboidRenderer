@@ -33,11 +33,14 @@ namespace Polyboid
 	class RenderCommand
 	{
 	private:
-		static Unique<RenderCommandData> s_Data;
+		static Ref<RenderCommandData> s_Data;
 	public:
 		static void SetCommandLists(const std::vector<Ref<CommandList>>& cmdList);
 		static void Init(RenderAPI* context);
 		static void AddCommand(const Ref<Command>& renderCommand);
+		static void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList);
+		static void BeginCommands(const std::vector<Ref<CommandList>>& cmdList);
+		static void EndCommands(const std::vector<Ref<CommandList>>& cmdList);
 		static void WaitAndRender(const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight);
 
 	};

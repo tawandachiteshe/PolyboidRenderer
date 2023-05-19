@@ -34,6 +34,9 @@ namespace Polyboid
 		void Bind(uint32_t slot) override;
 		void UnBind() override;
 		~VulkanSamplerState() override;
+		virtual void Destroy();
+
+		std::any GetSamplerHandle() override;
 	};
 
 	

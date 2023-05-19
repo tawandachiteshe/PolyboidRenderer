@@ -19,7 +19,7 @@ namespace Polyboid
         float Y;
         float Width;
         float Height;
-        float MinDepth;
-        float MaxDepth;
+        float MinDepth = 0.0;
+        float MaxDepth = 1.0;
     };
 }

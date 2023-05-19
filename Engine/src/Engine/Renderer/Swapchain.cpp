@@ -11,7 +11,7 @@ namespace Polyboid
     //Quick impl to test things out
     Ref<Swapchain> Swapchain::Create(const SwapchainSettings& settings)
     {
-        return Application::Get().GetRenderAPI()->CreateSwapChain(settings);
+        return RenderAPI::Get()->CreateSwapChain(settings);
     }
 }
 

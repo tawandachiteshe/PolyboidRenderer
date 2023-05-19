@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include "ShadercIncluder.h"
-#include "Engine/Renderer/RenderAPI.h"
+#include "Engine/Engine/Base.h"
 #include "shaderc/shaderc.hpp"
+#include <filesystem>
 
 namespace Polyboid
 {
@@ -15,6 +15,7 @@ namespace Polyboid
 
         uint32_t Binding = 0;
         uint32_t Set = 0;
+        uint32_t arrayLength = 1;
         std::string Name;
 
 
@@ -64,7 +65,7 @@ namespace Polyboid
 
 	};
 
-	struct ShaderBinaryAndInfo
+	struct ShaderBinaryAndReflectionInfo
 	{
         
         uint8_t type;
@@ -86,12 +87,13 @@ namespace Polyboid
 
             void SetupVulkan()
             {
-                m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, 0);
+                m_Options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_2);
 
             }
 
             void SetupOpenGL()
             {
+                __debugbreak();
                 m_Options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_opengl, 0);
             }
 
@@ -102,32 +104,7 @@ namespace Polyboid
             std::string m_IncludePath;
             bool m_Debug = true;
 
-            ShaderCompilerData(const RenderAPI* context, const std::string& includePath): m_Context(context), m_IncludePath(includePath)
-            {
-                const auto renderAPI = context->GetRenderAPIType();
-                switch (renderAPI)
-                {
-                case RenderAPIType::Opengl: SetupOpenGL(); break;
-                case RenderAPIType::Vulkan: SetupVulkan();  break;
-                case RenderAPIType::Metal: break;
-                case RenderAPIType::Dx11: break;
-                case RenderAPIType::Dx12: break;
-                }
-
-                //TODO: make this in more robust
-                m_Options.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
-                //only for vulkan
-                //options.SetTargetSpirv(shaderc_targe)
-                m_Options.SetGenerateDebugInfo();
-
-                std::unique_ptr<shaderc::CompileOptions::IncluderInterface> includer = std::make_unique<
-                    ShadercIncluder>(includePath);
-                m_Options.SetIncluder(std::move(includer));
-
-
-
-            }
-
+            ShaderCompilerData(const RenderAPI* context, const std::string& includePath);
 	    };
 
         static Ref<ShaderCompilerData> s_Data;
@@ -135,10 +112,10 @@ namespace Polyboid
     public:
 
 
-        using ShaderBinaryMap = std::unordered_map<std::string, ShaderBinaryAndInfo>;
+        using ShaderBinaryMap = std::unordered_map<std::string, ShaderBinaryAndReflectionInfo>;
         static void Init(const RenderAPI* context, const std::string& includePath);
 
-        static ShaderBinaryAndInfo Compile(const std::filesystem::path& path, const std::string& rootPath);
+        static ShaderBinaryAndReflectionInfo Compile(const std::filesystem::path& path, const std::string& rootPath);
         static void Reflect(const std::string& shaderReflectJson, ReflectionInfo& info);
         static ShaderBinaryMap CompileShadersFromPath(const std::filesystem::path& directoryPath);
         static bool Dump(const ShaderBinaryMap& shaderBinaries, const std::filesystem::path& cachePath);

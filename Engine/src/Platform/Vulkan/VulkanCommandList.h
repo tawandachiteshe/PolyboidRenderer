@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Engine/Renderer/CommandList.h"
 #include "vulkan/vulkan.hpp"
+#include <vector>
 
 namespace Polyboid
 {
@@ -22,11 +23,8 @@ namespace Polyboid
 
 		void Destroy(vk::Device device);
 
-		VulkanCommandList(const VkRenderAPI* context, bool canPresent);
-		void CreateCommandBuffers(uint32_t count) override;
+		VulkanCommandList(const VkRenderAPI* context, const CommandListSettings& settings);
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
-
-		
 		~VulkanCommandList() override;
 
 		friend class VulkanCommandBuffer;

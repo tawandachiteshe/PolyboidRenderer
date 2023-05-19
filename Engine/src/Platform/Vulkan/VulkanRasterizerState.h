@@ -4,23 +4,32 @@
 
 namespace Polyboid
 {
+	struct RasterizerVulkanInfo
+	{
+		vk::PipelineDynamicStateCreateInfo m_CreateDynamicStateInfo;
+		vk::PipelineRasterizationStateCreateInfo m_CreateRasterizeInfo;
+		vk::PipelineViewportStateCreateInfo m_ViewportCreateInfo;
+
+	};
+
 	class VulkanRasterizerState : public RasterizerState
 	{
 	private:
 
-		vk::PipelineDynamicStateCreateInfo m_CreateStateInfo;
-		vk::PipelineRasterizationStateCreateInfo m_CreateInfo;
-		vk::PipelineViewportStateCreateInfo m_ViewportCreateInfo;
+		RasterizerVulkanInfo m_Info{};
 
 		FillMode m_FrontFace = FillMode::Solid;
 		FillMode m_backFace = FillMode::Solid;
 		bool m_ScissorEnabled = false;
 		bool m_DepthClipEnabled = false;
 		std::vector<Viewport> m_Viewports;
+		std::vector<vk::Viewport> m_VkViewports;
+		std::vector<vk::Rect2D> m_VkScissorRects;
 		std::vector<Rect> m_ScissorRects;
-		FrontFaceDirection m_FaceDirection = FrontFaceDirection::CounterClockwise;
+		FrontFaceDirection m_FaceDirection = FrontFaceDirection::Clockwise;
 		CullFaceMode m_CullMode = CullFaceMode::Back;
 		DepthBias m_DepthBias;
+		std::vector<vk::DynamicState> m_DynamicStates;
 
 		float m_LineWidth = 1.0f;
 		float m_PointSize = 1.0f;
@@ -55,9 +64,9 @@ namespace Polyboid
 		float GetPointSize() override;
 		void Reset() override;
 
-		virtual void Bind();
+		virtual RasterizerVulkanInfo GetVulkanInfo();
 
-		~VulkanRasterizerState() override;
+		~VulkanRasterizerState() override = default;
 	};
 
 }

@@ -10,39 +10,11 @@
 
 namespace Polyboid
 {
-    Ref<Shader> Shader::Create(const ShaderType& shader, const std::string& shaderSoucePath)
+
+    Ref<Shader> Shader::Create(const ShaderBinaryAndReflectionInfo& info)
     {
+        const auto renderApi = RenderAPI::Get();
 
-        auto renderApi = Application::Get().GetRenderAPI()->GetRenderAPIType();
-
-        switch (renderApi)
-        {
-        case RenderAPIType::Opengl:
-        case RenderAPIType::Vulkan: 
-        case RenderAPIType::Metal: 
-        case RenderAPIType::Dx11: 
-        case RenderAPIType::Dx12: 
-            return nullptr;
-        }
-
-        return nullptr;
-    }
-
-    Ref<Shader> Shader::Create(const ShaderBinaryAndInfo& info)
-    {
-        const auto renderApi = Application::Get().GetRenderAPI();
-        const auto renderApiType = renderApi->GetRenderAPIType();
-
-        switch (renderApiType)
-        {
-        case RenderAPIType::Opengl:
-        case RenderAPIType::Vulkan:
-        case RenderAPIType::Metal:
-        case RenderAPIType::Dx11:
-        case RenderAPIType::Dx12:
-            return nullptr;
-        }
-
-        return nullptr;
+        return renderApi->CreateShader(info);
     }
 }

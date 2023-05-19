@@ -1,4 +1,4 @@
-#version 450 core
+#version 450
 
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec4 aNormal;
@@ -11,8 +11,7 @@ layout (std140, binding = 0) uniform CameraBuffer {
 	
 };
 
-layout(location = 0) out vec3 vTextureCoord;
-layout(location = 1) out vec2 vTextureCoord2D;
+layout(location = 0) out vec2 vTextureCoord2D;
 
 struct Vertex {
   float sPosition[3]; 
@@ -24,7 +23,7 @@ struct Vertex {
 };
 
 
-layout(std430, binding = 0) readonly buffer Vertices {
+layout(std430, binding = 1) readonly buffer Vertices {
   Vertex in_Vertices[];
 };
 
@@ -48,10 +47,10 @@ void main() {
 	
 
 	//mat4(mat3(view))
+	//vTextureCoord = aPosition; //getPosition(gl_VertexIndex);
 
+	gl_Position = vec4(aPosition, 1.0);//projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
 
-	gl_Position = projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
-
-	vTextureCoord = getPosition(gl_VertexIndex);
-	vTextureCoord2D = getUV(gl_VertexIndex);
+	
+	vTextureCoord2D =  aUV; //getUV(gl_VertexIndex);
 }

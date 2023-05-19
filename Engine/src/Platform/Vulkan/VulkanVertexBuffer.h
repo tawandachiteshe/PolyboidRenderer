@@ -15,6 +15,7 @@ namespace Polyboid
 		VmaAllocation m_Allocation = nullptr;
 		const VkRenderAPI* m_Context = nullptr;
 		BufferLayout m_Layout;
+		uint32_t m_Size = 0;
 
 
 	public:
@@ -28,6 +29,8 @@ namespace Polyboid
 		void SetData(const void* data, uint32_t size) override;
 		const BufferLayout& GetLayout() const override;
 		void SetLayout(const BufferLayout& layout) override;
+		uint32_t GetSizeInBytes() const override;
+		std::any GetHandle() const override;
 
 		virtual void Destroy();
 	};

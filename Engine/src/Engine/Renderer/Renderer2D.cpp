@@ -270,7 +270,7 @@ namespace Polyboid
 
 			auto& [vert, frag] = s_QuadData.shaders;
 
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
+			//vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
 
 
 			pipeLine->SetShader(vert);
@@ -310,7 +310,7 @@ namespace Polyboid
 
 			auto& [vert, frag] = s_CircleData.shaders;
 
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
+			//vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
 			pipeLine->SetShader(vert);
 			pipeLine->SetShader(frag);
 
@@ -343,7 +343,7 @@ namespace Polyboid
 			auto pipeLine = s_LineData.LinePipelineState;
 			auto& [vert, frag] = s_LineData.shaders;
 
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
+			//vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
 
 
 			pipeLine->SetShader(vert);

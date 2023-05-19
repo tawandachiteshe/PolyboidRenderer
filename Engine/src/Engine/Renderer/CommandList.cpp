@@ -7,10 +7,10 @@
 
 namespace Polyboid
 {
-	Ref<CommandList> CommandList::Create(bool canPresent)
+	Ref<CommandList> CommandList::Create(const CommandListSettings& settings)
 	{
 
-		return Application::Get().GetRenderAPI()->CreateCommandList(canPresent);
+		return RenderAPI::Get()->CreateCommandList(settings);
 
 	}
 }

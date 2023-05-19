@@ -17,6 +17,8 @@
 
 #include <struct_pack/struct_pack.hpp>
 
+#include "Engine/Renderer/RenderAPI.h"
+
 namespace Polyboid
 {
 
@@ -62,13 +64,36 @@ namespace Polyboid
 	}
 
 
+	ShaderCompiler::ShaderCompilerData::ShaderCompilerData(const RenderAPI* context, const std::string& includePath): m_Context(context), m_IncludePath(includePath)
+	{
+		switch (const auto renderAPI = context->GetRenderAPIType())
+		{
+		case RenderAPIType::Opengl: SetupOpenGL(); break;
+		case RenderAPIType::Vulkan: SetupVulkan();  break;
+		case RenderAPIType::Metal: break;
+		case RenderAPIType::Dx11: break;
+		case RenderAPIType::Dx12: break;
+		}
+
+		//TODO: make this in more robust
+		m_Options.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
+		//only for vulkan
+		//options.SetTargetSpirv(shaderc_targe)
+		m_Options.SetGenerateDebugInfo();
+
+		std::unique_ptr<shaderc::CompileOptions::IncluderInterface> includer = std::make_unique<
+			ShadercIncluder>(includePath);
+		m_Options.SetIncluder(std::move(includer));
+
+	}
+
 	void ShaderCompiler::Init(const RenderAPI* context, const std::string& includePath)
 	{
 		static auto data = std::make_shared<ShaderCompilerData>(context, includePath);
 		s_Data = data;
 	}
 
-	ShaderBinaryAndInfo ShaderCompiler::Compile(const std::filesystem::path& path, const std::string& rootPath)
+	ShaderBinaryAndReflectionInfo ShaderCompiler::Compile(const std::filesystem::path& path, const std::string& rootPath)
 	{
 		tf::Executor executor;
 
@@ -129,7 +154,7 @@ namespace Polyboid
 			}
 		}
 
-		ShaderBinaryAndInfo info;
+		ShaderBinaryAndReflectionInfo info;
 
 		if (!shaderSpv.empty())
 		{
@@ -160,6 +185,23 @@ namespace Polyboid
 
 		auto reflectionJson = nlohmann::json::parse(shaderReflectJson);
 
+		if (reflectionJson.contains("textures"))
+		{
+			auto textures = reflectionJson["textures"];
+
+			for (auto& texture : textures)
+			{
+				ShaderImageInfo shaderInfo;
+
+				shaderInfo.Binding = texture["binding"].get<uint32_t>();
+				shaderInfo.Name = texture["name"].get<std::string>();
+				shaderInfo.Set = texture["set"].get<uint32_t>();
+				shaderInfo.arrayLength = texture.contains("array") ? texture["array"].get<std::vector<uint32_t>>().at(0) : 1;
+				info.textures[shaderInfo.Name] = (shaderInfo);
+			}
+		}
+
+
 		if (reflectionJson.contains("images"))
 		{
 			auto images = reflectionJson["images"];
@@ -171,6 +213,9 @@ namespace Polyboid
 				imageInfo.Binding = image["binding"].get<uint32_t>();
 				imageInfo.Name = image["name"].get<std::string>();
 				imageInfo.Set = image["set"].get<uint32_t>();
+				imageInfo.arrayLength = image.contains("array") ? image["array"].get<std::vector<uint32_t>>().at(0) : 1;
+
+			
 
 				info.images[imageInfo.Name] = imageInfo;
 			}
@@ -194,22 +239,7 @@ namespace Polyboid
 
 
 
-		if (reflectionJson.contains("textures"))
-		{
-			auto textures = reflectionJson["textures"];
-
-			for (auto& texture : textures)
-			{
-				ShaderImageInfo shaderInfo;
-
-				shaderInfo.Binding = texture["binding"].get<uint32_t>();
-				shaderInfo.Name = texture["name"].get<std::string>();
-				shaderInfo.Set = texture["set"].get<uint32_t>();
-
-				info.textures[shaderInfo.Name] = (shaderInfo);
-			}
-		}
-
+	
 		if (reflectionJson.contains("ubos"))
 		{
 			auto ubos = reflectionJson["ubos"];
@@ -257,14 +287,14 @@ namespace Polyboid
 	}
 
 
-	std::unordered_map<std::string, ShaderBinaryAndInfo> ShaderCompiler::CompileShadersFromPath(
+	std::unordered_map<std::string, ShaderBinaryAndReflectionInfo> ShaderCompiler::CompileShadersFromPath(
 		const std::filesystem::path& directoryPath)
 	{
 		tf::Executor executor;
 		tf::Taskflow taskflow("Compile Shaders");
 
 		Timer t;
-		static std::vector<ShaderBinaryAndInfo> shaderResults;
+		static std::vector<ShaderBinaryAndReflectionInfo> shaderResults;
 
 		std::vector<std::string> filePaths;
 		std::filesystem::recursive_directory_iterator files(directoryPath);
@@ -281,7 +311,7 @@ namespace Polyboid
 		}
 
 	
-		std::unordered_map<std::string, ShaderBinaryAndInfo> infos;
+		std::unordered_map<std::string, ShaderBinaryAndReflectionInfo> infos;
 		infos.reserve(filePaths.size());
 		shaderResults.resize(filePaths.size());
 
@@ -299,7 +329,7 @@ namespace Polyboid
 		return infos;
 	}
 
-	bool ShaderCompiler::Dump(const std::unordered_map<std::string, ShaderBinaryAndInfo>& shaderBinaries,
+	bool ShaderCompiler::Dump(const std::unordered_map<std::string, ShaderBinaryAndReflectionInfo>& shaderBinaries,
 	                          const std::filesystem::path& cachePath)
 	{
 		tf::Executor executor;
@@ -368,7 +398,7 @@ namespace Polyboid
 				std::istreambuf_iterator<char>());
 
 
-			ShaderBinaryAndInfo binaryInfo;
+			ShaderBinaryAndReflectionInfo binaryInfo;
 			auto result = struct_pack::deserialize_to(binaryInfo, contents);
 
 			if (result == struct_pack::errc::ok)

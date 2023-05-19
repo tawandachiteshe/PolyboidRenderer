@@ -3,15 +3,20 @@
 
 #include <spdlog/spdlog.h>
 
+#include "Buffers.h"
 #include "VkSwapChain.h"
 #include "VulkanCommandList.h"
 #include "VulkanFence.h"
 #include "VulkanFramebuffer.h"
+#include "VulkanGraphicsPipeline.h"
 #include "VulkanIndexBuffer.h"
 #include "VulkanRenderPass.h"
 #include "VulkanSemaphore.h"
 #include "VulkanTexture2D.h"
 #include "VulkanVertexBuffer.h"
+#include "Engine/Renderer/Renderer.h"
+#include "VulkanImage2D.h"
+#include "VulkanPipelineDescriptorSetPool.h"
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
 #include "Utils/VulkanAllocator.h"
@@ -34,6 +39,69 @@ namespace Polyboid
 		return m_Surface;
 	}
 
+	void VkRenderAPI::SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& _imageAvailable, const Ref<Semaphore>& _renderFinished,
+		const Ref<Fence>& inFlight)
+	{
+
+		vk::Fence inFlightFence = std::any_cast<vk::Fence>(inFlight->GetHandle());
+		vk::Semaphore imageSemaphore = std::any_cast<vk::Semaphore>(_imageAvailable->GetHandle());
+		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderFinished->GetHandle());
+
+		std::vector<vk::CommandBuffer> m_CommandBuffers;
+
+		for (auto& _cmdList : cmdList)
+		{
+			auto cmdBuffer = _cmdList->GetCommandBufferAt(Renderer::GetCurrentFrame());
+			m_CommandBuffers.push_back(std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle()));
+		}
+
+
+
+		auto gfxQueue = GetDevice()->GetGraphicsQueue();
+		vk::SubmitInfo submitInfo{};
+		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &imageSemaphore;
+		submitInfo.pWaitDstStageMask = waitStages;
+
+		submitInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+		submitInfo.pCommandBuffers = m_CommandBuffers.data();
+
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &renderSemaphore;
+
+
+
+		vk::Result result = gfxQueue.submit(1, &submitInfo, inFlightFence);
+		vk::resultCheck(result, "Failed to submit commands");
+
+
+	}
+
+	void VkRenderAPI::SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList)
+	{
+
+		std::vector<vk::CommandBuffer> m_CommandBuffers;
+
+		for (auto& _cmdList : cmdList)
+		{
+			auto cmdBuffer = _cmdList->GetCommandBufferAt(Renderer::GetCurrentFrame());
+			m_CommandBuffers.push_back(std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle()));
+		}
+
+		auto gfxQueue = GetDevice()->GetGraphicsQueue();
+
+		vk::SubmitInfo submitInfo{};
+		submitInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+		submitInfo.pCommandBuffers = m_CommandBuffers.data();
+
+		vk::Result result = gfxQueue.submit(1, &submitInfo, nullptr);
+		vk::resultCheck(result, "Failed to submit commands");
+
+		result = gfxQueue.waitIdle();
+		vk::resultCheck(result, "Failed to wait commands");
+	}
+
 
 	VkRenderAPI::VkRenderAPI(const std::any& window): m_Window(window)
 	{
@@ -42,35 +110,34 @@ namespace Polyboid
 		m_Surface = std::make_shared<VulkanSurfaceKHR>(m_Instance, window);
 		m_PhysicalDevice = std::make_shared<VulkanPhysicalDevice>(m_Instance, m_Surface);
 		m_Device = std::make_shared<VulkanDevice>(m_PhysicalDevice);
-
 		m_Allocator = std::make_shared<VulkanAllocator>(this);
 
-		m_DescPool = ALLOC_API(VulkanDescriptorPool, this);
 	}
 
 
 	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const FramebufferSettings& settings)
 	{
-		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, settings)
+		//auto framebuffer = ALLOC_API(VulkanFramebuffer, this, settings)
+
+		//m_Framebuffers.push_back(framebuffer);
+
+		__debugbreak();
+
+		return nullptr;
+	}
+
+	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const Ref<RenderPass>& renderPass)
+	{
+		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass));
 
 		m_Framebuffers.push_back(framebuffer);
 
 		return framebuffer;
 	}
 
-	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const FramebufferSettings& settings,
-	                                                const Ref<RenderPass>& renderPass)
+	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings, const void* data)
 	{
-		//auto framebuffer = ALLOC_API(VulkanFramebuffer, this, settings, renderPass)
-
-		//m_Framebuffers.push_back(framebuffer);
-
-		return nullptr;
-	}
-
-	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings)
-	{
-		auto texture = ALLOC_API(VulkanTexture2D, this, nullptr, settings);
+		auto texture = ALLOC_API(VulkanTexture2D, this, settings, data);
 		m_Textures2D.push_back(texture);
 
 		return texture;
@@ -99,7 +166,16 @@ namespace Polyboid
 
 	Ref<UniformBuffer> VkRenderAPI::CreateUniformBuffer(uint32_t size, uint32_t binding)
 	{
-		return nullptr;
+		auto buffer = ALLOC_API(VulkanUniformBuffer, this, size, binding);
+		m_UniformBuffers.emplace_back(buffer);
+		return buffer;
+	}
+
+	Ref<StorageBuffer> VkRenderAPI::CreateStorageBuffer(uint32_t size)
+	{
+		auto buffer = ALLOC_API(VulkanShaderStorage,this, size);
+		m_StorageBuffers.emplace_back(buffer);
+		return buffer;
 	}
 
 	Ref<IndexBuffer> VkRenderAPI::CreateIndexBuffer(const IndexDataType& type, uint32_t count,
@@ -129,12 +205,12 @@ namespace Polyboid
 
 	Ref<VertexBufferArray> VkRenderAPI::CreateVertexBufferArray()
 	{
-		return nullptr;
+		return ALLOC_API(VulkanVertexBufferArray);
 	}
 
-	Ref<CommandList> VkRenderAPI::CreateCommandList(bool canPresent)
+	Ref<CommandList> VkRenderAPI::CreateCommandList(const CommandListSettings& settings)
 	{
-		auto vulkanCommandList = ALLOC_API(VulkanCommandList, this, canPresent);
+		auto vulkanCommandList = ALLOC_API(VulkanCommandList, this, settings);
 
 		m_CommandLists.push_back(vulkanCommandList);
 
@@ -143,7 +219,11 @@ namespace Polyboid
 
 	Ref<PipelineState> VkRenderAPI::CreatePipelineState()
 	{
-		return nullptr;
+		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
+
+		m_Pipelines.push_back(graphicsPipeline);
+
+		return graphicsPipeline;
 	}
 
 	Ref<Swapchain> VkRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
@@ -180,6 +260,28 @@ namespace Polyboid
 		m_Semaphores.push_back(semaphore);
 
 		return semaphore;
+	}
+
+	Ref<Image2D> VkRenderAPI::CreateImage2D(const ImageSettings& imageSettings)
+	{
+		auto image2D = ALLOC_API(VulkanImage2D, this, imageSettings);
+		m_Image2Ds.push_back(image2D);
+
+		return image2D;
+	}
+
+	Ref<Shader> VkRenderAPI::CreateShader(const ShaderBinaryAndReflectionInfo& info)
+	{
+		auto shader = ALLOC_API(VulkanShader, this, info);
+		m_VulkanShaders.push_back(shader);
+		return shader;
+	}
+
+	Ref<PipelineDescriptorSetPool> VkRenderAPI::CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings)
+	{
+		auto pool = ALLOC_API(VulkanPipelineDescriptorSetPool, this, settings);
+		m_DescPools.emplace_back(pool);
+		return pool;
 	}
 
 
@@ -221,6 +323,10 @@ namespace Polyboid
 			semaphore->Destroy();
 		}
 
+		for (auto& image : m_Image2Ds)
+		{
+			image->Destroy();
+		}
 
 		for (const auto& vtx : m_VertexBuffers)
 		{
@@ -247,7 +353,28 @@ namespace Polyboid
 			command->Destroy(device);
 		}
 
-		m_DescPool->Destroy();
+		for (const auto& pipelines : m_Pipelines)
+		{
+			pipelines->Destroy();
+			
+		}
+
+		for (const auto& buffer : m_UniformBuffers)
+		{
+			buffer->Destroy();
+		}
+
+		for (const auto& buffer : m_StorageBuffers)
+		{
+			buffer->Destroy();
+		}
+
+
+		for (const auto& pool : m_DescPools)
+		{
+			pool->Destroy();
+		}
+
 
 		result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");

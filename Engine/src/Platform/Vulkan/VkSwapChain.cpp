@@ -192,6 +192,7 @@ namespace Polyboid
 		renderPassSettings.Height = createInfo.imageExtent.height;
 		renderPassSettings.type = RenderPassType::Present;
 		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
+		renderPassSettings.debugName = "Swapchain Renderpass";
 
 		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
 
@@ -241,8 +242,8 @@ namespace Polyboid
 				break;
 		}
 		
-
-		const auto api = dynamic_cast<VkRenderAPI*>(Application::Get().GetRenderAPI());
+		
+		const auto api = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
 		const auto engineDevice = api->GetDevice();
 		const auto device = engineDevice->GetVulkanDevice();
 
@@ -258,7 +259,7 @@ namespace Polyboid
 		{
 			TextureSettings settings;
 			settings.sizedFormat = imageFormat;
-			textures[count] = std::make_shared<VulkanTexture2D>(api, settings, swapchainImage);
+			textures[count] = std::make_shared<VulkanTexture2D>(api, swapchainImage, settings);
 			count++;
 		}
 

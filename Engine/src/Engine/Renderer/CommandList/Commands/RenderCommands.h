@@ -1,12 +1,20 @@
 #pragma once
 #include <glm/vec4.hpp>
 
+#include "imgui.h"
 #include "Engine/Engine/Base.h"
+#include "Engine/Engine/LayerContainer.h"
+#include "Engine/Renderer/Rect.h"
 #include "Engine/Renderer/RenderPass.h"
+#include "Engine/Renderer/Viewport.h"
 
 
 namespace Polyboid
 {
+	class IndexBuffer;
+	class VertexBuffer;
+	class PipelineDescriptorSet;
+	class CommandList;
 	class CommandBuffer;
 	enum class PrimitiveType;
 	class VertexBufferArray;
@@ -95,6 +103,22 @@ namespace Polyboid
 		void Execute() override;
 	};
 
+	class BeginSwapChainRenderPass : public Command
+	{
+	
+	public:
+		BeginSwapChainRenderPass() = default;
+		void Execute() override;
+		~BeginSwapChainRenderPass() override = default;
+	};
+
+	class EndSwapChainRenderPass : public Command
+	{
+	public:
+		EndSwapChainRenderPass() = default;
+		void Execute() override;
+		~EndSwapChainRenderPass() override = default;
+	};
 
 	class ClearRenderPassCommand : public Command
 	{
@@ -107,12 +131,48 @@ namespace Polyboid
 	};
 
 
-	class EndRenderPassCommand :public Command
+	class EndRenderPassCommand : public Command
 	{
 	private:
 		Ref<RenderPass> m_RenderTarget;
 	public:
 		EndRenderPassCommand(const Ref<RenderPass>& renderTarget);
+		void Execute() override;
+	};
+
+	class BeginImguiRender : public Command
+	{
+	private:
+		Ref<CommandList> m_CmdList;
+	public:
+		BeginImguiRender(const Ref<CommandList>& cmdList);
+		void Execute() override;
+	};
+
+	class TestCommand : public Command
+	{
+	private:
+		ImTextureID m_TestDs;
+	public:
+		explicit TestCommand(ImTextureID ds);
+		void Execute() override;
+	};
+
+
+	class RenderImGuiCommand : public Command
+	{
+	private:
+		LayerContainer m_Container;
+	public:
+		RenderImGuiCommand(const LayerContainer& container);
+		void Execute() override;
+	};
+
+
+	class EndImguiRender : public Command
+	{
+	public:
+		EndImguiRender();
 		void Execute() override;
 	};
 
@@ -152,5 +212,78 @@ namespace Polyboid
 		void Execute() override;
 		~PushUniformBufferCommand() override = default;
 	};
+
+
+	class BindGraphicsPipelineCommand : public Command
+	{
+	public:
+		Ref<PipelineState> m_State;
+		BindGraphicsPipelineCommand(const Ref<PipelineState>& pipeLine);
+
+		void Execute() override;
+
+		~BindGraphicsPipelineCommand() override = default;
+	};
+
+	class BindGraphicsPipelineDescSetsCommand : public Command
+	{
+	public:
+		Ref<PipelineDescriptorSet> m_State;
+		uint32_t m_SetBinding = 0;
+		BindGraphicsPipelineDescSetsCommand(uint32_t setBinding, const Ref<PipelineDescriptorSet>& pipeLine);
+
+		void Execute() override;
+
+		~BindGraphicsPipelineDescSetsCommand() override = default;
+	};
+
+
+	class BindVertexBufferCommand : public Command
+	{
+	public:
+		Ref<VertexBuffer> m_Buffer;
+		BindVertexBufferCommand(const Ref<VertexBuffer>& buffer);
+
+		void Execute() override;
+
+		~BindVertexBufferCommand() override = default;
+	};
+
+
+	class BindIndexBufferCommand : public Command
+	{
+	public:
+		Ref<IndexBuffer> m_Buffer;
+		BindIndexBufferCommand(const Ref<IndexBuffer>& buffer);
+
+		void Execute() override;
+
+		~BindIndexBufferCommand() override = default;
+	};
+
+
+
+	class SetViewportCommand : public Command
+	{
+	public:
+		Viewport m_Viewport{};
+		SetViewportCommand(const Viewport& viewport);
+
+		void Execute() override;
+
+		~SetViewportCommand() override = default;
+	};
+
+	class SetScissorCommand : public Command
+	{
+	public:
+		Rect m_Rect{};
+		SetScissorCommand(const Rect& rect);
+
+		void Execute() override;
+
+		~SetScissorCommand() override = default;
+	};
+
 
 }

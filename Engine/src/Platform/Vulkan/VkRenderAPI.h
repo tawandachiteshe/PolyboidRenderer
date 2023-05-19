@@ -1,10 +1,14 @@
 #pragma once
+#include "VulkanShader.h"
 #include "Engine/Renderer/RenderAPI.h"
 #include "Utils/VulkanSyncObjects.h"
 
 
 namespace Polyboid
 {
+	class VulkanPipelineDescriptorSetPool;
+	class VulkanGraphicsPipeline;
+	class VulkanImage2D;
 	class VulkanSemaphore;
 	class VulkanFence;
 	class Fence;
@@ -35,6 +39,12 @@ namespace Polyboid
 		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
 		std::vector<Ref<VulkanFence>> m_Fences;
 		std::vector<Ref<VulkanSemaphore>> m_Semaphores;
+		std::vector<Ref<VulkanImage2D>> m_Image2Ds;
+		std::vector<Ref<VulkanShader>> m_VulkanShaders;
+		std::vector<Ref<VulkanGraphicsPipeline>> m_Pipelines;
+		std::vector<Ref<VulkanPipelineDescriptorSetPool>> m_DescPools;
+		std::vector<Ref<VulkanShaderStorage>> m_StorageBuffers;
+		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
 
 
 	private:
@@ -44,14 +54,12 @@ namespace Polyboid
 		Ref<VulkanDevice> m_Device;
 		Ref<VulkanSurfaceKHR> m_Surface;
 		Ref<VulkanAllocator> m_Allocator;
-		Ref<VulkanDescriptorPool> m_DescPool;
 		std::any m_Window;
 
 
 	public:
 
 		//Vulkan specific
-		[[nodiscard]] Ref<VulkanDescriptorPool> GetPool() const { return m_DescPool; }
 		[[nodiscard]] Ref<VkInstance> GetInstance() const { return  m_Instance; }
 		[[nodiscard]] Ref<VulkanPhysicalDevice> GetPhysicalDevice() const { return m_PhysicalDevice; }
 		[[nodiscard]] Ref<VulkanAllocator> GetAllocator() const { return m_Allocator; }
@@ -59,14 +67,19 @@ namespace Polyboid
 		[[nodiscard]] std::any GetWindow() const { return m_Window; }
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
 
+		void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
+			const Ref<Fence>& inFlight) override;
+
+		void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList) override;
+
 
 		VkRenderAPI(const std::any& window);
 
 		Ref<Framebuffer>
 		CreateFrameBuffer(const FramebufferSettings& settings) override;
 		Ref<Framebuffer>
-		CreateFrameBuffer(const FramebufferSettings& settings, const Ref<RenderPass>& renderPass) override;
-		Ref<Texture> CreateTexture2D(const TextureSettings& settings) override;
+		CreateFrameBuffer(const Ref<RenderPass>& renderPass) override;
+		Ref<Texture> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) override;
 		Ref<Texture> CreateTexture2D(const std::any& handle) override;
 		Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) override;
 		Ref<SamplerState> CreateSampler(const SamplerSettings& settings) override;
@@ -74,13 +87,14 @@ namespace Polyboid
 
 		Ref<Renderbuffer> CreateRenderBuffer(const RenderbufferSettings& settings) override;
 		Ref<UniformBuffer> CreateUniformBuffer(uint32_t size, uint32_t binding) override;
+		Ref<StorageBuffer> CreateStorageBuffer(uint32_t size) override;
 		Ref<IndexBuffer> CreateIndexBuffer(const IndexDataType& type, uint32_t count,
 			const std::variant<uint32_t*, uint16_t*>& data) override;
 
 		Ref<VertexBuffer> CreateVertexBuffer(const void* data, uint32_t dataSize) override;
 		Ref<VertexBuffer> CreateVertexBuffer(uint32_t dataSize) override;
 		Ref<VertexBufferArray> CreateVertexBufferArray() override;
-		Ref<CommandList> CreateCommandList(bool canPresent) override;
+		Ref<CommandList> CreateCommandList(const CommandListSettings& settings) override;
 
 		Ref<PipelineState> CreatePipelineState() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;
@@ -88,6 +102,10 @@ namespace Polyboid
 
 		Ref<Fence> CreateGraphicsFence() override;
 		Ref<Semaphore> CreateGraphicsSemaphore() override;
+		Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) override;
+		Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) override;
+		Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) override;
+		
 
 		RenderAPIType GetRenderAPIType() override;
 		RenderAPIType GetRenderAPIType() const override;

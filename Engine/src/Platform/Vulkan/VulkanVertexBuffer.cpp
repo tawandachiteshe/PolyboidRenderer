@@ -5,6 +5,10 @@
 #include <vulkan/vulkan.hpp>
 
 
+#include "VulkanCommandList.h"
+#include "VulkanStagingBuffer.h"
+#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Utils/VulkanAllocator.h"
 #include "Utils/VulkanDevice.h"
 
@@ -17,18 +21,15 @@ namespace Polyboid
 		
 
 		vk::BufferCreateInfo createInfo;
-		createInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer;
-		//vk::
+		createInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer;
 		createInfo.size = size;
+		m_Size = size;
 
 		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
 		VmaAllocationCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 		vmaCreateInfo.priority = 1.0f;
-
-
 		VkBuffer buffer;
-
 		VkResult result = vmaCreateBuffer(allocator, &vkCreateInfo, &vmaCreateInfo, &buffer, &m_Allocation, nullptr);
 
 		m_Handle = buffer;
@@ -39,21 +40,18 @@ namespace Polyboid
 			__debugbreak();
 		}
 
-		void* mappedData = nullptr;
-		result = vmaMapMemory(allocator, m_Allocation, &mappedData);
 
-		if (result != VK_SUCCESS)
-		{
-			spdlog::info("Failed to map indexBuffer");
-			__debugbreak();
-		}
+		Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, data, size);
+		Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
 
+		RenderCommand::BeginCommands({ cmdList });
+		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
+		cmdBuffer->CopyVertexBuffer(staging, this);
+		RenderCommand::EndCommands({ cmdList });
+		RenderCommand::SubmitCommandBuffer({ cmdList });
 
-		std::memcpy(mappedData, data, createInfo.size);
-
-		vmaUnmapMemory(allocator, m_Allocation);
-
-
+		staging->Destroy();
+		cmdList->Destroy(device);
 	}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size)
@@ -84,6 +82,16 @@ namespace Polyboid
 	void VulkanVertexBuffer::SetLayout(const BufferLayout& layout)
 	{
 		m_Layout = layout;
+	}
+
+	uint32_t VulkanVertexBuffer::GetSizeInBytes() const
+	{
+		return m_Size;
+	}
+
+	std::any VulkanVertexBuffer::GetHandle() const
+	{
+		return m_Handle;
 	}
 
 	void VulkanVertexBuffer::Destroy()

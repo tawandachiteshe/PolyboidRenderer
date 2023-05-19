@@ -59,7 +59,7 @@ namespace Polyboid
 
      struct DepthMode
     {
-        bool DepthEnable = true;
+        bool DepthEnable = false;
          
         DepthWrite DepthWriteMask = DepthWrite::Enable;
         DepthFunction depthFunction = DepthFunction::Less;
@@ -72,7 +72,7 @@ namespace Polyboid
         StencilOp StencilFail = StencilOp::Keep;
         StencilOp StencilPassDepthFail = StencilOp::Keep;
         StencilOp StencilDepthPass = StencilOp::Keep;
-        StencilFunction stencilFunction = StencilFunction::Always;
+        StencilFunction stencilFunction = StencilFunction::LessThanOrEqual;
     };
 
     struct StencilMode

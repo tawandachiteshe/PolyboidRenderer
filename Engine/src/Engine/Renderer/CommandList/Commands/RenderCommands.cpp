@@ -1,14 +1,17 @@
 #include "boidpch.h"
 #include "RenderCommands.h"
 
+#include <spdlog/spdlog.h>
 #include <spdlog/fmt/bundled/core.h>
 
 #include "Engine/Engine/Application.h"
+#include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/PipelineState.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "Platform/Vulkan/VkSwapChain.h"
+#include "imgui.h"
 
 
 namespace Polyboid
@@ -37,7 +40,7 @@ namespace Polyboid
 	void DrawIndexedCommand::Execute()
 	{
 
-		//m_Context->DrawIndexed(m_PrimitiveType, IndexDataType::UnsignedInt, m_Count);
+		m_Context->DrawIndexed(m_Count, IndexDataType::UnsignedInt);
 	}
 
 	DrawIndexedCommand::~DrawIndexedCommand()
@@ -52,7 +55,7 @@ namespace Polyboid
 	void DrawArraysCommand::Execute()
 	{
 
-		//m_Context->DrawArrays(m_PrimitiveType, m_VertexCount);
+		m_Context->DrawArrays(m_VertexCount);
 	}
 
 
@@ -71,14 +74,32 @@ namespace Polyboid
 
 	void BeginRenderPassCommand::Execute()
 	{
-		auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(Renderer::GetSwapChain());
-
-		auto vkFramebuffer = vkSwapchain->GetCurrentFramebuffer();
-		auto framebuffer = std::reinterpret_pointer_cast<Framebuffer>(vkFramebuffer);
+		const auto framebuffer = m_RenderTarget->GetFramebuffer();
 
 		m_Context->BeginRenderPass(m_RenderTarget, framebuffer);
 		//m_Context->BeginRenderPass(m_RenderTarget);
 	}
+
+
+	void BeginSwapChainRenderPass::Execute()
+	{
+
+		auto vkSwapchain = std::reinterpret_pointer_cast<VkSwapChain>(Renderer::GetSwapChain());
+
+		auto vkFramebuffer = vkSwapchain->GetCurrentFramebuffer();
+		auto framebuffer = std::reinterpret_pointer_cast<Framebuffer>(vkFramebuffer);
+		auto renderPass = vkSwapchain->GetDefaultRenderPass();
+
+		m_Context->BeginRenderPass(renderPass, framebuffer);
+	}
+
+
+
+	void EndSwapChainRenderPass::Execute()
+	{
+		m_Context->EndRenderPass();
+	}
+
 
 	ClearRenderPassCommand::ClearRenderPassCommand(const Ref<RenderPass>& renderTarget, ClearSettings settings): m_RenderTarget(renderTarget), m_Settings(settings)
 	{
@@ -91,11 +112,54 @@ namespace Polyboid
 
 	EndRenderPassCommand::EndRenderPassCommand(const Ref<RenderPass>& renderTarget) : m_RenderTarget(renderTarget)
 	{
+
 	}
 
 	void EndRenderPassCommand::Execute()
 	{
 		m_Context->EndRenderPass();
+	}
+
+	BeginImguiRender::BeginImguiRender(const Ref<CommandList>& cmdList): m_CmdList(cmdList)
+	{
+	}
+
+	void BeginImguiRender::Execute()
+	{
+		Imgui::Begin(m_CmdList);
+	}
+
+	TestCommand::TestCommand(ImTextureID ds): m_TestDs(ds)
+	{
+	}
+
+	void TestCommand::Execute()
+	{
+		ImGui::Begin("Test from commands");
+		ImGui::Text("Test card");
+		ImGui::Image(m_TestDs, ImVec2(1024, 1024));
+		ImGui::End();
+	}
+
+	RenderImGuiCommand::RenderImGuiCommand(const LayerContainer& container) : m_Container(container)
+	{
+	}
+
+	void RenderImGuiCommand::Execute()
+	{
+		for (auto& layer : m_Container)
+		{
+			layer->OnImguiRender();
+		}
+	}
+
+	EndImguiRender::EndImguiRender()
+	{
+	}
+
+	void EndImguiRender::Execute()
+	{
+		Imgui::End();
 	}
 
 	void BeginRenderCommand::Execute()
@@ -122,20 +186,61 @@ namespace Polyboid
 	{
 
 
-		auto& shaders = m_State->GetShaders();
+	}
 
-		for (auto& shaderType : shaders)
-		{
+	BindGraphicsPipelineCommand::BindGraphicsPipelineCommand(const Ref<PipelineState>& pipeLine): m_State(pipeLine)
+	{
+	}
 
-			auto& [type, shader] = shaderType;
+	void BindGraphicsPipelineCommand::Execute()
+	{
+		m_Context->BindGraphicsPipeline(m_State);
+	}
 
-			if (const auto uniformBuffer = shader->GetUniformBuffer(m_Name))
-			{
-				uniformBuffer->SetData(m_Data, m_DataSize);
-			}
-		}
-
+	BindGraphicsPipelineDescSetsCommand::BindGraphicsPipelineDescSetsCommand(uint32_t setBinding, const Ref<PipelineDescriptorSet>& pipeLine): m_State(pipeLine), m_SetBinding(setBinding)
+	{
 
 	}
 
+	void BindGraphicsPipelineDescSetsCommand::Execute()
+	{
+		m_Context->BindDescriptorSet(m_SetBinding, m_State);
+	}
+
+	BindVertexBufferCommand::BindVertexBufferCommand(const Ref<VertexBuffer>& buffer): m_Buffer(buffer)
+	{
+	}
+
+	void BindVertexBufferCommand::Execute()
+	{
+		m_Context->BindVertexBuffer(m_Buffer);
+	}
+
+	BindIndexBufferCommand::BindIndexBufferCommand(const Ref<IndexBuffer>& buffer): m_Buffer(buffer)
+	{
+	}
+
+	void BindIndexBufferCommand::Execute()
+	{
+		m_Context->BindIndexBuffer(m_Buffer);
+	}
+
+	SetViewportCommand::SetViewportCommand(const Viewport& viewport): m_Viewport(viewport)
+	{
+
+	}
+
+	void SetViewportCommand::Execute()
+	{
+		m_Context->SetViewPort(m_Viewport);
+	}
+
+	SetScissorCommand::SetScissorCommand(const Rect& rect): m_Rect(rect)
+	{
+	}
+
+	void SetScissorCommand::Execute()
+	{
+		m_Context->SetScissor(m_Rect);
+	}
 }

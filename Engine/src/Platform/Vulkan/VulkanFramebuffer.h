@@ -22,11 +22,12 @@ namespace Polyboid
 		std::unordered_map<TextureAttachmentSlot, Ref<VulkanTexture2D>> m_AttachmentTextures;
 		std::vector<Ref<VulkanTexture2D>> m_Textures;
 
-		void Init(const VkRenderAPI* context, const FramebufferSettings& settings);
+		void SwapChainInit(const VkRenderAPI* context, const FramebufferSettings& settings);
+		void Init(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass);
 
 	public:
 		void Destroy(vk::Device device);
-		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings);
+		VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, const VulkanRenderPass* renderPass, std::vector<Ref<VulkanTexture2D>>& textures);
 
 
@@ -34,8 +35,7 @@ namespace Polyboid
 
 
 		~VulkanFramebuffer() override;
-		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
-		void Clear(const ClearSettings& settings) override;
+		Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) override;
 
 		void ReSize(uint32_t width, uint32_t height) override;
 

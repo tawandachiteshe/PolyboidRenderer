@@ -14,7 +14,7 @@ namespace Polyboid
 {
 	class Shader;
 
-	std::unordered_map<std::string, ShaderBinaryAndInfo> ShaderRegistry::s_Registry;
+	std::unordered_map<std::string, ShaderBinaryAndReflectionInfo> ShaderRegistry::s_Registry;
 	std::unordered_map<std::string, Ref<Shader>> ShaderRegistry::s_RegistryShader;
 
 	static const std::filesystem::path cacheFolder = "Resources/.Cache";
@@ -58,11 +58,15 @@ namespace Polyboid
 		return s_RegistryShader.find(path) != s_RegistryShader.end();
 	}
 
+	void ShaderRegistry::SetPath(const std::string& path)
+	{
+	}
+
 	Ref<Shader> ShaderRegistry::Load(const std::string& path)
 	{
-		if (!Exist(path))
+		if (!Exist(shaderPath.string() + "/" + path))
 		{
-			auto info = s_Registry[path];
+			auto info = s_Registry.at(shaderPath.string() + "/" + path);
 			auto shader = Shader::Create(info);
 			s_RegistryShader[path] = shader;
 
@@ -70,6 +74,25 @@ namespace Polyboid
 		}
 
 		return s_RegistryShader[path];
+	}
+
+	GraphicsShaders ShaderRegistry::LoadGraphicsShaders(const std::string& vtxPath,
+		const std::string& fragPath)
+	{
+
+		std::string vtxPathWithExt = vtxPath;
+		vtxPathWithExt.append(".vert");
+
+
+		std::string fragPathWithExt = fragPath;
+		fragPathWithExt.append(".frag");
+
+		return 	{ Load(vtxPathWithExt), Load(fragPathWithExt)  };
+	}
+
+	GraphicsShaders ShaderRegistry::LoadGraphicsShaders(const std::string& path)
+	{
+		return 	LoadGraphicsShaders(path, path);
 	}
 
 	Ref<Shader> ShaderRegistry::Create(const std::string& path)

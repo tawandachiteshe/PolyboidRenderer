@@ -4,7 +4,11 @@
 #include <spdlog/spdlog.h>
 
 #include "VkRenderAPI.h"
+#include "VulkanStagingBuffer.h"
+#include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/RenderAPI.h"
+#include "Engine/Renderer/CommandList/RenderCommand.h"
+#include "VulkanCommandList.h"
 #include "Utils/VulkanAllocator.h"
 #include "Utils/VulkanDevice.h"
 
@@ -20,13 +24,17 @@ namespace Polyboid
 
 
 		vk::BufferCreateInfo createInfo;
-		createInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer;
+		createInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer;
+
+		void* IndicesData = nullptr;
 
 		switch (type)
 		{
-		case IndexDataType::UnsignedShort: createInfo.size = static_cast<vk::DeviceSize>(count * sizeof(uint16_t));  break;
-		case IndexDataType::UnsignedInt: createInfo.size = static_cast<vk::DeviceSize>(count * sizeof(uint32_t)); break;
+		case IndexDataType::UnsignedShort: IndicesData = std::get<uint16_t*>(data); createInfo.size = static_cast<vk::DeviceSize>(count * sizeof(uint16_t));  break;
+		case IndexDataType::UnsignedInt:  IndicesData = std::get<uint32_t*>(data); createInfo.size = static_cast<vk::DeviceSize>(count * sizeof(uint32_t)); break;
 		}
+
+		m_Size = static_cast<uint32_t>(createInfo.size);
 
 		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
 		VmaAllocationCreateInfo vmaCreateInfo{};
@@ -43,17 +51,23 @@ namespace Polyboid
 			spdlog::info("Failed to create indexBuffer");
 			__debugbreak();
 		}
-
 		m_Handle = buffer;
 
-		void* mappedData = nullptr;
-		vmaMapMemory(allocator, m_Allocation, &mappedData);
 
-		std::memcpy(mappedData, std::get<uint32_t*>(data), createInfo.size);
+		Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, IndicesData, static_cast<uint32_t>(createInfo.size));
+		Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
 
-		vmaUnmapMemory(allocator, m_Allocation);
+		RenderCommand::BeginCommands({ cmdList });
+		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
+		cmdBuffer->CopyIndexBuffer(staging, this);
+		RenderCommand::EndCommands({ cmdList });
+		RenderCommand::SubmitCommandBuffer({ cmdList });
+
+		staging->Destroy();
+		cmdList->Destroy(device);
 
 	}
+
 
 	VulkanIndexBuffer::~VulkanIndexBuffer()
 	{
@@ -75,6 +89,16 @@ namespace Polyboid
 	uint32_t VulkanIndexBuffer::GetCount() const
 	{
 		return 0;
+	}
+
+	uint32_t VulkanIndexBuffer::GetSizeInBytes() const
+	{
+		return m_Size;
+	}
+
+	std::any VulkanIndexBuffer::GetHandle() const
+	{
+		return m_Handle;
 	}
 
 	void VulkanIndexBuffer::Destroy()

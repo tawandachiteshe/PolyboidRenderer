@@ -1,5 +1,8 @@
 #pragma once
+#include <any>
 #include <cstdint>
+
+#include "Engine/Engine/Base.h"
 
 
 namespace Polyboid {
@@ -13,6 +16,8 @@ namespace Polyboid {
 		//Debugging stuff idk.... Im testing new systems
 		virtual uint32_t GetBindingSlot() = 0;
 		virtual uint32_t GetDataSize() = 0;
+		virtual std::any GetHandle() = 0;
+		static Ref<UniformBuffer> Create(uint32_t size);
 	}
 
 	;

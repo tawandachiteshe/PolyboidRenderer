@@ -8,6 +8,7 @@
 
 namespace Polyboid 
 {
+	class RenderPass;
 	struct ClearSettings;
 	class Texture;
 	
@@ -53,13 +54,12 @@ namespace Polyboid
 	public:
 
 		virtual ~Framebuffer() = default;
-		
-		virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
-		virtual void Clear(const ClearSettings& settings) = 0;
 
 		virtual void ReSize(uint32_t width, uint32_t height) =0;
+		virtual Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
 
-		static  Ref<Framebuffer> Create(const FramebufferSettings& settings);
+
+		static  Ref<Framebuffer> Create(const Ref<RenderPass>& renderPass);
 		
 	};
 

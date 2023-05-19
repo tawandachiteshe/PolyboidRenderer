@@ -11,6 +11,7 @@ namespace Polyboid
 
 	RenderAPI* RenderAPI::s_RenderAPI = nullptr;
 
+
 	RenderAPI* RenderAPI::Create(const RenderAPIType& renderType, const std::any& nativeWindow)
 	{
 		static RenderAPI* renderApi = nullptr;
@@ -31,7 +32,7 @@ namespace Polyboid
 
 	RenderAPI* RenderAPI::Get()
 	{
-		if (s_RenderAPI)
+		if (s_RenderAPI == nullptr)
 		{
 
 			__debugbreak();
