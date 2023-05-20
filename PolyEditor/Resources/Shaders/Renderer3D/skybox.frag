@@ -1,4 +1,4 @@
-#version 450 core
+#version 450
 
 layout(location = 0) out vec4 FragColor;
 
@@ -22,6 +22,6 @@ void main() {
 	//FragColor = vec4(envColor, 1.0);
 
 	
-	FragColor = vec4(envSampler, 1.0f);
+	FragColor = vec4(envSampler, 255.0f);
 
 }

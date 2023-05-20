@@ -3,7 +3,6 @@
 #include <vulkan/vulkan.hpp>
 
 #include "VkRenderAPI.h"
-#include "Utils/VulkanDescriptorPool.h"
 #include "Utils/VulkanDevice.h"
 
 namespace Polyboid

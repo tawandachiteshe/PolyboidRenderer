@@ -8,7 +8,6 @@
 #include "imgui_impl_vulkan.h"
 #include "VkRenderAPI.h"
 #include "VulkanCommandList.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "VulkanImage2D.h"
 #include "VulkanSamplerState.h"
 #include "VulkanStagingBuffer.h"
@@ -42,13 +41,14 @@ namespace Polyboid
 
 			Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
 
-			RenderCommand::BeginCommands({ cmdList });
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
+			cmdBuffer->Begin();
 			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::TransferDstOptimal);
 			cmdBuffer->CopyBufferToImage2D(staging, m_Image);
 			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::ShaderReadOptimal);
-			RenderCommand::EndCommands({ cmdList });
-			RenderCommand::SubmitCommandBuffer({ cmdList });
+			cmdBuffer->End();
+			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+
 		}
 		else
 		{
@@ -69,15 +69,17 @@ namespace Polyboid
 
 			Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer> (context, pixels, size);
 			Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
-			
 
-			RenderCommand::BeginCommands({ cmdList });
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
+			cmdBuffer->Begin();
+
 			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::TransferDstOptimal);
 			cmdBuffer->CopyBufferToImage2D(staging, m_Image);
 			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::ShaderReadOptimal);
-			RenderCommand::EndCommands({ cmdList });
-			RenderCommand::SubmitCommandBuffer({ cmdList });
+
+			cmdBuffer->End();
+			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+
 		
 		
 			stbi_image_free(pixels);
@@ -108,29 +110,33 @@ namespace Polyboid
 		vk::resultCheck(createViewResult, "Failed to create image view");
 
 		m_View = view;
-		SamplerSettings samplerSettings;
-		samplerSettings.wrap = TextureWrap::ClampToBorder;
-		samplerSettings.magFilter = MagFilterMode::Linear;
-		samplerSettings.minFilter = MinFilterMode::Linear;
-		samplerSettings.minLod = -1000;
-		samplerSettings.magLod = 1000;
 
-		Ref<VulkanSamplerState> sampler = std::make_shared<VulkanSamplerState>(context, samplerSettings);
-		m_SamplerState = sampler;
-		auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
-//		m_ImguiDS = ImGui_ImplVulkan_AddTexture(vulkanSampler, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		if (data || !settings.path.empty())
+		{
+			SamplerSettings samplerSettings;
+			samplerSettings.wrap = TextureWrap::ClampToBorder;
+			samplerSettings.magFilter = MagFilterMode::Linear;
+			samplerSettings.minFilter = MinFilterMode::Linear;
+			samplerSettings.minLod = -1000;
+			samplerSettings.magLod = 1000;
 
-		m_ImageDescriptorInfo.sampler = vulkanSampler;
-		m_ImageDescriptorInfo.imageView = view;
-		m_ImageDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+			Ref<VulkanSamplerState> sampler = std::make_shared<VulkanSamplerState>(context, samplerSettings);
+			m_SamplerState = sampler;
+			auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
+			//		m_ImguiDS = ImGui_ImplVulkan_AddTexture(vulkanSampler, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			m_ImageDescriptorInfo.sampler = vulkanSampler;
+			m_ImageDescriptorInfo.imageView = view;
+			m_ImageDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+		}
+	
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const std::any& imageHandle, const TextureSettings& settings
-		): m_Context(context), m_ImageMemory(nullptr)
+	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle): m_Context(context), m_ImageMemory(nullptr)
 	{
 		vk::Device device = (*context->GetDevice());
-		vk::Image image = std::any_cast<vk::Image>(imageHandle);
-		m_VulkanImage = image;
+		
+		m_VulkanImage = imageHandle;
 
 		//vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
 
@@ -138,8 +144,8 @@ namespace Polyboid
 		createViewInfo.flags = vk::ImageViewCreateFlags();
 		createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
 		createViewInfo.viewType = vk::ImageViewType::e2D;
-		createViewInfo.format = Utils::ConvertToVulkanFormat(settings.sizedFormat);
-		createViewInfo.image = image;
+		createViewInfo.format = vk::Format::eB8G8R8A8Unorm;
+		createViewInfo.image = imageHandle;
 		createViewInfo.components = vk::ComponentMapping();
 		createViewInfo.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
 
@@ -147,6 +153,9 @@ namespace Polyboid
 		vk::resultCheck(createViewResult, "Failed to create image view");
 
 		m_View = view;
+
+		VkImageView v = view;
+		spdlog::info("Image View {}", (uint64_t)v);
 	}
 
 	void VulkanTexture2D::Destroy()

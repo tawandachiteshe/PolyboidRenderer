@@ -14,12 +14,10 @@
 #include "GLFW/glfw3.h"
 #include "imgui_impl_vulkan.h"
 #include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Platform/Vulkan/VulkanRenderPass.h"
 #include "Platform/Vulkan/Utils/VkInstance.h"
-#include "Platform/Vulkan/Utils/VulkanDescriptorPool.h"
 #include "Platform/Vulkan/Utils/VulkanDevice.h"
 #include "Platform/Vulkan/Utils/VulkanPhysicalDevice.h"
 #include "Platform/Vulkan/Utils/VulkanSurfaceKHR.h"
@@ -108,7 +106,6 @@ namespace Polyboid
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
             s_Data.m_CommandList = std::make_shared<VulkanCommandList>(renderAPI, CommandListSettings{3});
-            s_Data.cmdPool = std::make_shared<VulkanDescriptorPool>(renderAPI);
 
             s_Data.m_RenderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
 
@@ -123,7 +120,7 @@ namespace Polyboid
             init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
             init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
             init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
-            init_info.DescriptorPool = s_Data.cmdPool->GetPool();
+            init_info.DescriptorPool = nullptr;
             init_info.MinImageCount = 2;
             init_info.ImageCount = 3;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -223,7 +220,6 @@ namespace Polyboid
             auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
             // s_Data.m_CommandList->Destroy(device);
-            s_Data.cmdPool->Destroy();
 
 
             ImGui_ImplVulkan_Shutdown();

@@ -4,7 +4,6 @@
 
 namespace Polyboid
 {
-
 	vk::CompareOp depthFunctionToVkCompareOp(DepthFunction depthFunction)
 	{
 		switch (depthFunction)
@@ -90,7 +89,7 @@ namespace Polyboid
 
 	const DepthMode& VulkanDepthStencilState::GetDepthMode() const
 	{
-		return  m_DepthMode;
+		return m_DepthMode;
 	}
 
 	void VulkanDepthStencilState::SetStencilMode(const StencilMode& stencilMode)
@@ -109,45 +108,39 @@ namespace Polyboid
 
 	vk::PipelineDepthStencilStateCreateInfo VulkanDepthStencilState::GetVulkanInfo()
 	{
-		if (m_Dirty)
-		{
+		m_CreateInfo.minDepthBounds = 0.0f;
+		m_CreateInfo.maxDepthBounds = 1.0f;
+		m_CreateInfo.depthBoundsTestEnable = m_DepthMode.DepthEnable;
+		m_CreateInfo.depthWriteEnable = m_DepthMode.DepthWriteMask == DepthWrite::Enable;
+		m_CreateInfo.depthCompareOp = depthFunctionToVkCompareOp(m_DepthMode.depthFunction);
+		m_CreateInfo.stencilTestEnable = false;
 
-			m_CreateInfo.minDepthBounds = 0.0f;
-			m_CreateInfo.maxDepthBounds = 1.0f;
-			m_CreateInfo.depthBoundsTestEnable = m_DepthMode.DepthEnable;
-			m_CreateInfo.depthWriteEnable = m_DepthMode.DepthWriteMask == DepthWrite::Enable;
-			m_CreateInfo.depthCompareOp = depthFunctionToVkCompareOp(m_DepthMode.depthFunction);
-			m_CreateInfo.stencilTestEnable = false;
+		m_CreateInfo.stencilTestEnable = m_StencilMode.StencilEnabled;
 
-			m_CreateInfo.stencilTestEnable = m_StencilMode.StencilEnabled;
+		vk::StencilOpState front;
+		auto frontFace = m_StencilMode.FrontFace;
+		front.compareOp = stencilFunctionToVkCompareOp(frontFace.stencilFunction);
+		front.depthFailOp = stencilOpToVkStencilOp(frontFace.StencilPassDepthFail);
+		front.failOp = stencilOpToVkStencilOp(frontFace.StencilFail);
+		front.passOp = stencilOpToVkStencilOp(frontFace.StencilDepthPass);
+		front.reference = m_StencilMode.StencilReference;
+		front.compareMask = 0xFF;
 
-			vk::StencilOpState front;
-			auto frontFace = m_StencilMode.FrontFace;
-			front.compareOp = stencilFunctionToVkCompareOp(frontFace.stencilFunction);
-			front.depthFailOp = stencilOpToVkStencilOp(frontFace.StencilPassDepthFail);
-			front.failOp = stencilOpToVkStencilOp(frontFace.StencilFail);
-			front.passOp = stencilOpToVkStencilOp(frontFace.StencilDepthPass);
-			front.reference = m_StencilMode.StencilReference;
-			front.compareMask = 0xFF;
+		m_CreateInfo.front = front;
 
-			m_CreateInfo.front = front;
+		vk::StencilOpState back;
+		auto backFace = m_StencilMode.BackFace;
+		back.compareOp = stencilFunctionToVkCompareOp(backFace.stencilFunction);
+		back.depthFailOp = stencilOpToVkStencilOp(backFace.StencilPassDepthFail);
+		back.failOp = stencilOpToVkStencilOp(backFace.StencilFail);
+		back.passOp = stencilOpToVkStencilOp(backFace.StencilDepthPass);
+		back.reference = m_StencilMode.StencilReference;
+		back.compareMask = 0xFF;
 
-			vk::StencilOpState back;
-			auto backFace = m_StencilMode.BackFace;
-			back.compareOp = stencilFunctionToVkCompareOp(backFace.stencilFunction);
-			back.depthFailOp = stencilOpToVkStencilOp(backFace.StencilPassDepthFail);
-			back.failOp = stencilOpToVkStencilOp(backFace.StencilFail);
-			back.passOp = stencilOpToVkStencilOp(backFace.StencilDepthPass);
-			back.reference = m_StencilMode.StencilReference;
-			back.compareMask = 0xFF;
+		m_CreateInfo.back = back;
 
-			m_CreateInfo.back = back;
+		m_Dirty = false;
 
-			m_Dirty = false;
-
-			return m_CreateInfo;
-		}
-
-		return {};
+		return m_CreateInfo;
 	}
 }

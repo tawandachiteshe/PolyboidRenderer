@@ -20,7 +20,6 @@ namespace Polyboid
 	{
 	public:
 		virtual  std::any GetHandle() = 0;
-		virtual void WaitAndReset() = 0;
 		virtual ~Fence() {}
 
 		static Ref<Fence> Create();

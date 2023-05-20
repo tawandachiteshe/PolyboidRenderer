@@ -38,6 +38,7 @@ namespace Polyboid
 		Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) override;
 
 		void ReSize(uint32_t width, uint32_t height) override;
+		std::any GetHandle() override;
 
 		friend class VulkanCommandBuffer;
 		friend class VulkanRenderPass;

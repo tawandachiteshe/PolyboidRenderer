@@ -16,6 +16,8 @@ int main(int argc, char** argv);
 
 namespace Polyboid
 {
+	class CommandList;
+	class PipelineState;
 	class RenderPass;
 	class Swapchain;
 	class RenderAPI;
@@ -63,6 +65,8 @@ namespace Polyboid
 		std::atomic_bool m_ShouldRender = true;
 
 		double m_LastFrameTime = 0.0;
+		Ref<PipelineState> m_Pipeline;
+		Ref<CommandList> m_CommandList;
 
 	private:
 		static Application* s_Instance;

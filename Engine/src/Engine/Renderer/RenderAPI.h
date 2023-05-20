@@ -97,8 +97,10 @@ namespace Polyboid
 		virtual Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) = 0;
 		virtual Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) = 0;
 
-		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
-		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList) = 0;
+		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
+		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) = 0;
+
+		virtual void WaitForFences(const Ref<Fence>& fence) = 0;
 
 
 		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;

@@ -1,6 +1,8 @@
 ﻿#include "boidpch.h"
 #include "VulkanFence.h"
 
+#include <spdlog/spdlog.h>
+
 #include "VkRenderAPI.h"
 #include "Utils/VulkanDevice.h"
 
@@ -16,23 +18,16 @@ namespace Polyboid
 		fenceCreateInfo.flags = vk::FenceCreateFlagBits::eSignaled;
 
 		auto [result, _fence] = device.createFence(fenceCreateInfo);
-
 		vk::resultCheck(result, "Failed to create fence");
+
+		vk::Fence::NativeType fenceId = _fence;
+		spdlog::info("Fence id {}", (uint64_t)fenceId);
 		
 
 		m_Handle = _fence;
 
 	}
 
-	void VulkanFence::WaitAndReset()
-	{
-		vk::Result result = m_VulkanDevice.waitForFences(1, &m_Handle, true, std::numeric_limits<uint64_t>::max());
-		vk::resultCheck(result, "Failed to wait for fence");
-
-		result = m_VulkanDevice.resetFences(1, &m_Handle);
-		vk::resultCheck(result, "Failed to wait for fence");
-
-	}
 
 	void VulkanFence::Destroy()
 	{

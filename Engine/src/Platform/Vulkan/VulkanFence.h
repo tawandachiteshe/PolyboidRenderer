@@ -17,7 +17,6 @@ namespace Polyboid
 
 	public:
 		explicit VulkanFence(const VkRenderAPI* context);
-		void WaitAndReset() override;
 
 		virtual void Destroy();
 

@@ -6,9 +6,9 @@
 
 
 #include "VkInstance.h"
-#define GLFW_NATIVE_INCLUDE_NONE
-#include "GLFW/glfw3native.h"
 #include <GLFW/glfw3.h>
+
+#include <vulkan/vulkan.hpp>
 
 
 namespace Polyboid
@@ -19,6 +19,8 @@ namespace Polyboid
 
 		const auto window = std::any_cast<GLFWwindow*>(nativWindow);
 
+		//auto const createInfo = vk::Win32SurfaceCreateInfoKHR().setHinstance(nullptr).setHwnd(window);
+		
 		
 		VkSurfaceKHR surface;
 		if(glfwCreateWindowSurface(vkInstance, window, nullptr, &surface) != VK_SUCCESS)

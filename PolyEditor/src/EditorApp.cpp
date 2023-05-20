@@ -14,7 +14,7 @@ namespace Polyboid
 
 	EditorApp::EditorApp()
 	{
-        //AddLayer(new EditorLayer("EditorLayer"));
+        // AddLayer(new EditorLayer("EditorLayer"));
 	}
 
 

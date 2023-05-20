@@ -885,6 +885,7 @@ static void ImGui_ImplVulkan_CreatePipeline(VkDevice device, const VkAllocationC
     viewport_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewport_info.viewportCount = 1;
     viewport_info.scissorCount = 1;
+    
 
     VkPipelineRasterizationStateCreateInfo raster_info = {};
     raster_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;

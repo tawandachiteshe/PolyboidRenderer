@@ -2,6 +2,8 @@
 
 #include "Renderer.h"
 
+#include <spdlog/spdlog.h>
+
 #include "CommandList.h"
 #include "Framebuffer.h"
 #include "PipelineState.h"
@@ -9,10 +11,10 @@
 #include "RendererSyncObjects.h"
 #include "RenderPass.h"
 #include "SyncObjects.h"
-#include "CommandList/RenderCommand.h"
-#include "CommandList/Commands/RenderCommands.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Engine.h"
+#include "Platform/Vulkan/VkRenderAPI.h"
+#include "Platform/Vulkan/Utils/VulkanDevice.h"
 
 
 namespace Polyboid
@@ -31,7 +33,7 @@ namespace Polyboid
 
     void Renderer::Init(RenderAPI* context, const ApplicationSettings& appSettings) {
       
-        RenderCommand::Init(context);
+       
 		s_Data = std::make_unique<RendererStorage>();
         s_Data->m_Context = context;
         
@@ -59,7 +61,7 @@ namespace Polyboid
         s_Data->m_MaxFramesInFlight = frames;
     }
 
-    std::atomic_uint32_t& Renderer::GetCurrentFrame()
+    uint32_t& Renderer::GetCurrentFrame()
     {
         return s_Data->m_CurrentFrame;
     }
@@ -69,37 +71,45 @@ namespace Polyboid
        
     }
 
-    void Renderer::BeginCommands(const std::vector<Ref<CommandList>>& cmdLists)
+    void Renderer::BeginCommands(const Ref<CommandList>& cmdLists)
     {
 
-        s_Data->m_CurrentCommandList = cmdLists.at(0);
-        RenderCommand::SetCommandLists(cmdLists);
-        // for (auto& cmdList : cmdLists)
-        // {
-        //     cmdList->GetCommandBufferAt(s_Data->m_CurrentFrame)->Reset();
-        // }
-    	RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderCommand));
-      
+        s_Data->m_CurrentCommandList = cmdLists;
+        cmdLists->GetCommandBufferAt(s_Data->m_ImageIndex)->Begin();
+        SetCurrentCommandBuffer(cmdLists->GetCommandBufferAt(s_Data->m_ImageIndex));
         
+    }
+
+    void Renderer::BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+    {
+        cmdBuffer->Begin();
+        SetCurrentCommandBuffer(cmdBuffer);
+    }
+
+    void Renderer::EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+    {
+        cmdBuffer->End();
     }
 
     void Renderer::EndCommands()
     {
 
-      
-        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderCommand));
+        s_Data->m_CurrentCommandList->GetCommandBufferAt(s_Data->m_ImageIndex)->End();
+       
     }
 
-    void Renderer::SubmitCurrentCommandList()
+    void Renderer::SubmitCommandList(const Ref<CommandList>& cmdList)
     {
-        auto& frame = s_Data->m_CurrentFrame;
+        auto& frame = GetCurrentFrame();
         auto& syncObjects = s_Data->m_CurrentSyncObjects;
 
         const auto& inFlightFence = syncObjects->GetInFlightFence(frame);
         const auto& imageSemaphore = syncObjects->GetImageSemaphore(frame);
         const auto& renderSemaphore = syncObjects->GetRenderSemaphore(frame);
 
-        RenderCommand::WaitAndRender(imageSemaphore, renderSemaphore, inFlightFence);
+
+        auto cmdBuffer = cmdList->GetCommandBufferAt(s_Data->m_ImageIndex);
+        s_Data->m_Context->SubmitCommandBuffer(cmdBuffer, imageSemaphore, renderSemaphore, inFlightFence);
 
     }
 
@@ -109,126 +119,139 @@ namespace Polyboid
         auto& frame = s_Data->m_CurrentFrame;
 
         const auto& imageFence = s_Data->m_CurrentSyncObjects->GetInFlightFence(frame);
-    	imageFence->WaitAndReset();
+
+        RenderAPI::Get()->WaitForFences(imageFence);
+
         const auto& imageSemaphore = s_Data->m_CurrentSyncObjects->GetImageSemaphore(frame);
         s_Data->m_ImageIndex = s_Data->m_Swapchain->GetImageIndex(imageSemaphore);
     }
 
     void Renderer::EndFrame()
     {
-        auto& frame = s_Data->m_CurrentFrame;
+        auto frame = s_Data->m_CurrentFrame;
 
+      
         const auto& syncObjects = s_Data->m_CurrentSyncObjects;
         const auto& renderSemaphore = syncObjects->GetRenderSemaphore(frame);
 
-
         s_Data->m_Swapchain->Present(renderSemaphore);
 
-        auto& maxFrames = s_Data->m_MaxFramesInFlight;
+        auto maxFrames = s_Data->m_MaxFramesInFlight;
         frame = (frame + 1) % maxFrames;
+
+        s_Data->m_CurrentFrame = frame;
     }
 
     void Renderer::DisplayImGuiTexture(ImTextureID ds)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(class TestCommand, ds));
+       // RenderCommand::AddCommand(ALLOC_COMMAND(class TestCommand, ds));
     }
 
     void Renderer::RenderImGui(const LayerContainer& layerContainer)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(RenderImGuiCommand, layerContainer));
+        //RenderCommand::AddCommand(ALLOC_COMMAND(RenderImGuiCommand, layerContainer));
     }
 
     void Renderer::BeginImGui()
     {
-		RenderCommand::AddCommand(ALLOC_COMMAND(BeginImguiRender, s_Data->m_CurrentCommandList));
+		//RenderCommand::AddCommand(ALLOC_COMMAND(BeginImguiRender, s_Data->m_CurrentCommandList));
     }
 
     void Renderer::EndImGui()
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(EndImguiRender));
+        //RenderCommand::AddCommand(ALLOC_COMMAND(EndImguiRender));
     }
 
     void Renderer::BeginSwapChainRenderPass()
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(class BeginSwapChainRenderPass));
+        GetCurrentCommandBuffer()->BeginRenderPass(GetSwapChain()->GetDefaultRenderPass(), GetSwapChain()->GetCurrentFrameBuffer());
     }
 
     void Renderer::EndSwapChainRenderPass()
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(class EndSwapChainRenderPass));
+        GetCurrentCommandBuffer()->EndRenderPass();
     }
+
+    Ref<CommandBuffer> Renderer::GetCurrentCommandBuffer()
+    {
+        return s_Data->m_CommandBuffer;
+    }
+void Renderer::SetCurrentCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+    {
+        s_Data->m_CommandBuffer = cmdBuffer;
+    }
+
 
     void Renderer::Clear(ClearSettings settings)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(ClearRenderPassCommand, GetSwapChain()->GetDefaultRenderPass(), settings));
+        
+        GetSwapChain()->GetDefaultRenderPass()->Clear(settings);
+       
     }
 
     void Renderer::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(DrawIndexedCommand, count, primitive));
+        GetCurrentCommandBuffer()->DrawIndexed(count, IndexDataType::UnsignedInt);
     }
 
     void Renderer::DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(DrawArraysCommand, primitive, vertexCount));
+        GetCurrentCommandBuffer()->DrawArrays(vertexCount);
     }
 
     void Renderer::SetPipelineState(const Ref<PipelineState>& pipelineState)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(PipelineStateCommand, pipelineState));
+
+        GetCurrentCommandBuffer()->BindGraphicsPipeline(pipelineState);
     }
 
-
-    void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, bool isMain)
+    void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer)
     {
-        s_Data->m_CurrentRenderPass = renderPass;
-        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderPassCommand, s_Data->m_CurrentRenderPass));
-        s_Data->m_IsMainRenderPass = isMain;
-
-
+        GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffer);
     }
+
+
 
     void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers)
     {
-        renderPass->SetFramebuffer(buffers[GetCurrentFrame()]);
-        s_Data->m_CurrentRenderPass = renderPass;
-        RenderCommand::AddCommand(ALLOC_COMMAND(BeginRenderPassCommand, s_Data->m_CurrentRenderPass));
+        GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffers.at(GetCurrentFrame()));
     }
 
     void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(BindGraphicsPipelineCommand, pipeline));
+        GetCurrentCommandBuffer()->BindGraphicsPipeline(pipeline);
     }
 
     void Renderer::BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(BindGraphicsPipelineDescSetsCommand, set, sets[GetCurrentFrame()]));
+        GetCurrentCommandBuffer()->BindDescriptorSet(set, sets.at(GetCurrentFrame()));
     }
 
     void Renderer::EndRenderPass()
     {
 
-        RenderCommand::AddCommand(ALLOC_COMMAND(EndRenderPassCommand, s_Data->m_CurrentRenderPass));
+        GetCurrentCommandBuffer()->EndRenderPass();
     }
+
 
     void Renderer::BindVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(BindVertexBufferCommand, vertexBuffer));
+        GetCurrentCommandBuffer()->BindVertexBuffer(vertexBuffer);
     }
 
     void Renderer::BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(BindIndexBufferCommand, indexBuffer));
+        GetCurrentCommandBuffer()->BindIndexBuffer(indexBuffer);
     }
 
     void Renderer::SetViewport(const Viewport& viewport)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(SetViewportCommand, viewport));
+        GetCurrentCommandBuffer()->SetViewPort(viewport);
     }
 
     void Renderer::SetScissor(const Rect& rect)
     {
-        RenderCommand::AddCommand(ALLOC_COMMAND(SetScissorCommand, rect));
+        GetCurrentCommandBuffer()->SetScissor(rect);
     }
 
 

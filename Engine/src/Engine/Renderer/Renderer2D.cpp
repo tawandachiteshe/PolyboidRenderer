@@ -17,8 +17,6 @@
 #include "RasterizerState.h"
 #include "Renderer.h"
 #include "VertexBufferArray.h"
-#include "CommandList/RenderCommand.h"
-#include "CommandList/Commands/RenderCommands.h"
 #include "Engine/Engine/Registry/ShaderRegistry.h"
 
 
@@ -292,7 +290,7 @@ namespace Polyboid
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
-			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
+			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
 			Renderer::DrawIndexed(count);
 		}
@@ -330,7 +328,7 @@ namespace Polyboid
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
-			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
+			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
 			Renderer::DrawIndexed(count);
 		}
@@ -366,7 +364,7 @@ namespace Polyboid
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
-			RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
+			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
 			Renderer::DrawArrays(s_LineData.lineCount);
 		}

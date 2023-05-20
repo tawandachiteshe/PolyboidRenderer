@@ -341,7 +341,7 @@ namespace Polyboid
 
 		if (std::filesystem::exists(cachePath))
 		{
-			taskflow.for_each(shaderBinaries.cbegin(), shaderBinaries.cend(), [&](const auto& entry)
+			taskflow.for_each(shaderBinaries.cbegin(), shaderBinaries.cend(), [&](const std::pair<std::string, ShaderBinaryAndReflectionInfo>& entry)
 				{
 					std::scoped_lock lock(mapMutex);
 					auto& [path, shaderInfo] = entry;
@@ -352,6 +352,8 @@ namespace Polyboid
 
 					auto cacheFilePath = (cachePath / (filename.string() + cacheExtension + fileExt.string())).
 						generic_string();
+
+					
 
 					std::ofstream outStream(cacheFilePath, std::ios::binary | std::ios::out);
 

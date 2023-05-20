@@ -13,6 +13,8 @@
 
 namespace Polyboid
 {
+
+
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VkRenderAPI* context): m_Context(context)
 	{
 	}
@@ -145,6 +147,7 @@ namespace Polyboid
 
 	
 		auto [graphicsPipelineResult, gfxPipeline] = device.createGraphicsPipeline(nullptr, createInfo);
+		vk::resultCheck(graphicsPipelineResult, "Failed to create");
 
 		m_Pipeline = gfxPipeline;
 		m_PipelineLayout = pipelineLayout;

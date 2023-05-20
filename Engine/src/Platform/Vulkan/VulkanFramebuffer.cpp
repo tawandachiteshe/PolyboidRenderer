@@ -20,11 +20,8 @@ namespace Polyboid
 		if (m_RenderPassPtr)
 		{
 			std::vector<vk::ImageView> imageViews;
+			imageViews.push_back(std::any_cast<vk::ImageView>(m_Textures[0]->GetViewHandle()));
 
-			for (auto textures : m_Textures)
-			{
-				imageViews.push_back(std::any_cast<vk::ImageView>(textures->GetViewHandle()));
-			}
 
 			vk::FramebufferCreateInfo createInfo;
 			createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
@@ -35,8 +32,19 @@ namespace Polyboid
 			createInfo.pAttachments = imageViews.data();
 			createInfo.layers = 1;
 
+			
+
 			auto [result, framebuffer] = device.createFramebuffer(createInfo);
 			vk::resultCheck(result, "Failed to create framebuffer");
+
+			vk::Framebuffer::NativeType fb = framebuffer;
+			vk::ImageView::NativeType view = imageViews[0];
+
+			spdlog::info("Frame buffer id {}", (uint64_t)fb);
+			//spdlog::info("Image view id {}", (uint64_t)view);
+
+
+
 
 			m_FrameBuffer = framebuffer;
 		}
@@ -142,5 +150,8 @@ namespace Polyboid
 		SwapChainInit(m_Context, m_Settings);
 	}
 
-	
+	std::any VulkanFramebuffer::GetHandle()
+	{
+		return m_FrameBuffer;
+	}
 }

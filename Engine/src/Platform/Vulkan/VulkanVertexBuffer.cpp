@@ -8,7 +8,6 @@
 #include "VulkanCommandList.h"
 #include "VulkanStagingBuffer.h"
 #include "Engine/Renderer/CommandList.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Utils/VulkanAllocator.h"
 #include "Utils/VulkanDevice.h"
 
@@ -44,11 +43,11 @@ namespace Polyboid
 		Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, data, size);
 		Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
 
-		RenderCommand::BeginCommands({ cmdList });
+		cmdList->GetCommandBufferAt(0)->Begin();
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 		cmdBuffer->CopyVertexBuffer(staging, this);
-		RenderCommand::EndCommands({ cmdList });
-		RenderCommand::SubmitCommandBuffer({ cmdList });
+		cmdList->GetCommandBufferAt(0)->End();
+		RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
 
 		staging->Destroy();
 		cmdList->Destroy(device);

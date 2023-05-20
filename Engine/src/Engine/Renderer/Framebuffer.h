@@ -57,6 +57,7 @@ namespace Polyboid
 
 		virtual void ReSize(uint32_t width, uint32_t height) =0;
 		virtual Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
+		virtual std::any GetHandle() = 0;
 
 
 		static  Ref<Framebuffer> Create(const Ref<RenderPass>& renderPass);

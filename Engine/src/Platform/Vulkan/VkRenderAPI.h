@@ -1,7 +1,6 @@
 #pragma once
 #include "VulkanShader.h"
 #include "Engine/Renderer/RenderAPI.h"
-#include "Utils/VulkanSyncObjects.h"
 
 
 namespace Polyboid
@@ -67,10 +66,10 @@ namespace Polyboid
 		[[nodiscard]] std::any GetWindow() const { return m_Window; }
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
 
-		void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
+		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
 			const Ref<Fence>& inFlight) override;
 
-		void SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList) override;
+		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) override;
 
 
 		VkRenderAPI(const std::any& window);
@@ -105,7 +104,8 @@ namespace Polyboid
 		Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) override;
 		Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) override;
 		Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) override;
-		
+		void WaitForFences(const Ref<Fence>& fence) override;
+
 
 		RenderAPIType GetRenderAPIType() override;
 		RenderAPIType GetRenderAPIType() const override;

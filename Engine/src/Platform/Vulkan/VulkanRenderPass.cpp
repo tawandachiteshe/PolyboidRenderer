@@ -26,100 +26,38 @@ namespace Polyboid
 	{
 		vk::Device device = (*context->GetDevice());
 
-		uint32_t count = 0;
-
-		std::vector<vk::AttachmentDescription> attachmentments;
-		std::vector<vk::AttachmentReference> attachmentmentsRefs;
-
-		for (auto& attachment : settings.TextureAttachments)
-		{
-			vk::AttachmentDescription attachmentDescription{};
-			attachmentDescription.format = Utils::ConvertToVulkanFormat(attachment.format);
-			attachmentDescription.samples = vk::SampleCountFlagBits::e1;
-			attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-			attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-
-			attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-			attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-			attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-
-
-			switch (settings.type)
-			{
-			case RenderPassType::Present: attachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-				break;
-			case RenderPassType::ColorAttachment: attachmentDescription.finalLayout =
-					vk::ImageLayout::eColorAttachmentOptimal;
-				break;
-			case RenderPassType::Copy: attachmentDescription.finalLayout = vk::ImageLayout::eTransferDstOptimal;
-				break;
-			case RenderPassType::ShaderReadOnly: attachmentDescription.finalLayout =
-					vk::ImageLayout::eShaderReadOnlyOptimal;
-				break;
-			}
-
-
-			vk::AttachmentReference colorAttachmentRef{};
-			colorAttachmentRef.attachment = count;
-			colorAttachmentRef.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-			attachmentments.push_back(attachmentDescription);
-			attachmentmentsRefs.push_back(colorAttachmentRef);
-
-			count++;
-		}
-
-		//TODO: remove this here 
-		vk::SubpassDescription subpass{};
-		subpass.pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
-		subpass.colorAttachmentCount = static_cast<uint32_t>(attachmentmentsRefs.size());
-		subpass.pColorAttachments = attachmentmentsRefs.data();
-		subpass.pDepthStencilAttachment = nullptr;
-
-		// //We use this for image transition
-		// std::array<vk::SubpassDependency, 2> dependencies = {};
-		// dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-		// dependencies[0].dstSubpass = 0;
-		// dependencies[0].srcStageMask = vk::PipelineStageFlagBits::eFragmentShader;
-		// dependencies[0].dstStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		// dependencies[0].srcAccessMask = vk::AccessFlagBits::eShaderRead;
-		// dependencies[0].dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		// dependencies[0].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-		//
-		// dependencies[1].srcSubpass = 0;
-		// dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-		// dependencies[1].srcStageMask = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-		// dependencies[1].dstStageMask = vk::PipelineStageFlagBits::eFragmentShader;
-		// dependencies[1].srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
-		// dependencies[1].dstAccessMask = vk::AccessFlagBits::eShaderRead;
-		// dependencies[1].dependencyFlags = vk::DependencyFlagBits::eByRegion;
-
-		//	vk::PipelineStageFlags stages = vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests;
-
-		std::array<vk::SubpassDependency, 1> const dependencies = {
-			vk::SubpassDependency() // Image layout transition
-			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
-			.setDstSubpass(0)
-			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-			.setSrcAccessMask(vk::AccessFlagBits())
-			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
-			.setDependencyFlags(vk::DependencyFlags()),
+		// The initial layout for the color and depth attachments will be LAYOUT_UNDEFINED
+// because at the start of the renderpass, we don't care about their contents.
+// At the start of the subpass, the color attachment's layout will be transitioned
+// to LAYOUT_COLOR_ATTACHMENT_OPTIMAL and the depth stencil attachment's layout
+// will be transitioned to LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL.  At the end of
+// the renderpass, the color attachment's layout will be transitioned to
+// LAYOUT_PRESENT_SRC_KHR to be ready to present.  This is all done as part of
+// the renderpass, no barriers are necessary.
+		std::array<vk::AttachmentDescription, 1> const attachments = {
+			vk::AttachmentDescription()
+				.setFormat(vk::Format::eB8G8R8A8Unorm)
+				.setSamples(vk::SampleCountFlagBits::e1)
+				.setLoadOp(vk::AttachmentLoadOp::eClear)
+				.setStoreOp(vk::AttachmentStoreOp::eStore)
+				.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setInitialLayout(vk::ImageLayout::eUndefined)
+				.setFinalLayout(vk::ImageLayout::ePresentSrcKHR),
 		};
 
-		vk::RenderPassCreateInfo renderPassInfo{};
-		renderPassInfo.sType = vk::StructureType::eRenderPassCreateInfo;
-		renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentments.size());
-		renderPassInfo.pAttachments = attachmentments.data();
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subpass;
-		renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size());
-		renderPassInfo.pDependencies = dependencies.data();
+		auto const color_reference = vk::AttachmentReference().setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-		auto [result, renderpass] = device.createRenderPass(renderPassInfo);
-		vk::resultCheck(result, "Failed to create render pass");
-		m_RenderPass = renderpass;
+		auto const subpass = vk::SubpassDescription()
+			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+			.setColorAttachments(color_reference)
+			.setPDepthStencilAttachment(nullptr);
 
+
+		const auto render_pass_result = device.createRenderPass(
+			vk::RenderPassCreateInfo().setAttachments(attachments).setSubpasses(subpass));
+		vk::resultCheck(render_pass_result.result, "failed to create render pass");
+		m_RenderPass = render_pass_result.value;
 
 		m_ColorValue.float32[0] = m_ClearSettings.color.x;
 		m_ColorValue.float32[1] = m_ClearSettings.color.y;
@@ -176,6 +114,9 @@ namespace Polyboid
 		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{m_Settings.Width, m_Settings.Height};
 		m_RenderPassBeginInfo.clearValueCount = 1;
 		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();
+
+		vk::Framebuffer::NativeType fb = m_RenderPassBeginInfo.framebuffer;
+		//spdlog::info("Framebuffer id {}", (uint64_t)fb);
 
 		return m_RenderPassBeginInfo;
 	}

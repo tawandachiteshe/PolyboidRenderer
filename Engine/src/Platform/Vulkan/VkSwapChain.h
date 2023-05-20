@@ -6,6 +6,7 @@
 
 namespace Polyboid
 {
+	class Framebuffer;
 	class VulkanCommandList;
 	class VulkanCommandBuffer;
 	class VulkanFence;
@@ -19,7 +20,6 @@ namespace Polyboid
 	class VkSwapChain : public Swapchain
 	{
 	private:
-		static vk::SwapchainKHR s_Swapchain;
 		vk::SurfaceCapabilitiesKHR m_Capabilities;
 		std::vector<vk::SurfaceFormatKHR> m_Formats;
 		std::vector<vk::PresentModeKHR> m_PresentModes;
@@ -31,7 +31,9 @@ namespace Polyboid
 		uint32_t m_SwapchainCurrentImageIndex = 0;
 		std::vector<Ref<VulkanTexture2D>> m_Textures;
 		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
+		std::vector<Ref<Framebuffer>> m_FramebuffersRefs;
 		vk::Queue m_PresentQueue;
+
 
 
 		bool m_Resize = false;
@@ -45,7 +47,8 @@ namespace Polyboid
 
 		operator vk::SwapchainKHR() const { return m_Swapchain; }
 		VkSwapChain(VkRenderAPI* context, const SwapchainSettings& settings);
-		static std::vector<Ref<VulkanTexture2D>> CreateSwapchainTextures(EngineGraphicsFormats imageFormat = EngineGraphicsFormats::BGRA8U);
+
+		virtual vk::SwapchainKHR GetSwapChainHandle();
 
 		Ref<RenderPass> GetDefaultRenderPass() override;
 
@@ -59,7 +62,12 @@ namespace Polyboid
 
 
 		uint32_t GetImageIndex(const Ref<Semaphore>& imageSemaphore) override;
-		virtual  Ref<VulkanFramebuffer> GetCurrentFramebuffer();
+
+		uint32_t GetCurrentImageIndex() override;
+
+		std::vector<Ref<Framebuffer>> GetFrameBuffers() override;
+
+		Ref<Framebuffer> GetCurrentFrameBuffer() override;
 		void SetVsync(bool vsync) override;
 		~VkSwapChain() override;
 	};

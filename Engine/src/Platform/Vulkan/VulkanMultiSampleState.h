@@ -9,7 +9,7 @@ namespace Polyboid
 	private:
 		vk::PipelineMultisampleStateCreateInfo m_CreateInfo{};
 
-		uint32_t m_SampleMask = 0;
+		uint32_t m_SampleMask = 0xFF'FF'FF'FF;
 		uint32_t m_SamplesCount = 0;
 
 		bool m_AlphaToCov = false;

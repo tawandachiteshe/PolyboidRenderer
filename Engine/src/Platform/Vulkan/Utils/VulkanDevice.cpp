@@ -11,7 +11,7 @@ namespace Polyboid
 	VulkanDevice::VulkanDevice(const Ref<VulkanPhysicalDevice>& device)
 	{
 		auto indices = device->GetFamilyIndices();
-		auto deviceFeatures = device->GetPhysicalDevice().getFeatures();
+		auto deviceFeatures = device->GetPhysicalDevice().getFeatures2();
 		auto physicalDevice = device->GetPhysicalDevice();
 
 
@@ -19,7 +19,7 @@ namespace Polyboid
 		{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 		const std::vector<const char*> validationLayers = 
-		{ "VK_LAYER_KHRONOS_validation", "VK_LAYER_RENDERDOC_Capture"};
+		{ "VK_LAYER_KHRONOS_validation"};
 
 		std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
 
@@ -32,7 +32,7 @@ namespace Polyboid
 			queueCreateInfo.sType = vk::StructureType::eDeviceQueueCreateInfo;
 			queueCreateInfo.queueFamilyIndex = queueFamily;
 			queueCreateInfo.queueCount = 1;
-
+			
 			float priority = 1.0f;
 			queueCreateInfo.pQueuePriorities = &priority;
 
@@ -47,10 +47,8 @@ namespace Polyboid
 		createInfo.sType = vk::StructureType::eDeviceCreateInfo;
 		createInfo.pQueueCreateInfos = queueCreateInfos.data();
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
-		createInfo.pEnabledFeatures = &deviceFeatures;
 		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
 		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
 		createInfo.ppEnabledLayerNames = validationLayers.data();
 

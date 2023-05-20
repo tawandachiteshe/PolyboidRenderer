@@ -20,7 +20,6 @@
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
 #include "Utils/VulkanAllocator.h"
-#include "Utils/VulkanDescriptorPool.h"
 #include "Utils/VulkanDevice.h"
 #include "Utils/VulkanPhysicalDevice.h"
 #include "Utils/VulkanSurfaceKHR.h"
@@ -39,7 +38,7 @@ namespace Polyboid
 		return m_Surface;
 	}
 
-	void VkRenderAPI::SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList, const Ref<Semaphore>& _imageAvailable, const Ref<Semaphore>& _renderFinished,
+	void VkRenderAPI::SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& _imageAvailable, const Ref<Semaphore>& _renderFinished,
 		const Ref<Fence>& inFlight)
 	{
 
@@ -47,29 +46,21 @@ namespace Polyboid
 		vk::Semaphore imageSemaphore = std::any_cast<vk::Semaphore>(_imageAvailable->GetHandle());
 		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderFinished->GetHandle());
 
-		std::vector<vk::CommandBuffer> m_CommandBuffers;
-
-		for (auto& _cmdList : cmdList)
-		{
-			auto cmdBuffer = _cmdList->GetCommandBufferAt(Renderer::GetCurrentFrame());
-			m_CommandBuffers.push_back(std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle()));
-		}
-
+		vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
 
 
 		auto gfxQueue = GetDevice()->GetGraphicsQueue();
 		vk::SubmitInfo submitInfo{};
-		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
+		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &imageSemaphore;
 		submitInfo.pWaitDstStageMask = waitStages;
-
-		submitInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-		submitInfo.pCommandBuffers = m_CommandBuffers.data();
-
+		
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &buffer;
+		
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &renderSemaphore;
-
 
 
 		vk::Result result = gfxQueue.submit(1, &submitInfo, inFlightFence);
@@ -78,17 +69,13 @@ namespace Polyboid
 
 	}
 
-	void VkRenderAPI::SubmitCommandBuffer(const std::vector<Ref<CommandList>>& cmdList)
+	void VkRenderAPI::SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
 	{
 
 		std::vector<vk::CommandBuffer> m_CommandBuffers;
+		m_CommandBuffers.push_back(std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle()));
 
-		for (auto& _cmdList : cmdList)
-		{
-			auto cmdBuffer = _cmdList->GetCommandBufferAt(Renderer::GetCurrentFrame());
-			m_CommandBuffers.push_back(std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle()));
-		}
-
+	
 		auto gfxQueue = GetDevice()->GetGraphicsQueue();
 
 		vk::SubmitInfo submitInfo{};
@@ -282,6 +269,17 @@ namespace Polyboid
 		auto pool = ALLOC_API(VulkanPipelineDescriptorSetPool, this, settings);
 		m_DescPools.emplace_back(pool);
 		return pool;
+	}
+
+	void VkRenderAPI::WaitForFences(const Ref<Fence>& fence)
+	{
+
+		auto vulkanFence = std::any_cast<vk::Fence>(fence->GetHandle());
+		vk::Result result = GetDevice()->GetVulkanDevice().waitForFences(1, &vulkanFence, true, std::numeric_limits<uint64_t>::max());
+		vk::resultCheck(result, "Failed to wait for fence");
+
+		result = GetDevice()->GetVulkanDevice().resetFences(1, &vulkanFence);
+		vk::resultCheck(result, "Failed to wait for fence");
 	}
 
 

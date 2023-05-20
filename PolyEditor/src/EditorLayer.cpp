@@ -22,8 +22,6 @@
 #include "Editor/Editor.h"
 #include "EditorWIndows/StatsWindow.h"
 #include "Engine/Engine/Engine.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
-#include "Engine/Renderer/CommandList/Commands/RenderCommands.h"
 #include "Engine/Renderer/RenderPass.h"
 
 namespace Polyboid

@@ -60,7 +60,7 @@ namespace Polyboid
 		};
 
 		std::vector<const char*> extensions = {
-			"VK_EXT_debug_utils"
+			"VK_EXT_debug_utils", VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME
 		};
 
 		uint32_t glfwExtensionCount = 0;

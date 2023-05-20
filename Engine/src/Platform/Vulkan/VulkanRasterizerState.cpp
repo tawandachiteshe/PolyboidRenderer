@@ -4,9 +4,10 @@
 
 namespace Polyboid
 {
-
-	static vk::PolygonMode ToVulkanPolygonMode(FillMode mode) {
-		switch (mode) {
+	static vk::PolygonMode ToVulkanPolygonMode(FillMode mode)
+	{
+		switch (mode)
+		{
 		case FillMode::Wireframe:
 			return vk::PolygonMode::eLine;
 		case FillMode::Solid:
@@ -23,12 +24,10 @@ namespace Polyboid
 		case FrontFaceDirection::CounterClockwise: return vk::FrontFace::eCounterClockwise;
 		case FrontFaceDirection::Clockwise: return vk::FrontFace::eClockwise;
 		}
-		
 	}
 
 	VulkanRasterizerState::VulkanRasterizerState()
 	{
-
 		Viewport viewport{};
 		viewport.Width = 1600;
 		viewport.Height = 900;
@@ -57,7 +56,6 @@ namespace Polyboid
 	void VulkanRasterizerState::SetCullMode(CullFaceMode cullMode)
 	{
 		m_CullMode = cullMode;
-
 	}
 
 	CullFaceMode VulkanRasterizerState::GetCullMode() const
@@ -72,7 +70,7 @@ namespace Polyboid
 
 	FrontFaceDirection VulkanRasterizerState::GetFrontFacing() const
 	{
-		return  m_FaceDirection;
+		return m_FaceDirection;
 	}
 
 	void VulkanRasterizerState::SetDepthBias(const DepthBias& bias)
@@ -163,65 +161,58 @@ namespace Polyboid
 
 	RasterizerVulkanInfo VulkanRasterizerState::GetVulkanInfo()
 	{
-		if (m_Dirty)
-		{
-			 m_DynamicStates = {
-				//Require version 1.3
-				//vk::DynamicState::eCullMode,
-				vk::DynamicState::eViewport,
-				vk::DynamicState::eScissor
-			};
+		m_DynamicStates = {
+			//Require version 1.3
+			//vk::DynamicState::eCullMode,
+			vk::DynamicState::eViewport,
+			vk::DynamicState::eScissor
+		};
 
-			m_Info.m_CreateDynamicStateInfo.pDynamicStates = m_DynamicStates.data();
-			m_Info.m_CreateDynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(m_DynamicStates.size());
+		m_Info.m_CreateDynamicStateInfo.pDynamicStates = m_DynamicStates.data();
+		m_Info.m_CreateDynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(m_DynamicStates.size());
 
-			m_Info.m_CreateRasterizeInfo.depthBiasEnable = false;
-			m_Info.m_CreateRasterizeInfo.depthBiasConstantFactor = m_DepthBias.depthBias;
-			m_Info.m_CreateRasterizeInfo.depthBiasClamp = m_DepthBias.biasClamp;
-			m_Info.m_CreateRasterizeInfo.depthClampEnable = false;
-			m_Info.m_CreateRasterizeInfo.depthBiasSlopeFactor = m_DepthBias.slopeBias;
-			m_Info.m_CreateRasterizeInfo.lineWidth = m_LineWidth;
-			m_Info.m_CreateRasterizeInfo.cullMode = vk::CullModeFlagBits::eBack;
-			m_Info.m_CreateRasterizeInfo.polygonMode = ToVulkanPolygonMode(m_FrontFace);
-			m_Info.m_CreateRasterizeInfo.frontFace = ToVulkanFrontFace(m_FaceDirection);
-			m_Info.m_CreateRasterizeInfo.rasterizerDiscardEnable = false;
+		m_Info.m_CreateRasterizeInfo.depthBiasEnable = false;
+		// m_Info.m_CreateRasterizeInfo.depthBiasConstantFactor = m_DepthBias.depthBias;
+		// m_Info.m_CreateRasterizeInfo.depthBiasClamp = m_DepthBias.biasClamp;
+		m_Info.m_CreateRasterizeInfo.depthClampEnable = false;
+		// m_Info.m_CreateRasterizeInfo.depthBiasSlopeFactor = m_DepthBias.slopeBias;
+		m_Info.m_CreateRasterizeInfo.lineWidth = m_LineWidth;
+		m_Info.m_CreateRasterizeInfo.cullMode = vk::CullModeFlagBits::eNone;
+		m_Info.m_CreateRasterizeInfo.polygonMode = ToVulkanPolygonMode(m_FrontFace);
+		m_Info.m_CreateRasterizeInfo.frontFace = ToVulkanFrontFace(m_FaceDirection);
+		m_Info.m_CreateRasterizeInfo.rasterizerDiscardEnable = false;
 
-			for (const auto& viewport : m_Viewports)
-			{
-				vk::Viewport vkViewport;
-				vkViewport.width = viewport.Width;
-				vkViewport.height = viewport.Height;
-				vkViewport.x = viewport.X;
-				vkViewport.y = viewport.Y;
-				vkViewport.minDepth = viewport.MinDepth;
-				vkViewport.maxDepth = viewport.MaxDepth;
-				m_VkViewports.emplace_back(vkViewport);
-			}
+		m_Info.m_ViewportCreateInfo.viewportCount = static_cast<uint32_t>(m_Viewports.size());
+		m_Info.m_ViewportCreateInfo.scissorCount = static_cast<uint32_t>(m_ScissorRects.size());
 
-			m_Info.m_ViewportCreateInfo.viewportCount = static_cast<uint32_t>(m_Viewports.size());
-			m_Info.m_ViewportCreateInfo.pViewports = m_VkViewports.data();
-
-			for (const auto& scissor : m_ScissorRects)
-			{
-				vk::Rect2D vkScissor;
-				vkScissor.extent.height = static_cast<uint32_t>(scissor.Height);
-				vkScissor.extent.width = static_cast<uint32_t>(scissor.Width);
-				vkScissor.offset.x = static_cast<int32_t>(scissor.X);
-				vkScissor.offset.y = static_cast<int32_t>(scissor.Y);
-
-				m_VkScissorRects.emplace_back(vkScissor);
-			}
+		// for (const auto& scissor : m_ScissorRects)
+		// {
+		// 	vk::Rect2D vkScissor;
+		// 	vkScissor.extent.height = static_cast<uint32_t>(scissor.Height);
+		// 	vkScissor.extent.width = static_cast<uint32_t>(scissor.Width);
+		// 	vkScissor.offset.x = static_cast<int32_t>(scissor.X);
+		// 	vkScissor.offset.y = static_cast<int32_t>(scissor.Y);
+		//
+		// 	m_VkScissorRects.emplace_back(vkScissor);
+		// }
+		//
 
 
-			m_Info.m_ViewportCreateInfo.pScissors = m_VkScissorRects.data();
-			m_Info.m_ViewportCreateInfo.scissorCount = static_cast<uint32_t>(m_ScissorRects.size());
+		// for (const auto& viewport : m_Viewports)
+		// {
+		// 	vk::Viewport vkViewport;
+		// 	vkViewport.width = viewport.Width;
+		// 	vkViewport.height = viewport.Height;
+		// 	vkViewport.x = viewport.X;
+		// 	vkViewport.y = viewport.Y;
+		// 	vkViewport.minDepth = viewport.MinDepth;
+		// 	vkViewport.maxDepth = viewport.MaxDepth;
+		// 	m_VkViewports.emplace_back(vkViewport);
+		// }
 
 
-			m_Dirty = false;
+		m_Dirty = false;
 
-			return m_Info;
-		}
-
-		return {};
+		return m_Info;
 	}
 }

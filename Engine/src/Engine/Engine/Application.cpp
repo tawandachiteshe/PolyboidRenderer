@@ -22,15 +22,19 @@
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
 #include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
+#include "Platform/Vulkan/VkRenderAPI.h"
+#include "Platform/Vulkan/VkSwapChain.h"
+#include "Platform/Vulkan/VulkanRenderPass.h"
+#include "Platform/Vulkan/Utils/VulkanDevice.h"
 #include "Registry/ShaderRegistry.h"
 
 
 namespace Polyboid
 {
+	class VkRenderAPI;
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application(const ApplicationSettings& settings) : m_Settings(settings)
@@ -104,6 +108,7 @@ namespace Polyboid
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
 		//Renderer::Resize();
+
 	}
 
 	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
@@ -129,28 +134,9 @@ namespace Polyboid
 
 		Engine::Init();
 
-		auto mainCmdList = CommandList::Create({3});
+		m_CommandList = CommandList::Create({3});
 		auto mainSyncObjects = RendererSyncObjects::Create(3);
 
-
-		RenderPassSettings renderPassSettings{};
-		renderPassSettings.type = RenderPassType::ShaderReadOnly;
-		renderPassSettings.Height = 400;
-		renderPassSettings.Width = 400;
-		renderPassSettings.IsSwapchainRenderPass = false;
-		renderPassSettings.TextureAttachments = {{TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U}};
-		renderPassSettings.debugName = "Application debug";
-
-
-		auto newRenderPass = RenderPass::Create(renderPassSettings);
-
-		std::vector<Ref<Framebuffer>> newFramebuffers;
-
-		for (int i = 0; i < 3; ++i)
-		{
-			auto newFrameBuffer = Framebuffer::Create(newRenderPass);
-			newFramebuffers.emplace_back(newFrameBuffer);
-		}
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/triangle");
 
@@ -200,6 +186,8 @@ namespace Polyboid
 		skyBoxPipeline->SetRenderPass(Renderer::GetSwapChain()->GetDefaultRenderPass());
 		skyBoxPipeline->Bake();
 
+		m_Pipeline = skyBoxPipeline;
+
 		// skyBoxPipeline->AllocateDescSetsFromShaders(pool);
 		// auto descSets = skyBoxPipeline->GetDescriptorSets(0);
 
@@ -231,6 +219,59 @@ namespace Polyboid
 		// 	descSets[i]->Commit();
 		// }
 
+		/*
+		for (int i = 0; i < 3; ++i)
+		{
+
+			Renderer::BeginCommandBuffer(m_CommandList->GetCommandBufferAt(i));
+			auto swapchain = Renderer::GetSwapChain();
+			Renderer::BeginRenderPass(swapchain->GetDefaultRenderPass(), swapchain->GetFrameBuffers().at(i));
+
+			Renderer::Clear(glm::vec4(0.2, 0.2, 0.2, 1));
+
+			//
+			// Imgui::Begin(mainCmdList);
+			//
+			// ImGui::Begin("Tawanda");
+			//
+			// ImGui::End();
+			//
+			// Imgui::End();
+
+			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+
+
+
+
+			Viewport viewport{};
+			viewport.Width = 1600;
+			viewport.Height = 900;
+			viewport.MinDepth = 0.0;
+			viewport.MaxDepth = 1.0f;
+
+
+			Renderer::SetViewport(viewport);
+			Rect rect{};
+			rect.Width = 1600;
+			rect.Height = 900;
+			Renderer::SetScissor(rect);
+
+
+			// Renderer::BindVertexBuffer(triVerts);
+			// Renderer::BindIndexBuffer(triIdxs);
+			//Renderer::BindGraphicsDescriptorSets(0, descSets);
+			//Renderer::DrawIndexed(6);
+			
+
+
+			Renderer::EndRenderPass();
+			Renderer::EndCommandBuffer(m_CommandList->GetCommandBufferAt(i));
+
+			
+		}
+		*/
+
+
 		while (m_Running)
 		{
 			OPTICK_FRAME("Main Frame")
@@ -248,50 +289,34 @@ namespace Polyboid
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
-
 			//Note these commands are executed later
 			Renderer::BeginFrame(mainSyncObjects);
-
-			//Imgui
-			Renderer::BeginCommands({mainCmdList});
-			Renderer::Clear(glm::vec4(0.2, 0.2, 0.2, 1));
-
-
+			Renderer::BeginCommands(m_CommandList);
 			Renderer::BeginSwapChainRenderPass();
+			Renderer::Clear(ClearSettings{ { 0.2, 0.2, 0.2, 1.0f } });
 
-			// Renderer::BeginImGui();
-			//
-			// auto texture = newFramebuffers[Renderer::GetCurrentFrame()]->GetColorAttachment(
-			// 	TextureAttachmentSlot::Color0);
-			//
-			// auto imTex = std::any_cast<ImTextureID>(texture->GetImGuiTexture());
-			// Renderer::DisplayImGuiTexture(imTex);
-			//
-			// Renderer::RenderImGui(m_Layers);
-			// Renderer::EndImGui();
+			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+
 
 			Viewport viewport{};
 			viewport.Width = 1600;
 			viewport.Height = 900;
 			viewport.MinDepth = 0.0;
 			viewport.MaxDepth = 1.0f;
+
+
 			Renderer::SetViewport(viewport);
 			Rect rect{};
 			rect.Width = 1600;
 			rect.Height = 900;
 			Renderer::SetScissor(rect);
 
-			Renderer::BindGraphicsPipeline(skyBoxPipeline);
-			// Renderer::BindVertexBuffer(triVerts);
-			// Renderer::BindIndexBuffer(triIdxs);
-			//Renderer::BindGraphicsDescriptorSets(0, descSets);
-			//Renderer::DrawIndexed(6);
-			Renderer::DrawArrays(3);
+			Renderer::DrawArrays(12 * 3);
 
 			Renderer::EndSwapChainRenderPass();
 			Renderer::EndCommands();
 
-			Renderer::SubmitCurrentCommandList();
+			Renderer::SubmitCommandList(m_CommandList);
 			Renderer::EndFrame();
 
 

@@ -84,9 +84,9 @@ namespace Polyboid
 
 
 			vk::Bool32 presentSupport = false;
-			auto result = m_Device.getSurfaceSupportKHR(count, (*surface), &presentSupport);
+			auto _result = m_Device.getSurfaceSupportKHR(count, (*surface), &presentSupport);
 
-			if (result == vk::Result::eSuccess)
+			if (_result == vk::Result::eSuccess)
 			{
 				if (presentSupport)
 				{

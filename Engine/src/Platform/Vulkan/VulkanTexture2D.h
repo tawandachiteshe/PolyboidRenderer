@@ -25,7 +25,7 @@ namespace Polyboid
 
 	public:
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
-		VulkanTexture2D(const VkRenderAPI* context, const std::any& imageHandle, const TextureSettings& settings);
+		VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle);
 
 		void Destroy();
 

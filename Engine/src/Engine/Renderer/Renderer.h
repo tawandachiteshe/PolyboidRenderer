@@ -28,10 +28,11 @@ namespace Polyboid
         Ref<PipelineState> m_DefaultPipelineState;
         Ref<Swapchain> m_Swapchain;
         Ref<CommandList> m_CurrentCommandList;
+        Ref<CommandBuffer> m_CommandBuffer;
 
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
-        std::atomic_uint32_t m_CurrentFrame = 0;
+        uint32_t m_CurrentFrame = 0;
         uint32_t m_MaxFramesInFlight = 3;
         uint32_t m_ImageIndex = 0;
         Ref<RendererSyncObjects> m_CurrentSyncObjects;
@@ -53,11 +54,13 @@ namespace Polyboid
     	static void Init(RenderAPI* context, const ApplicationSettings& settings);
         static void BeginDraw(const Ref<Camera>& camera);
         static void SetMaxFramesInFlight(uint32_t frames);
-        static std::atomic_uint32_t& GetCurrentFrame();
+        static uint32_t& GetCurrentFrame();
         static void EndDraw();
-        static void BeginCommands(const std::vector<Ref<CommandList>>& cmdList);
-        static void EndCommands();
-        static void SubmitCurrentCommandList();
+        static void BeginCommands(const Ref<CommandList>& cmdList);
+        static void BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
+        static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
+    	static void EndCommands();
+        static void SubmitCommandList(const Ref<CommandList>& cmdList);
         static void BeginFrame(const Ref<RendererSyncObjects>& syncObjects);
         static void EndFrame();
         static void DisplayImGuiTexture(ImTextureID ds);
@@ -66,13 +69,15 @@ namespace Polyboid
         static void EndImGui();
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
+        static Ref<CommandBuffer> GetCurrentCommandBuffer();
+        static void SetCurrentCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
 
         static void Clear(ClearSettings settings = {});
 
         static void DrawIndexed(uint32_t count, const PrimitiveType& primitive = PrimitiveType::Triangles);
         static void DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive = PrimitiveType::Lines);
         static void SetPipelineState(const Ref<PipelineState>& pipelineState);
-        static void BeginRenderPass(const Ref<RenderPass>& renderPass, bool isMain = false);
+        static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers);
         static void BindGraphicsPipeline(const Ref<PipelineState>& pipeline);
         static void BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets);

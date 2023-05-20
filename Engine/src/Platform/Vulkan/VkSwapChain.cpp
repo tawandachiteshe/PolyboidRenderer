@@ -28,7 +28,6 @@
 namespace Polyboid
 {
 
-	vk::SwapchainKHR VkSwapChain::s_Swapchain = nullptr;
 
 	VkExtent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
@@ -62,9 +61,11 @@ namespace Polyboid
 		vk::SurfaceKHR surface = (*context->GetSurface());
 		auto indices = context->GetPhysicalDevice()->GetFamilyIndices();
 		uint32_t queueFamilyIndices[] = { indices.GraphicsFamily.value(), indices.PresentFamily.value() };
-		m_PresentQueue = context->GetDevice()->GetPresentQueue();
+		m_PresentQueue = context->GetDevice()->GetGraphicsQueue();
 
 		Destroy(device);
+
+
 
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(m_Context->GetWindow()), &width, &height);
@@ -111,20 +112,8 @@ namespace Polyboid
 		vk::Format swapChainFormat = vk::Format::eUndefined;
 		vk::ColorSpaceKHR colorSpace = vk::ColorSpaceKHR::eSrgbNonlinear;
 
-		switch (settings.SwapchainFormat)
-		{
-		case EngineGraphicsFormats::BGRA8ISrgb:
-
-			if (formatMap.contains(vk::Format::eB8G8R8A8Unorm))
-			{
-				swapChainFormat = vk::Format::eB8G8R8A8Unorm;
-				colorSpace = formatMap[vk::Format::eB8G8R8A8Unorm];
-			}
-			break;
-		default:
-			spdlog::error("Format Not Supported");
-			__debugbreak();
-		}
+		swapChainFormat = vk::Format::eB8G8R8A8Unorm;
+		colorSpace = formatMap.at(vk::Format::eB8G8R8A8Unorm);
 
 
 		std::map<vk::PresentModeKHR, uint32_t> presentMap;
@@ -146,13 +135,12 @@ namespace Polyboid
 
 		presentMode = vk::PresentModeKHR::eMailbox;
 
-		uint32_t imageCount = m_Capabilities.minImageCount + 1;
 
 		vk::SwapchainCreateInfoKHR createInfo{};
 		createInfo.sType = vk::StructureType::eSwapchainCreateInfoKHR;
 		createInfo.flags = vk::SwapchainCreateFlagsKHR();
 		createInfo.surface = surface;
-		createInfo.minImageCount = imageCount;
+		createInfo.minImageCount = 3;
 		createInfo.imageFormat = swapChainFormat;
 		createInfo.imageColorSpace = colorSpace;
 		createInfo.imageExtent = chooseSwapExtent(m_Capabilities, std::any_cast<GLFWwindow*>(context->GetWindow()));
@@ -182,7 +170,6 @@ namespace Polyboid
 		auto[swapChainResult, swapchain] = device.createSwapchainKHR(createInfo);
 		vk::resultCheck(swapChainResult, "Failed to create result");
 		m_Swapchain = swapchain;
-		s_Swapchain = swapchain;
 
 		spdlog::info("Successfully created a swapchain!");
 
@@ -196,7 +183,16 @@ namespace Polyboid
 
 		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
 
-		m_Textures = CreateSwapchainTextures();
+		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(m_Swapchain);
+		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
+		std::vector<Ref<VulkanTexture2D>> textures;
+		textures.resize(swapchainImages.size());
+
+		//Abstract this to something cool
+		for (auto& swapchainImage : swapchainImages)
+		{
+			m_Textures.push_back(std::make_shared<VulkanTexture2D>(context, swapchainImage));
+		}
 
 		for (auto& texture : m_Textures)
 		{
@@ -210,6 +206,7 @@ namespace Polyboid
 
 			auto framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, m_RenderPass.get(), attachments);
 			m_Framebuffers.push_back(framebuffer);
+			m_FramebuffersRefs.push_back(framebuffer);
 		}
 
 		
@@ -221,51 +218,21 @@ namespace Polyboid
 		Init(m_Context, m_Settings);
 	}
 
-	VkSwapChain::VkSwapChain(VkRenderAPI* context, const SwapchainSettings& settings): m_Settings(settings), m_Context(context)
+	VkSwapChain::VkSwapChain(VkRenderAPI* context, const SwapchainSettings& settings): m_Context(context),
+		m_Settings(settings)
 	{
 
 		Init(context, settings);
 
 	}
 
-	std::vector<Ref<VulkanTexture2D>> VkSwapChain::CreateSwapchainTextures(EngineGraphicsFormats imageFormat)
+
+
+	vk::SwapchainKHR VkSwapChain::GetSwapChainHandle()
 	{
-
-		vk::Format swapchainImageFormat = vk::Format::eB8G8R8A8Unorm;
-
-		switch (imageFormat)
-		{
-		case EngineGraphicsFormats::BGRA8U:
-			swapchainImageFormat = vk::Format::eB8G8R8A8Unorm;
-			break;
-			default:
-				break;
-		}
-		
-		
-		const auto api = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
-		const auto engineDevice = api->GetDevice();
-		const auto device = engineDevice->GetVulkanDevice();
-
-
-		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(s_Swapchain);
-		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
-		std::vector<Ref<VulkanTexture2D>> textures;
-		textures.resize(swapchainImages.size());
-
-		//Abstract this to something cool
-		int count = 0;
-		for (auto& swapchainImage : swapchainImages)
-		{
-			TextureSettings settings;
-			settings.sizedFormat = imageFormat;
-			textures[count] = std::make_shared<VulkanTexture2D>(api, swapchainImage, settings);
-			count++;
-		}
-
-		return textures;
-
+		return m_Swapchain;
 	}
+
 
 	Ref<RenderPass> VkSwapChain::GetDefaultRenderPass()
 	{
@@ -297,6 +264,9 @@ namespace Polyboid
 		}
 
 		m_Framebuffers.clear();
+		m_FramebuffersRefs.clear();
+		m_Formats.clear();
+		m_Textures.clear();
 	}
 
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)
@@ -309,24 +279,21 @@ namespace Polyboid
 	{
 
 		uint32_t imageIndex = m_SwapchainCurrentImageIndex;
-		vk::Result presentResult = vk::Result::eSuccess;
 
-		auto swapChain = m_Swapchain;
+		
 		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
-
 
 		vk::PresentInfoKHR presentInfo{};
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &renderSemaphore;
 		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pSwapchains = &swapChain;
-		presentInfo.pResults = &presentResult;
+		presentInfo.pSwapchains = &m_Swapchain;
 		presentInfo.swapchainCount = 1;
 
 		vk::Result result = m_PresentQueue.presentKHR(&presentInfo);
 
-
-		if (presentResult == vk::Result::eErrorOutOfDateKHR) {
+	
+		if (result == vk::Result::eErrorOutOfDateKHR) {
 
 			Init(m_Context, m_Settings);
 		}
@@ -342,17 +309,31 @@ namespace Polyboid
 	{
 
 		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
-		vk::Device device = (*m_Context->GetDevice());
-		auto ImageResult = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore);
-		m_SwapchainCurrentImageIndex = ImageResult.value;
 
+
+		vk::Device device = (*m_Context->GetDevice());
+		auto ImageResult = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore, vk::Fence(), &m_SwapchainCurrentImageIndex);
+
+		vk::resultCheck(ImageResult, "Failed to aquire image");
 		return  m_SwapchainCurrentImageIndex;
 	}
 
-	Ref<VulkanFramebuffer> VkSwapChain::GetCurrentFramebuffer()
+	uint32_t VkSwapChain::GetCurrentImageIndex()
 	{
-		return m_Framebuffers[m_SwapchainCurrentImageIndex];
+		return  m_SwapchainCurrentImageIndex;
 	}
+
+	std::vector<Ref<Framebuffer>> VkSwapChain::GetFrameBuffers()
+	{
+		return m_FramebuffersRefs;
+	}
+
+
+	Ref<Framebuffer> VkSwapChain::GetCurrentFrameBuffer()
+	{
+		return m_Framebuffers.at(m_SwapchainCurrentImageIndex);
+	}
+
 
 	void VkSwapChain::SetVsync(bool vsync)
 	{
