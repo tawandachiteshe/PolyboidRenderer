@@ -17,6 +17,7 @@
 #include "Engine/Renderer/Renderer.h"
 #include "VulkanImage2D.h"
 #include "VulkanPipelineDescriptorSetPool.h"
+#include "VulkanStagingBuffer.h"
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
 #include "Utils/VulkanAllocator.h"
@@ -204,6 +205,13 @@ namespace Polyboid
 		return vulkanCommandList;
 	}
 
+	Ref<StagingBuffer> VkRenderAPI::CreateStagingBuffer(uint32_t size)
+	{
+		auto buffer = ALLOC_API(VulkanStagingBuffer, this, size);
+		m_StagingBuffers.emplace_back(buffer);
+		return buffer;
+	}
+
 	Ref<PipelineState> VkRenderAPI::CreatePipelineState()
 	{
 		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
@@ -363,6 +371,11 @@ namespace Polyboid
 		}
 
 		for (const auto& buffer : m_StorageBuffers)
+		{
+			buffer->Destroy();
+		}
+
+		for (const auto& buffer : m_StagingBuffers)
 		{
 			buffer->Destroy();
 		}

@@ -27,27 +27,30 @@ namespace Polyboid
 
 		ShaderCompiler::Init(context, shaderPath.generic_string());
 
-		if (!std::filesystem::exists(cacheFolder))
-		{
-			std::filesystem::create_directory(cacheFolder);
-		}
 
+		s_Registry = ShaderCompiler::CompileShadersFromPath(shaderPath.string());
 
-		if (!std::filesystem::exists(shaderCache))
-		{
-			s_Registry = ShaderCompiler::CompileShadersFromPath(shaderPath.string());
-			std::filesystem::create_directory(shaderCache);
-		}
-
-
-		if (!s_Registry.empty())
-		{
-			ShaderCompiler::Dump(s_Registry, shaderCache);
-		}
-		else
-		{
-			s_Registry = ShaderCompiler::LoadFromDump(shaderCache);
-		}
+		// if (!std::filesystem::exists(cacheFolder))
+		// {
+		// 	std::filesystem::create_directory(cacheFolder);
+		// }
+		//
+		//
+		// if (!std::filesystem::exists(shaderCache))
+		// {
+		// 	s_Registry = ShaderCompiler::CompileShadersFromPath(shaderPath.string());
+		// 	std::filesystem::create_directory(shaderCache);
+		// }
+		//
+		//
+		// if (!s_Registry.empty())
+		// {
+		// 	ShaderCompiler::Dump(s_Registry, shaderCache);
+		// }
+		// else
+		// {
+		// 	s_Registry = ShaderCompiler::LoadFromDump(shaderCache);
+		// }
 
 
 

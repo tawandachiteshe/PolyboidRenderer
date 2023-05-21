@@ -34,6 +34,29 @@ namespace Polyboid
 // the renderpass, the color attachment's layout will be transitioned to
 // LAYOUT_PRESENT_SRC_KHR to be ready to present.  This is all done as part of
 // the renderpass, no barriers are necessary.
+
+		// vk::SubpassDependency memDependency;
+		// memDependency.setSrcSubpass(VK_SUBPASS_EXTERNAL);
+		// memDependency.setDstSubpass(0); // The subpass index you are currently in
+		// memDependency.setSrcStageMask(vk::PipelineStageFlagBits::eAllCommands); // Modify to match the appropriate stage(s)
+		// memDependency.setDstStageMask(vk::PipelineStageFlagBits::eAllCommands); // Modify to match the appropriate stage(s)
+		// memDependency.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite); // Modify to match the appropriate access flag(s)
+		// memDependency.setDstAccessMask(vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite); // Modify to match the appropriate access flag(s)
+
+
+		std::array<vk::SubpassDependency, 1> dependencies = {
+		  // Depth buffer is shared between swapchain images
+			vk::SubpassDependency()  // Image layout transition
+			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+			.setDstSubpass(0)
+			.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+			.setSrcAccessMask(vk::AccessFlagBits())
+			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
+			.setDependencyFlags(vk::DependencyFlags()) };
+
+
+
 		std::array<vk::AttachmentDescription, 1> const attachments = {
 			vk::AttachmentDescription()
 				.setFormat(vk::Format::eB8G8R8A8Unorm)
@@ -55,7 +78,7 @@ namespace Polyboid
 
 
 		const auto render_pass_result = device.createRenderPass(
-			vk::RenderPassCreateInfo().setAttachments(attachments).setSubpasses(subpass));
+			vk::RenderPassCreateInfo().setAttachments(attachments).setSubpasses(subpass).setDependencies(dependencies));
 		vk::resultCheck(render_pass_result.result, "failed to create render pass");
 		m_RenderPass = render_pass_result.value;
 

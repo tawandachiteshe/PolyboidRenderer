@@ -5,6 +5,7 @@
 
 namespace Polyboid
 {
+	class VulkanStagingBuffer;
 	class VulkanPipelineDescriptorSetPool;
 	class VulkanGraphicsPipeline;
 	class VulkanImage2D;
@@ -44,6 +45,7 @@ namespace Polyboid
 		std::vector<Ref<VulkanPipelineDescriptorSetPool>> m_DescPools;
 		std::vector<Ref<VulkanShaderStorage>> m_StorageBuffers;
 		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
+		std::vector<Ref<VulkanStagingBuffer>> m_StagingBuffers;
 
 
 	private:
@@ -94,6 +96,7 @@ namespace Polyboid
 		Ref<VertexBuffer> CreateVertexBuffer(uint32_t dataSize) override;
 		Ref<VertexBufferArray> CreateVertexBufferArray() override;
 		Ref<CommandList> CreateCommandList(const CommandListSettings& settings) override;
+		Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) override;
 
 		Ref<PipelineState> CreatePipelineState() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;

@@ -34,12 +34,15 @@ namespace Polyboid
 		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const Ref<VertexBuffer>& dstVtxBuffer) override;
 		void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) override;
 		void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) override;
+		
 
 		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const IndexBuffer* dstIndexBuffer) override;
 		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) override;
 		void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) override;
 		void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) override;
 		void BindGraphicsPipeline(const Ref<PipelineState>& pipeline) override;
+		void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) override;
+
 
 		void SetViewPort(const Viewport& viewport) override;
 		void SetScissor(const Rect& rect) override;
@@ -47,6 +50,7 @@ namespace Polyboid
 		void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
 		void DrawIndexed(uint32_t count, const IndexDataType& type) override;
 		void DrawArrays(uint32_t count) override;
+		void PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) override;
 
 		void Reset() override;
 

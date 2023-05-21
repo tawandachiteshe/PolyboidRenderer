@@ -1,6 +1,7 @@
 ﻿#include "boidpch.h"
 
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "Application.h"
 #include <spdlog/spdlog.h>
 
@@ -30,6 +31,7 @@
 #include "Platform/Vulkan/VulkanRenderPass.h"
 #include "Platform/Vulkan/Utils/VulkanDevice.h"
 #include "Registry/ShaderRegistry.h"
+
 
 
 namespace Polyboid
@@ -138,7 +140,7 @@ namespace Polyboid
 		auto mainSyncObjects = RendererSyncObjects::Create(3);
 
 
-		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/triangle");
+		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
 
 		struct Vertex
 		{
@@ -174,22 +176,25 @@ namespace Polyboid
 
 		auto greenTexture = Texture::Create({
 			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
-			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1
+			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
+
 		                                    }, &green);
+
+		auto checkerTexture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/checker.jpg" });
 
 
 		auto pool = PipelineDescriptorSetPool::Create({3});
 
 		auto skyBoxPipeline = PipelineState::CreateGraphicsPipeline();
 		skyBoxPipeline->SetGraphicsShaders(skyboxShaders);
-		//skyBoxPipeline->SetVertexArray(vtxArray);
+		skyBoxPipeline->SetVertexArray(vtxArray);
 		skyBoxPipeline->SetRenderPass(Renderer::GetSwapChain()->GetDefaultRenderPass());
 		skyBoxPipeline->Bake();
 
 		m_Pipeline = skyBoxPipeline;
 
-		// skyBoxPipeline->AllocateDescSetsFromShaders(pool);
-		// auto descSets = skyBoxPipeline->GetDescriptorSets(0);
+		skyBoxPipeline->AllocateDescSetsFromShaders(pool);
+		auto descSets = skyBoxPipeline->GetDescriptorSets(0);
 
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
@@ -200,77 +205,45 @@ namespace Polyboid
 			glm::mat4 view;
 		};
 
+		struct EntityBufferData
+		{
+			glm::mat4 transform;
+			glm::mat4 padding;
+		};
+
+
+		CameraBufferData camerData{};
+		EntityBufferData entityBufferData{};
+
 		std::vector<Ref<UniformBuffer>> uniformBuffers;
 		std::vector<Ref<StorageBuffer>> storageBuffers;
+		std::vector<Ref<StagingBuffer>> stagingBuffers;
 		//
-		// for (int i = 0; i < 3; ++i)
-		// {
-		// 	auto cameraDataUB = UniformBuffer::Create(sizeof(CameraBufferData));
-		// 	descSets[i]->WriteUniformBuffer(0, cameraDataUB);
-		// 	uniformBuffers.emplace_back(cameraDataUB);
-		//
-		// 	auto storageBuffer = StorageBuffer::Create(sizeof(vert));
-		// 	descSets[i]->WriteStorageBuffer(1, storageBuffer);
-		// 	storageBuffers.emplace_back(storageBuffer);
-		//
-		// 	descSets[i]->WriteTexture2D(2, greenTexture);
-		//
-		//
-		// 	descSets[i]->Commit();
-		// }
-
-		/*
 		for (int i = 0; i < 3; ++i)
 		{
+			auto cameraDataUB = UniformBuffer::Create(sizeof(CameraBufferData));
+			descSets[i]->WriteUniformBuffer(0, cameraDataUB);
+			uniformBuffers.emplace_back(cameraDataUB);
+		
+			auto storageBuffer = StorageBuffer::Create(sizeof(vert));
+			descSets[i]->WriteStorageBuffer(1, storageBuffer);
+			storageBuffers.emplace_back(storageBuffer);
 
-			Renderer::BeginCommandBuffer(m_CommandList->GetCommandBufferAt(i));
-			auto swapchain = Renderer::GetSwapChain();
-			Renderer::BeginRenderPass(swapchain->GetDefaultRenderPass(), swapchain->GetFrameBuffers().at(i));
-
-			Renderer::Clear(glm::vec4(0.2, 0.2, 0.2, 1));
-
-			//
-			// Imgui::Begin(mainCmdList);
-			//
-			// ImGui::Begin("Tawanda");
-			//
-			// ImGui::End();
-			//
-			// Imgui::End();
-
-			Renderer::BindGraphicsPipeline(skyBoxPipeline);
-
-
-
-
-			Viewport viewport{};
-			viewport.Width = 1600;
-			viewport.Height = 900;
-			viewport.MinDepth = 0.0;
-			viewport.MaxDepth = 1.0f;
-
-
-			Renderer::SetViewport(viewport);
-			Rect rect{};
-			rect.Width = 1600;
-			rect.Height = 900;
-			Renderer::SetScissor(rect);
-
-
-			// Renderer::BindVertexBuffer(triVerts);
-			// Renderer::BindIndexBuffer(triIdxs);
-			//Renderer::BindGraphicsDescriptorSets(0, descSets);
-			//Renderer::DrawIndexed(6);
-			
-
-
-			Renderer::EndRenderPass();
-			Renderer::EndCommandBuffer(m_CommandList->GetCommandBufferAt(i));
-
-			
+			auto staging = StagingBuffer::Create(sizeof(CameraBufferData));
+			stagingBuffers.emplace_back(staging);
+		
+			descSets[i]->WriteTexture2D(2, checkerTexture);
+		
+		
+			descSets[i]->Commit();
 		}
-		*/
 
+		camerData.projection = glm::perspective(1600.f / 900.f, glm::radians(45.0f), 0.01f, 1000.0f);
+		camerData.view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -1.0f}) * glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), {0.0f, 1.0f, 0.0f});
+
+		
+
+		static  float rotation = 0;
 
 		while (m_Running)
 		{
@@ -282,6 +255,9 @@ namespace Polyboid
 			double m_GameTime = currentFrame - m_LastFrameTime;
 			m_LastFrameTime = currentFrame;
 
+			rotation += (float)m_GameTime * (float)100.0f;
+
+			entityBufferData.transform = glm::mat4(1.0f) * glm::rotate(glm::mat4(1.0f), glm::radians(rotation), { 0, 0.0f, 1.0 }) * glm::scale(glm::mat4(1.0f), { 0.2, 0.2, 0.2 });
 
 			// update here.....
 			for (auto layer : m_Layers)
@@ -289,13 +265,21 @@ namespace Polyboid
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
+			//camerData.view = camerData.view * glm::rotate(glm::mat4(), 0.12f, glm::vec3({0.0f, 0.0f, 1.0f}));
+
 			//Note these commands are executed later
 			Renderer::BeginFrame(mainSyncObjects);
 			Renderer::BeginCommands(m_CommandList);
+
+			Renderer::SetStagingBufferData(stagingBuffers, &camerData);
+			Renderer::CopyStagingBuffer(stagingBuffers, uniformBuffers);
+
 			Renderer::BeginSwapChainRenderPass();
 			Renderer::Clear(ClearSettings{ { 0.2, 0.2, 0.2, 1.0f } });
 
 			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+			Renderer::BindGraphicsDescriptorSets(0, descSets);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
 
 
 			Viewport viewport{};
@@ -310,8 +294,10 @@ namespace Polyboid
 			rect.Width = 1600;
 			rect.Height = 900;
 			Renderer::SetScissor(rect);
+			Renderer::BindVertexBuffer(triVerts);
+			Renderer::BindIndexBuffer(triIdxs);
 
-			Renderer::DrawArrays(12 * 3);
+			Renderer::DrawIndexed(6);
 
 			Renderer::EndSwapChainRenderPass();
 			Renderer::EndCommands();

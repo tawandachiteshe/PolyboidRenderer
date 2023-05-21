@@ -16,6 +16,7 @@ namespace Polyboid
 		vk::DescriptorBufferInfo m_DescBufferInfo;
 		const VkRenderAPI* m_Context = nullptr;
 		VmaAllocation m_Allocation = nullptr;
+		vk::DeviceMemory m_Memory;
 
 		uint32_t m_Size = 0, m_Slot = 0;
 

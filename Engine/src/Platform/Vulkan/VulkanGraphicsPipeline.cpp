@@ -42,12 +42,9 @@ namespace Polyboid
 		}
 
 
-
-
 		if (!vulkanVtxShader->GetPushContantRange().empty())
 		{
-			m_PushConstantRanges.insert(std::end(m_PushConstantRanges),
-				vulkanVtxShader->GetPushContantRange().begin(), vulkanVtxShader->GetPushContantRange().end());
+			m_PushConstantRanges.push_back(vulkanVtxShader->GetPushContantRange().at(0));
 		}
 
 		if (!vulkanFragShader->GetPushContantRange().empty())

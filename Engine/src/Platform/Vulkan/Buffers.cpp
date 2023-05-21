@@ -18,7 +18,7 @@ namespace Polyboid
 
 
 		vk::BufferCreateInfo createInfo;
-		createInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer;
+		createInfo.usage = vk::BufferUsageFlagBits::eUniformBuffer | vk::BufferUsageFlagBits::eTransferDst;
 		//vk::
 		createInfo.size = size;
 		m_Size = size;
@@ -26,8 +26,11 @@ namespace Polyboid
 
 		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
 		VmaAllocationCreateInfo vmaCreateInfo{};
-		vmaCreateInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
+		vmaCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 		vmaCreateInfo.priority = 1.0f;
+		vmaCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 
 		VkBuffer buffer;
@@ -46,11 +49,31 @@ namespace Polyboid
 		m_DescBufferInfo.buffer = buffer;
 		m_DescBufferInfo.offset = 0;
 		m_DescBufferInfo.range = m_Size;
+
+		VmaAllocationInfo memAllocInfo{};
+		vmaGetAllocationInfo(allocator, m_Allocation, &memAllocInfo);
+
+		// vk::Result bindResult = device.bindBufferMemory(buffer, memAllocInfo.deviceMemory, 0);
+		// vk::resultCheck(bindResult, "Failed to bind memory");
+
+		m_Memory = memAllocInfo.deviceMemory;
+
+		
 	
 	}
 
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
+		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		auto device = m_Context->GetDevice()->GetVulkanDevice();
+
+
+		auto [result, mappedData] = device.mapMemory(m_Memory, offset, size);
+		vk::resultCheck(result, "Uniform buffer mem allocation failed");
+		std::memcpy(mappedData, data, size);
+
+		device.unmapMemory(m_Memory);
+
 	}
 
 	uint32_t VulkanUniformBuffer::GetBindingSlot()

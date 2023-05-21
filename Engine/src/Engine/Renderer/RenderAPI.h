@@ -12,6 +12,7 @@
 
 namespace Polyboid
 {
+	class StagingBuffer;
 	struct DescriptorSetPoolSettings;
 	class PipelineDescriptorSetPool;
 	struct CommandListSettings;
@@ -96,6 +97,7 @@ namespace Polyboid
 		virtual Ref<Semaphore> CreateGraphicsSemaphore() = 0;
 		virtual Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) = 0;
 		virtual Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) = 0;
+		virtual Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) = 0;
 
 		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
 		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) = 0;

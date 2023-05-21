@@ -10,7 +10,7 @@
 namespace Polyboid
 {
 	VulkanStagingBuffer::VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size): m_Size(size),
-		m_Context(context)
+		m_Context(context), m_AllocInfo()
 	{
 		VmaAllocator allocator = (*context->GetAllocator());
 
@@ -45,15 +45,41 @@ namespace Polyboid
 		vmaUnmapMemory(allocator, m_Memory);
 	}
 
+	VulkanStagingBuffer::VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size): m_Size(size), m_Context(context)
+	{
+		VmaAllocator allocator = (*context->GetAllocator());
+
+
+		vk::BufferCreateInfo createInfo;
+		createInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		createInfo.size = static_cast<vk::DeviceSize>(size);
+		m_Size = size;
+
+		VmaAllocationCreateInfo memCreateInfo{};
+		memCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+		memCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		memCreateInfo.priority = 1.0f;
+
+		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
+
+		VkBuffer buffer;
+
+		auto result = vmaCreateBuffer(allocator, &vkCreateInfo, &memCreateInfo, &buffer, &m_Memory, &m_AllocInfo);
+
+		m_Buffer = buffer;
+
+		if (result != VK_SUCCESS)
+		{
+			spdlog::info("Failed to create indexBuffer");
+			__debugbreak();
+		}
+	}
+
 	void VulkanStagingBuffer::SetData(const void* data)
 	{
 		VmaAllocator allocator = (*m_Context->GetAllocator());
-
-		void* gpuData = nullptr;
-		vmaMapMemory(allocator, m_Memory, &gpuData);
-		std::memcpy(gpuData, data, m_Size);
-		vmaUnmapMemory(allocator, m_Memory);
-
+		std::memcpy(m_AllocInfo.pMappedData, data, m_Size);
+		vmaFlushAllocation(allocator, m_Memory, 0, VK_WHOLE_SIZE);
 
 	}
 

@@ -146,6 +146,8 @@ namespace Polyboid
         virtual std::any GetHandle() = 0;
         virtual ~StagingBuffer() = default;
 
+        static Ref<StagingBuffer> Create(uint32_t size);
+
     };
 
 }

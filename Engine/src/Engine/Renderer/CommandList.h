@@ -8,6 +8,8 @@
 
 namespace Polyboid
 {
+	enum class ShaderType : uint8_t;
+	class UniformBuffer;
 	enum class IndexDataType;
 	class PipelineDescriptorSet;
 	class PipelineState;
@@ -37,6 +39,7 @@ namespace Polyboid
 		virtual void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) = 0;
 		virtual void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) = 0;
 		virtual void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) = 0;
+		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) = 0;
 
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;
@@ -47,6 +50,7 @@ namespace Polyboid
 		virtual void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
 		virtual void DrawIndexed(uint32_t count, const IndexDataType& type) = 0;
 		virtual void DrawArrays(uint32_t count) = 0;
+		virtual void PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
 
 		virtual ~CommandBuffer() = default;
 

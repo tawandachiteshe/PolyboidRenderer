@@ -71,6 +71,7 @@ namespace Polyboid
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
         static void SetCurrentCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
+        static uint32_t GetSwapChainImageIndex();
 
         static void Clear(ClearSettings settings = {});
 
@@ -86,6 +87,11 @@ namespace Polyboid
         static void BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
         static void SetViewport(const Viewport& viewport);
         static void SetScissor(const Rect& rect);
+        static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
+        static void SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data);
+        static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<UniformBuffer>>& buffers);
+        static void VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
+        static void FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
 
         static Ref<RenderPass> GetDefaultRenderTarget();
         static Ref<PipelineState> GetDefaultPipeline();

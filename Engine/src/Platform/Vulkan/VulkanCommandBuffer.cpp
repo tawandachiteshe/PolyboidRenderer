@@ -20,6 +20,7 @@
 #include "Engine/Renderer/Image2D.h"
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/UniformBuffer.h"
 #include "vulkan/vulkan.hpp"
 #include "Utils/VulkanDevice.h"
 #include "Utils/Common.h"
@@ -260,6 +261,33 @@ namespace Polyboid
 		m_CommandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, vulkanPipeline);
 	}
 
+#undef MemoryBarrier
+
+	void VulkanCommandBuffer::CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo)
+	{
+		vk::BufferMemoryBarrier memBarrier{};
+
+		memBarrier.setOffset(0);
+		memBarrier.size = VK_WHOLE_SIZE;
+		memBarrier.buffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
+		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+		
+		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
+
+		auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
+		auto dstBuffer = std::any_cast<vk::Buffer>(dstUbo->GetHandle());
+
+		vk::BufferCopy bufferCopy{};
+		bufferCopy.size = srcUbo->GetSizeInBytes();
+		bufferCopy.dstOffset = 0;
+		bufferCopy.srcOffset = 0;
+
+		m_CommandBuffer.copyBuffer(srcBuffer, dstBuffer, { bufferCopy });
+		
+
+	}
+
 	void VulkanCommandBuffer::SetViewPort(const Viewport& viewport)
 	{
 		vk::Viewport vkViewport{};
@@ -301,6 +329,25 @@ namespace Polyboid
 	void VulkanCommandBuffer::DrawArrays(uint32_t count)
 	{
 		m_CommandBuffer.draw(count, 1, 0, 0);
+	}
+
+	void VulkanCommandBuffer::PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
+	{
+		const auto vkPipeline = std::reinterpret_pointer_cast<VulkanGraphicsPipeline>(pipeline);
+		auto pipelineLayout = vkPipeline->GetPipelineLayout();
+
+		vk::ShaderStageFlagBits stage{};
+
+		switch (type)
+		{
+		case ShaderType::Vertex: stage = vk::ShaderStageFlagBits::eVertex; break;
+		case ShaderType::Fragment: stage = vk::ShaderStageFlagBits::eFragment; break;
+		case ShaderType::Compute: stage = vk::ShaderStageFlagBits::eCompute; break;
+		case ShaderType::None: break;
+		default: ;
+		}
+
+		m_CommandBuffer.pushConstants(pipelineLayout, stage, offset, size, data);
 	}
 
 	void VulkanCommandBuffer::Reset()

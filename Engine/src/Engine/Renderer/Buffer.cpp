@@ -20,4 +20,9 @@ namespace Polyboid
 	{
 		return RenderAPI::Get()->CreateIndexBuffer(IndexDataType::UnsignedInt, count, indices);
 	}
+
+	Ref<StagingBuffer> StagingBuffer::Create(uint32_t size)
+	{
+		return RenderAPI::Get()->CreateStagingBuffer(size);
+	}
 }

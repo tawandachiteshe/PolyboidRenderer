@@ -13,10 +13,12 @@ namespace Polyboid
 		VmaAllocation m_Memory = nullptr;
 		uint32_t m_Size = 0;
 		const VkRenderAPI* m_Context = nullptr;
+		VmaAllocationInfo m_AllocInfo{};
 
 	public:
 
 		VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
+		VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size);
 		void SetData(const void* data) override;
 
 		virtual void Destroy();
