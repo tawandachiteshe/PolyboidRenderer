@@ -288,6 +288,30 @@ namespace Polyboid
 
 	}
 
+	void VulkanCommandBuffer::CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo,
+		const Ref<StorageBuffer>& storageBuffer)
+	{
+		vk::BufferMemoryBarrier memBarrier{};
+
+		memBarrier.setOffset(0);
+		memBarrier.size = VK_WHOLE_SIZE;
+		memBarrier.buffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
+		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
+
+		auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
+		auto dstBuffer = std::any_cast<vk::Buffer>(storageBuffer->GetHandle());
+
+		vk::BufferCopy bufferCopy{};
+		bufferCopy.size = srcUbo->GetSizeInBytes();
+		bufferCopy.dstOffset = 0;
+		bufferCopy.srcOffset = 0;
+
+		m_CommandBuffer.copyBuffer(srcBuffer, dstBuffer, { bufferCopy });
+	}
+
 	void VulkanCommandBuffer::SetViewPort(const Viewport& viewport)
 	{
 		vk::Viewport vkViewport{};

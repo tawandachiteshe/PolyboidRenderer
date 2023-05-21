@@ -46,6 +46,7 @@ namespace Polyboid
 		std::vector<Ref<VulkanShaderStorage>> m_StorageBuffers;
 		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
 		std::vector<Ref<VulkanStagingBuffer>> m_StagingBuffers;
+		std::vector<vk::CommandBuffer> m_CommandBuffersBatching;
 
 
 	private:
@@ -70,7 +71,9 @@ namespace Polyboid
 
 		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
 			const Ref<Fence>& inFlight) override;
-
+		void SubmitCommandBuffer(const std::vector<Ref<CommandBuffer>>& cmdBuffers,
+			const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
+			const Ref<Fence>& inFlight) override;
 		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) override;
 
 

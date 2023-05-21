@@ -100,6 +100,7 @@ namespace Polyboid
 		virtual Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) = 0;
 
 		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
+		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandBuffer>>& cmdBuffers, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
 		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) = 0;
 
 		virtual void WaitForFences(const Ref<Fence>& fence) = 0;

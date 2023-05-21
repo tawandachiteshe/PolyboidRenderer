@@ -42,6 +42,7 @@ namespace Polyboid
 		void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) override;
 		void BindGraphicsPipeline(const Ref<PipelineState>& pipeline) override;
 		void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) override;
+		void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) override;
 
 
 		void SetViewPort(const Viewport& viewport) override;

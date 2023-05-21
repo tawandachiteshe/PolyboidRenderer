@@ -137,8 +137,8 @@ namespace Polyboid
 		Engine::Init();
 
 		m_CommandList = CommandList::Create({3});
-		auto mainSyncObjects = RendererSyncObjects::Create(3);
-
+		auto secondCommandList = CommandList::Create({ 3 });
+		
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
 
@@ -217,7 +217,8 @@ namespace Polyboid
 
 		std::vector<Ref<UniformBuffer>> uniformBuffers;
 		std::vector<Ref<StorageBuffer>> storageBuffers;
-		std::vector<Ref<StagingBuffer>> stagingBuffers;
+		std::vector<Ref<StagingBuffer>> uniformStagingBuffers;
+		std::vector<Ref<StagingBuffer>> storageStagingBuffers;
 		//
 		for (int i = 0; i < 3; ++i)
 		{
@@ -229,9 +230,12 @@ namespace Polyboid
 			descSets[i]->WriteStorageBuffer(1, storageBuffer);
 			storageBuffers.emplace_back(storageBuffer);
 
-			auto staging = StagingBuffer::Create(sizeof(CameraBufferData));
-			stagingBuffers.emplace_back(staging);
-		
+			auto uniformStaging = StagingBuffer::Create(sizeof(CameraBufferData));
+			uniformStagingBuffers.emplace_back(uniformStaging);
+
+			auto storageStaging = StagingBuffer::Create(sizeof(vert));
+			storageStagingBuffers.emplace_back(storageStaging);
+
 			descSets[i]->WriteTexture2D(2, checkerTexture);
 		
 		
@@ -268,11 +272,21 @@ namespace Polyboid
 			//camerData.view = camerData.view * glm::rotate(glm::mat4(), 0.12f, glm::vec3({0.0f, 0.0f, 1.0f}));
 
 			//Note these commands are executed later
-			Renderer::BeginFrame(mainSyncObjects);
+			Renderer::BeginFrame();
+
+			Renderer::BeginCommands(secondCommandList);
+
+			Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
+			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
+			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
+			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
+
+
+			Renderer::EndCommands();
+			Renderer::SubmitCommandList(secondCommandList);
+
 			Renderer::BeginCommands(m_CommandList);
 
-			Renderer::SetStagingBufferData(stagingBuffers, &camerData);
-			Renderer::CopyStagingBuffer(stagingBuffers, uniformBuffers);
 
 			Renderer::BeginSwapChainRenderPass();
 			Renderer::Clear(ClearSettings{ { 0.2, 0.2, 0.2, 1.0f } });

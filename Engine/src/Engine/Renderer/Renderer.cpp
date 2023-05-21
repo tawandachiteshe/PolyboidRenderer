@@ -91,25 +91,20 @@ namespace Polyboid
 
 	void Renderer::SubmitCommandList(const Ref<CommandList>& cmdList)
 	{
-		auto& frame = GetCurrentFrame();
-		auto& syncObjects = s_Data->m_CurrentSyncObjects;
-
-		const auto& inFlightFence = syncObjects->GetInFlightFence(frame);
-		const auto& imageSemaphore = syncObjects->GetImageSemaphore(frame);
-		const auto& renderSemaphore = syncObjects->GetRenderSemaphore(frame);
+		
 
 
 		auto cmdBuffer = cmdList->GetCommandBufferAt(s_Data->m_ImageIndex);
-		s_Data->m_Context->SubmitCommandBuffer(cmdBuffer, imageSemaphore, renderSemaphore, inFlightFence);
+		s_Data->m_CommandBuffers.emplace_back(cmdBuffer);
+
+		
 	}
 
-	void Renderer::BeginFrame(const Ref<RendererSyncObjects>& syncObjects)
+	void Renderer::BeginFrame()
 	{
-		s_Data->m_CurrentSyncObjects = syncObjects;
+
 		auto& frame = s_Data->m_CurrentFrame;
-
 		const auto& imageFence = s_Data->m_CurrentSyncObjects->GetInFlightFence(frame);
-
 		RenderAPI::Get()->WaitForFences(imageFence);
 
 		const auto& imageSemaphore = s_Data->m_CurrentSyncObjects->GetImageSemaphore(frame);
@@ -120,9 +115,12 @@ namespace Polyboid
 	{
 		auto frame = s_Data->m_CurrentFrame;
 
-
 		const auto& syncObjects = s_Data->m_CurrentSyncObjects;
 		const auto& renderSemaphore = syncObjects->GetRenderSemaphore(frame);
+		const auto& inFlightFence = syncObjects->GetInFlightFence(frame);
+		const auto& imageSemaphore = syncObjects->GetImageSemaphore(frame);
+
+		s_Data->m_Context->SubmitCommandBuffer(s_Data->m_CommandBuffers, imageSemaphore, renderSemaphore, inFlightFence);
 
 		s_Data->m_Swapchain->Present(renderSemaphore);
 
@@ -130,6 +128,8 @@ namespace Polyboid
 		frame = (frame + 1) % maxFrames;
 
 		s_Data->m_CurrentFrame = frame;
+
+		s_Data->m_CommandBuffers.clear();
 	}
 
 	void Renderer::DisplayImGuiTexture(ImTextureID ds)
@@ -263,8 +263,15 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers.at(GetSwapChainImageIndex()), buffers.at(GetSwapChainImageIndex()));
 	}
 
+	void Renderer::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
+		const std::vector<Ref<StorageBuffer>>& buffers)
+	{
+		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers.at(GetSwapChainImageIndex()), buffers.at(GetSwapChainImageIndex()));
+	}
+	
+
 	void Renderer::VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
-		uint32_t dataSize, uint32_t offset)
+	                                         uint32_t dataSize, uint32_t offset)
 	{
 		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Vertex,data, dataSize, offset);
 	}

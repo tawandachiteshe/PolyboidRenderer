@@ -70,6 +70,39 @@ namespace Polyboid
 
 	}
 
+	void VkRenderAPI::SubmitCommandBuffer(const std::vector<Ref<CommandBuffer>>& cmdBuffers,
+		const Ref<Semaphore>& _imageAvailable, const Ref<Semaphore>& _renderFinished, const Ref<Fence>& inFlight)
+	{
+
+		vk::Fence inFlightFence = std::any_cast<vk::Fence>(inFlight->GetHandle());
+		vk::Semaphore imageSemaphore = std::any_cast<vk::Semaphore>(_imageAvailable->GetHandle());
+		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderFinished->GetHandle());
+
+		for (auto& buffer : cmdBuffers)
+		{
+			m_CommandBuffersBatching.push_back(std::any_cast<vk::CommandBuffer>(buffer->GetHandle()));
+		}
+		
+		auto gfxQueue = GetDevice()->GetGraphicsQueue();
+		vk::SubmitInfo submitInfo{};
+		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &imageSemaphore;
+		submitInfo.pWaitDstStageMask = waitStages;
+
+		submitInfo.setCommandBuffers(m_CommandBuffersBatching);
+
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &renderSemaphore;
+
+
+		vk::Result result = gfxQueue.submit(1, &submitInfo, inFlightFence);
+		vk::resultCheck(result, "Failed to submit commands");
+
+		m_CommandBuffersBatching.clear();
+
+	}
+
 	void VkRenderAPI::SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
 	{
 
@@ -99,6 +132,8 @@ namespace Polyboid
 		m_PhysicalDevice = std::make_shared<VulkanPhysicalDevice>(m_Instance, m_Surface);
 		m_Device = std::make_shared<VulkanDevice>(m_PhysicalDevice);
 		m_Allocator = std::make_shared<VulkanAllocator>(this);
+
+		m_CommandBuffersBatching.reserve(10);
 
 	}
 

@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	class StorageBuffer;
 	enum class ShaderType : uint8_t;
 	class UniformBuffer;
 	enum class IndexDataType;
@@ -40,6 +41,7 @@ namespace Polyboid
 		virtual void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) = 0;
 		virtual void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) = 0;
 		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) = 0;
+		virtual void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) = 0;
 
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;

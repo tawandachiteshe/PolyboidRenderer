@@ -127,7 +127,7 @@ namespace Polyboid
 
 
 		vk::BufferCreateInfo createInfo;
-		createInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer;
+		createInfo.usage = vk::BufferUsageFlagBits::eStorageBuffer | vk::BufferUsageFlagBits::eTransferDst;
 		//vk::
 		createInfo.size = size;
 		m_Size = size;
@@ -136,7 +136,9 @@ namespace Polyboid
 		VmaAllocationCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 		vmaCreateInfo.priority = 1.0f;
-
+		vmaCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+			VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
+			VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		VkBuffer buffer;
 

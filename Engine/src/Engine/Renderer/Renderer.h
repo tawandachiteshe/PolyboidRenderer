@@ -29,6 +29,7 @@ namespace Polyboid
         Ref<Swapchain> m_Swapchain;
         Ref<CommandList> m_CurrentCommandList;
         Ref<CommandBuffer> m_CommandBuffer;
+        std::vector<Ref<CommandBuffer>> m_CommandBuffers;
 
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
@@ -61,7 +62,7 @@ namespace Polyboid
         static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
     	static void EndCommands();
         static void SubmitCommandList(const Ref<CommandList>& cmdList);
-        static void BeginFrame(const Ref<RendererSyncObjects>& syncObjects);
+        static void BeginFrame();
         static void EndFrame();
         static void DisplayImGuiTexture(ImTextureID ds);
         static void RenderImGui(const LayerContainer& layerContainer);
@@ -90,6 +91,7 @@ namespace Polyboid
         static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data);
         static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<UniformBuffer>>& buffers);
+        static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<StorageBuffer>>& buffers);
         static void VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
         static void FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
 
