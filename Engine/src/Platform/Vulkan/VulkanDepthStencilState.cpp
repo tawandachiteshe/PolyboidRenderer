@@ -112,9 +112,8 @@ namespace Polyboid
 		m_CreateInfo.maxDepthBounds = 1.0f;
 		m_CreateInfo.depthBoundsTestEnable = m_DepthMode.DepthEnable;
 		m_CreateInfo.depthWriteEnable = m_DepthMode.DepthWriteMask == DepthWrite::Enable;
+		m_CreateInfo.depthTestEnable = m_DepthMode.DepthEnable;
 		m_CreateInfo.depthCompareOp = depthFunctionToVkCompareOp(m_DepthMode.depthFunction);
-		m_CreateInfo.stencilTestEnable = false;
-
 		m_CreateInfo.stencilTestEnable = m_StencilMode.StencilEnabled;
 
 		vk::StencilOpState front;

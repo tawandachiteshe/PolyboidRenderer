@@ -54,7 +54,7 @@ namespace Polyboid
         virtual void Bind() = 0;
         virtual void UnBind() = 0;
 
-        virtual void AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding = 0) = 0;
+        virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding = 0) = 0;
 
         virtual std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) = 0;
 

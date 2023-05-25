@@ -29,7 +29,8 @@ namespace Polyboid
 		SwapchainSettings m_Settings;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
 		uint32_t m_SwapchainCurrentImageIndex = 0;
-		std::vector<Ref<VulkanTexture2D>> m_Textures;
+		std::vector<Ref<VulkanTexture2D>> m_ColorTextures;
+		std::vector<Ref<VulkanTexture2D>> m_DepthTextures;
 		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
 		std::vector<Ref<Framebuffer>> m_FramebuffersRefs;
 		vk::Queue m_PresentQueue;

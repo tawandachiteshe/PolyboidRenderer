@@ -269,7 +269,7 @@ namespace Polyboid
 	{
 	}
 
-	void VulkanGraphicsPipeline::AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding)
+	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding)
 	{
 		m_DescPool = std::reinterpret_pointer_cast<VulkanPipelineDescriptorSetPool>(descPool);
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
@@ -296,6 +296,8 @@ namespace Polyboid
 
 		m_Sets[setBinding] = m_PipeDescSets;
 
+
+		return m_PipeDescSets;
 
 	}
 

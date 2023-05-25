@@ -59,7 +59,7 @@ namespace Polyboid
 
      struct DepthMode
     {
-        bool DepthEnable = false;
+        bool DepthEnable = true;
          
         DepthWrite DepthWriteMask = DepthWrite::Enable;
         DepthFunction depthFunction = DepthFunction::Less;

@@ -100,7 +100,7 @@ namespace Polyboid
 		createViewInfo.format = Utils::ConvertToVulkanFormat(settings.sizedFormat);
 		createViewInfo.image = std::any_cast<vk::Image>(m_Image->GetHandle());
 		createViewInfo.components = vk::ComponentMapping();
-		createViewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		createViewInfo.subresourceRange.aspectMask = Utils::ImageFormatToAspectBits(settings.sizedFormat); //vk::ImageAspectFlagBits::eColor;
 		createViewInfo.subresourceRange.baseMipLevel = 0;
 		createViewInfo.subresourceRange.levelCount = 1;
 		createViewInfo.subresourceRange.baseArrayLayer = 0;

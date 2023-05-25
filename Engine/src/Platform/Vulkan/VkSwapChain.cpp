@@ -191,10 +191,20 @@ namespace Polyboid
 		//Abstract this to something cool
 		for (auto& swapchainImage : swapchainImages)
 		{
-			m_Textures.push_back(std::make_shared<VulkanTexture2D>(context, swapchainImage));
+			m_ColorTextures.push_back(std::make_shared<VulkanTexture2D>(context, swapchainImage));
+			TextureSettings textureSettings{};
+			textureSettings.Height = createInfo.imageExtent.height;
+			textureSettings.Width = createInfo.imageExtent.width;
+			textureSettings.usage = ImageUsage::DepthStencilAttachment;
+			textureSettings.sizedFormat = EngineGraphicsFormats::Depth32FStencil8;
+
+			auto depthTexture = std::make_shared<VulkanTexture2D>(context, textureSettings);
+			m_DepthTextures.push_back(depthTexture);
 		}
 
-		for (auto& texture : m_Textures)
+		
+		uint32_t textureCount = 0;
+		for (auto& colorTexture : m_ColorTextures)
 		{
 			FramebufferSettings framebufferSettings;
 			framebufferSettings.height = createInfo.imageExtent.height;
@@ -202,11 +212,14 @@ namespace Polyboid
 			framebufferSettings.attachmentSlots = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
 
 			std::vector<Ref<VulkanTexture2D>> attachments;
-			attachments.push_back(texture);
+			attachments.push_back(colorTexture);
+			attachments.push_back(m_DepthTextures[textureCount]);
 
 			auto framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, m_RenderPass.get(), attachments);
 			m_Framebuffers.push_back(framebuffer);
 			m_FramebuffersRefs.push_back(framebuffer);
+
+			textureCount++;
 		}
 
 		
@@ -266,7 +279,7 @@ namespace Polyboid
 		m_Framebuffers.clear();
 		m_FramebuffersRefs.clear();
 		m_Formats.clear();
-		m_Textures.clear();
+		m_ColorTextures.clear();
 	}
 
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)

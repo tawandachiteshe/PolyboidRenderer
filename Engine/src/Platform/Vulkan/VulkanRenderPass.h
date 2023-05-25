@@ -18,7 +18,7 @@ namespace Polyboid
 		vk::RenderPassBeginInfo m_RenderPassBeginInfo{};
 		vk::ClearColorValue m_ColorValue;
 		vk::ClearDepthStencilValue m_DepthValue;
-		std::array<vk::ClearValue, 1> m_ClearValues;
+		std::array<vk::ClearValue, 2> m_ClearValues;
 		const VkRenderAPI* m_Context = nullptr;
 
 	public:

@@ -80,7 +80,7 @@ namespace Polyboid
 		void Bind() override;
 		void UnBind() override;
 
-		void AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding) override;
+		std::vector<Ref<PipelineDescriptorSet>> AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding) override;
 
 		std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) override;
 

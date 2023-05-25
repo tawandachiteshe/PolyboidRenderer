@@ -1,7 +1,7 @@
 ﻿#include "boidpch.h"
 
 
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "Application.h"
 #include <spdlog/spdlog.h>
 
@@ -19,17 +19,12 @@
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
 #include "Engine/Renderer/PipelineState.h"
-#include "Engine/Renderer/RendererSyncObjects.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
-#include "Platform/Vulkan/VkRenderAPI.h"
-#include "Platform/Vulkan/VkSwapChain.h"
-#include "Platform/Vulkan/VulkanRenderPass.h"
-#include "Platform/Vulkan/Utils/VulkanDevice.h"
 #include "Registry/ShaderRegistry.h"
 
 
@@ -193,8 +188,7 @@ namespace Polyboid
 
 		m_Pipeline = skyBoxPipeline;
 
-		skyBoxPipeline->AllocateDescSetsFromShaders(pool);
-		auto descSets = skyBoxPipeline->GetDescriptorSets(0);
+		auto descSets = skyBoxPipeline->AllocateDescSetsFromShaders(pool);
 
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
@@ -214,6 +208,7 @@ namespace Polyboid
 
 		CameraBufferData camerData{};
 		EntityBufferData entityBufferData{};
+		EntityBufferData entityBufferData2{};
 
 		std::vector<Ref<UniformBuffer>> uniformBuffers;
 		std::vector<Ref<StorageBuffer>> storageBuffers;
@@ -243,7 +238,7 @@ namespace Polyboid
 		}
 
 		camerData.projection = glm::perspective(1600.f / 900.f, glm::radians(45.0f), 0.01f, 1000.0f);
-		camerData.view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -1.0f}) * glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), {0.0f, 1.0f, 0.0f});
+		camerData.view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -1.0f });
 
 		
 
@@ -268,6 +263,8 @@ namespace Polyboid
 			{
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
+
+			entityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f  }) * glm::scale(glm::mat4(1.0f), { 0.2, 0.2, 0.2 });;
 
 			//camerData.view = camerData.view * glm::rotate(glm::mat4(), 0.12f, glm::vec3({0.0f, 0.0f, 1.0f}));
 
@@ -311,6 +308,9 @@ namespace Polyboid
 			Renderer::BindVertexBuffer(triVerts);
 			Renderer::BindIndexBuffer(triIdxs);
 
+			Renderer::DrawIndexed(6);
+
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
 			Renderer::DrawIndexed(6);
 
 			Renderer::EndSwapChainRenderPass();

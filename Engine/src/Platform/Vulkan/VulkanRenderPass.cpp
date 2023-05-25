@@ -35,16 +35,8 @@ namespace Polyboid
 // LAYOUT_PRESENT_SRC_KHR to be ready to present.  This is all done as part of
 // the renderpass, no barriers are necessary.
 
-		// vk::SubpassDependency memDependency;
-		// memDependency.setSrcSubpass(VK_SUBPASS_EXTERNAL);
-		// memDependency.setDstSubpass(0); // The subpass index you are currently in
-		// memDependency.setSrcStageMask(vk::PipelineStageFlagBits::eAllCommands); // Modify to match the appropriate stage(s)
-		// memDependency.setDstStageMask(vk::PipelineStageFlagBits::eAllCommands); // Modify to match the appropriate stage(s)
-		// memDependency.setSrcAccessMask(vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite); // Modify to match the appropriate access flag(s)
-		// memDependency.setDstAccessMask(vk::AccessFlagBits::eMemoryRead | vk::AccessFlagBits::eMemoryWrite); // Modify to match the appropriate access flag(s)
 
-
-		std::array<vk::SubpassDependency, 1> dependencies = {
+		std::array<vk::SubpassDependency, 2> dependencies = {
 		  // Depth buffer is shared between swapchain images
 			vk::SubpassDependency()  // Image layout transition
 			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
@@ -53,11 +45,20 @@ namespace Polyboid
 			.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
 			.setSrcAccessMask(vk::AccessFlagBits())
 			.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
-			.setDependencyFlags(vk::DependencyFlags()) };
+			.setDependencyFlags(vk::DependencyFlagBits::eByRegion),
+			vk::SubpassDependency()  // Image layout transition
+			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+			.setDstSubpass(0)
+			.setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests)
+			.setDstStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests)
+			.setSrcAccessMask(vk::AccessFlagBits())
+			.setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentRead)
+			.setDependencyFlags(vk::DependencyFlagBits::eByRegion)
+		};
 
 
 
-		std::array<vk::AttachmentDescription, 1> const attachments = {
+		std::array<vk::AttachmentDescription, 2> const attachments = {
 			vk::AttachmentDescription()
 				.setFormat(vk::Format::eB8G8R8A8Unorm)
 				.setSamples(vk::SampleCountFlagBits::e1)
@@ -67,14 +68,24 @@ namespace Polyboid
 				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
 				.setInitialLayout(vk::ImageLayout::eUndefined)
 				.setFinalLayout(vk::ImageLayout::ePresentSrcKHR),
+			vk::AttachmentDescription()
+				.setFormat(vk::Format::eD32SfloatS8Uint)
+				.setSamples(vk::SampleCountFlagBits::e1)
+				.setLoadOp(vk::AttachmentLoadOp::eClear)
+				.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setInitialLayout(vk::ImageLayout::eUndefined)
+				.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
 		};
 
 		auto const color_reference = vk::AttachmentReference().setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		auto const depth_reference = vk::AttachmentReference().setAttachment(1).setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 
 		auto const subpass = vk::SubpassDescription()
 			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
 			.setColorAttachments(color_reference)
-			.setPDepthStencilAttachment(nullptr);
+			.setPDepthStencilAttachment(&depth_reference);
 
 
 		const auto render_pass_result = device.createRenderPass(
@@ -87,7 +98,11 @@ namespace Polyboid
 		m_ColorValue.float32[2] = m_ClearSettings.color.z;
 		m_ColorValue.float32[3] = m_ClearSettings.color.w;
 
+		m_DepthValue.depth = 1.0f;
+		m_DepthValue.stencil = 0u;
+
 		m_ClearValues[0] = m_ColorValue;
+		m_ClearValues[1] = m_DepthValue;
 	}
 
 	void VulkanRenderPass::Destroy(vk::Device device)
@@ -135,7 +150,7 @@ namespace Polyboid
 		m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle();
 		m_RenderPassBeginInfo.renderArea.offset = vk::Offset2D{0, 0};
 		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{m_Settings.Width, m_Settings.Height};
-		m_RenderPassBeginInfo.clearValueCount = 1;
+		m_RenderPassBeginInfo.clearValueCount = 2;
 		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();
 
 		vk::Framebuffer::NativeType fb = m_RenderPassBeginInfo.framebuffer;
