@@ -8,6 +8,8 @@
 
 namespace Polyboid
 {
+	class StorageBufferSet;
+	class UniformBufferSet;
 	class PipelineDescriptorSet;
 	class PipelineDescriptorSetPool;
 	class MultiSampleState;
@@ -54,8 +56,13 @@ namespace Polyboid
         virtual void Bind() = 0;
         virtual void UnBind() = 0;
 
-        virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding = 0) = 0;
+        virtual void BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet, uint32_t setBinding = 0) = 0;
+        virtual void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet, uint32_t setBinding = 0) = 0;
+        virtual void BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding = 0) = 0;
 
+        virtual void WriteSetResourceBindings(uint32_t set = 0) = 0;
+
+        virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding = 0) = 0;
         virtual std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) = 0;
 
         static Ref<PipelineState> CreateGraphicsPipeline();

@@ -110,7 +110,7 @@ namespace Polyboid
 	{
 		m_CreateInfo.minDepthBounds = 0.0f;
 		m_CreateInfo.maxDepthBounds = 1.0f;
-		m_CreateInfo.depthBoundsTestEnable = m_DepthMode.DepthEnable;
+		m_CreateInfo.depthBoundsTestEnable = false;
 		m_CreateInfo.depthWriteEnable = m_DepthMode.DepthWriteMask == DepthWrite::Enable;
 		m_CreateInfo.depthTestEnable = m_DepthMode.DepthEnable;
 		m_CreateInfo.depthCompareOp = depthFunctionToVkCompareOp(m_DepthMode.depthFunction);

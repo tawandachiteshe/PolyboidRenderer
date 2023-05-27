@@ -123,7 +123,7 @@ namespace Polyboid
 			Ref<VulkanSamplerState> sampler = std::make_shared<VulkanSamplerState>(context, samplerSettings);
 			m_SamplerState = sampler;
 			auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
-			//		m_ImguiDS = ImGui_ImplVulkan_AddTexture(vulkanSampler, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		
 
 			m_ImageDescriptorInfo.sampler = vulkanSampler;
 			m_ImageDescriptorInfo.imageView = view;

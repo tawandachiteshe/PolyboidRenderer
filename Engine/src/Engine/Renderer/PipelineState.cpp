@@ -6,6 +6,7 @@
 
 namespace Polyboid
 {
+
 	Ref<PipelineState> PipelineState::CreateGraphicsPipeline()
 	{
 		return RenderAPI::Get()->CreatePipelineState();

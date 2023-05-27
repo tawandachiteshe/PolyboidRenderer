@@ -10,6 +10,9 @@
 
 namespace Polyboid
 {
+	class StorageBufferSet;
+	class StagingBufferSet;
+	class UniformBufferSet;
 	struct Rect;
 	struct Viewport;
 	class PipelineDescriptorSet;
@@ -55,6 +58,7 @@ namespace Polyboid
     	static void Init(RenderAPI* context, const ApplicationSettings& settings);
         static void BeginDraw(const Ref<Camera>& camera);
         static void SetMaxFramesInFlight(uint32_t frames);
+        static uint32_t GetMaxFramesInFlight();
         static uint32_t& GetCurrentFrame();
         static void EndDraw();
         static void BeginCommands(const Ref<CommandList>& cmdList);
@@ -64,10 +68,6 @@ namespace Polyboid
         static void SubmitCommandList(const Ref<CommandList>& cmdList);
         static void BeginFrame();
         static void EndFrame();
-        static void DisplayImGuiTexture(ImTextureID ds);
-        static void RenderImGui(const LayerContainer& layerContainer);
-        static void BeginImGui();
-        static void EndImGui();
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
@@ -88,10 +88,18 @@ namespace Polyboid
         static void BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
         static void SetViewport(const Viewport& viewport);
         static void SetScissor(const Rect& rect);
-        static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
+
+    	static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data);
         static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<UniformBuffer>>& buffers);
         static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<StorageBuffer>>& buffers);
+
+        static void SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize);
+        static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers);
+
+
         static void VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
         static void FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
 

@@ -5,6 +5,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Buffer.h"
+#include "BufferSet.h"
 #include "CommandList.h"
 #include "Framebuffer.h"
 #include "PipelineState.h"
@@ -55,6 +56,11 @@ namespace Polyboid
 	void Renderer::SetMaxFramesInFlight(uint32_t frames)
 	{
 		s_Data->m_MaxFramesInFlight = frames;
+	}
+
+	uint32_t Renderer::GetMaxFramesInFlight()
+	{
+		return s_Data->m_MaxFramesInFlight;
 	}
 
 	uint32_t& Renderer::GetCurrentFrame()
@@ -132,25 +138,6 @@ namespace Polyboid
 		s_Data->m_CommandBuffers.clear();
 	}
 
-	void Renderer::DisplayImGuiTexture(ImTextureID ds)
-	{
-		// RenderCommand::AddCommand(ALLOC_COMMAND(class TestCommand, ds));
-	}
-
-	void Renderer::RenderImGui(const LayerContainer& layerContainer)
-	{
-		//RenderCommand::AddCommand(ALLOC_COMMAND(RenderImGuiCommand, layerContainer));
-	}
-
-	void Renderer::BeginImGui()
-	{
-		//RenderCommand::AddCommand(ALLOC_COMMAND(BeginImguiRender, s_Data->m_CurrentCommandList));
-	}
-
-	void Renderer::EndImGui()
-	{
-		//RenderCommand::AddCommand(ALLOC_COMMAND(EndImguiRender));
-	}
 
 	void Renderer::BeginSwapChainRenderPass()
 	{
@@ -268,7 +255,27 @@ namespace Polyboid
 	{
 		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers.at(GetSwapChainImageIndex()), buffers.at(GetSwapChainImageIndex()));
 	}
-	
+
+	void Renderer::SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize)
+	{
+		buffers->Get(GetSwapChainImageIndex())->SetData(data, dataSize);
+	}
+
+	void Renderer::SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data)
+	{
+		buffers->Get(GetSwapChainImageIndex())->SetData(data);
+	}
+
+	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
+	{
+		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetSwapChainImageIndex()), buffers->Get(GetSwapChainImageIndex()));
+	}
+
+	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers)
+	{
+		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetSwapChainImageIndex()), buffers->Get(GetSwapChainImageIndex()));
+	}
+
 
 	void Renderer::VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
 	                                         uint32_t dataSize, uint32_t offset)

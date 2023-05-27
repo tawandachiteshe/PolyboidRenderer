@@ -26,6 +26,7 @@ namespace Polyboid
 		void SetFramebuffer(const Ref<Framebuffer>& framebuffer) override;
 		Ref<Framebuffer> GetFramebuffer() override;
 
+		VulkanRenderPass(const VkRenderAPI* context);
 		VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings);
 		void Destroy(vk::Device device);
 

@@ -45,6 +45,15 @@ namespace Polyboid
     }
 
 
+    ImTextureID Imgui::GetVulkanTextureID(const Ref<Texture>& texture)
+    {
+        auto vulkanSampler = std::any_cast<vk::Sampler>(texture->GetSamplerHandle());
+        auto vulkanView = std::any_cast<vk::ImageView>(texture->GetViewHandle());
+
+    	auto ImguiDS = ImGui_ImplVulkan_AddTexture(vulkanSampler, vulkanView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+        return ImguiDS;
+    }
+
     //TODO make this api agnostic
     void Imgui::Init(const std::any& window)
     {
@@ -105,7 +114,32 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
-            s_Data.m_CommandList = std::make_shared<VulkanCommandList>(renderAPI, CommandListSettings{3});
+            VkDescriptorPoolSize pool_sizes[] =
+            {
+                { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+                { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+            };
+
+            VkDescriptorPoolCreateInfo pool_info = {};
+            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+            pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+            pool_info.maxSets = 1000;
+            pool_info.poolSizeCount = std::size(pool_sizes);
+            pool_info.pPoolSizes = pool_sizes;
+
+            VkDescriptorPool imguiPool;
+            (vkCreateDescriptorPool(renderAPI->GetDevice()->GetVulkanDevice(), &pool_info, nullptr, &imguiPool));
+            vk::DescriptorPool pool = imguiPool;
+            s_Data.m_CommandPool = pool;
 
             s_Data.m_RenderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
 
@@ -120,7 +154,7 @@ namespace Polyboid
             init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
             init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
             init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
-            init_info.DescriptorPool = nullptr;
+            init_info.DescriptorPool = pool;
             init_info.MinImageCount = 2;
             init_info.ImageCount = 3;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -185,12 +219,11 @@ namespace Polyboid
 
     void Imgui::End()
 	{
-        auto& app = Application::Get();
 
         ImGui::Render();
 
         auto cmd = s_Data.m_CommandList;
-        auto& frame = Renderer::GetCurrentFrame();
+        auto frame = Renderer::GetSwapChainImageIndex();
         auto cmdBuffer = cmd->GetCommandBufferAt(frame);
         VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
@@ -220,7 +253,8 @@ namespace Polyboid
             auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
             // s_Data.m_CommandList->Destroy(device);
-
+            device.destroyDescriptorPool(std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool));
+            
 
             ImGui_ImplVulkan_Shutdown();
         }

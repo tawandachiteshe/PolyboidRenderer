@@ -1,25 +1,31 @@
 ﻿#pragma once
 #include <any>
 
+#include "imgui.h"
 #include "Platform/Windows/WindowsWindow.h"
 
 struct ImGuiIO;
 
 namespace Polyboid
 {
+	class Texture;
 	class CommandList;
-	class VulkanDescriptorPool;
 	class VulkanRenderPass;
 	class VulkanCommandBuffer;
 	class VulkanCommandList;
 
+
+
     class Imgui
     {
 
-    
+        
 
 
     public:
+
+        static ImTextureID GetVulkanTextureID(const Ref<Texture>& texture);
+
 
         struct ImguiData
         {
@@ -28,7 +34,7 @@ namespace Polyboid
         	Ref<VulkanCommandList> m_CommandList = nullptr;
             Ref<VulkanRenderPass> m_RenderPass = nullptr;
             uint32_t swapChainImage = 0;
-            Ref<VulkanDescriptorPool> cmdPool;
+            std::any m_CommandPool;
 
         };
 

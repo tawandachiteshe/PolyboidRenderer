@@ -21,23 +21,12 @@ namespace Polyboid
 		return m_Framebuffer;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings):
-		m_Settings(settings), m_Context(context)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context): m_Context(context)
 	{
 		vk::Device device = (*context->GetDevice());
 
-		// The initial layout for the color and depth attachments will be LAYOUT_UNDEFINED
-// because at the start of the renderpass, we don't care about their contents.
-// At the start of the subpass, the color attachment's layout will be transitioned
-// to LAYOUT_COLOR_ATTACHMENT_OPTIMAL and the depth stencil attachment's layout
-// will be transitioned to LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL.  At the end of
-// the renderpass, the color attachment's layout will be transitioned to
-// LAYOUT_PRESENT_SRC_KHR to be ready to present.  This is all done as part of
-// the renderpass, no barriers are necessary.
-
 
 		std::array<vk::SubpassDependency, 2> dependencies = {
-		  // Depth buffer is shared between swapchain images
 			vk::SubpassDependency()  // Image layout transition
 			.setSrcSubpass(VK_SUBPASS_EXTERNAL)
 			.setDstSubpass(0)
@@ -103,6 +92,10 @@ namespace Polyboid
 
 		m_ClearValues[0] = m_ColorValue;
 		m_ClearValues[1] = m_DepthValue;
+	}
+
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings)
+	{
 	}
 
 	void VulkanRenderPass::Destroy(vk::Device device)

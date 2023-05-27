@@ -7,6 +7,8 @@
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
+#include "Engine/Renderer/BufferSet.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "Utils/VulkanDevice.h"
 
@@ -17,6 +19,8 @@ namespace Polyboid
 
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VkRenderAPI* context): m_Context(context)
 	{
+
+		m_DescPool = std::make_shared<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ Renderer::GetMaxFramesInFlight() });
 	}
 
 	void VulkanGraphicsPipeline::Bake()
@@ -269,11 +273,9 @@ namespace Polyboid
 	{
 	}
 
-	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding)
+	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescriptorSets(uint32_t setBinding)
 	{
-		m_DescPool = std::reinterpret_pointer_cast<VulkanPipelineDescriptorSetPool>(descPool);
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
-
 
 		vk::DescriptorSetLayout vulkanLayout = m_SetIndexWithLayout[setBinding];
 		vk::DescriptorSetAllocateInfo allocateInfo{};
@@ -306,6 +308,40 @@ namespace Polyboid
 		return m_Sets.at(set);
 	}
 
+	void VulkanGraphicsPipeline::BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet,
+		uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteUniformBuffer(binding, bufferSet->Get(i));
+		}
+	}
+
+	void VulkanGraphicsPipeline::BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
+		uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteStorageBuffer(binding, bufferSet->Get(i));
+		}
+	}
+
+	void VulkanGraphicsPipeline::BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteTexture2D(binding, bufferSet);
+		}
+	}
+
+	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)
+	{
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[set].at(i)->Commit();
+		}
+	}
+
 
 	void VulkanGraphicsPipeline::Destroy()
 	{
@@ -316,7 +352,7 @@ namespace Polyboid
 		{
 			device.destroyDescriptorSetLayout(layout);
 		}
-		
+		m_DescPool->Destroy();
 		device.destroyPipeline(m_Pipeline);
 		
 	}

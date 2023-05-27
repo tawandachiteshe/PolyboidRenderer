@@ -174,14 +174,7 @@ namespace Polyboid
 		spdlog::info("Successfully created a swapchain!");
 
 
-		RenderPassSettings renderPassSettings;
-		renderPassSettings.Width = createInfo.imageExtent.width;
-		renderPassSettings.Height = createInfo.imageExtent.height;
-		renderPassSettings.type = RenderPassType::Present;
-		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
-		renderPassSettings.debugName = "Swapchain Renderpass";
-
-		m_RenderPass = std::make_shared<VulkanRenderPass>(context, renderPassSettings);
+		m_RenderPass = std::make_shared<VulkanRenderPass>(context);
 
 		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(m_Swapchain);
 		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
@@ -280,6 +273,7 @@ namespace Polyboid
 		m_FramebuffersRefs.clear();
 		m_Formats.clear();
 		m_ColorTextures.clear();
+		m_DepthTextures.clear();
 	}
 
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)
@@ -326,6 +320,11 @@ namespace Polyboid
 
 		vk::Device device = (*m_Context->GetDevice());
 		auto ImageResult = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore, vk::Fence(), &m_SwapchainCurrentImageIndex);
+
+		if (ImageResult != vk::Result::eSuccess)
+		{
+			__debugbreak();
+		}
 
 		vk::resultCheck(ImageResult, "Failed to aquire image");
 		return  m_SwapchainCurrentImageIndex;

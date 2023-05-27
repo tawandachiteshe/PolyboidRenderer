@@ -80,10 +80,17 @@ namespace Polyboid
 		void Bind() override;
 		void UnBind() override;
 
-		std::vector<Ref<PipelineDescriptorSet>> AllocateDescSetsFromShaders(const Ref<PipelineDescriptorSetPool>& descPool, uint32_t setBinding) override;
+		std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding) override;
 
 		std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) override;
 
+		void BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet,
+			uint32_t setBinding) override;
+		void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
+			uint32_t setBinding) override;
+		void BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding) override;
+
+		void WriteSetResourceBindings(uint32_t set) override;
 
 		virtual void Destroy();
 

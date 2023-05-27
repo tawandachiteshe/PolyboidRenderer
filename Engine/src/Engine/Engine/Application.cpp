@@ -15,6 +15,7 @@
 #include "imgui.h"
 #include "imgui_impl_vulkan.h"
 #include "Engine/Renderer/Buffer.h"
+#include "Engine/Renderer/BufferSet.h"
 #include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
@@ -78,7 +79,7 @@ namespace Polyboid
 
 		Renderer::Init(m_RenderAPI, m_Settings);
 		ShaderRegistry::Init(m_RenderAPI);
-		//Imgui::Init(m_MainWindow->GetNativeWindow());
+		Imgui::Init(m_MainWindow->GetNativeWindow());
 	}
 
 	Application::~Application()
@@ -133,6 +134,7 @@ namespace Polyboid
 
 		m_CommandList = CommandList::Create({3});
 		auto secondCommandList = CommandList::Create({ 3 });
+		auto imGuiCommandList = CommandList::Create({ 3 });
 		
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
@@ -178,7 +180,6 @@ namespace Polyboid
 		auto checkerTexture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/checker.jpg" });
 
 
-		auto pool = PipelineDescriptorSetPool::Create({3});
 
 		auto skyBoxPipeline = PipelineState::CreateGraphicsPipeline();
 		skyBoxPipeline->SetGraphicsShaders(skyboxShaders);
@@ -188,7 +189,7 @@ namespace Polyboid
 
 		m_Pipeline = skyBoxPipeline;
 
-		auto descSets = skyBoxPipeline->AllocateDescSetsFromShaders(pool);
+		
 
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
@@ -210,35 +211,20 @@ namespace Polyboid
 		EntityBufferData entityBufferData{};
 		EntityBufferData entityBufferData2{};
 
-		std::vector<Ref<UniformBuffer>> uniformBuffers;
-		std::vector<Ref<StorageBuffer>> storageBuffers;
-		std::vector<Ref<StagingBuffer>> uniformStagingBuffers;
-		std::vector<Ref<StagingBuffer>> storageStagingBuffers;
+		Ref<UniformBufferSet> uniformBuffers = UniformBufferSet::Create(sizeof(CameraBufferData));
+		Ref<StorageBufferSet> storageBuffers = StorageBufferSet::Create(sizeof(vert));
+		Ref<StagingBufferSet> uniformStagingBuffers = StagingBufferSet::Create(sizeof(CameraBufferData));
+		Ref<StagingBufferSet> storageStagingBuffers = StagingBufferSet::Create(sizeof(vert));
+
+		const auto descSets = skyBoxPipeline->AllocateDescriptorSets();
+		skyBoxPipeline->BindUniformBufferSet(0, uniformBuffers);
+		skyBoxPipeline->BindStorageBufferSet(1, storageBuffers);
+		skyBoxPipeline->BindTexture2D(2, checkerTexture);
+		skyBoxPipeline->WriteSetResourceBindings();
 		//
-		for (int i = 0; i < 3; ++i)
-		{
-			auto cameraDataUB = UniformBuffer::Create(sizeof(CameraBufferData));
-			descSets[i]->WriteUniformBuffer(0, cameraDataUB);
-			uniformBuffers.emplace_back(cameraDataUB);
-		
-			auto storageBuffer = StorageBuffer::Create(sizeof(vert));
-			descSets[i]->WriteStorageBuffer(1, storageBuffer);
-			storageBuffers.emplace_back(storageBuffer);
 
-			auto uniformStaging = StagingBuffer::Create(sizeof(CameraBufferData));
-			uniformStagingBuffers.emplace_back(uniformStaging);
-
-			auto storageStaging = StagingBuffer::Create(sizeof(vert));
-			storageStagingBuffers.emplace_back(storageStaging);
-
-			descSets[i]->WriteTexture2D(2, checkerTexture);
-		
-		
-			descSets[i]->Commit();
-		}
-
-		camerData.projection = glm::perspective(1600.f / 900.f, glm::radians(45.0f), 0.01f, 1000.0f);
-		camerData.view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -1.0f });
+		camerData.projection = glm::perspective( 900.f / 1600.f, glm::radians(45.0f), 0.01f, 1000.0f);
+		camerData.view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -10.0f });
 
 		
 
@@ -271,22 +257,29 @@ namespace Polyboid
 			//Note these commands are executed later
 			Renderer::BeginFrame();
 
-			Renderer::BeginCommands(secondCommandList);
 
+			Renderer::BeginCommands(secondCommandList);
 			Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
 			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
 			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
 			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
 
-
 			Renderer::EndCommands();
 			Renderer::SubmitCommandList(secondCommandList);
 
-			Renderer::BeginCommands(m_CommandList);
 
+
+			Renderer::BeginCommands(m_CommandList);
 
 			Renderer::BeginSwapChainRenderPass();
 			Renderer::Clear(ClearSettings{ { 0.2, 0.2, 0.2, 1.0f } });
+
+			Imgui::Begin(m_CommandList);
+			for (auto layer : m_Layers)
+			{
+				layer->OnImguiRender();
+			}
+			Imgui::End();
 
 			Renderer::BindGraphicsPipeline(skyBoxPipeline);
 			Renderer::BindGraphicsDescriptorSets(0, descSets);
