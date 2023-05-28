@@ -1,0 +1,3 @@
+[submodule "yalantinglibs"]
+	path = Engine/Vendor/yalantinglibs
+	url = https://github.com/alibaba/yalantinglibs
