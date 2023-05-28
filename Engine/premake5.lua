@@ -69,7 +69,7 @@ project "Engine"
     }
 
     filter "configurations:Debug"
-       defines { "DEBUG" }
+       defines { "DEBUG", "POLY_DEBUG" }
        symbols "On"
 
        links

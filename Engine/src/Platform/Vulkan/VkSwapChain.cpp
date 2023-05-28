@@ -320,12 +320,15 @@ namespace Polyboid
 
 
 		vk::Device device = (*m_Context->GetDevice());
-		auto ImageResult = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore, vk::Fence(), &m_SwapchainCurrentImageIndex);
+		auto [ImageResult, index] = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore);
+
 
 		if (ImageResult != vk::Result::eSuccess)
 		{
 			__debugbreak();
 		}
+
+		m_SwapchainCurrentImageIndex = index;
 
 		vk::resultCheck(ImageResult, "Failed to aquire image");
 		return  m_SwapchainCurrentImageIndex;

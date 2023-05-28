@@ -282,7 +282,6 @@ namespace Polyboid
 			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
 
 			Renderer::EndCommands();
-			Renderer::SubmitCommandList(secondCommandList);
 
 
 			Renderer::BeginCommands(m_CommandList);
@@ -332,7 +331,6 @@ namespace Polyboid
 			Renderer::EndSwapChainRenderPass();
 			Renderer::EndCommands();
 
-			Renderer::SubmitCommandList(m_CommandList);
 			
 			Renderer::EndFrame();
 

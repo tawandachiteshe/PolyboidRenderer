@@ -46,6 +46,8 @@ namespace Polyboid
 
 		s_Data->m_Swapchain = Swapchain::Create(settings);
 		s_Data->m_CurrentSyncObjects = RendererSyncObjects::Create(s_Data->m_MaxFramesInFlight);
+
+		s_Data->m_CommandBuffers.reserve(20);
 	}
 
 
@@ -98,12 +100,14 @@ namespace Polyboid
 	void Renderer::EndCommands()
 	{
 		GetCurrentCommandBuffer()->End();
+
+		SubmitCommandList(s_Data->m_CurrentCommandList);
 	}
 
 	void Renderer::SubmitCommandList(const Ref<CommandList>& cmdList)
 	{
 
-		auto cmdBuffer = GetCurrentCommandBuffer();
+		auto cmdBuffer = cmdList->GetCommandBufferAt(GetSwapChainImageIndex());
 		s_Data->m_CommandBuffers.emplace_back(cmdBuffer);
 		
 	}

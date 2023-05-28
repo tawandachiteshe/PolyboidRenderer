@@ -46,7 +46,10 @@ namespace Polyboid
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.setPQueueCreateInfos(queueCreateInfos.data());
 		createInfo.setPEnabledExtensionNames(deviceExtensions);
+
+#if POLY_DEBUG
 		createInfo.setPEnabledLayerNames(validationLayers);
+#endif
 
 		auto [result, logicalDevice] = physicalDevice.createDevice(createInfo);
 		vk::resultCheck(result, "Failed to create device");
