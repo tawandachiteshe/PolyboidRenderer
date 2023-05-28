@@ -2,7 +2,7 @@
 #include "VulkanImage2D.h"
 
 #include <vulkan/vulkan.hpp>
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include "vma/vk_mem_alloc.h"
 #include "Utils/VulkanDevice.h"
 #include "VkRenderAPI.h"
@@ -63,7 +63,7 @@ namespace Polyboid
 
 		VmaAllocationCreateInfo allocInfo = {};
 		allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-		allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+		// allocInfo.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
 		allocInfo.priority = 1.0f;
 		VmaAllocation allocation;
 

@@ -2,7 +2,7 @@
 #include "VulkanTexture2D.h"
 #include <vulkan/vulkan.hpp>
 #include "Utils/VulkanDevice.h"
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include <vma/vk_mem_alloc.h>
 
 #include "imgui_impl_vulkan.h"
@@ -48,6 +48,9 @@ namespace Polyboid
 			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::ShaderReadOptimal);
 			cmdBuffer->End();
 			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+
+			staging->Destroy();
+			cmdList->Destroy(device);
 
 		}
 		else
@@ -111,7 +114,9 @@ namespace Polyboid
 
 		m_View = view;
 
-		if (data || !settings.path.empty())
+		
+
+		if (data || !settings.path.empty() || settings.usage == ImageUsage::ColorAttachmentSampling || settings.usage == ImageUsage::DepthStencilAttachmentSampling)
 		{
 			SamplerSettings samplerSettings;
 			samplerSettings.wrap = TextureWrap::ClampToBorder;

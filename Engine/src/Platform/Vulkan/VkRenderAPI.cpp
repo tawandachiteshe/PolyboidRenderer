@@ -20,7 +20,7 @@
 #include "VulkanStagingBuffer.h"
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 #include "Utils/VulkanPhysicalDevice.h"
 #include "Utils/VulkanSurfaceKHR.h"
@@ -39,8 +39,32 @@ namespace Polyboid
 		return m_Surface;
 	}
 
+	vk::Device VkRenderAPI::GetVulkanDevice()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return api->GetDevice()->GetVulkanDevice();
+	}
+
+	vk::PhysicalDevice VkRenderAPI::GetVulkanPhysicalDevice()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return api->GetPhysicalDevice()->GetPhysicalDevice();
+	}
+
+	vk::Instance VkRenderAPI::GetVulkanInstance()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return api->GetInstance()->GetVKInstance();
+	}
+
+	VmaAllocator VkRenderAPI::GetVulkanAllocator()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return *api->GetAllocator();
+	}
+
 	void VkRenderAPI::SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& _imageAvailable, const Ref<Semaphore>& _renderFinished,
-		const Ref<Fence>& inFlight)
+	                                      const Ref<Fence>& inFlight)
 	{
 
 		vk::Fence inFlightFence = std::any_cast<vk::Fence>(inFlight->GetHandle());
@@ -85,7 +109,7 @@ namespace Polyboid
 		
 		auto gfxQueue = GetDevice()->GetGraphicsQueue();
 		vk::SubmitInfo submitInfo{};
-		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eFragmentShader };
+		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &imageSemaphore;
 		submitInfo.pWaitDstStageMask = waitStages;
@@ -131,7 +155,7 @@ namespace Polyboid
 		m_Surface = std::make_shared<VulkanSurfaceKHR>(m_Instance, window);
 		m_PhysicalDevice = std::make_shared<VulkanPhysicalDevice>(m_Instance, m_Surface);
 		m_Device = std::make_shared<VulkanDevice>(m_PhysicalDevice);
-		m_Allocator = std::make_shared<VulkanAllocator>(this);
+		m_Allocator = std::make_shared<VulkanAllocatorInstance>(this);
 
 		m_CommandBuffersBatching.reserve(10);
 
@@ -325,29 +349,20 @@ namespace Polyboid
 		vk::resultCheck(result, "Failed to wait for fence");
 	}
 
-
-	RenderAPIType VkRenderAPI::GetRenderAPIType()
-	{
-		return RenderAPIType::Vulkan;
-	}
-
-	RenderAPIType VkRenderAPI::GetRenderAPIType() const
-	{
-		return RenderAPIType::Vulkan;
-	}
-
-
-	VkRenderAPI::~VkRenderAPI()
+	void VkRenderAPI::Destroy()
 	{
 		const auto instance = m_Instance->GetVKInstance();
 		vk::Device device = (*m_Device);
 		vk::Result result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");
 
+
 		for (const auto& swapchain : m_Swapchains)
 		{
 			swapchain->Destroy(device);
 		}
+
+	
 
 		for (const auto& renderPass : m_RenderPasses)
 		{
@@ -389,16 +404,6 @@ namespace Polyboid
 			framebuffer->Destroy(device);
 		}
 
-		for (const auto& command : m_CommandLists)
-		{
-			command->Destroy(device);
-		}
-
-		for (const auto& pipelines : m_Pipelines)
-		{
-			pipelines->Destroy();
-			
-		}
 
 		for (const auto& buffer : m_UniformBuffers)
 		{
@@ -421,6 +426,24 @@ namespace Polyboid
 			pool->Destroy();
 		}
 
+		for (const auto& pipelines : m_Pipelines)
+		{
+			pipelines->Destroy();
+
+		}
+
+		for (auto& shader : m_VulkanShaders)
+		{
+			shader->Destroy();
+		}
+
+		for (const auto& command : m_CommandLists)
+		{
+			command->Destroy(device);
+		}
+
+	
+
 
 		result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");
@@ -430,5 +453,23 @@ namespace Polyboid
 
 		instance.destroyDebugUtilsMessengerEXT(m_Messenger->GetMessenger(), nullptr, m_Instance->GetLoader());
 		instance.destroy();
+	}
+
+
+	RenderAPIType VkRenderAPI::GetRenderAPIType()
+	{
+		return RenderAPIType::Vulkan;
+	}
+
+	RenderAPIType VkRenderAPI::GetRenderAPIType() const
+	{
+		return RenderAPIType::Vulkan;
+	}
+
+
+
+	VkRenderAPI::~VkRenderAPI()
+	{
+		
 	}
 }

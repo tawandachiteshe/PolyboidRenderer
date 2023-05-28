@@ -68,6 +68,11 @@ namespace Polyboid
 		return s_Data->m_CurrentFrame;
 	}
 
+	void Renderer::SetCurrentFrame(uint32_t currentFrame)
+	{
+		s_Data->m_CurrentFrame = currentFrame;
+	}
+
 	void Renderer::EndDraw()
 	{
 	}
@@ -75,14 +80,14 @@ namespace Polyboid
 	void Renderer::BeginCommands(const Ref<CommandList>& cmdLists)
 	{
 		s_Data->m_CurrentCommandList = cmdLists;
-		cmdLists->GetCommandBufferAt(s_Data->m_ImageIndex)->Begin();
-		SetCurrentCommandBuffer(cmdLists->GetCommandBufferAt(s_Data->m_ImageIndex));
+		SetCurrentCommandBuffer(s_Data->m_CurrentFrame);
+		GetCurrentCommandBuffer()->Begin();
 	}
 
 	void Renderer::BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
 	{
 		cmdBuffer->Begin();
-		SetCurrentCommandBuffer(cmdBuffer);
+	
 	}
 
 	void Renderer::EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
@@ -92,17 +97,14 @@ namespace Polyboid
 
 	void Renderer::EndCommands()
 	{
-		s_Data->m_CurrentCommandList->GetCommandBufferAt(s_Data->m_ImageIndex)->End();
+		GetCurrentCommandBuffer()->End();
 	}
 
 	void Renderer::SubmitCommandList(const Ref<CommandList>& cmdList)
 	{
-		
 
-
-		auto cmdBuffer = cmdList->GetCommandBufferAt(s_Data->m_ImageIndex);
+		auto cmdBuffer = GetCurrentCommandBuffer();
 		s_Data->m_CommandBuffers.emplace_back(cmdBuffer);
-
 		
 	}
 
@@ -155,9 +157,9 @@ namespace Polyboid
 		return s_Data->m_CommandBuffer;
 	}
 
-	void Renderer::SetCurrentCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+	void Renderer::SetCurrentCommandBuffer(uint32_t currentFrame)
 	{
-		s_Data->m_CommandBuffer = cmdBuffer;
+		s_Data->m_CommandBuffer = s_Data->m_CurrentCommandList->GetCommandBufferAt(currentFrame);
 	}
 
 	uint32_t Renderer::GetSwapChainImageIndex()
@@ -195,6 +197,12 @@ namespace Polyboid
 	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers)
 	{
 		GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffers.at(GetCurrentFrame()));
+	}
+
+	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers)
+	{
+		GetCurrentCommandBuffer()->BeginRenderPass(renderPass,
+			buffers->Get(GetCurrentFrame()));
 	}
 
 	void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
@@ -236,44 +244,44 @@ namespace Polyboid
 	void Renderer::SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data,
 		uint32_t dataSize)
 	{
-		buffers.at(GetSwapChainImageIndex())->SetData(data, dataSize);
+		buffers.at(GetCurrentFrame())->SetData(data, dataSize);
 	}
 
 	void Renderer::SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data)
 	{
-		buffers.at(GetSwapChainImageIndex())->SetData(data);
+		buffers.at(GetCurrentFrame())->SetData(data);
 	}
 
 	void Renderer::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
 		const std::vector<Ref<UniformBuffer>>& buffers)
 	{
-		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers.at(GetSwapChainImageIndex()), buffers.at(GetSwapChainImageIndex()));
+		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers.at(GetCurrentFrame()), buffers.at(GetCurrentFrame()));
 	}
 
 	void Renderer::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
 		const std::vector<Ref<StorageBuffer>>& buffers)
 	{
-		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers.at(GetSwapChainImageIndex()), buffers.at(GetSwapChainImageIndex()));
+		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers.at(GetCurrentFrame()), buffers.at(GetCurrentFrame()));
 	}
 
 	void Renderer::SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize)
 	{
-		buffers->Get(GetSwapChainImageIndex())->SetData(data, dataSize);
+		buffers->Get(GetCurrentFrame())->SetData(data, dataSize);
 	}
 
 	void Renderer::SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data)
 	{
-		buffers->Get(GetSwapChainImageIndex())->SetData(data);
+		buffers->Get(GetCurrentFrame())->SetData(data);
 	}
 
 	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
 	{
-		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetSwapChainImageIndex()), buffers->Get(GetSwapChainImageIndex()));
+		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
 	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers)
 	{
-		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetSwapChainImageIndex()), buffers->Get(GetSwapChainImageIndex()));
+		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
 

@@ -6,6 +6,9 @@
 
 namespace Polyboid
 {
+	class RenderPass;
+	class Framebuffer;
+
 	class UniformBufferSet
 	{
 		std::vector<Ref<UniformBuffer>> m_Buffers;
@@ -32,6 +35,16 @@ namespace Polyboid
 		StagingBufferSet(uint32_t size);
 		static Ref<StagingBufferSet> Create(uint32_t size);
 		Ref<StagingBuffer> Get(uint32_t frame);
+	};
+
+
+	class FrameBufferSet
+	{
+		std::vector<Ref<Framebuffer>> m_Buffers;
+	public:
+		FrameBufferSet(const Ref<RenderPass>& renderPass);
+		static Ref<FrameBufferSet> Create(const Ref<RenderPass>& renderPass);
+		Ref<Framebuffer> Get(uint32_t frame);
 	};
 
 }

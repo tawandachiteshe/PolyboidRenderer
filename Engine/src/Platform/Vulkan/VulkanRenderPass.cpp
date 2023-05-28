@@ -21,9 +21,16 @@ namespace Polyboid
 		return m_Framebuffer;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context): m_Context(context)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height): m_Context(context)
 	{
 		vk::Device device = (*context->GetDevice());
+
+
+		m_Settings.Width = width;
+		m_Settings.Height = height;
+		m_Settings.type = RenderPassType::Present;
+		m_Settings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::BGRA8U } };
+		m_Settings.debugName = "Swapchain Renderpass";
 
 
 		std::array<vk::SubpassDependency, 2> dependencies = {
@@ -94,8 +101,77 @@ namespace Polyboid
 		m_ClearValues[1] = m_DepthValue;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings): m_Context(context), m_Settings(settings)
 	{
+
+		vk::Device device = (*context->GetDevice());
+
+		std::array<vk::SubpassDependency, 2> dependencies = {
+		vk::SubpassDependency()  // Image layout transition
+		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
+		.setDstSubpass(0)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)
+		.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setSrcAccessMask(vk::AccessFlagBits::eShaderRead)
+		.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eColorAttachmentRead)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion),
+		vk::SubpassDependency()  // Image layout transition
+		.setSrcSubpass(0)
+		.setDstSubpass(VK_SUBPASS_EXTERNAL)
+		.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
+		.setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
+		.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+		.setDstAccessMask(vk::AccessFlagBits::eShaderRead)
+		.setDependencyFlags(vk::DependencyFlagBits::eByRegion)
+		};
+
+
+
+		std::array<vk::AttachmentDescription, 2> const attachments = {
+			vk::AttachmentDescription()
+				.setFormat(vk::Format::eR8G8B8A8Unorm)
+				.setSamples(vk::SampleCountFlagBits::e1)
+				.setLoadOp(vk::AttachmentLoadOp::eClear)
+				.setStoreOp(vk::AttachmentStoreOp::eStore)
+				.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setInitialLayout(vk::ImageLayout::eUndefined)
+				.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal),
+			vk::AttachmentDescription()
+				.setFormat(vk::Format::eD32SfloatS8Uint)
+				.setSamples(vk::SampleCountFlagBits::e1)
+				.setLoadOp(vk::AttachmentLoadOp::eClear)
+				.setStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
+				.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
+				.setInitialLayout(vk::ImageLayout::eUndefined)
+				.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
+		};
+
+		auto const color_reference = vk::AttachmentReference().setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		auto const depth_reference = vk::AttachmentReference().setAttachment(1).setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+		auto const subpass = vk::SubpassDescription()
+			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
+			.setColorAttachments(color_reference)
+			.setPDepthStencilAttachment(&depth_reference);
+
+
+		const auto render_pass_result = device.createRenderPass(
+			vk::RenderPassCreateInfo().setAttachments(attachments).setSubpasses(subpass).setDependencies(dependencies));
+		vk::resultCheck(render_pass_result.result, "failed to create render pass");
+		m_RenderPass = render_pass_result.value;
+
+		m_ColorValue.float32[0] = m_ClearSettings.color.x;
+		m_ColorValue.float32[1] = m_ClearSettings.color.y;
+		m_ColorValue.float32[2] = m_ClearSettings.color.z;
+		m_ColorValue.float32[3] = m_ClearSettings.color.w;
+
+		m_DepthValue.depth = 1.0f;
+		m_DepthValue.stencil = 0u;
+
+		m_ClearValues[0] = m_ColorValue;
+		m_ClearValues[1] = m_DepthValue;
 	}
 
 	void VulkanRenderPass::Destroy(vk::Device device)

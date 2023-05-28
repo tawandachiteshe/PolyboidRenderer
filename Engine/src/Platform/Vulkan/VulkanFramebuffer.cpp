@@ -68,6 +68,16 @@ namespace Polyboid
 			m_Textures.push_back(colorTexture);
 		}
 
+		TextureSettings textureSettings{};
+		textureSettings.Height = renderPassSettings.Height;
+		textureSettings.Width = renderPassSettings.Width;
+		textureSettings.usage = ImageUsage::DepthStencilAttachment;
+		textureSettings.sizedFormat = EngineGraphicsFormats::Depth32FStencil8;
+
+		auto depthTexture = std::make_shared<VulkanTexture2D>(context, textureSettings);
+		imageViews.push_back(std::any_cast<vk::ImageView>(std::any_cast<vk::ImageView>(depthTexture->GetViewHandle())));
+		m_Textures.push_back(depthTexture);
+
 		vk::FramebufferCreateInfo createInfo;
 		createInfo.sType = vk::StructureType::eFramebufferCreateInfo;
 		createInfo.renderPass = std::any_cast<vk::RenderPass>(renderPass->GetHandle());

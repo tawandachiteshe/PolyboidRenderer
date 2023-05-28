@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "VkRenderAPI.h"
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
 

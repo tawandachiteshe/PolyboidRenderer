@@ -2,6 +2,8 @@
 #include "Engine/Renderer/Buffer.h"
 #include <vma/vk_mem_alloc.h>
 
+#include "Utils/VulkanAllocator.h"
+
 namespace Polyboid
 {
 	class VkRenderAPI;
@@ -14,6 +16,7 @@ namespace Polyboid
 		uint32_t m_Size = 0;
 		const VkRenderAPI* m_Context = nullptr;
 		VmaAllocationInfo m_AllocInfo{};
+		VulkanAllocator m_Allocator;
 
 	public:
 

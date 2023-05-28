@@ -159,6 +159,7 @@ namespace Polyboid
             init_info.ImageCount = 3;
             init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
             init_info.CheckVkResultFn = check_vk_result;
+            init_info.Subpass = 0;
 
            
             ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());

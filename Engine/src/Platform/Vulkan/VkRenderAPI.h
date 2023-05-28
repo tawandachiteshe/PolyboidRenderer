@@ -1,7 +1,7 @@
 #pragma once
 #include "VulkanShader.h"
 #include "Engine/Renderer/RenderAPI.h"
-
+#include <vma/vk_mem_alloc.h>
 
 namespace Polyboid
 {
@@ -19,7 +19,7 @@ namespace Polyboid
 	class VulkanCommandList;
 	class VulkanFramebuffer;
 	class VulkanRenderPass;
-	class VulkanAllocator;
+	class VulkanAllocatorInstance;
 	class VkSwapChain;
 	class VulkanSurfaceKHR;
 	class VulkanDevice;
@@ -55,7 +55,7 @@ namespace Polyboid
 		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
 		Ref<VulkanDevice> m_Device;
 		Ref<VulkanSurfaceKHR> m_Surface;
-		Ref<VulkanAllocator> m_Allocator;
+		Ref<VulkanAllocatorInstance> m_Allocator;
 		std::any m_Window;
 
 
@@ -64,10 +64,15 @@ namespace Polyboid
 		//Vulkan specific
 		[[nodiscard]] Ref<VkInstance> GetInstance() const { return  m_Instance; }
 		[[nodiscard]] Ref<VulkanPhysicalDevice> GetPhysicalDevice() const { return m_PhysicalDevice; }
-		[[nodiscard]] Ref<VulkanAllocator> GetAllocator() const { return m_Allocator; }
+		[[nodiscard]] Ref<VulkanAllocatorInstance> GetAllocator() const { return m_Allocator; }
 		[[nodiscard]] Ref<VulkanDevice> GetDevice() const;
 		[[nodiscard]] std::any GetWindow() const { return m_Window; }
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
+
+		static vk::Device GetVulkanDevice();
+		static vk::PhysicalDevice GetVulkanPhysicalDevice();
+		static vk::Instance GetVulkanInstance();
+		static VmaAllocator GetVulkanAllocator();
 
 		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
 			const Ref<Fence>& inFlight) override;
@@ -111,6 +116,8 @@ namespace Polyboid
 		Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) override;
 		Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) override;
 		void WaitForFences(const Ref<Fence>& fence) override;
+
+		void Destroy() override;
 
 
 		RenderAPIType GetRenderAPIType() override;

@@ -174,7 +174,8 @@ namespace Polyboid
 		spdlog::info("Successfully created a swapchain!");
 
 
-		m_RenderPass = std::make_shared<VulkanRenderPass>(context);
+
+		m_RenderPass = std::make_shared<VulkanRenderPass>(context, createInfo.imageExtent.width, createInfo.imageExtent.height);
 
 		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(m_Swapchain);
 		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");

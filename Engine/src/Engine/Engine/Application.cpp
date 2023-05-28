@@ -123,6 +123,7 @@ namespace Polyboid
 	void Application::ShutDown()
 	{
 		Imgui::ShutDown();
+		m_RenderAPI->Destroy();
 		delete m_RenderAPI;
 	}
 
@@ -134,10 +135,20 @@ namespace Polyboid
 
 		m_CommandList = CommandList::Create({3});
 		auto secondCommandList = CommandList::Create({ 3 });
+		auto offscreenCommandBuffer = CommandList::Create({ 3 });
 		auto imGuiCommandList = CommandList::Create({ 3 });
 		
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
+		RenderPassSettings renderPassSettings{};
+		renderPassSettings.Height = 600;
+		renderPassSettings.Width = 800;
+		renderPassSettings.TextureAttachments = { { TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8 } };
+		renderPassSettings.debugName = "Offscreen render pass";
+
+		auto offRenderPass = RenderPass::Create(renderPassSettings);
+		auto offscreenBuffers = FrameBufferSet::Create(offRenderPass);
+
 
 		struct Vertex
 		{
@@ -184,7 +195,7 @@ namespace Polyboid
 		auto skyBoxPipeline = PipelineState::CreateGraphicsPipeline();
 		skyBoxPipeline->SetGraphicsShaders(skyboxShaders);
 		skyBoxPipeline->SetVertexArray(vtxArray);
-		skyBoxPipeline->SetRenderPass(Renderer::GetSwapChain()->GetDefaultRenderPass());
+		skyBoxPipeline->SetRenderPass(offRenderPass);
 		skyBoxPipeline->Bake();
 
 		m_Pipeline = skyBoxPipeline;
@@ -226,6 +237,12 @@ namespace Polyboid
 		camerData.projection = glm::perspective( 900.f / 1600.f, glm::radians(45.0f), 0.01f, 1000.0f);
 		camerData.view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -10.0f });
 
+		std::vector<ImTextureID> m_FramebufferTextures;
+
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_FramebufferTextures.push_back(Imgui::GetVulkanTextureID(offscreenBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
+		}
 		
 
 		static  float rotation = 0;
@@ -268,48 +285,55 @@ namespace Polyboid
 			Renderer::SubmitCommandList(secondCommandList);
 
 
-
 			Renderer::BeginCommands(m_CommandList);
 
+			Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
+			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+			Renderer::BindGraphicsDescriptorSets(0, descSets);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
+
+			Viewport viewport{};
+			viewport.Width = 800;
+			viewport.Height = 600;
+			viewport.MinDepth = 0.0;
+			viewport.MaxDepth = 1.0f;
+
+			Renderer::SetViewport(viewport);
+			Rect rect{};
+			rect.Width = 800;
+			rect.Height = 600;
+			Renderer::SetScissor(rect);
+			Renderer::BindVertexBuffer(triVerts);
+			Renderer::BindIndexBuffer(triIdxs);
+			Renderer::DrawIndexed(6);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
+			Renderer::DrawIndexed(6);
+			Renderer::EndRenderPass();
+
+
+			//Swapchain renderpass
 			Renderer::BeginSwapChainRenderPass();
 			Renderer::Clear(ClearSettings{ { 0.2, 0.2, 0.2, 1.0f } });
 
 			Imgui::Begin(m_CommandList);
+
+			ImGui::Begin("Texture display");
+			ImGui::Image(m_FramebufferTextures.at(Renderer::GetCurrentFrame()), { 800, 600 });
+			ImGui::End();
+
+
 			for (auto layer : m_Layers)
 			{
 				layer->OnImguiRender();
 			}
 			Imgui::End();
 
-			Renderer::BindGraphicsPipeline(skyBoxPipeline);
-			Renderer::BindGraphicsDescriptorSets(0, descSets);
-			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
-
-
-			Viewport viewport{};
-			viewport.Width = 1600;
-			viewport.Height = 900;
-			viewport.MinDepth = 0.0;
-			viewport.MaxDepth = 1.0f;
-
-
-			Renderer::SetViewport(viewport);
-			Rect rect{};
-			rect.Width = 1600;
-			rect.Height = 900;
-			Renderer::SetScissor(rect);
-			Renderer::BindVertexBuffer(triVerts);
-			Renderer::BindIndexBuffer(triIdxs);
-
-			Renderer::DrawIndexed(6);
-
-			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
-			Renderer::DrawIndexed(6);
-
+	
 			Renderer::EndSwapChainRenderPass();
 			Renderer::EndCommands();
 
 			Renderer::SubmitCommandList(m_CommandList);
+			
 			Renderer::EndFrame();
 
 

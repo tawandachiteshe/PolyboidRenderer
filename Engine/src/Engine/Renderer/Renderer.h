@@ -10,6 +10,7 @@
 
 namespace Polyboid
 {
+	class FrameBufferSet;
 	class StorageBufferSet;
 	class StagingBufferSet;
 	class UniformBufferSet;
@@ -60,6 +61,7 @@ namespace Polyboid
         static void SetMaxFramesInFlight(uint32_t frames);
         static uint32_t GetMaxFramesInFlight();
         static uint32_t& GetCurrentFrame();
+        static void SetCurrentFrame(uint32_t currentFrame);
         static void EndDraw();
         static void BeginCommands(const Ref<CommandList>& cmdList);
         static void BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
@@ -71,7 +73,7 @@ namespace Polyboid
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
-        static void SetCurrentCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
+        static void SetCurrentCommandBuffer(uint32_t currentFrame);
         static uint32_t GetSwapChainImageIndex();
 
         static void Clear(ClearSettings settings = {});
@@ -81,6 +83,9 @@ namespace Polyboid
         static void SetPipelineState(const Ref<PipelineState>& pipelineState);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers);
+        static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers);
+
+
         static void BindGraphicsPipeline(const Ref<PipelineState>& pipeline);
         static void BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets);
         static void EndRenderPass();

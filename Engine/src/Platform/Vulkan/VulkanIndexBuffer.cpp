@@ -8,7 +8,7 @@
 #include "Engine/Renderer/CommandList.h"
 #include "Engine/Renderer/RenderAPI.h"
 #include "VulkanCommandList.h"
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
 
@@ -102,7 +102,7 @@ namespace Polyboid
 
 	void VulkanIndexBuffer::Destroy()
 	{
-		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		VmaAllocator allocator = VkRenderAPI::GetVulkanAllocator();
 		vmaDestroyBuffer(allocator, m_Handle, m_Allocation);
 
 	}

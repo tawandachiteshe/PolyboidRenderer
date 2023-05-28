@@ -1,40 +1,66 @@
 ﻿#include "boidpch.h"
 #include "VulkanAllocator.h"
 
-#include "VulkanDevice.h"
-#include "VulkanPhysicalDevice.h"
-#include "VkInstance.h"
+#include <spdlog/spdlog.h>
+
 #include "Platform/Vulkan/VkRenderAPI.h"
-#include <vma/vk_mem_alloc.h>
 
 
 namespace Polyboid
 {
-	VulkanAllocator::VulkanAllocator(const VkRenderAPI* context)
+	VulkanAllocator::VulkanAllocator(const std::string& name): m_Name(name)
 	{
-
-		vk::Device device = *context->GetDevice();
-		vk::PhysicalDevice physicalDevice = *context->GetPhysicalDevice();
-		vk::Instance instance = *context->GetInstance();
-
-
-		VmaAllocatorCreateInfo allocatorCreateInfo = {};
-		allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_2;
-		allocatorCreateInfo.physicalDevice = physicalDevice;
-		allocatorCreateInfo.device = device;
-		allocatorCreateInfo.instance = instance;
-
-		vmaCreateAllocator(&allocatorCreateInfo, &m_Allocator);
-
-		//vmaCreateImage(=)
-
-
-		//vma::createAllocator(&info, &allocatorCreateInfo);
-
+		m_Allocator = VkRenderAPI::GetVulkanAllocator();
 	}
 
-	void VulkanAllocator::Destroy()
+	std::pair<vk::Buffer, VmaAllocation> VulkanAllocator::CreateBuffer(uint32_t size, vk::BufferUsageFlagBits usage)
 	{
-		vmaDestroyAllocator(m_Allocator);
+		vk::BufferCreateInfo createInfo;
+		createInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		createInfo.size = static_cast<vk::DeviceSize>(size);
+		m_Size = size;
+
+		VmaAllocationCreateInfo memCreateInfo{};
+		memCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+		memCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		memCreateInfo.priority = 1.0f;
+
+		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
+
+		VkBuffer buffer;
+
+		auto result = vmaCreateBuffer(m_Allocator, &vkCreateInfo, &memCreateInfo, &buffer, &m_Allocation, &m_AllocInfo);
+
+		
+
+		if (result != VK_SUCCESS)
+		{
+			spdlog::info("Failed to create indexBuffer");
+			__debugbreak();
+		}
+
+		vmaSetAllocationName(m_Allocator, m_Allocation, m_Name.c_str());
+
+		m_AllocAndBufferHandle.first = buffer;
+		m_AllocAndBufferHandle.second = m_Allocation;
+
+		return m_AllocAndBufferHandle;
+	}
+
+	void VulkanAllocator::DestroyBuffer()
+	{
+		vmaDestroyBuffer(m_Allocator, m_AllocAndBufferHandle.first, m_AllocAndBufferHandle.second);
+
+		m_AllocAndBufferHandle.first = nullptr;
+		m_AllocAndBufferHandle.second = nullptr;
+	}
+
+	void VulkanAllocator::MapData(const void* data, uint32_t size)
+	{
+		if (size)
+		{
+			m_Size = size;
+		}
+		std::memcpy(m_AllocInfo.pMappedData, data, m_Size);
 	}
 }

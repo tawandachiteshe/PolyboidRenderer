@@ -18,7 +18,13 @@ namespace Polyboid
 		{
 			commandBuffer->Destroy(device);
 		}
-		device.destroyCommandPool(m_CommandList);
+
+		if (m_CommandList)
+		{
+			device.destroyCommandPool(m_CommandList);
+			m_CommandList = nullptr;
+		}
+		
 	}
 
 	VulkanCommandList::VulkanCommandList(const VkRenderAPI* context, const CommandListSettings& settings): m_Context(context)

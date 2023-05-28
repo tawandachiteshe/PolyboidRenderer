@@ -8,7 +8,7 @@
 #include "VulkanCommandList.h"
 #include "VulkanStagingBuffer.h"
 #include "Engine/Renderer/CommandList.h"
-#include "Utils/VulkanAllocator.h"
+#include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
 namespace Polyboid

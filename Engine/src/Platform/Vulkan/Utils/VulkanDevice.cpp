@@ -40,18 +40,13 @@ namespace Polyboid
 		}
 
 
-	
 
 		vk::DeviceCreateInfo createInfo{};
 		createInfo.flags = vk::DeviceCreateFlags();
-		createInfo.sType = vk::StructureType::eDeviceCreateInfo;
-		createInfo.pQueueCreateInfos = queueCreateInfos.data();
-		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());;
-		createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-		createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-		createInfo.ppEnabledLayerNames = validationLayers.data();
-
+		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+		createInfo.setPQueueCreateInfos(queueCreateInfos.data());
+		createInfo.setPEnabledExtensionNames(deviceExtensions);
+		createInfo.setPEnabledLayerNames(validationLayers);
 
 		auto [result, logicalDevice] = physicalDevice.createDevice(createInfo);
 		vk::resultCheck(result, "Failed to create device");

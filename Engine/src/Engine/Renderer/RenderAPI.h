@@ -115,6 +115,8 @@ namespace Polyboid
 
 		static RenderAPI* Create(const RenderAPIType& renderType, const std::any& nativeWindow);
 		static RenderAPI* Get();
+
+		virtual void Destroy() = 0;
 	};
 
 

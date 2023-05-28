@@ -26,7 +26,7 @@ namespace Polyboid
         ClearSettings(const glm::vec4& col): color(col){}
 
         ClearFlags clearFlags = ClearFlags::All;
-    	glm::vec4 color = glm::vec4(0);
+    	glm::vec4 color = glm::vec4(0.2);
         float depth = 1.0f;
         uint8_t stencil = 0;
         

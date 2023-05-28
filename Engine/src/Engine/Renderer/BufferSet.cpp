@@ -63,4 +63,24 @@ namespace Polyboid
 	{
 		return m_Buffers.at(frame);
 	}
+
+
+	//Frame buffers
+	FrameBufferSet::FrameBufferSet(const Ref<RenderPass>& renderPass)
+	{
+		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		{
+			m_Buffers.push_back(Framebuffer::Create(renderPass));
+		}
+	}
+
+	Ref<FrameBufferSet> FrameBufferSet::Create(const Ref<RenderPass>& renderPass)
+	{
+		return std::make_shared<FrameBufferSet>(renderPass);
+	}
+
+	Ref<Framebuffer> FrameBufferSet::Get(uint32_t frame)
+	{
+		return m_Buffers.at(frame);
+	}
 }
