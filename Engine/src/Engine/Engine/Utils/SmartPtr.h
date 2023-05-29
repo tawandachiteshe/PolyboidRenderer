@@ -138,8 +138,12 @@ namespace Polyboid
 		~RefPtr() {
 			if(m_RefCount.RemoveRef())
 			{
-				FreeMem<T>(m_Ptr);
-				m_RefCount.DeleteCounter();
+				if(m_Ptr)
+				{
+					FreeMem<T>(m_Ptr);
+					m_RefCount.DeleteCounter();
+				}
+				
 			}
 		}
 

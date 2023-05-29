@@ -19,7 +19,7 @@ namespace Polyboid
     template<typename T>
     void FreeMem(T* ptr)
 	{
-        delete ptr;
+        operator delete(ptr);
 	}
 
     class EngineMemoryManager

@@ -124,7 +124,7 @@ namespace Polyboid
 	{
 		Imgui::ShutDown();
 		m_RenderAPI->Destroy();
-		delete m_RenderAPI;
+		FreeMem(m_RenderAPI);
 	}
 
 	void Application::Run()

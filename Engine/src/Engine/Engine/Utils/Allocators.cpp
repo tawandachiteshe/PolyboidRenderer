@@ -20,17 +20,26 @@ void* operator new(std::size_t size) {
 }
 
 void operator delete(void* ptr) noexcept {
-    void* originalPtr = static_cast<char*>(ptr) - sizeof(std::size_t);
 
-    // Get the size from the stored field
-    std::size_t size;
-    std::memcpy(&size, originalPtr, sizeof(std::size_t));
+	if (ptr)
+	{
+        void* originalPtr = static_cast<char*>(ptr) - sizeof(std::size_t);
 
-    Polyboid::EngineMemoryManager::s_MemUsage -= size;
+        // Get the size from the stored field
+        std::size_t size;
+        std::memcpy(&size, originalPtr, sizeof(std::size_t));
+
+        Polyboid::EngineMemoryManager::s_MemUsage -= size;
 
 
-    // Free the memory block
-    std::free(originalPtr);
+        // Free the memory block
+        std::free(originalPtr);
+	}
+	else
+	{
+        __debugbreak();
+	}
+
 }
 
 namespace Polyboid
