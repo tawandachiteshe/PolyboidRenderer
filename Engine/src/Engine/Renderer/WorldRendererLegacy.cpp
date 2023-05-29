@@ -330,7 +330,7 @@ namespace Polyboid
 
 	Ref<WorldRendererLegacy> WorldRendererLegacy::Make(const WorldRendererSettings& settings)
 	{
-		return std::make_shared<WorldRendererLegacy>(settings);
+		return CreateRef<WorldRendererLegacy>(settings);
 	}
 
 	

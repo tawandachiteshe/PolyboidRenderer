@@ -14,7 +14,7 @@ namespace Polyboid
 		m_Context(context), m_Size(size), m_Slot(slot)
 	{
 		auto device = context->GetDevice()->GetVulkanDevice();
-		VmaAllocator allocator = *context->GetAllocator().get();
+		VmaAllocator allocator = *context->GetAllocator();
 
 
 		vk::BufferCreateInfo createInfo;
@@ -64,7 +64,7 @@ namespace Polyboid
 
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
-		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		VmaAllocator allocator = *m_Context->GetAllocator();
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
 
 
@@ -88,7 +88,7 @@ namespace Polyboid
 
 	void VulkanUniformBuffer::Destroy()
 	{
-		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		VmaAllocator allocator = *m_Context->GetAllocator();
 		vmaDestroyBuffer(allocator, m_UniformBuffer, m_Allocation);
 	}
 
@@ -99,7 +99,7 @@ namespace Polyboid
 
 	void VulkanShaderStorage::Destroy()
 	{
-		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		VmaAllocator allocator = *m_Context->GetAllocator();
 		vmaDestroyBuffer(allocator, m_StorageBuffer, m_Allocation);
 	}
 
@@ -122,7 +122,7 @@ namespace Polyboid
 		m_Context(context)
 	{
 		auto device = context->GetDevice()->GetVulkanDevice();
-		VmaAllocator allocator = *context->GetAllocator().get();
+		VmaAllocator allocator = *context->GetAllocator();
 		m_Allocator = allocator;
 
 

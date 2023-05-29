@@ -27,7 +27,7 @@
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
 #include "Registry/ShaderRegistry.h"
-
+#include "Utils/SmartPtr.h"
 
 
 namespace Polyboid
@@ -148,6 +148,36 @@ namespace Polyboid
 
 		auto offRenderPass = RenderPass::Create(renderPassSettings);
 		auto offscreenBuffers = FrameBufferSet::Create(offRenderPass);
+
+		struct Person
+		{
+			std::string m_Name = "";
+			uint32_t m_Age = 0;
+
+			Person(const std::string& m_name, uint32_t m_age)
+				: m_Name(m_name),
+				  m_Age(m_age)
+			{
+			}
+		};
+
+		RefPtr outerScope(new int);
+		auto ptr = CreateRef<Person>("Tawanda", 1);
+
+		std::allocator<int> a;
+		a.allocate(2);
+
+
+		Ref<int> refC(new int);
+		{
+			RefPtr<int> myNum = outerScope;
+			*myNum = 1;
+
+			Ref<int> refC2 = refC;
+			*refC = 2;
+
+		}
+	
 
 
 		struct Vertex

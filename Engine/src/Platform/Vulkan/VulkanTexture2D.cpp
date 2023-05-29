@@ -35,17 +35,17 @@ namespace Polyboid
 		if (data)
 		{
 			auto size = imageSettings.width * imageSettings.height * 4;
-			m_Image = std::make_shared<VulkanImage2D>(context, imageSettings);
+			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 
-			Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, data, size);
+			auto staging = CreateRef<VulkanStagingBuffer>(context, data, size);
 
-			Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+			Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 			cmdBuffer->Begin();
-			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::TransferDstOptimal);
-			cmdBuffer->CopyBufferToImage2D(staging, m_Image);
-			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::ShaderReadOptimal);
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal);
+			cmdBuffer->CopyBufferToImage2D(staging.As<StagingBuffer>(), m_Image.As<Image2D>());
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 			cmdBuffer->End();
 			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
 
@@ -55,7 +55,7 @@ namespace Polyboid
 		}
 		else
 		{
-			m_Image = std::make_shared<VulkanImage2D>(context, imageSettings);
+			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 		}
 		
 
@@ -68,17 +68,17 @@ namespace Polyboid
 			auto size = w * h * 4;
 			imageSettings.width = static_cast<uint32_t>(w);
 			imageSettings.height = static_cast<uint32_t>(h);
-			m_Image = std::make_shared<VulkanImage2D>(context, imageSettings);
+			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 
-			Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer> (context, pixels, size);
-			Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+			Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer> (context, pixels, size);
+			Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 			cmdBuffer->Begin();
 
-			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::TransferDstOptimal);
-			cmdBuffer->CopyBufferToImage2D(staging, m_Image);
-			cmdBuffer->TransitionImageLayout(m_Image, ImageLayout::ShaderReadOptimal);
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal);
+			cmdBuffer->CopyBufferToImage2D(staging.As<StagingBuffer>(), m_Image.As<Image2D>());
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 
 			cmdBuffer->End();
 			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
@@ -125,7 +125,7 @@ namespace Polyboid
 			samplerSettings.minLod = -1000;
 			samplerSettings.magLod = 1000;
 
-			Ref<VulkanSamplerState> sampler = std::make_shared<VulkanSamplerState>(context, samplerSettings);
+			Ref<VulkanSamplerState> sampler = CreateRef<VulkanSamplerState>(context, samplerSettings);
 			m_SamplerState = sampler;
 			auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
 		
@@ -173,12 +173,12 @@ namespace Polyboid
 			m_View = nullptr;
 		}
 
-		if (m_Image)
+		if (m_Image.Get())
 		{
 			m_Image->Destroy();
 		}
 
-		if (m_SamplerState)
+		if (m_SamplerState.Get())
 		{
 			m_SamplerState->Destroy();
 		}

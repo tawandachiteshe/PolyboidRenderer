@@ -33,6 +33,6 @@ namespace Polyboid
 
 	Ref<RendererSyncObjects> RendererSyncObjects::Create(uint32_t count)
 	{
-		return std::make_shared<RendererSyncObjects>(count);
+		return CreateRef<RendererSyncObjects>(count);
 	}
 }

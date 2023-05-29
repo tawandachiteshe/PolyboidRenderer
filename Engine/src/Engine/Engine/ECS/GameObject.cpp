@@ -53,7 +53,7 @@ namespace Polyboid
 	void GameObject::AttachScript(const std::string& monoKlassName)
 	{
 
-		auto klass = std::make_shared<MonoClassInstance>(ScriptingEngine::FindClass(monoKlassName), monoKlassName);
+		auto klass = CreateRef<MonoClassInstance>(ScriptingEngine::FindClass(monoKlassName), monoKlassName);
 		klass->SetField("gameObjectID", static_cast<uint64_t>(GetComponent<IDComponent>().id));
 		klass->InvokeMethod("OnConstruct");
 		m_MonoScripts.emplace_back(klass);
@@ -66,7 +66,7 @@ namespace Polyboid
 
 		for (auto& name : m_MonoScriptsName)
 		{
-			auto klass = std::make_shared<MonoClassInstance>(ScriptingEngine::FindClass(name), name);
+			auto klass = CreateRef<MonoClassInstance>(ScriptingEngine::FindClass(name), name);
 			klass->SetField("gameObjectID", static_cast<uint64_t>(GetComponent<IDComponent>().id));
 			klass->InvokeMethod("OnConstruct");
 			m_MonoScripts.emplace_back(klass);

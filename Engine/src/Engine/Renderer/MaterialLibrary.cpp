@@ -8,7 +8,7 @@ namespace Polyboid
 
 	Ref<Material>& MaterialLibrary::CreateMaterial(const UUID& id, const std::string& name)
 	{
-		s_Data->m_Materials[id] = std::make_shared<Material>(name);
+		s_Data->m_Materials[id] = CreateRef<Material>(name);
 		s_Data->m_Materials[id]->SetID(id);
 
 		return s_Data->m_Materials[id];

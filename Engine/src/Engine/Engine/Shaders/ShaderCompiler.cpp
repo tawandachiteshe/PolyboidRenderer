@@ -89,7 +89,7 @@ namespace Polyboid
 
 	void ShaderCompiler::Init(const RenderAPI* context, const std::string& includePath)
 	{
-		static auto data = std::make_shared<ShaderCompilerData>(context, includePath);
+		static auto data = CreateRef<ShaderCompilerData>(context, includePath);
 		s_Data = data;
 	}
 

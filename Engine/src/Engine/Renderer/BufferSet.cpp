@@ -16,7 +16,7 @@ namespace Polyboid
 
 	Ref<UniformBufferSet> UniformBufferSet::Create(uint32_t size)
 	{
-		return std::make_shared<UniformBufferSet>(size);
+		return CreateRef<UniformBufferSet>(size);
 	}
 
 	Ref<UniformBuffer> UniformBufferSet::Get(uint32_t frame)
@@ -36,7 +36,7 @@ namespace Polyboid
 
 	Ref<StorageBufferSet> StorageBufferSet::Create(uint32_t size)
 	{
-		return std::make_shared<StorageBufferSet>(size);
+		return CreateRef<StorageBufferSet>(size);
 	}
 
 	Ref<StorageBuffer> StorageBufferSet::Get(uint32_t frame)
@@ -56,7 +56,7 @@ namespace Polyboid
 
 	Ref<StagingBufferSet> StagingBufferSet::Create(uint32_t size)
 	{
-		return std::make_shared<StagingBufferSet>(size);
+		return CreateRef<StagingBufferSet>(size);
 	}
 
 	Ref<StagingBuffer> StagingBufferSet::Get(uint32_t frame)
@@ -76,7 +76,7 @@ namespace Polyboid
 
 	Ref<FrameBufferSet> FrameBufferSet::Create(const Ref<RenderPass>& renderPass)
 	{
-		return std::make_shared<FrameBufferSet>(renderPass);
+		return CreateRef<FrameBufferSet>(renderPass);
 	}
 
 	Ref<Framebuffer> FrameBufferSet::Get(uint32_t frame)

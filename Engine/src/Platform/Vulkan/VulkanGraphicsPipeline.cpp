@@ -20,7 +20,7 @@ namespace Polyboid
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VkRenderAPI* context): m_Context(context)
 	{
 
-		m_DescPool = std::make_shared<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ Renderer::GetMaxFramesInFlight() });
+		m_DescPool = CreateRef<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ Renderer::GetMaxFramesInFlight() });
 	}
 
 	void VulkanGraphicsPipeline::Bake()
@@ -28,8 +28,8 @@ namespace Polyboid
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
 
 
-		auto vulkanVtxShader = std::reinterpret_pointer_cast<VulkanShader>(m_Shaders.at(ShaderType::Vertex));
-		auto vulkanFragShader = std::reinterpret_pointer_cast<VulkanShader>(m_Shaders.at(ShaderType::Fragment));
+		auto vulkanVtxShader = m_Shaders.at(ShaderType::Vertex).As<VulkanShader>(); 
+		auto vulkanFragShader = m_Shaders.at(ShaderType::Fragment).As<VulkanShader>();
 
 		m_Stages.emplace_back(vulkanVtxShader->GetVulkanPipelineStageInfo());
 		m_Stages.emplace_back(vulkanFragShader->GetVulkanPipelineStageInfo());
@@ -121,7 +121,7 @@ namespace Polyboid
 		const auto multiSampleStateInfo = m_MultiSampleState.GetVulkanInfo();
 		const auto rasterizerStateInfo = m_RasterizerState.GetVulkanInfo();
 
-		if (m_VertexInput)
+		if (m_VertexInput.Get())
 		{
 			vtxInput = m_VertexInput->GetVulkanInfo();
 		}
@@ -171,7 +171,7 @@ namespace Polyboid
 		SetShader(shader->GetType(), shader);
 	}
 
-	std::shared_ptr<Shader> VulkanGraphicsPipeline::GetShader(const ShaderType& type) const
+	Ref<Shader> VulkanGraphicsPipeline::GetShader(const ShaderType& type) const
 	{
 		if (!m_Shaders.contains(type))
 		{
@@ -179,7 +179,7 @@ namespace Polyboid
 			spdlog::info("Shader not found");
 		}
 
-		return m_Shaders.at(type);
+		return m_Shaders.at(type).As<Shader>();
 	}
 
 	const PipelineState::ShaderMap& VulkanGraphicsPipeline::GetShaders() const
@@ -208,12 +208,12 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::SetRenderPass(const Ref<RenderPass>& renderPass)
 	{
-		m_RenderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass);
+		m_RenderPass = renderPass.As<VulkanRenderPass>(); 
 	}
 
 	Ref<RenderPass> VulkanGraphicsPipeline::GetRenderPass()
 	{
-		return std::reinterpret_pointer_cast<RenderPass>(m_RenderPass);
+		return m_RenderPass.As<RenderPass>();
 	}
 
 	void VulkanGraphicsPipeline::SetDepthStencilState(const DepthStencilState& depthStencilState)
@@ -228,13 +228,13 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::SetVertexArray(const Ref<VertexBufferArray>& va)
 	{
-		m_VertexInput = std::reinterpret_pointer_cast<VulkanVertexBufferArray>(va);
+		m_VertexInput = va.As<VulkanVertexBufferArray>();
 	}
 
 
 	Ref<VertexBufferArray> VulkanGraphicsPipeline::GetVertexArray()
 	{
-		return m_VertexInput;
+		return m_VertexInput.As<VertexBufferArray>();
 		//dynamic_cast<std::nullptr_t&>(nullptr);
 	}
 
@@ -292,7 +292,7 @@ namespace Polyboid
 
 		for (auto set : allocSets)
 		{
-			auto descSet = std::reinterpret_pointer_cast<PipelineDescriptorSet>(std::make_shared<VulkanPipelineDescriptorSet>(set, m_PipelineLayout,m_DescWriteMap[setBinding]));
+			auto descSet = CreateRef<VulkanPipelineDescriptorSet>(set, m_PipelineLayout, m_DescWriteMap[setBinding]).As<PipelineDescriptorSet>();
 			m_PipeDescSets.push_back(descSet);
 		}
 

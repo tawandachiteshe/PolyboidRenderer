@@ -12,13 +12,13 @@ namespace Polyboid
 {
 	void VulkanRenderPass::SetFramebuffer(const Ref<Framebuffer>& framebuffer)
 	{
-		auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(framebuffer);
+		auto vkFramebuffer = framebuffer.As<VulkanFramebuffer>();
 		m_Framebuffer = vkFramebuffer;
 	}
 
 	Ref<Framebuffer> VulkanRenderPass::GetFramebuffer()
 	{
-		return m_Framebuffer;
+		return m_Framebuffer.As<Framebuffer>();
 	}
 
 	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height): m_Context(context)

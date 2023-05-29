@@ -3,10 +3,12 @@
 #include <memory>
 #include <utility>
 
+#include "Utils/SmartPtr.h"
+
 namespace Polyboid
 {
     template<typename T>
-    using Ref = std::shared_ptr<T>;
+    using Ref = RefPtr<T>;
 
     class Event;
     

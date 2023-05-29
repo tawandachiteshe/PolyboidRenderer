@@ -51,7 +51,7 @@ namespace Polyboid
 		void SetShader(const ShaderType& type, const Ref<Shader>& shader) override;
 		void SetShader(const Ref<Shader>& shader) override;
 
-		std::shared_ptr<Shader> GetShader(const ShaderType& type) const override;
+		Ref<Shader> GetShader(const ShaderType& type) const override;
 		[[nodiscard]] const ShaderMap& GetShaders() const override;
 
 		void SetBlendState(const BlendState& blendState) override;

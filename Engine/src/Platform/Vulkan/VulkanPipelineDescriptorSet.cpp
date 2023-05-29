@@ -27,7 +27,7 @@ namespace Polyboid
 	{
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
-		auto vulkanBuffer = std::reinterpret_pointer_cast<VulkanUniformBuffer>(buffer);
+		auto vulkanBuffer = buffer.As<VulkanUniformBuffer>();
 		auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
 
 		m_Buffers[binding] = (bufferInfo);
@@ -43,7 +43,7 @@ namespace Polyboid
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
-		auto vulkanBuffer = std::reinterpret_pointer_cast<VulkanShaderStorage>(buffer);
+		auto vulkanBuffer = buffer.As<VulkanShaderStorage>();
 		
 		auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
 		m_Buffers[binding] = (bufferInfo);
@@ -58,7 +58,7 @@ namespace Polyboid
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
-		auto vulkanBuffer = std::reinterpret_pointer_cast<VulkanTexture2D>(texture);
+		auto vulkanBuffer = texture.As<VulkanTexture2D>();
 		auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
 		m_Images[binding] = (imageInfo);
 		writeDescriptor.pImageInfo = &m_Images.at(binding);

@@ -141,7 +141,7 @@ namespace Polyboid
             vk::DescriptorPool pool = imguiPool;
             s_Data.m_CommandPool = pool;
 
-            s_Data.m_RenderPass = std::reinterpret_pointer_cast<VulkanRenderPass>(Renderer::GetSwapChain()->GetDefaultRenderPass());
+            s_Data.m_RenderPass = Renderer::GetSwapChain()->GetDefaultRenderPass().As<VulkanRenderPass>();
 
 
             // Select Surface Format
@@ -166,7 +166,7 @@ namespace Polyboid
 
             // Upload Fonts
             {
-                Ref<VulkanCommandList> uploadList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+                Ref<VulkanCommandList> uploadList = CommandList::Create({ 1 }).As<VulkanCommandList>();
                 auto cmd = uploadList->GetCommandBufferAt(0);
 
 
@@ -206,7 +206,7 @@ namespace Polyboid
 
     void Imgui::Begin(const Ref<CommandList>& cmdList)
     {
-        s_Data.m_CommandList = std::reinterpret_pointer_cast<VulkanCommandList>(cmdList);
+        s_Data.m_CommandList = cmdList.As<VulkanCommandList>();
 
         ImGui_ImplGlfw_NewFrame();
     	ImGui_ImplVulkan_NewFrame();

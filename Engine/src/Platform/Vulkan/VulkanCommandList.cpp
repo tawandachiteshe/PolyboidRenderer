@@ -48,7 +48,7 @@ namespace Polyboid
 
 		for (uint32_t i = 0; i < settings.ImageCount; ++i)
 		{
-			auto vulkanCommandBuffer = std::make_shared<VulkanCommandBuffer>(m_Context, this);
+			auto vulkanCommandBuffer = CreateRef<VulkanCommandBuffer>(m_Context, this);
 			m_CommandBuffers.push_back(vulkanCommandBuffer);
 		}
 
@@ -59,7 +59,7 @@ namespace Polyboid
 
 	Ref<CommandBuffer> VulkanCommandList::GetCommandBufferAt(uint32_t index)
 	{
-		return m_CommandBuffers.at(index);
+		return m_CommandBuffers.at(index).As<CommandBuffer>();
 	}
 
 

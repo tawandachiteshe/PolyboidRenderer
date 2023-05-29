@@ -63,7 +63,7 @@ namespace Polyboid
 			attachmentSettings.sizedFormat = attachmentSlot.format;
 			attachmentSettings.usage = ImageUsage::ColorAttachmentSampling;
 
-			auto colorTexture = std::make_shared<VulkanTexture2D>(context, attachmentSettings);
+			auto colorTexture = CreateRef<VulkanTexture2D>(context, attachmentSettings);
 			imageViews.push_back(std::any_cast<vk::ImageView>(colorTexture->GetViewHandle()));
 			m_Textures.push_back(colorTexture);
 		}
@@ -74,7 +74,7 @@ namespace Polyboid
 		textureSettings.usage = ImageUsage::DepthStencilAttachment;
 		textureSettings.sizedFormat = EngineGraphicsFormats::Depth32FStencil8;
 
-		auto depthTexture = std::make_shared<VulkanTexture2D>(context, textureSettings);
+		auto depthTexture = CreateRef<VulkanTexture2D>(context, textureSettings);
 		imageViews.push_back(std::any_cast<vk::ImageView>(std::any_cast<vk::ImageView>(depthTexture->GetViewHandle())));
 		m_Textures.push_back(depthTexture);
 
@@ -136,7 +136,7 @@ namespace Polyboid
 			__debugbreak();
 		}
 
-		return m_Textures.at(static_cast<uint32_t>(attachment));
+		return m_Textures.at(static_cast<uint32_t>(attachment)).As<Texture>();
 	}
 
 

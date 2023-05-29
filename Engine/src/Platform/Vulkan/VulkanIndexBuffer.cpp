@@ -53,12 +53,12 @@ namespace Polyboid
 		m_Handle = buffer;
 
 
-		Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, IndicesData, static_cast<uint32_t>(createInfo.size));
-		Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+		Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer>(context, IndicesData, static_cast<uint32_t>(createInfo.size));
+		Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
 
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 		cmdBuffer->Begin();
-		cmdBuffer->CopyIndexBuffer(staging, this);
+		cmdBuffer->CopyIndexBuffer(staging.As<StagingBuffer>(), this);
 		cmdBuffer->End();
 		RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
 

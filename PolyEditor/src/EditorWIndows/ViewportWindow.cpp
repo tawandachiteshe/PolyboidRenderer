@@ -21,7 +21,7 @@ namespace Polyboid
 		m_Name = name;
 		
 		float fov = 45.0f;
-		m_ViewportCamera = std::make_shared<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
+		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 		
 	}
 

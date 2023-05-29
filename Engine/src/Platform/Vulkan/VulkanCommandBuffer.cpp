@@ -77,8 +77,8 @@ namespace Polyboid
 	void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer)
 	{
 
-		auto vkRenderpass = std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass);
-		auto vkFramebuffer = std::reinterpret_pointer_cast<VulkanFramebuffer>(framebuffer);
+		auto vkRenderpass = renderPass.As<VulkanRenderPass>();
+		auto vkFramebuffer = framebuffer.As<VulkanFramebuffer>();
 		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo(vkFramebuffer);
 		m_RenderPass = vkRenderpass;
 		m_CommandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
@@ -338,7 +338,7 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set)
 	{
-		const auto vulkanEngineSet = std::reinterpret_pointer_cast<VulkanPipelineDescriptorSet> (set);
+		const auto vulkanEngineSet = set.As<VulkanPipelineDescriptorSet>();
 		const auto vulkanSet = std::any_cast<vk::DescriptorSet>(set->GetHandle());
 
 		m_CommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, vulkanEngineSet->GetDescLayout(), setBinding, {vulkanSet}, {});
@@ -357,7 +357,7 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
 	{
-		const auto vkPipeline = std::reinterpret_pointer_cast<VulkanGraphicsPipeline>(pipeline);
+		const auto vkPipeline = pipeline.As<VulkanGraphicsPipeline>();
 		auto pipelineLayout = vkPipeline->GetPipelineLayout();
 
 		vk::ShaderStageFlagBits stage{};

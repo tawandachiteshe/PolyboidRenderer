@@ -175,7 +175,7 @@ namespace Polyboid
 
 
 
-		m_RenderPass = std::make_shared<VulkanRenderPass>(context, createInfo.imageExtent.width, createInfo.imageExtent.height);
+		m_RenderPass = CreateRef<VulkanRenderPass>(context, createInfo.imageExtent.width, createInfo.imageExtent.height);
 
 		auto [swapchainImagesResult, swapchainImages] = device.getSwapchainImagesKHR(m_Swapchain);
 		vk::resultCheck(swapchainImagesResult, "Failed to get swapchain results");
@@ -185,14 +185,14 @@ namespace Polyboid
 		//Abstract this to something cool
 		for (auto& swapchainImage : swapchainImages)
 		{
-			m_ColorTextures.push_back(std::make_shared<VulkanTexture2D>(context, swapchainImage));
+			m_ColorTextures.push_back(CreateRef<VulkanTexture2D>(context, swapchainImage));
 			TextureSettings textureSettings{};
 			textureSettings.Height = createInfo.imageExtent.height;
 			textureSettings.Width = createInfo.imageExtent.width;
 			textureSettings.usage = ImageUsage::DepthStencilAttachment;
 			textureSettings.sizedFormat = EngineGraphicsFormats::Depth32FStencil8;
 
-			auto depthTexture = std::make_shared<VulkanTexture2D>(context, textureSettings);
+			auto depthTexture = CreateRef<VulkanTexture2D>(context, textureSettings);
 			m_DepthTextures.push_back(depthTexture);
 		}
 
@@ -209,9 +209,9 @@ namespace Polyboid
 			attachments.push_back(colorTexture);
 			attachments.push_back(m_DepthTextures[textureCount]);
 
-			auto framebuffer = std::make_shared<VulkanFramebuffer>(context, framebufferSettings, m_RenderPass.get(), attachments);
+			auto framebuffer = CreateRef<VulkanFramebuffer>(context, framebufferSettings, m_RenderPass.Get(), attachments);
 			m_Framebuffers.push_back(framebuffer);
-			m_FramebuffersRefs.push_back(framebuffer);
+			m_FramebuffersRefs.push_back(framebuffer.As<Framebuffer>());
 
 			textureCount++;
 		}
@@ -243,7 +243,7 @@ namespace Polyboid
 
 	Ref<RenderPass> VkSwapChain::GetDefaultRenderPass()
 	{
-		return m_RenderPass;
+		return m_RenderPass.As<RenderPass>();
 	}
 
 
@@ -264,7 +264,7 @@ namespace Polyboid
 			framebuffer->Destroy(device);
 		}
 
-		if (m_RenderPass)
+		if (m_RenderPass.Get())
 		{
 			m_RenderPass->Destroy(device);
 			m_RenderPass = nullptr;
@@ -347,7 +347,7 @@ namespace Polyboid
 
 	Ref<Framebuffer> VkSwapChain::GetCurrentFrameBuffer()
 	{
-		return m_Framebuffers.at(m_SwapchainCurrentImageIndex);
+		return m_Framebuffers.at(m_SwapchainCurrentImageIndex).As<Framebuffer>();
 	}
 
 

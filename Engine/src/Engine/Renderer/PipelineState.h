@@ -25,7 +25,7 @@ namespace Polyboid
 
         virtual void SetShader(const ShaderType& type, const Ref<Shader>& shader) = 0;
         virtual void SetShader(const Ref<Shader>& shader) = 0;
-        virtual std::shared_ptr<Shader> GetShader( const ShaderType& type ) const = 0;
+        virtual Ref<Shader> GetShader( const ShaderType& type ) const = 0;
         [[nodiscard]] virtual const ShaderMap& GetShaders() const = 0;
 
         virtual void SetGraphicsShaders(const GraphicsShaders& shaders) = 0;

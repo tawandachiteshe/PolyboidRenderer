@@ -4,7 +4,7 @@
 
 namespace Polyboid
 {
-	Ref<ResourceData> Resource::m_sData = std::make_shared<ResourceData>();
+	Ref<ResourceData> Resource::m_sData = CreateRef<ResourceData>();
 
 	static std::filesystem::path s_ResourcePath = "Resources";
 

@@ -73,7 +73,7 @@ namespace Polyboid
 		m_VertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(m_VkLayouts.size());
 		m_VertexInputInfo.pVertexAttributeDescriptions = m_VkLayouts.data();
 
-		auto vulkanBuffer = std::reinterpret_pointer_cast<VulkanVertexBuffer>(vbuffer);
+		auto vulkanBuffer = vbuffer.As<VulkanVertexBuffer>();
 		
 		m_VertexBuffers.push_back(vulkanBuffer);
 
@@ -81,7 +81,7 @@ namespace Polyboid
 
 	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<IndexBuffer>& iBuffer)
 	{
-		m_IndexBuffer = std::reinterpret_pointer_cast<VulkanIndexBuffer>(iBuffer);
+		m_IndexBuffer = iBuffer.As<VulkanIndexBuffer>();
 	}
 
 	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<StorageBuffer>& buffer, uint32_t count,

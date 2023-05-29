@@ -6,7 +6,7 @@
 namespace Polyboid
 {
 
-	Ref<GameInstanceData> GameStatics::m_sData = std::make_shared<GameInstanceData>();
+	Ref<GameInstanceData> GameStatics::m_sData = CreateRef<GameInstanceData>();
 
 	void GameStatics::SetCurrentCamera(const Ref<Camera>& camera)
 	{

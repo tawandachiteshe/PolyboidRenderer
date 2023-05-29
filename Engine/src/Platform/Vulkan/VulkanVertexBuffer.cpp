@@ -16,7 +16,7 @@ namespace Polyboid
 	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size): m_Context(context)
 	{
 		auto device = context->GetDevice()->GetVulkanDevice();
-		VmaAllocator allocator = *context->GetAllocator().get();
+		VmaAllocator allocator = *context->GetAllocator();
 		
 
 		vk::BufferCreateInfo createInfo;
@@ -40,12 +40,12 @@ namespace Polyboid
 		}
 
 
-		Ref<VulkanStagingBuffer> staging = std::make_shared<VulkanStagingBuffer>(context, data, size);
-		Ref<VulkanCommandList> cmdList = std::reinterpret_pointer_cast<VulkanCommandList>(CommandList::Create({1}));
+		Ref<VulkanStagingBuffer> staging =  CreateRef<VulkanStagingBuffer>(context, data, size);
+		Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
 
 		cmdList->GetCommandBufferAt(0)->Begin();
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
-		cmdBuffer->CopyVertexBuffer(staging, this);
+		cmdBuffer->CopyVertexBuffer(staging.As<StagingBuffer>(), this);
 		cmdList->GetCommandBufferAt(0)->End();
 		RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
 
@@ -95,7 +95,7 @@ namespace Polyboid
 
 	void VulkanVertexBuffer::Destroy()
 	{
-		VmaAllocator allocator = *m_Context->GetAllocator().get();
+		VmaAllocator allocator = *m_Context->GetAllocator();
 		vmaDestroyBuffer(allocator, m_Handle, m_Allocation);
 	}
 }

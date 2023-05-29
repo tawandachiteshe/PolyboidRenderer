@@ -25,7 +25,7 @@
 #include "Utils/VulkanPhysicalDevice.h"
 #include "Utils/VulkanSurfaceKHR.h"
 
-#define ALLOC_API(Klass, ...) std::make_shared<Klass>(__VA_ARGS__);
+#define ALLOC_API(Klass, ...) CreateRef<Klass>(__VA_ARGS__);
 
 namespace Polyboid
 {
@@ -150,12 +150,12 @@ namespace Polyboid
 
 	VkRenderAPI::VkRenderAPI(const std::any& window): m_Window(window)
 	{
-		m_Instance = std::make_shared<VkInstance>();
-		m_Messenger = std::make_shared<VkDebugMessenger>(m_Instance);
-		m_Surface = std::make_shared<VulkanSurfaceKHR>(m_Instance, window);
-		m_PhysicalDevice = std::make_shared<VulkanPhysicalDevice>(m_Instance, m_Surface);
-		m_Device = std::make_shared<VulkanDevice>(m_PhysicalDevice);
-		m_Allocator = std::make_shared<VulkanAllocatorInstance>(this);
+		m_Instance = CreateRef<VkInstance>();
+		m_Messenger = CreateRef<VkDebugMessenger>(m_Instance);
+		m_Surface = CreateRef<VulkanSurfaceKHR>(m_Instance, window);
+		m_PhysicalDevice = CreateRef<VulkanPhysicalDevice>(m_Instance, m_Surface);
+		m_Device = CreateRef<VulkanDevice>(m_PhysicalDevice);
+		m_Allocator = CreateRef<VulkanAllocatorInstance>(this);
 
 		m_CommandBuffersBatching.reserve(10);
 
@@ -175,11 +175,11 @@ namespace Polyboid
 
 	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const Ref<RenderPass>& renderPass)
 	{
-		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, std::reinterpret_pointer_cast<VulkanRenderPass>(renderPass));
+		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, renderPass.As<VulkanRenderPass>());
 
 		m_Framebuffers.push_back(framebuffer);
 
-		return framebuffer;
+		return framebuffer.As<Framebuffer>();
 	}
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings, const void* data)
@@ -187,7 +187,7 @@ namespace Polyboid
 		auto texture = ALLOC_API(VulkanTexture2D, this, settings, data);
 		m_Textures2D.push_back(texture);
 
-		return texture;
+		return texture.As<Texture>();
 	}
 
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const std::any& handle)
@@ -215,14 +215,14 @@ namespace Polyboid
 	{
 		auto buffer = ALLOC_API(VulkanUniformBuffer, this, size, binding);
 		m_UniformBuffers.emplace_back(buffer);
-		return buffer;
+		return buffer.As<UniformBuffer>();
 	}
 
 	Ref<StorageBuffer> VkRenderAPI::CreateStorageBuffer(uint32_t size)
 	{
 		auto buffer = ALLOC_API(VulkanShaderStorage,this, size);
 		m_StorageBuffers.emplace_back(buffer);
-		return buffer;
+		return buffer.As<StorageBuffer>();
 	}
 
 	Ref<IndexBuffer> VkRenderAPI::CreateIndexBuffer(const IndexDataType& type, uint32_t count,
@@ -232,7 +232,8 @@ namespace Polyboid
 		auto indexBuffer = ALLOC_API(VulkanIndexBuffer, this, type, data, count);
 		m_IndexBuffers.push_back(indexBuffer);
 
-		return indexBuffer;
+
+		return indexBuffer.As<IndexBuffer>();
 	}
 
 	Ref<VertexBuffer> VkRenderAPI::CreateVertexBuffer(const void* data, uint32_t dataSize)
@@ -242,7 +243,7 @@ namespace Polyboid
 		m_VertexBuffers.push_back(vertexBuffer);
 
 
-		return vertexBuffer;
+		return vertexBuffer.As<VertexBuffer>();
 	}
 
 	Ref<VertexBuffer> VkRenderAPI::CreateVertexBuffer(uint32_t dataSize)
@@ -252,7 +253,10 @@ namespace Polyboid
 
 	Ref<VertexBufferArray> VkRenderAPI::CreateVertexBufferArray()
 	{
-		return ALLOC_API(VulkanVertexBufferArray);
+
+		auto vaBuffer = ALLOC_API(VulkanVertexBufferArray);
+
+		return vaBuffer.As<VertexBufferArray>();
 	}
 
 	Ref<CommandList> VkRenderAPI::CreateCommandList(const CommandListSettings& settings)
@@ -261,14 +265,14 @@ namespace Polyboid
 
 		m_CommandLists.push_back(vulkanCommandList);
 
-		return vulkanCommandList;
+		return vulkanCommandList.As<CommandList>();
 	}
 
 	Ref<StagingBuffer> VkRenderAPI::CreateStagingBuffer(uint32_t size)
 	{
 		auto buffer = ALLOC_API(VulkanStagingBuffer, this, size);
 		m_StagingBuffers.emplace_back(buffer);
-		return buffer;
+		return buffer.As<StagingBuffer>();
 	}
 
 	Ref<PipelineState> VkRenderAPI::CreatePipelineState()
@@ -277,7 +281,7 @@ namespace Polyboid
 
 		m_Pipelines.push_back(graphicsPipeline);
 
-		return graphicsPipeline;
+		return graphicsPipeline.As<PipelineState>();
 	}
 
 	Ref<Swapchain> VkRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
@@ -285,7 +289,7 @@ namespace Polyboid
 		auto swapchain = ALLOC_API(VkSwapChain, this, settings);
 		m_Swapchains.push_back(swapchain);
 
-		return swapchain;
+		return swapchain.As<Swapchain>();
 	}
 
 	Ref<RenderPass> VkRenderAPI::CreateRenderPass(const RenderPassSettings& settings)
@@ -294,7 +298,7 @@ namespace Polyboid
 
 		m_RenderPasses.push_back(renderPass);
 
-		return renderPass;
+		return renderPass.As<RenderPass>();
 	}
 
 	Ref<Fence> VkRenderAPI::CreateGraphicsFence()
@@ -303,7 +307,7 @@ namespace Polyboid
 
 		m_Fences.push_back(fence);
 
-		return fence;
+		return fence.As<Fence>();
 
 	}
 
@@ -313,7 +317,8 @@ namespace Polyboid
 		auto semaphore = ALLOC_API(VulkanSemaphore, this);
 		m_Semaphores.push_back(semaphore);
 
-		return semaphore;
+	
+		return semaphore.As<Semaphore>();
 	}
 
 	Ref<Image2D> VkRenderAPI::CreateImage2D(const ImageSettings& imageSettings)
@@ -321,21 +326,21 @@ namespace Polyboid
 		auto image2D = ALLOC_API(VulkanImage2D, this, imageSettings);
 		m_Image2Ds.push_back(image2D);
 
-		return image2D;
+		return image2D.As<Image2D>();
 	}
 
 	Ref<Shader> VkRenderAPI::CreateShader(const ShaderBinaryAndReflectionInfo& info)
 	{
 		auto shader = ALLOC_API(VulkanShader, this, info);
 		m_VulkanShaders.push_back(shader);
-		return shader;
+		return shader.As<Shader>();
 	}
 
 	Ref<PipelineDescriptorSetPool> VkRenderAPI::CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings)
 	{
 		auto pool = ALLOC_API(VulkanPipelineDescriptorSetPool, this, settings);
 		m_DescPools.emplace_back(pool);
-		return pool;
+		return pool.As<PipelineDescriptorSetPool>();
 	}
 
 	void VkRenderAPI::WaitForFences(const Ref<Fence>& fence)
