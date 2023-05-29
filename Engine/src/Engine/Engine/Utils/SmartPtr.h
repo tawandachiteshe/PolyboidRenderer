@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Allocators.h"
 #include "RefCounter.h"
 
 
@@ -137,7 +138,7 @@ namespace Polyboid
 		~RefPtr() {
 			if(m_RefCount.RemoveRef())
 			{
-				delete m_Ptr;
+				FreeMem<T>(m_Ptr);
 				m_RefCount.DeleteCounter();
 			}
 		}
@@ -147,7 +148,7 @@ namespace Polyboid
 
 	template<typename T, typename... Args>
 	RefPtr<T> CreateRef(Args&&... args) {
-		return RefPtr<T>(new T(std::forward<Args>(args)...));
+		return RefPtr<T>(AllocateMem<T>(std::forward<Args>(args)...));
 	}
 
 

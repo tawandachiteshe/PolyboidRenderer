@@ -28,6 +28,7 @@ namespace Polyboid
 
 	}
 
+
 	void StatsWindow::RenderImgui()
 	{
 		ImGui::Begin(m_Name.c_str());
@@ -36,6 +37,7 @@ namespace Polyboid
 
 		ImGui::Text("Frame time %f", 1.0f / frameRate);
 		ImGui::Text("Frame rate %f", frameRate);
+		ImGui::Text("Mem usage %llu", EngineMemoryManager::GetMemoryUsage() / 1024llu);
 
 		ImGui::Image(m_Texture, { 128, 128 });
 		ImGui::SameLine();
