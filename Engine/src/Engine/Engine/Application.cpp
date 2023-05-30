@@ -125,6 +125,9 @@ namespace Polyboid
 		Imgui::ShutDown();
 		m_RenderAPI->Destroy();
 		FreeMem(m_RenderAPI);
+		spdlog::info("Allocation Count: {}", EngineMemoryManager::GetAllocationCount());
+		spdlog::info("Free Count: {}", EngineMemoryManager::GetFreeCount());
+		spdlog::warn("Memory not freed {}", EngineMemoryManager::GetAllocationCount() - EngineMemoryManager::GetFreeCount());
 	}
 
 	void Application::Run()

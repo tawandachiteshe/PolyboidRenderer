@@ -34,11 +34,20 @@ namespace Polyboid
 
 		void AddRef() { ++(*m_Count); }
 
-		std::atomic_int32_t* GetCount() const { return m_Count; }
+		std::atomic<int>* GetCount() const { return m_Count; }
 		
 		bool RemoveRef() { return --(*m_Count) == 0; }
 
-		void DeleteCounter() { delete m_Count; }
+		void DeleteCounter()
+		{
+			delete m_Count;
+			if (m_Ptr)
+			{
+				FreeMem(m_Ptr);
+				m_Ptr = nullptr;
+			}
+			
+		}
 
 		T* Get() const {
 			assert(*m_Count > 0);

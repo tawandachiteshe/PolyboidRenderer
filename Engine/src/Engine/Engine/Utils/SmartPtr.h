@@ -140,11 +140,10 @@ namespace Polyboid
 			{
 				if(m_Ptr)
 				{
-					FreeMem<T>(m_Ptr);
 					m_RefCount.DeleteCounter();
 				}
-				
 			}
+
 		}
 
 

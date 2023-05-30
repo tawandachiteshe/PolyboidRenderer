@@ -20,6 +20,10 @@ extern Polyboid::Application* Polyboid::CreateApplication();
     app->Run();
 	delete app;
 
+    spdlog::info("Allocation Count: {}", Polyboid::EngineMemoryManager::GetAllocationCount());
+    spdlog::info("Free Count: {}", Polyboid::EngineMemoryManager::GetFreeCount());
+    spdlog::warn("Memory not freed {}", Polyboid::EngineMemoryManager::GetAllocationCount() - Polyboid::EngineMemoryManager::GetFreeCount());
+
 
 
     //OPTICK_SHUTDOWN();

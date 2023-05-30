@@ -26,8 +26,12 @@ namespace Polyboid
     {
     public:
 
+        static uint64_t s_AllocationCount;
+        static uint64_t s_FreeCount;
         static uint64_t s_MemUsage;
         static uint64_t GetMemoryUsage();
+        static uint64_t GetAllocationCount();
+        static uint64_t GetFreeCount();
 
     };
 
