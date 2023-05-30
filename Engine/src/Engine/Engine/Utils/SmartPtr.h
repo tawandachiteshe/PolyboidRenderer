@@ -151,7 +151,7 @@ namespace Polyboid
 
 	template<typename T, typename... Args>
 	RefPtr<T> CreateRef(Args&&... args) {
-		return RefPtr<T>(AllocateMem<T>(std::forward<Args>(args)...));
+		return RefPtr<T>(EngineMemoryManager::AllocateMem<T>(std::forward<Args>(args)...));
 	}
 
 

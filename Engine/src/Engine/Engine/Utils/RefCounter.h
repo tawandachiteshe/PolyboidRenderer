@@ -1,10 +1,9 @@
 ﻿#pragma once
 #include <cassert>
-
+#include "Allocators.h"
 
 namespace Polyboid
 {
-
 
 
 	template<typename T>
@@ -40,11 +39,18 @@ namespace Polyboid
 
 		void DeleteCounter()
 		{
-			delete m_Count;
+			
+			
 			if (m_Ptr)
 			{
-				FreeMem(m_Ptr);
+				EngineMemoryManager::FreeMem(m_Ptr);
 				m_Ptr = nullptr;
+			}
+
+			if (m_Count)
+			{
+				delete m_Count;
+				m_Count = nullptr;
 			}
 			
 		}

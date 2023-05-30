@@ -123,8 +123,8 @@ namespace Polyboid
 	void Application::ShutDown()
 	{
 		Imgui::ShutDown();
-		m_RenderAPI->Destroy();
-		FreeMem(m_RenderAPI);
+		//m_RenderAPI->Destroy();
+		EngineMemoryManager::FreeMem(m_RenderAPI);
 		spdlog::info("Allocation Count: {}", EngineMemoryManager::GetAllocationCount());
 		spdlog::info("Free Count: {}", EngineMemoryManager::GetFreeCount());
 		spdlog::warn("Memory not freed {}", EngineMemoryManager::GetAllocationCount() - EngineMemoryManager::GetFreeCount());
@@ -171,7 +171,11 @@ namespace Polyboid
 		a.allocate(2);
 
 
-		Ref<int> refC(new int);
+		Ref<int> refC(new int(1));
+		auto  c = refC.Get();
+
+		spdlog::info("{}", *c);
+
 		{
 			RefPtr<int> myNum = outerScope;
 			*myNum = 1;
@@ -180,6 +184,8 @@ namespace Polyboid
 			*refC = 2;
 
 		}
+
+		spdlog::info("{}", *c);
 	
 
 

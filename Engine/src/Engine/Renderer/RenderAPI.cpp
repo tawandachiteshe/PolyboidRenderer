@@ -17,7 +17,7 @@ namespace Polyboid
 		static RenderAPI* renderApi = nullptr;
 		switch (renderType)
 		{
-		case RenderAPIType::Vulkan: renderApi = AllocateMem<VkRenderAPI>(nativeWindow); s_RenderAPI = renderApi; return renderApi;
+		case RenderAPIType::Vulkan: renderApi = EngineMemoryManager::AllocateMem<VkRenderAPI>(nativeWindow); s_RenderAPI = renderApi; return renderApi;
 		case RenderAPIType::Opengl:
 		case RenderAPIType::Metal:  
 		case RenderAPIType::Dx11:

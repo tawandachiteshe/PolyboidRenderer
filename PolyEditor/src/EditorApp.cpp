@@ -14,7 +14,7 @@ namespace Polyboid
 
 	EditorApp::EditorApp()
 	{
-        AddLayer(AllocateMem<EditorLayer>("EditorLayer"));
+        AddLayer(EngineMemoryManager::AllocateMem<EditorLayer>("EditorLayer"));
 	}
 
 
