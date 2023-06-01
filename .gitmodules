@@ -16,3 +16,9 @@
 [submodule "Engine/Vendor/file_watcher"]
 	path = Engine/Vendor/file_watcher
 	url = https://github.com/tawandachiteshe/file_watcher.git
+[submodule "Engine/Vendor/mono"]
+	path = Engine/Vendor/mono
+	url = https://github.com/tawandachiteshe/mono.git
+[submodule "Engine/Vendor/imgui"]
+	path = Engine/Vendor/imgui
+	url = https://github.com/tawandachiteshe/imgui.git
