@@ -34,3 +34,6 @@
 [submodule "Engine/Vendor/glfw"]
 	path = Engine/Vendor/glfw
 	url = https://github.com/tawandachiteshe/GLFW.git
+[submodule "Engine/Vendor/spdlog"]
+	path = Engine/Vendor/spdlog
+	url = https://github.com/gabime/spdlog.git

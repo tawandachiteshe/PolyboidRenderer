@@ -16,18 +16,15 @@ project "Engine"
     {
         "src",
         "Vendor/spdlog/include",
-        "Vendor/msgpack/include",
         "Vendor/GLFW/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
         "Vendor/assimp/include",
         "Vendor/Optick/include",
-        "Vendor/hashpp/include",
         "Vendor/mono/include",
         "Vendor/entt",
         "Vendor/imgui/src",
         "Vendor/json/include",
-        "Vendor/siglot/include",
         "Vendor/taskflow",
         "Vendor/file_watcher",
         "%{VULKAN_SDK}/Include",
@@ -49,7 +46,6 @@ project "Engine"
     links
     {
         "GLFW",
-        "glad",
         "imgui",
         "Vendor/assimp/bin/assimp.lib",
         "Vendor/mono/lib/libmono-static-sgen.lib",
