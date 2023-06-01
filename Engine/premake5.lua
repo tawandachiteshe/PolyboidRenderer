@@ -16,7 +16,7 @@ project "Engine"
     {
         "src",
         "Vendor/spdlog/include",
-        "Vendor/GLFW/include",
+        "Vendor/glfw/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
         "Vendor/assimp/include",
