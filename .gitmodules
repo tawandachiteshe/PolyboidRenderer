@@ -31,3 +31,6 @@
 [submodule "Engine/Vendor/taskflow"]
 	path = Engine/Vendor/taskflow
 	url = https://github.com/tawandachiteshe/taskflow.git
+[submodule "Engine/Vendor/json"]
+	path = Engine/Vendor/json
+	url = https://github.com/tawandachiteshe/json.git
