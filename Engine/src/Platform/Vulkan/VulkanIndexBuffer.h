@@ -3,7 +3,7 @@
 
 #include "Engine/Renderer/Buffer.h"
 #include "Utils/VulkanAllocatorInstance.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 namespace Polyboid
 {

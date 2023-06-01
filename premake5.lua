@@ -13,6 +13,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 group "Dependencies"
 include "Engine/Vendor/imgui"
+include "Engine/Vendor/glfw"
 group ""
 
 group "Dev"

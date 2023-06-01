@@ -1,18 +1,10 @@
 #include "boidpch.h"
 #include "Engine.h"
 
-#include "Serializer.h"
-#include "Debug/Timer.h"
 #include "Engine/Renderer/Framebuffer.h"
-#include "Engine/Renderer/Renderer.h"
 #include "Scripting/ScriptingEngine.h"
-#include "Shaders/ShaderCompiler.h"
 #include "nlohmann/json.hpp"
-#include "taskflow/taskflow.hpp"
-#include "hashpp/hashpp.h"
 
-#include "Engine/Renderer/Renderer2D.h"
-#include "Registry/ShaderRegistry.h"
 
 namespace Polyboid
 {

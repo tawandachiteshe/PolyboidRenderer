@@ -33,6 +33,11 @@ namespace Polyboid
 		return s_Data->m_Swapchain;
 	}
 
+	void Renderer::SetCanPresent(bool canPreset)
+	{
+		s_Data->m_CanSubmitToQueue = canPreset;
+	}
+
 	void Renderer::Init(RenderAPI* context, const ApplicationSettings& appSettings)
 	{
 		s_Data = std::make_unique<RendererStorage>();
@@ -132,9 +137,12 @@ namespace Polyboid
 		const auto& inFlightFence = syncObjects->GetInFlightFence(frame);
 		const auto& imageSemaphore = syncObjects->GetImageSemaphore(frame);
 
+	
 		s_Data->m_Context->SubmitCommandBuffer(s_Data->m_CommandBuffers, imageSemaphore, renderSemaphore, inFlightFence);
-
 		s_Data->m_Swapchain->Present(renderSemaphore);
+		
+
+		
 
 		auto maxFrames = s_Data->m_MaxFramesInFlight;
 		frame = (frame + 1) % maxFrames;
@@ -310,6 +318,16 @@ namespace Polyboid
 	Ref<PipelineState> Renderer::GetDefaultPipeline()
 	{
 		return s_Data->m_DefaultPipelineState;
+	}
+
+	void Renderer::Resize(uint32_t width, uint32_t height)
+	{
+		s_Data->m_CanSubmitToQueue = false;
+		//std::this_thread::sleep_for(std::chrono_literals::operator ""ms(200ull));
+		//s_Data->m_CanSubmitToQueue = true;
+		
+		//s_Data->m_CanSubmitToQueue = true;
+
 	}
 
 	void Renderer::WaitAndRender()

@@ -66,6 +66,7 @@ namespace Polyboid
 	protected:
 		Unique<Window> m_MainWindow = nullptr;
 		RenderAPI* m_RenderAPI = nullptr;
+		bool m_CanStartRendering = false;
 
 		ApplicationSettings m_Settings;
 		void OnEvent(Event& event);

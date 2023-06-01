@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "Engine/Renderer/Image2D.h"
 #include "Engine/Renderer/Texture.h"

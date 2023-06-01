@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Engine/Renderer/Texture.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 #include <vma/vk_mem_alloc.h>
 
 namespace Polyboid

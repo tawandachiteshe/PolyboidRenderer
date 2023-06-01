@@ -4,8 +4,6 @@
 #include <spdlog/spdlog.h>
 
 #include "VkRenderAPI.h"
-#include "VkSwapChain.h"
-#include "Engine/Engine/Application.h"
 #include "Utils/VulkanDevice.h"
 #include "Engine/Renderer/Texture.h"
 #include "Platform/Vulkan/VulkanTexture2D.h"

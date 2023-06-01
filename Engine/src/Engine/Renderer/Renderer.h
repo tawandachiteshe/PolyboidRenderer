@@ -34,6 +34,7 @@ namespace Polyboid
         Ref<CommandList> m_CurrentCommandList;
         Ref<CommandBuffer> m_CommandBuffer;
         std::vector<Ref<CommandBuffer>> m_CommandBuffers;
+        bool m_CanSubmitToQueue = true;
 
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
@@ -55,6 +56,7 @@ namespace Polyboid
 
     public:
         static Ref<Swapchain> GetSwapChain();
+        static void SetCanPresent(bool canPreset);
 
     	static void Init(RenderAPI* context, const ApplicationSettings& settings);
         static void BeginDraw(const Ref<Camera>& camera);
@@ -110,7 +112,9 @@ namespace Polyboid
 
         static Ref<RenderPass> GetDefaultRenderTarget();
         static Ref<PipelineState> GetDefaultPipeline();
-        
+
+        static void Resize(uint32_t width, uint32_t height);
+
         static void WaitAndRender();
     };
 

@@ -9,7 +9,6 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 #include "Engine/Renderer/RenderAPI.h"
 #include "GLFW/glfw3.h"
 #include "imgui_impl_vulkan.h"
@@ -240,11 +239,6 @@ namespace Polyboid
     {
         
         auto type = RenderAPI::Get()->GetRenderAPIType();
-
-        if (type == RenderAPIType::Opengl)
-        {
-            ImGui_ImplOpenGL3_Shutdown();
-        }
 
         if (type == RenderAPIType::Vulkan)
         {

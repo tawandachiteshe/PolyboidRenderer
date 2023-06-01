@@ -34,7 +34,7 @@ namespace Polyboid
 
 			std::streampos end = stream.tellg();
 			stream.seekg(0, std::ios::beg);
-			uint32_t size = end - stream.tellg();
+			const uint32_t size = static_cast<uint32_t>(end - stream.tellg());
 
 			if (size == 0)
 			{
@@ -378,7 +378,7 @@ namespace Polyboid
 		std::vector<void*> paramsArray(params);
 
 
-		return InvokeMonoMethod(instance, methodName, paramsCount, paramsArray.data());
+		return InvokeMonoMethod(instance, methodName, static_cast<int32_t>(paramsCount), paramsArray.data());
 	}
 
 	MonoClassField* ScriptingEngine::GetMonoClassField(MonoObject* instance, const char* name)

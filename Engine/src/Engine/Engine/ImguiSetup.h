@@ -30,7 +30,7 @@ namespace Polyboid
         struct ImguiData
         {
             ImGuiIO* io = nullptr;
-            GLFWwindow* window;
+            GLFWwindow* window = nullptr;
         	Ref<VulkanCommandList> m_CommandList = nullptr;
             Ref<VulkanRenderPass> m_RenderPass = nullptr;
             uint32_t swapChainImage = 0;

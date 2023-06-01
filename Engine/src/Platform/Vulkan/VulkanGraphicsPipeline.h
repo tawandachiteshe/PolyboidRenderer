@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Engine/Renderer/PipelineState.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "VkRenderAPI.h"
 #include "VulkanDepthStencilState.h"

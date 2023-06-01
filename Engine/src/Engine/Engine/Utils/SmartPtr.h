@@ -154,10 +154,57 @@ namespace Polyboid
 		return RefPtr<T>(new T(std::forward<Args>(args)...));
 	}
 
-
+	template<typename  T>
 	class ScopePtr
 	{
+	private:
+		T* m_Ptr = nullptr;
+
 	public:
+
+		using ElementType = T;
+
+		ScopePtr<T>& operator=(const RefPtr<T>& other) = delete;
+		ScopePtr(const RefPtr<T>& other) = delete;
+
+		explicit ScopePtr(T* ptr) : m_Ptr(ptr)
+		{
+
+		}
+
+		T* Get() const {
+			return m_Ptr;
+		}
+
+		T* operator->() const {
+			return Get();
+		}
+
+		T& operator*() const {
+			return *Get();
+		}
+
+
+		template<typename U>
+		ScopePtr<U> As()
+		{
+			const auto convertPtr = reinterpret_cast<typename ScopePtr<U>::ElementType*>(m_Ptr);
+
+			ScopePtr<U> other(convertPtr);
+
+			return other;
+		}
+
+		~ScopePtr()
+		{
+			delete m_Ptr;
+		}
+
+
+		template<typename T, typename... Args>
+		ScopePtr<T> CreateRef(Args&&... args) {
+			return ScopePtr<T>(new T(std::forward<Args>(args)...));
+		}
 
 	};
 

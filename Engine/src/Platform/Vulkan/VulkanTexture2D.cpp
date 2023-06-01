@@ -1,6 +1,6 @@
 ﻿#include "boidpch.h"
 #include "VulkanTexture2D.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 #include "Utils/VulkanDevice.h"
 #include "Utils/VulkanAllocatorInstance.h"
 #include <vma/vk_mem_alloc.h>

@@ -1,6 +1,6 @@
 ﻿#include "boidpch.h"
 #include "VulkanRenderPass.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "VkRenderAPI.h"
 #include "VkSwapChain.h"

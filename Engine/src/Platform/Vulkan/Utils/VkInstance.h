@@ -21,6 +21,7 @@ namespace Polyboid
 		operator vk::Instance() const { return m_Instance; }
 		operator vk::Instance() { return m_Instance; }
 
+
 		vk::Instance& GetVKInstance() { return m_Instance; }
 
 		vk::DispatchLoaderDynamic GetLoader()

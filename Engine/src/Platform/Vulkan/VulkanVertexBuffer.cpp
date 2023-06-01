@@ -2,7 +2,7 @@
 #include "VulkanVertexBuffer.h"
 
 #include <spdlog/spdlog.h>
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 
 #include "VulkanCommandList.h"

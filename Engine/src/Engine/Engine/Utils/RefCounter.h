@@ -47,7 +47,7 @@ namespace Polyboid
 				m_Ptr = nullptr;
 			}
 
-			if (m_Count)
+			if (m_Count && *m_Count)
 			{
 				delete m_Count;
 				m_Count = nullptr;

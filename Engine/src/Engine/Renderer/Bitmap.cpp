@@ -28,7 +28,7 @@ namespace Polyboid
 	{
 		const auto size = width * height * channels * numOfbitMaps;
 		m_Pixels = new float[size];
-		std::memset(m_Pixels, 0.0f, size);
+		std::memset(m_Pixels, 0, size);
 	}
 
 	Bitmap::Bitmap(int32_t width, int32_t height, int32_t channels, float* data): m_Width(width), m_Height(height), m_Channels(channels), m_Pixels(data)
@@ -71,6 +71,7 @@ namespace Polyboid
 
 		}
 
+		return {};
 
 	}
 

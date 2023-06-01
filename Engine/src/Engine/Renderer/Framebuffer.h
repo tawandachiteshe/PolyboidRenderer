@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "Framebuffer.h"
-#include "Renderbuffer.h"
+#include "Texture.h"
 #include "Engine/Engine/Base.h"
 
 namespace Polyboid 

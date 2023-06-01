@@ -448,7 +448,23 @@ namespace Polyboid
 		}
 
 
-		
+		m_Swapchains.clear();
+		m_RenderPasses.clear();
+		m_Framebuffers.clear();
+		m_CommandLists.clear();
+		m_Textures2D.clear();
+		m_IndexBuffers.clear();
+		m_VertexBuffers.clear();
+		m_Fences.clear();
+		m_Semaphores.clear();
+		m_Image2Ds.clear();
+		m_VulkanShaders.clear();
+		m_Pipelines.clear();
+		m_DescPools.clear();
+		m_StorageBuffers.clear();
+		m_UniformBuffers.clear();
+		m_StagingBuffers.clear();
+		m_CommandBuffersBatching.clear();
 
 
 		result = device.waitIdle();

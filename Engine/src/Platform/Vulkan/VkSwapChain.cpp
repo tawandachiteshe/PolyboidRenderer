@@ -280,6 +280,9 @@ namespace Polyboid
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)
 	{
 		m_Resize = true;
+		m_Settings.Width = width;
+		m_Settings.Height = height;
+		//Init(m_Context, m_Settings);
 	}
 
 
@@ -311,6 +314,11 @@ namespace Polyboid
 			__debugbreak();
 		}
 
+		if (result != vk::Result::eSuccess && result != vk::Result::eErrorOutOfDateKHR)
+		{
+			__debugbreak();
+		}
+
 	}
 
 	uint32_t VkSwapChain::GetImageIndex(const Ref<Semaphore>& _imageSemaphore)
@@ -325,12 +333,16 @@ namespace Polyboid
 
 		if (ImageResult != vk::Result::eSuccess)
 		{
-			__debugbreak();
+			Renderer::SetCanPresent(false);
+			m_SwapchainCurrentImageIndex = true;
+		}
+		else
+		{
+			m_SwapchainCurrentImageIndex = index;
+			
 		}
 
-		m_SwapchainCurrentImageIndex = index;
-
-		vk::resultCheck(ImageResult, "Failed to aquire image");
+		
 		return  m_SwapchainCurrentImageIndex;
 	}
 

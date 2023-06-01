@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "Engine/Engine/Shaders/ShaderCompiler.h"
 #include "Engine/Renderer/Shader.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 namespace Polyboid
 {

@@ -1,8 +1,8 @@
 ﻿#include "boidpch.h"
 #include "VulkanPipelineDescriptorSet.h"
 
-#include <spdlog/spdlog.h>
-#include <vulkan/vulkan.hpp>
+
+#include <vulkan/vulkan_raii.hpp>
 
 #include "Buffers.h"
 #include "VkRenderAPI.h"

@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "Engine/Renderer/Buffer.h"
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_raii.hpp>
 
 #include "VkRenderAPI.h"
 #include <vma/vk_mem_alloc.h>

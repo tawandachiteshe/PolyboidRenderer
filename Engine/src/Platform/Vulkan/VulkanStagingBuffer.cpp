@@ -1,11 +1,9 @@
 ﻿#include "boidpch.h"
 #include "VulkanStagingBuffer.h"
 
-#include <spdlog/spdlog.h>
-#include <vulkan/vulkan.hpp>
-
+#include <vulkan/vulkan_raii.hpp>
 #include "VkRenderAPI.h"
-#include "Utils/VulkanAllocatorInstance.h"
+
 
 namespace Polyboid
 {

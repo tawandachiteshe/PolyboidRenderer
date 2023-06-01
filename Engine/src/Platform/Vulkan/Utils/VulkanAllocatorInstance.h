@@ -16,7 +16,7 @@ namespace Polyboid
 
 		explicit VulkanAllocatorInstance(const VkRenderAPI* context);
 		void Destroy();
-		~VulkanAllocatorInstance() = default;
+		~VulkanAllocatorInstance() {}
 	};
 
 }

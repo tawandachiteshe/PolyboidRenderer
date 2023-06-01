@@ -1,20 +1,13 @@
 ﻿#include "boidpch.h"
 #include "VulkanCommandBuffer.h"
 
-#include <spdlog/spdlog.h>
 
-#include "imgui.h"
-#include "imgui_impl_vulkan.h"
 #include "VkRenderAPI.h"
-#include "VkSwapChain.h"
 #include "VulkanCommandList.h"
-#include "VulkanFence.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanPipelineDescriptorSet.h"
 #include "VulkanRenderPass.h"
-#include "VulkanSemaphore.h"
-#include "Engine/Engine/Application.h"
 #include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/Image2D.h"

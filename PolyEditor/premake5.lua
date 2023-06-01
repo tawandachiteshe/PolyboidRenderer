@@ -47,17 +47,7 @@ project "PolyEditor"
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
-        postbuildcommands {
-            "{COPY} %{wks.location}/Engine/Vendor/assimp/bin/assimp-vc143-mt.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/Optick/lib/x64/debug/OptickCore.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/shaderc/shaderc_shared.dll %{cfg.targetdir}"
-        }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "On"
-        postbuildcommands {
-            "{COPY} %{wks.location}/Engine/Vendor/assimp/bin/assimp-vc143-mt.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/Optick/lib/x64/release/OptickCore.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/shaderc/shaderc_shared.dll %{cfg.targetdir}"
-        }

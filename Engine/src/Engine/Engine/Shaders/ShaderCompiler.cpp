@@ -13,8 +13,6 @@
 #include "spirv_cross/spirv_cross.hpp"
 #include "spirv_cross/spirv_reflect.hpp"
 #include "nlohmann/json.hpp"
-#include "hashpp/hashpp.h"
-
 #include <struct_pack/struct_pack.hpp>
 
 #include "Engine/Renderer/RenderAPI.h"
@@ -431,7 +429,7 @@ namespace Polyboid
 		stringBytes.resize(spirv.size() * sizeof(uint32_t));
 		std::memcpy(&stringBytes[0], bytes, spirv.size() * sizeof(uint32_t));
 
-		auto md5 = hashpp::MD::MD5();
-		return md5.getHash(stringBytes);
+		
+		return "tawanda";
 	}
 }
