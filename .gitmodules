@@ -34,3 +34,6 @@
 [submodule "Engine/Vendor/json"]
 	path = Engine/Vendor/json
 	url = https://github.com/tawandachiteshe/json.git
+[submodule "Engine/Vendor/glfw"]
+	path = Engine/Vendor/glfw
+	url = https://github.com/tawandachiteshe/GLFW.git
