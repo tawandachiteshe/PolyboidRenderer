@@ -3,12 +3,28 @@
 
 #include <spdlog/spdlog.h>
 
+void* operator new(size_t size)
+{
+    Polyboid::EngineMemoryManager::s_MemUsage += size;
+    Polyboid::EngineMemoryManager::s_AllocationCount += 1;
+    return std::malloc(size);
+}
+
+void operator delete(void* memory, size_t size)
+{
+    Polyboid::EngineMemoryManager::s_Freed += size;
+    Polyboid::EngineMemoryManager::s_FreeCount += 1;
+    std::free(memory);
+}
+
+
 
 namespace Polyboid
 {
     uint64_t EngineMemoryManager::s_MemUsage = 0u;
     uint64_t EngineMemoryManager::s_AllocationCount = 0u;
     uint64_t EngineMemoryManager::s_FreeCount = 0u;
+    uint64_t EngineMemoryManager::s_Freed = 0u;
 
     struct MemInfo
     {
@@ -18,15 +34,14 @@ namespace Polyboid
     };
 
     void* EngineMemoryManager::operator new(std::size_t size) {
-        Polyboid::EngineMemoryManager::s_MemUsage += size;
-        Polyboid::EngineMemoryManager::s_AllocationCount += 1;
 
         if (size == 4)
         {
             __debugbreak();
         }
 
-        void* rawPtr = std::malloc(size);
+        
+        void* rawPtr = ::operator new(size);
 
         return (rawPtr);
 
@@ -38,7 +53,7 @@ namespace Polyboid
 
         Polyboid::EngineMemoryManager::s_FreeCount += 1;
         // Free the memory block
-        std::free(ptr);
+        ::operator delete(ptr);
 
 
     }
@@ -46,6 +61,11 @@ namespace Polyboid
     uint64_t EngineMemoryManager::GetMemoryUsage()
     {
         return s_MemUsage;
+    }
+
+    uint64_t EngineMemoryManager::GetFreed()
+    {
+        return s_Freed;
     }
 
     uint64_t EngineMemoryManager::GetAllocationCount()

@@ -43,7 +43,7 @@ namespace Polyboid
 			
 			if (m_Ptr)
 			{
-				EngineMemoryManager::FreeMem(m_Ptr);
+				delete m_Ptr;
 				m_Ptr = nullptr;
 			}
 

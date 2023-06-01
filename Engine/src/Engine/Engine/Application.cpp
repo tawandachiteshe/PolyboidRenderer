@@ -152,7 +152,12 @@ namespace Polyboid
 		auto offRenderPass = RenderPass::Create(renderPassSettings);
 		auto offscreenBuffers = FrameBufferSet::Create(offRenderPass);
 
-		struct Person
+		struct Base
+		{
+			virtual ~Base() = default;
+		};
+
+		struct Person : public Base
 		{
 			std::string m_Name = "";
 			uint32_t m_Age = 0;
@@ -162,14 +167,24 @@ namespace Polyboid
 				  m_Age(m_age)
 			{
 			}
+
+			~Person() override
+			{
+				spdlog::info("Person diss");
+			}
 		};
+
+		{
+			Person p("tawada", 1);
+		}
+
 
 		RefPtr outerScope(new int);
 		auto ptr = CreateRef<Person>("Tawanda", 1);
 
-		std::allocator<int> a;
-		a.allocate(2);
 
+		Person* ac = new Person("tawnaa", 1);
+		delete ac;
 
 		Ref<int> refC(new int(1));
 		auto  c = refC.Get();

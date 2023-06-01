@@ -226,5 +226,6 @@ namespace Polyboid
 
 	VulkanTexture2D::~VulkanTexture2D()
 	{
+		spdlog::info("Reloaded hahha");
 	}
 }

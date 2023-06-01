@@ -185,7 +185,7 @@ namespace Polyboid
 	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings, const void* data)
 	{
 		auto texture = ALLOC_API(VulkanTexture2D, this, settings, data);
-		m_Textures2D.push_back(texture);
+		//m_Textures2D.push_back(texture);
 
 		return texture.As<Texture>();
 	}
@@ -394,10 +394,10 @@ namespace Polyboid
 			vtx->Destroy();
 		}
 
-		for (const auto& texture : m_Textures2D)
-		{
-			texture->Destroy();
-		}
+		// for (const auto& texture : m_Textures2D)
+		// {
+		// 	texture->Destroy();
+		// }
 
 		for (const auto& idx : m_IndexBuffers)
 		{
@@ -447,7 +447,8 @@ namespace Polyboid
 			command->Destroy(device);
 		}
 
-	
+
+		
 
 
 		result = device.waitIdle();

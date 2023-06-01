@@ -16,6 +16,24 @@ int main(int argc, char** argv);
 
 namespace Polyboid
 {
+	template <typename T>
+	class MyAllocator {
+	public:
+		// Allocate memory for an object of type T
+		T* allocate(size_t n) {
+			return static_cast<T*>(std::malloc(n * sizeof(T)));
+		}
+
+		// Deallocate memory
+		void deallocate(T* ptr, size_t n) {
+			for (size_t i = 0; i < n; ++i) {
+				ptr[i].~T();  // Call the destructor explicitly
+			}
+			std::free(ptr);
+		}
+	};
+
+
 	class CommandList;
 	class PipelineState;
 	class RenderPass;

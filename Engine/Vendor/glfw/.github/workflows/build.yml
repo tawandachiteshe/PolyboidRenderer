@@ -3,6 +3,7 @@ on:
     pull_request:
     push:
         branches: [ ci, master, latest, 3.3-stable ]
+    workflow_dispatch:
 permissions:
     statuses: write
     contents: read
@@ -15,7 +16,7 @@ jobs:
             CC: clang
             CFLAGS: -Werror
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - name: Install dependencies
               run: |
                   sudo apt update
@@ -31,49 +32,26 @@ jobs:
             - name: Build shared library
               run: cmake --build build-shared --parallel
 
-    build-linux-wayland-clang:
-        name: Wayland (Linux, Clang)
+    build-linux-full-clang:
+        name: X11+Wayland (Linux, Clang)
         runs-on: ubuntu-latest
         env:
             CC: clang
             CFLAGS: -Werror
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
             - name: Install dependencies
               run: |
                   sudo apt update
-                  sudo apt install wayland-protocols libwayland-dev libxkbcommon-dev extra-cmake-modules
+                  sudo apt install libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev wayland-protocols libwayland-dev libxkbcommon-dev
 
             - name: Configure static library
-              run: cmake -S . -B build-static -D GLFW_USE_WAYLAND=ON
+              run: cmake -S . -B build-static -D GLFW_BUILD_WAYLAND=ON
             - name: Build static library
               run: cmake --build build-static --parallel
 
             - name: Configure shared library
-              run: cmake -S . -B build-shared -D GLFW_USE_WAYLAND=ON -D BUILD_SHARED_LIBS=ON
-            - name: Build shared library
-              run: cmake --build build-shared --parallel
-
-    build-linux-null-clang:
-        name: Null (Linux, Clang)
-        runs-on: ubuntu-latest
-        env:
-            CC: clang
-            CFLAGS: -Werror
-        steps:
-            - uses: actions/checkout@v2
-            - name: Install dependencies
-              run: |
-                  sudo apt update
-                  sudo apt install libosmesa6-dev
-
-            - name: Configure static library
-              run: cmake -S . -B build-static -D GLFW_USE_OSMESA=ON
-            - name: Build static library
-              run: cmake --build build-static --parallel
-
-            - name: Configure shared library
-              run: cmake -S . -B build-shared -D GLFW_USE_OSMESA=ON -D BUILD_SHARED_LIBS=ON
+              run: cmake -S . -B build-shared -D GLFW_BUILD_WAYLAND=ON -D BUILD_SHARED_LIBS=ON
             - name: Build shared library
               run: cmake --build build-shared --parallel
 
@@ -84,7 +62,7 @@ jobs:
             CFLAGS: -Werror
             MACOSX_DEPLOYMENT_TARGET: 10.8
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
 
             - name: Configure static library
               run: cmake -S . -B build-static
@@ -102,7 +80,7 @@ jobs:
         env:
             CFLAGS: /WX
         steps:
-            - uses: actions/checkout@v2
+            - uses: actions/checkout@v3
 
             - name: Configure static library
               run: cmake -S . -B build-static -G "Visual Studio 17 2022"

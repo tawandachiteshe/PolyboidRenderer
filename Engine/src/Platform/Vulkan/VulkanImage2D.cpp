@@ -111,4 +111,10 @@ namespace Polyboid
 	{
 		return m_Settings.width;
 	}
+
+	VulkanImage2D::~VulkanImage2D()
+	{
+		
+		spdlog::info("Reloaded hahha");
+	}
 }

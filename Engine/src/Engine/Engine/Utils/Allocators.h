@@ -1,9 +1,10 @@
 ﻿#pragma once
+#include <type_traits>
 
 
 namespace Polyboid
 {
-
+  
 
     class EngineMemoryManager
     {
@@ -35,13 +36,16 @@ namespace Polyboid
         template<typename Type>
         static void FreeMem(Type* ptr)
         {
+           
             Deallocate<8>(ptr);
         }
 
         static uint64_t s_AllocationCount;
         static uint64_t s_FreeCount;
         static uint64_t s_MemUsage;
+        static uint64_t s_Freed;
         static uint64_t GetMemoryUsage();
+        static uint64_t GetFreed();
         static uint64_t GetAllocationCount();
         static uint64_t GetFreeCount();
 

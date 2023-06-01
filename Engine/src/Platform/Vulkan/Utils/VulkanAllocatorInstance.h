@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <vma/vk_mem_alloc.h>
 
+
 namespace Polyboid
 {
 	class VkRenderAPI;
@@ -15,7 +16,7 @@ namespace Polyboid
 
 		explicit VulkanAllocatorInstance(const VkRenderAPI* context);
 		void Destroy();
-
+		~VulkanAllocatorInstance() = default;
 	};
 
 }
