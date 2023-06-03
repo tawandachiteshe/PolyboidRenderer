@@ -72,6 +72,11 @@ namespace Polyboid
 		Init(m_Context, m_Settings);
 	}
 
+	CommandListSettings& VulkanCommandBufferSet::GetSettings()
+	{
+		return m_Settings;
+	}
+
 
 	Ref<CommandBuffer> VulkanCommandBufferSet::GetCommandBufferAt(uint32_t index)
 	{

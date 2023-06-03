@@ -114,18 +114,10 @@ namespace Polyboid
 	void VulkanGraphicsBackend::GetSwapchainImageIndex(uint32_t currentImage)
 	{
 
-		
-	}
-
-	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
-	{
-		auto frame = Renderer::GetCurrentFrame();
-
-		s_Data->m_CommandBuffers = commandBuffers;
 		auto& syncObjects = s_Data->m_SyncObjects;
-		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(frame);
-		const auto& _fence = syncObjects->GetInFlightFence(frame);
-		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(frame);
+		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(currentImage);
+		const auto& _fence = syncObjects->GetInFlightFence(currentImage);
+		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(currentImage);
 
 		auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
 
@@ -174,7 +166,22 @@ namespace Polyboid
 				vk::resultCheck(acquireResult, "Failed to acquire image");
 			}
 		} while (acquireResult != vk::Result::eSuccess);
+	}
 
+	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	{
+		auto frame = Renderer::GetCurrentFrame();
+
+		s_Data->m_CommandBuffers = commandBuffers;
+		auto& syncObjects = s_Data->m_SyncObjects;
+		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(frame);
+		const auto& _fence = syncObjects->GetInFlightFence(frame);
+		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(frame);
+		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
+
+		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
+		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
+		auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
 
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
@@ -205,7 +212,7 @@ namespace Polyboid
 		submitInfo.pSignalSemaphores = &renderSemaphore;
 
 
-	 result = m_GraphicsQueue.submit(1, &submitInfo, fence);
+	   vk::Result result = m_GraphicsQueue.submit(1, &submitInfo, fence);
 		vk::resultCheck(result, "Failed to submit commands");
 
 

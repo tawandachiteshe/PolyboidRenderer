@@ -47,7 +47,6 @@ namespace Polyboid
 		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
 
 		s_Data->m_Swapchain = Swapchain::Create(settings);
-		s_Data->m_CommandBuffers.reserve(20);
 
 		
 		s_Data->m_GraphicsBackend = CreateRef<VulkanGraphicsBackend>().As<GraphicsBackend>();
@@ -84,12 +83,11 @@ namespace Polyboid
 	{
 	}
 
-	void Renderer::BeginCommands(const Ref<CommandBufferSet>& cmdLists)
+	void Renderer::BeginCommands(const Ref<CommandBufferSet>& cmdLists, uint32_t index)
 	{
-		
-		s_Data->m_CommandBuffers.emplace_back(cmdLists);
+
 		s_Data->m_CurrentCommandList = cmdLists;
-		SetCurrentCommandBuffer(s_Data->m_CurrentFrame);
+		SetCurrentCommandBuffer(index);
 		GetCurrentCommandBuffer()->Begin();
 	}
 
@@ -97,6 +95,18 @@ namespace Polyboid
 	{
 		cmdBuffer->Begin();
 	
+	}
+
+	void Renderer::BeginFrameCommands(const Ref<CommandBufferSet>& cmdList)
+	{
+		s_Data->m_CurrentCommandList = cmdList;
+		SetCurrentCommandBuffer(GetGraphicsBackend()->GetCurrentImageIndex());
+		GetCurrentCommandBuffer()->Begin();
+	}
+
+	void Renderer::EndFrameCommands()
+	{
+		GetCurrentCommandBuffer()->End();
 	}
 
 	void Renderer::EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
@@ -109,6 +119,10 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->End();
 	}
 
+	void Renderer::AcquireImageIndex()
+	{
+		GetGraphicsBackend()->GetSwapchainImageIndex(GetCurrentFrame());
+	}
 
 
 	void Renderer::BeginSwapChainRenderPass()
@@ -196,7 +210,7 @@ namespace Polyboid
 
 	void Renderer::EndRenderPass()
 	{
-		
+		spdlog::info("Current buffer index {}", s_Data->m_CurrentFrame);
 		GetCurrentCommandBuffer()->EndRenderPass();
 	}
 
@@ -298,9 +312,8 @@ namespace Polyboid
 
 	}
 
-	void Renderer::WaitAndRender()
+	void Renderer::WaitAndRender(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
 	{
-		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CommandBuffers);
-		s_Data->m_CommandBuffers.clear();
+		s_Data->m_GraphicsBackend->SubmitGraphicsWork(commandBuffers);
 	}
 }

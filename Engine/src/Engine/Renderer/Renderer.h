@@ -34,7 +34,6 @@ namespace Polyboid
         Ref<Swapchain> m_Swapchain;
         Ref<CommandBufferSet> m_CurrentCommandList;
         Ref<CommandBuffer> m_CommandBuffer;
-        std::vector<Ref<CommandBufferSet>> m_CommandBuffers;
 
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
@@ -65,10 +64,13 @@ namespace Polyboid
         static uint32_t& GetCurrentFrame();
         static void SetCurrentFrame(uint32_t currentFrame);
         static void EndDraw();
-        static void BeginCommands(const Ref<CommandBufferSet>& cmdList);
+        static void BeginCommands(const Ref<CommandBufferSet>& cmdList, uint32_t index);
         static void BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
+        static void BeginFrameCommands(const Ref<CommandBufferSet>& cmdList);
+        static void EndFrameCommands();
         static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
     	static void EndCommands();
+        static void AcquireImageIndex();
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
@@ -113,7 +115,7 @@ namespace Polyboid
 
         static void Resize(uint32_t width, uint32_t height);
 
-        static void WaitAndRender();
+        static void WaitAndRender(const std::vector<Ref<CommandBufferSet>>& commandBuffers);
     };
 
 }

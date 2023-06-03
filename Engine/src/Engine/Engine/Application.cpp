@@ -137,8 +137,8 @@ namespace Polyboid
 
 		Engine::Init();
 
-		m_CommandList = CommandBufferSet::Create({3});
-		auto secondCommandList = CommandBufferSet::Create({3});
+		m_CommandList = CommandBufferSet::Create({3, CommandType::ManyTime});
+		auto secondCommandList = CommandBufferSet::Create({3, CommandType::ManyTime});
 		auto offscreenCommandBuffer = CommandBufferSet::Create({3});
 		auto imGuiCommandList = CommandBufferSet::Create({3});
 
@@ -258,8 +258,7 @@ namespace Polyboid
 		static float rotation = 0;
 		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
 		{
-			Renderer::SetCurrentFrame(i);
-			Renderer::BeginCommands(m_CommandList);
+			Renderer::BeginCommands(m_CommandList, i);
 			Renderer::BeginRenderPass(Renderer::GetSwapChain()->GetRenderPass(),
 			                          Renderer::GetSwapChain()->GetFrameBuffer(i));
 			Renderer::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
@@ -284,6 +283,7 @@ namespace Polyboid
 				continue;
 			}
 
+			Renderer::AcquireImageIndex();
 
 			rotation += (float)m_GameTime * (float)100.0f;
 
@@ -312,12 +312,12 @@ namespace Polyboid
 			Imgui::End();
 
 
-			// Renderer::BeginCommands(secondCommandList);
-			// Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
-			// Renderer::SetStagingBufferData(storageStagingBuffers, vert);
-			// Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
-			// Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
-			// Renderer::EndCommands();
+			Renderer::BeginFrameCommands(secondCommandList);
+			Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
+			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
+			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
+			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
+			Renderer::EndFrameCommands();
 
 
 			// Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
@@ -347,7 +347,7 @@ namespace Polyboid
 			//Swapchain renderpass
 
 
-			Renderer::WaitAndRender();
+			Renderer::WaitAndRender({m_CommandList, secondCommandList});
 		}
 
 		int a = 2000;

@@ -48,6 +48,7 @@ namespace Polyboid
 		m_CommandBuffer = commandbuffer.at(0);
 	}
 
+
 	void VulkanCommandBuffer::Recreate()
 	{
 		Init(m_Context, m_CommandList);
@@ -55,13 +56,13 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::Begin()
 	{
-
-		vk::Result result = m_CommandBuffer.reset();
+		vk::Result result;
+		result = m_CommandBuffer.reset();
 		vk::resultCheck(result, "Failed to reset command buffer");
 
 		vk::CommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
-		beginInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
+		beginInfo.flags = m_CommandList->m_Settings.SubmissionType == CommandType::ManyTime ? vk::CommandBufferUsageFlagBits::eSimultaneousUse : vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
 		beginInfo.pInheritanceInfo = nullptr;
 		
 		 result = m_CommandBuffer.begin(beginInfo);

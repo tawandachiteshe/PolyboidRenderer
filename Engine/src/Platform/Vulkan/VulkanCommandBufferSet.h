@@ -27,6 +27,7 @@ namespace Polyboid
 		VulkanCommandBufferSet(const VkRenderAPI* context, const CommandListSettings& settings);
 		void Init(const VkRenderAPI* context, const CommandListSettings& settings);
 		void Recreate();
+		CommandListSettings& GetSettings() override;
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
 		~VulkanCommandBufferSet() override;
 

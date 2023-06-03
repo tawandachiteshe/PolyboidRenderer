@@ -60,17 +60,26 @@ namespace Polyboid
 
 	};
 
+	enum class CommandType
+	{
+		OneTime,
+		ManyTime
+	};
+
 	struct CommandListSettings
 	{
 		uint32_t ImageCount = 3;
+		CommandType SubmissionType = CommandType::OneTime;
 	};
 
 	class CommandBufferSet
 	{
+
 	public:
 
 		virtual Ref<CommandBuffer> GetCommandBufferAt(uint32_t index = 0) = 0;
 		virtual ~CommandBufferSet() = default;
+		virtual CommandListSettings& GetSettings() = 0;
 
 		static Ref<CommandBufferSet> Create(const CommandListSettings& settings);
 
