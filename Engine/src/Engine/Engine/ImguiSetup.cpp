@@ -30,7 +30,48 @@ namespace Polyboid
 
 
 	Imgui::ImguiData Imgui::s_Data;
-    
+    static  ImGui_ImplVulkanH_Window s_Window;
+    static ImGui_ImplVulkanH_Window s_MainWindowData;
+    static  vk::PhysicalDevice g_PhysicalDevice;
+    static vk::Instance g_Instance;
+    static vk::Device g_Device;
+    static  uint32_t g_QueueFamily;
+    static uint32_t g_MinImageCount = 2;
+    static vk::AllocationCallbacks g_Allocator = nullptr;
+
+    static void SetupVulkanWindow(ImGui_ImplVulkanH_Window* wd, VkSurfaceKHR surface, int width, int height)
+    {
+        wd->Surface = surface;
+
+        // Check for WSI support
+        VkBool32 res;
+        vkGetPhysicalDeviceSurfaceSupportKHR(g_PhysicalDevice, g_QueueFamily, wd->Surface, &res);
+        if (res != VK_TRUE)
+        {
+            fprintf(stderr, "Error no WSI support on physical device 0\n");
+            exit(-1);
+        }
+
+        // Select Surface Format
+        const VkFormat requestSurfaceImageFormat[] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM };
+        const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+        wd->SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(g_PhysicalDevice, wd->Surface, requestSurfaceImageFormat, (size_t)IM_ARRAYSIZE(requestSurfaceImageFormat), requestSurfaceColorSpace);
+
+        // Select Present Mode
+#ifdef IMGUI_UNLIMITED_FRAME_RATE
+        VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_MAILBOX_KHR, VK_PRESENT_MODE_IMMEDIATE_KHR, VK_PRESENT_MODE_FIFO_KHR };
+#else
+        VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
+#endif
+        wd->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(g_PhysicalDevice, wd->Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
+        //printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
+
+        // Create SwapChain, RenderPass, Framebuffer, etc.
+        IM_ASSERT(g_MinImageCount >= 2);
+
+        vk::AllocationCallbacks::NativeType* allocator = nullptr;
+        ImGui_ImplVulkanH_CreateOrResizeWindow(g_Instance, g_PhysicalDevice, g_Device, wd, g_QueueFamily, allocator, width, height, g_MinImageCount);
+    }
 
     static void check_vk_result(VkResult err)
     {
@@ -64,6 +105,7 @@ namespace Polyboid
 
         s_Data.window = std::any_cast<GLFWwindow*>(window);
         s_Data.io = &io;
+        
 
         //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
   //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -112,13 +154,6 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
-  
-
-           
-
-
-            // Select Surface Format
-            ImGui_ImplGlfw_InitForVulkan((s_Data.window), true);
 
             InitVulkanRenderer();
 
@@ -171,13 +206,28 @@ namespace Polyboid
         init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
         init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
         init_info.DescriptorPool = std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool);
-        init_info.MinImageCount = 2;
+        init_info.MinImageCount = 3;
         init_info.ImageCount = 3;
         init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
         init_info.CheckVkResultFn = check_vk_result;
         init_info.Subpass = 0;
 
+        g_Device = init_info.Device;
+        g_Instance = init_info.Instance;
+        g_PhysicalDevice = init_info.PhysicalDevice;
+        g_QueueFamily = init_info.QueueFamily;
+        
 
+        int w, h;
+        glfwGetFramebufferSize(s_Data.window, &w, &h);
+        ImGui_ImplVulkanH_Window* wd = &s_MainWindowData;
+
+        vk::SurfaceKHR surface = renderAPI->GetSurface()->GetSurface();
+        
+
+        //SetupVulkanWindow(wd, surface, w, h);
+
+        ImGui_ImplGlfw_InitForVulkan(s_Data.window, true);
         ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());
 
         // Upload Fonts
@@ -224,13 +274,31 @@ namespace Polyboid
 
     void Imgui::RecreateVulkanRenderer()
     {
-        DestroyVulkanRenderer();
-        InitVulkanRenderer();
+        // DestroyVulkanRenderer();
+        // InitVulkanRenderer();
+        auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
+
+        auto Instance = renderAPI->GetInstance()->GetVKInstance();
+        auto PhysicalDevice = renderAPI->GetPhysicalDevice()->GetPhysicalDevice();
+        auto Device = renderAPI->GetDevice()->GetVulkanDevice();
+        auto QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
+        auto Queue = renderAPI->GetDevice()->GetGraphicsQueue();
+
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
+
+        if (width > 0 && height > 0)
+        {
+            // ImGui_ImplVulkan_SetMinImageCount(2);
+            // ImGui_ImplVulkanH_CreateOrResizeWindow(Instance, PhysicalDevice, Device, &s_Window, QueueFamily, nullptr, (int)width, (int)height, 2);
+            // s_MainWindowData.FrameIndex = 0;
+        }
+
+        
     }
 
-    void Imgui::Begin(const Ref<CommandBufferSet>& cmdList)
+    void Imgui::Begin()
     {
-        s_Data.m_CommandList = cmdList.As<VulkanCommandBufferSet>();
 
         ImGui_ImplGlfw_NewFrame();
     	ImGui_ImplVulkan_NewFrame();
@@ -247,17 +315,17 @@ namespace Polyboid
 
         ImGui::Render();
 
-        auto cmd = s_Data.m_CommandList;
-        auto frame = Renderer::GetCurrentFrame();
-        auto cmdBuffer = cmd->GetCommandBufferAt(frame);
-        VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
-       
         if ((*s_Data.io).ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
         }
+    }
+
+    void Imgui::SubmitToCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+    {
+        VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
     }
 
     void Imgui::ShutDown()

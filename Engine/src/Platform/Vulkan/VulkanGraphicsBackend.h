@@ -40,7 +40,7 @@ namespace Polyboid
 		std::vector<Ref<FrameBufferSet>> m_Framebuffers;
 		std::vector<Ref<VulkanCommandBufferSet>> m_CommandLists;
 		std::vector<Ref<VulkanGraphicsPipeline>> m_Pipelines;
-
+		std::vector<Ref<CommandBufferSet>> m_CommandBuffers;
 
 		std::vector<vk::CommandBuffer> m_SubmittingBuffer;
 		Ref<RendererSyncObjects> m_SyncObjects;
@@ -51,7 +51,6 @@ namespace Polyboid
 	private:
 		Ref<GraphicsBackendData> s_Data;
 		uint32_t m_SwapchainIndex = 0;
-		uint32_t m_CurrentFrame = 0;
 		vk::Queue m_GraphicsQueue;
 		vk::Device m_Device;
 		bool m_CanRender = true;

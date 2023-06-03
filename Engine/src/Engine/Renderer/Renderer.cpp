@@ -77,6 +77,7 @@ namespace Polyboid
 	void Renderer::SetCurrentFrame(uint32_t currentFrame)
 	{
 		s_Data->m_CurrentFrame = currentFrame;
+		
 	}
 
 	void Renderer::EndDraw()
@@ -85,8 +86,9 @@ namespace Polyboid
 
 	void Renderer::BeginCommands(const Ref<CommandBufferSet>& cmdLists)
 	{
-		s_Data->m_CurrentCommandList = cmdLists;
+		
 		s_Data->m_CommandBuffers.emplace_back(cmdLists);
+		s_Data->m_CurrentCommandList = cmdLists;
 		SetCurrentCommandBuffer(s_Data->m_CurrentFrame);
 		GetCurrentCommandBuffer()->Begin();
 	}
@@ -105,29 +107,8 @@ namespace Polyboid
 	void Renderer::EndCommands()
 	{
 		GetCurrentCommandBuffer()->End();
-
 	}
 
-
-	void Renderer::BeginFrame()
-	{
-		s_Data->m_GraphicsBackend->GetSwapchainImageIndex(s_Data->m_CurrentFrame);
-	}
-
-	void Renderer::EndFrame()
-	{
-		auto frame = s_Data->m_CurrentFrame;
-
-
-		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CommandBuffers);
-
-		const auto& maxFrames = s_Data->m_MaxFramesInFlight;
-		frame = (frame + 1) % maxFrames;
-
-		s_Data->m_CurrentFrame = frame;
-
-		s_Data->m_CommandBuffers.clear();
-	}
 
 
 	void Renderer::BeginSwapChainRenderPass()
@@ -143,6 +124,8 @@ namespace Polyboid
 
 	Ref<CommandBuffer> Renderer::GetCurrentCommandBuffer()
 	{
+		
+		
 		return s_Data->m_CommandBuffer;
 	}
 
@@ -179,6 +162,7 @@ namespace Polyboid
 
 	void Renderer::SetPipelineState(const Ref<PipelineState>& pipelineState)
 	{
+		s_Data->m_GraphicsBackend->SubmitPipeline(pipelineState);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipelineState);
 	}
 
@@ -201,6 +185,7 @@ namespace Polyboid
 
 	void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
 	{
+		s_Data->m_GraphicsBackend->SubmitPipeline(pipeline);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipeline);
 	}
 
@@ -211,6 +196,7 @@ namespace Polyboid
 
 	void Renderer::EndRenderPass()
 	{
+		
 		GetCurrentCommandBuffer()->EndRenderPass();
 	}
 
@@ -314,5 +300,7 @@ namespace Polyboid
 
 	void Renderer::WaitAndRender()
 	{
+		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CommandBuffers);
+		s_Data->m_CommandBuffers.clear();
 	}
 }

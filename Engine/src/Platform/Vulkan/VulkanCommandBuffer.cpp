@@ -61,7 +61,7 @@ namespace Polyboid
 
 		vk::CommandBufferBeginInfo beginInfo{};
 		beginInfo.sType = vk::StructureType::eCommandBufferBeginInfo;
-		//beginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+		beginInfo.flags = vk::CommandBufferUsageFlagBits::eSimultaneousUse;
 		beginInfo.pInheritanceInfo = nullptr;
 		
 		 result = m_CommandBuffer.begin(beginInfo);

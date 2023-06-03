@@ -12,6 +12,15 @@ namespace Polyboid
 	VulkanPipelineDescriptorSetPool::VulkanPipelineDescriptorSetPool(const VkRenderAPI* context,
 		DescriptorSetPoolSettings settings): m_Context(context), m_Settings(settings)
 	{
+
+		//device.resetDescriptorPool(m_DescPool);
+		Init();
+	}
+
+	void VulkanPipelineDescriptorSetPool::Init()
+	{
+		auto device = VkRenderAPI::GetVulkanDevice();
+
 		if (m_Settings.UniformBufferCount)
 		{
 			vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformBuffer, m_Settings.UniformBufferCount };
@@ -30,13 +39,6 @@ namespace Polyboid
 			m_PoolSizes.emplace_back(poolSize);
 		}
 
-		//device.resetDescriptorPool(m_DescPool);
-		Init();
-	}
-
-	void VulkanPipelineDescriptorSetPool::Init()
-	{
-		auto device = VkRenderAPI::GetVulkanDevice();
 
 
 		vk::DescriptorPoolCreateInfo createInfo{};
@@ -77,8 +79,11 @@ namespace Polyboid
 
 	void VulkanPipelineDescriptorSetPool::Destroy()
 	{
+		
 		const auto device = m_Context->GetDevice()->GetVulkanDevice();
 		device.destroyDescriptorPool(m_DescPool);
+		m_DescPool = nullptr;
+		m_PoolSizes.clear();
 	}
 
 	DescriptorSetPoolSettings VulkanPipelineDescriptorSetPool::GetDescPoolSettings()

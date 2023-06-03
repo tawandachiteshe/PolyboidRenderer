@@ -73,6 +73,7 @@ namespace Polyboid
 
 		static vk::Device GetVulkanDevice();
 		static vk::PhysicalDevice GetVulkanPhysicalDevice();
+		static vk::SurfaceKHR GetVulkanSurface();
 		static vk::Instance GetVulkanInstance();
 		static VmaAllocator GetVulkanAllocator();
 

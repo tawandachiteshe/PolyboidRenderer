@@ -51,6 +51,12 @@ namespace Polyboid
 		return api->GetPhysicalDevice()->GetPhysicalDevice();
 	}
 
+	vk::SurfaceKHR VkRenderAPI::GetVulkanSurface()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return api->GetSurface()->GetSurface();
+	}
+
 	vk::Instance VkRenderAPI::GetVulkanInstance()
 	{
 		auto api = reinterpret_cast<VkRenderAPI*>(Get());

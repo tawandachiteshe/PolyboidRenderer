@@ -163,35 +163,39 @@ namespace Polyboid
 
 	vk::PipelineColorBlendStateCreateInfo VulkanBlendState::GetVulkanInfo()
 	{
-		m_CreateInfo.flags = vk::PipelineColorBlendStateCreateFlags();
-		m_CreateInfo.blendConstants[0] = m_ConstBlend[0];
-		m_CreateInfo.blendConstants[1] = m_ConstBlend[1];
-		m_CreateInfo.blendConstants[2] = m_ConstBlend[2];
-		m_CreateInfo.blendConstants[3] = m_ConstBlend[3];
-		m_CreateInfo.logicOpEnable = m_BlendMode.LogicOpEnabled;
-		m_CreateInfo.logicOp = ToVulkanLogicOP(m_BlendMode.LogicOp);
-
-
-		for (auto& blendMode : m_BlendModes)
+		if (m_Dirty)
 		{
-			vk::PipelineColorBlendAttachmentState attachmentState;
-			attachmentState.blendEnable = blendMode.BlendEnabled;
-			attachmentState.alphaBlendOp = ToVKBlendOperation(blendMode.AlphaOp);
-			attachmentState.colorBlendOp = ToVKBlendOperation(blendMode.BlendOp);
-			attachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-				vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
-			attachmentState.dstAlphaBlendFactor = ToVkBlendFactor(blendMode.DstAlphaFactor);
-			attachmentState.srcAlphaBlendFactor = ToVkBlendFactor(blendMode.SrcAlphaFactor);
-			attachmentState.dstColorBlendFactor = ToVkBlendFactor(blendMode.DstFactor);
-			attachmentState.srcColorBlendFactor = ToVkBlendFactor(blendMode.SrcFactor);
-			m_AttachmentStates.push_back(attachmentState);
+			m_CreateInfo.flags = vk::PipelineColorBlendStateCreateFlags();
+			m_CreateInfo.blendConstants[0] = m_ConstBlend[0];
+			m_CreateInfo.blendConstants[1] = m_ConstBlend[1];
+			m_CreateInfo.blendConstants[2] = m_ConstBlend[2];
+			m_CreateInfo.blendConstants[3] = m_ConstBlend[3];
+			m_CreateInfo.logicOpEnable = m_BlendMode.LogicOpEnabled;
+			m_CreateInfo.logicOp = ToVulkanLogicOP(m_BlendMode.LogicOp);
+
+
+			for (auto& blendMode : m_BlendModes)
+			{
+				vk::PipelineColorBlendAttachmentState attachmentState;
+				attachmentState.blendEnable = blendMode.BlendEnabled;
+				attachmentState.alphaBlendOp = ToVKBlendOperation(blendMode.AlphaOp);
+				attachmentState.colorBlendOp = ToVKBlendOperation(blendMode.BlendOp);
+				attachmentState.colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+					vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA;
+				attachmentState.dstAlphaBlendFactor = ToVkBlendFactor(blendMode.DstAlphaFactor);
+				attachmentState.srcAlphaBlendFactor = ToVkBlendFactor(blendMode.SrcAlphaFactor);
+				attachmentState.dstColorBlendFactor = ToVkBlendFactor(blendMode.DstFactor);
+				attachmentState.srcColorBlendFactor = ToVkBlendFactor(blendMode.SrcFactor);
+				m_AttachmentStates.push_back(attachmentState);
+			}
+
+			m_CreateInfo.pAttachments = m_AttachmentStates.data();
+			m_CreateInfo.attachmentCount = static_cast<uint32_t>(m_AttachmentStates.size());
+			m_Dirty = false;
 		}
-
-		m_CreateInfo.pAttachments = m_AttachmentStates.data();
-		m_CreateInfo.attachmentCount = static_cast<uint32_t>(m_AttachmentStates.size());
+	
 
 
-		m_Dirty = false;
 
 		return m_CreateInfo;
 	}

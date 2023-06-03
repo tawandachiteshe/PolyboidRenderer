@@ -31,6 +31,7 @@ namespace Polyboid
         virtual void Resize(uint32_t width = 0, uint32_t height = 0) = 0;
         virtual Ref<RenderPass> GetRenderPass() = 0;
         virtual Ref<Framebuffer> GetCurrentFrameBuffer() = 0;
+        virtual Ref<Framebuffer> GetFrameBuffer(uint32_t index) = 0;
         virtual std::vector<Ref<Framebuffer>> GetFrameBuffers() = 0;
         virtual std::any GetHandle() = 0;
 

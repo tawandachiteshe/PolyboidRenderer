@@ -101,7 +101,8 @@ namespace Polyboid
 		s_Data->m_CommandLists.clear();
 		s_Data->m_Pipelines.clear();
 
-
+		m_SwapchainIndex = 0;
+		m_CanRender = true;
 	}
 
 	bool VulkanGraphicsBackend::IsReady()
@@ -112,26 +113,32 @@ namespace Polyboid
 
 	void VulkanGraphicsBackend::GetSwapchainImageIndex(uint32_t currentImage)
 	{
-		m_CurrentFrame = currentImage;
+
+		
+	}
+
+	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	{
+		auto frame = Renderer::GetCurrentFrame();
+
+		s_Data->m_CommandBuffers = commandBuffers;
 		auto& syncObjects = s_Data->m_SyncObjects;
-		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(currentImage);
-		const auto& _fence = syncObjects->GetInFlightFence(currentImage);
+		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(frame);
+		const auto& _fence = syncObjects->GetInFlightFence(frame);
+		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(frame);
 
 		auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
 
 		auto result = m_Device.waitForFences(fence, VK_TRUE, UINT64_MAX);
-		vk::resultCheck(result, "Failed to wait fence");
-
 		result = m_Device.resetFences({ fence });
-		vk::resultCheck(result, "Failed to wait reset");
-		
+
 
 		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
+		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
 		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
 
 
 		vk::Device device = VkRenderAPI::GetVulkanDevice();
-
 
 
 		vk::Result acquireResult;
@@ -144,7 +151,12 @@ namespace Polyboid
 				// must be recreated:
 				Renderer::GetSwapChain()->Resize();
 				Imgui::RecreateVulkanRenderer();
+				for (auto& cmdSet : s_Data->m_CommandBuffers)
+				{
+					cmdSet.As<VulkanCommandBufferSet>()->Recreate();
+				}
 				RecreateResources();
+
 			}
 			else if (acquireResult == vk::Result::eSuboptimalKHR) {
 				// swapchain is not as optimal as it could be, but the platform's
@@ -164,12 +176,6 @@ namespace Polyboid
 		} while (acquireResult != vk::Result::eSuccess);
 
 
-		
-	}
-
-	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
-	{
-
 		int width = 0, height = 0;
 		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
 		while (width == 0 || height == 0) {
@@ -178,15 +184,8 @@ namespace Polyboid
 		}
 
 		const uint32_t imageIndex = m_SwapchainIndex;
-		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
 
-		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(m_CurrentFrame);
-		const auto& _imageAvailable = s_Data->m_SyncObjects->GetImageSemaphore(m_CurrentFrame);
-		const auto& inFlight = s_Data->m_SyncObjects->GetInFlightFence(m_CurrentFrame);
 
-		vk::Fence inFlightFence = std::any_cast<vk::Fence>(inFlight->GetHandle());
-		vk::Semaphore imageSemaphore = std::any_cast<vk::Semaphore>(_imageAvailable->GetHandle());
-		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
 
 		for (const auto& commandSet : commandBuffers)
 		{
@@ -206,7 +205,7 @@ namespace Polyboid
 		submitInfo.pSignalSemaphores = &renderSemaphore;
 
 
-		vk::Result result = m_GraphicsQueue.submit(1, &submitInfo, inFlightFence);
+	 result = m_GraphicsQueue.submit(1, &submitInfo, fence);
 		vk::resultCheck(result, "Failed to submit commands");
 
 
@@ -220,22 +219,33 @@ namespace Polyboid
 
 		result = m_GraphicsQueue.presentKHR(&presentInfo);
 
-		s_Data->m_SubmittingBuffer.clear();
 
-	
+		
+		const auto& maxFrames = Renderer::GetMaxFramesInFlight();
+		frame = (frame + 1) % maxFrames;
+		Renderer::SetCurrentFrame(frame);
 
 		if (result == vk::Result::eErrorOutOfDateKHR) {
 			// swapchain is out of date (e.g. the window was resized) and
 			// must be recreated:
 			Renderer::GetSwapChain()->Resize();
 			Imgui::RecreateVulkanRenderer();
-			//RecreateResources();
+			RecreateResources();
+			s_Data->m_SubmittingBuffer.clear();
 		}
 		else if (result == vk::Result::eSuboptimalKHR) {
 			// SUBOPTIMAL could be due to resize
-			Renderer::GetSwapChain()->Resize();
-			Imgui::RecreateVulkanRenderer();
-			//RecreateResources();
+
+			vk::SurfaceCapabilitiesKHR surfCapabilities;
+			auto surface = VkRenderAPI::GetVulkanSurface();
+			auto caps_result = VkRenderAPI::GetVulkanPhysicalDevice().getSurfaceCapabilitiesKHR(surface, &surfCapabilities);
+			vk::resultCheck(caps_result, "failed to check");
+			if (surfCapabilities.currentExtent.width != width || surfCapabilities.currentExtent.height != height) {
+				Renderer::GetSwapChain()->Resize();
+				Imgui::RecreateVulkanRenderer();
+				RecreateResources();
+			}
+
 		}
 		else if (result == vk::Result::eErrorSurfaceLostKHR) {
 			// inst.destroySurfaceKHR(surface);
@@ -247,6 +257,17 @@ namespace Polyboid
 			vk::resultCheck(result, "Failed to present");
 			
 		}
+
+		
+
+		if (m_CanRender)
+		{
+			s_Data->m_SubmittingBuffer.clear();
+			s_Data->m_RenderPasses.clear();
+			s_Data->m_Framebuffers.clear();
+			s_Data->m_CommandLists.clear();
+			s_Data->m_Pipelines.clear();
+		} 
 
 
 	}

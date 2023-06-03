@@ -8,6 +8,7 @@ struct ImGuiIO;
 
 namespace Polyboid
 {
+	class CommandBuffer;
 	class Texture;
 	class CommandBufferSet;
 	class VulkanRenderPass;
@@ -47,8 +48,9 @@ namespace Polyboid
         static void InitVulkanRenderer();
         static void DestroyVulkanRenderer();
         static void RecreateVulkanRenderer();
-        static void Begin(const Ref<CommandBufferSet>& cmdList);
+        static void Begin();
         static void End();
+        static void SubmitToCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
         static void ShutDown();
     
     };

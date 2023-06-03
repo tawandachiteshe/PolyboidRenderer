@@ -69,8 +69,6 @@ namespace Polyboid
         static void BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
         static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
     	static void EndCommands();
-        static void BeginFrame();
-        static void EndFrame();
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();

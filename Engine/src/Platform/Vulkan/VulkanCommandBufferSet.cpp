@@ -67,6 +67,9 @@ namespace Polyboid
 		{
 			commandBuffer->Destroy(VkRenderAPI::GetVulkanDevice());
 		}
+
+		Destroy(VkRenderAPI::GetVulkanDevice());
+		Init(m_Context, m_Settings);
 	}
 
 

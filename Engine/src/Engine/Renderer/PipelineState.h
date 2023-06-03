@@ -62,6 +62,7 @@ namespace Polyboid
 
         virtual void WriteSetResourceBindings(uint32_t set = 0) = 0;
 
+
         virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding = 0) = 0;
         virtual std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) = 0;
 

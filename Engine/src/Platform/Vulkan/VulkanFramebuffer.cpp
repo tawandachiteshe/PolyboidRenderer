@@ -112,6 +112,7 @@ namespace Polyboid
 		}
 
 		device.destroyFramebuffer(m_FrameBuffer);
+		m_Textures.clear();
 	}
 
 	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass):

@@ -76,7 +76,7 @@ namespace Polyboid
 
 			for (const auto& [setIndex, binding] : fragBindings)
 			{
-				m_Bindings[setIndex].insert(m_Bindings[0].end(), binding.begin(), binding.end());
+				m_Bindings[setIndex].insert(m_Bindings[setIndex].end(), binding.begin(), binding.end());
 			}
 
 		}
@@ -155,14 +155,16 @@ namespace Polyboid
 
 		m_Pipeline = gfxPipeline;
 		m_PipelineLayout = pipelineLayout;
+		
 	}
 
 	void VulkanGraphicsPipeline::Recreate()
 	{
+		Destroy();
+		m_RenderPass->Recreate();
 		m_VertexInput->Recreate();
 		m_DescPool->Recreate();
-		Destroy();
-		Init();
+		Bake();
 
 		for (const auto& binding : m_Sets | std::views::keys)
 		{
@@ -317,7 +319,6 @@ namespace Polyboid
 	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescriptorSets(uint32_t setBinding)
 	{
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
-		m_Sets.clear();
 
 		vk::DescriptorSetLayout vulkanLayout = m_SetIndexWithLayout[setBinding];
 		vk::DescriptorSetAllocateInfo allocateInfo{};
@@ -330,7 +331,7 @@ namespace Polyboid
 		auto [allocResult, allocSets] = device.allocateDescriptorSets(allocateInfo);
 		vk::resultCheck(allocResult, "Failed to create Desc Sets");
 
-		std::vector<Ref<PipelineDescriptorSet>> m_PipeDescSets;
+		
 
 		for (auto set : allocSets)
 		{
@@ -341,9 +342,11 @@ namespace Polyboid
 		m_Sets[setBinding] = m_PipeDescSets;
 
 
-		return m_PipeDescSets;
+		return m_Sets.at(setBinding);
 
 	}
+
+	
 
 	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::GetDescriptorSets(uint32_t set)
 	{
@@ -394,14 +397,20 @@ namespace Polyboid
 	void VulkanGraphicsPipeline::Destroy()
 	{
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
-		device.destroyPipelineLayout(m_PipelineLayout);
 
 		for (auto& layout : m_DescriptorSetLayouts)
 		{
 			device.destroyDescriptorSetLayout(layout);
 		}
 		m_DescPool->Destroy();
+		device.destroyPipelineLayout(m_PipelineLayout);
 		device.destroyPipeline(m_Pipeline);
+		m_DescWriteMap.clear();
+		m_PushConstantRanges.clear();
+		m_DescriptorSetLayouts.clear();
+		m_Bindings.clear();
+		m_Stages.clear();
+		m_PipeDescSets.clear();
 		
 	}
 

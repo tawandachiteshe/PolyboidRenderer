@@ -295,6 +295,11 @@ namespace Polyboid
 		return m_FramebuffersRefs;
 	}
 
+	Ref<Framebuffer> VkSwapChain::GetFrameBuffer(uint32_t index)
+	{
+		return m_FramebuffersRefs.at(index);
+	}
+
 
 	Ref<Framebuffer> VkSwapChain::GetCurrentFrameBuffer()
 	{
