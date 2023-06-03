@@ -86,6 +86,7 @@ namespace Polyboid
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers);
+        static void BeginRenderPass(const Ref<Swapchain>& swapchain);
 
 
         static void BindGraphicsPipeline(const Ref<PipelineState>& pipeline);

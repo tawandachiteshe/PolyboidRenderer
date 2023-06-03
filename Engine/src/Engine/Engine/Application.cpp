@@ -258,15 +258,7 @@ namespace Polyboid
 		static float rotation = 0;
 		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
 		{
-			Renderer::BeginCommands(m_CommandList, i);
-			Renderer::BeginRenderPass(Renderer::GetSwapChain()->GetRenderPass(),
-			                          Renderer::GetSwapChain()->GetFrameBuffer(i));
-			Renderer::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
-
-
-
-			Renderer::EndRenderPass();
-			Renderer::EndCommands();
+	
 		}
 
 
@@ -317,8 +309,19 @@ namespace Polyboid
 			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
 			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
 			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
+
 			Renderer::EndFrameCommands();
 
+			Renderer::BeginFrameCommands(m_CommandList);
+			Renderer::BeginRenderPass(Renderer::GetSwapChain());
+			Renderer::Clear(ClearSettings{ {0.2, 0.2, 0.2, 1.0f} });
+
+			Imgui::SubmitToCommandBuffer(Renderer::GetCurrentCommandBuffer());
+
+			Renderer::EndRenderPass();
+			Renderer::EndFrameCommands();
+
+			
 
 			// Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
 			// Renderer::BindGraphicsPipeline(skyBoxPipeline);

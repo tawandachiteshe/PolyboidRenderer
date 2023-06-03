@@ -40,6 +40,15 @@ namespace Polyboid
 		s_Data->m_Pipelines.reserve(20);
 	}
 
+	void VulkanGraphicsBackend::ClearResources()
+	{
+		s_Data->m_SubmittingBuffer.clear();
+		s_Data->m_RenderPasses.clear();
+		s_Data->m_Framebuffers.clear();
+		s_Data->m_CommandLists.clear();
+		s_Data->m_Pipelines.clear();
+	}
+
 	VulkanGraphicsBackend::VulkanGraphicsBackend()
 	{
 		Init();
@@ -94,12 +103,15 @@ namespace Polyboid
 		{
 			pool->Recreate();
 		}
-	
 
-		s_Data->m_RenderPasses.clear();
-		s_Data->m_Framebuffers.clear();
-		s_Data->m_CommandLists.clear();
-		s_Data->m_Pipelines.clear();
+		for (auto& cmdSet : s_Data->m_CommandBuffers)
+		{
+			cmdSet.As<VulkanCommandBufferSet>()->Recreate();
+		}
+
+		s_Data->m_SubmittingBuffer.clear();
+
+		ClearResources();
 
 		m_SwapchainIndex = 0;
 		m_CanRender = true;
@@ -143,11 +155,8 @@ namespace Polyboid
 				// must be recreated:
 				Renderer::GetSwapChain()->Resize();
 				Imgui::RecreateVulkanRenderer();
-				for (auto& cmdSet : s_Data->m_CommandBuffers)
-				{
-					cmdSet.As<VulkanCommandBufferSet>()->Recreate();
-				}
 				RecreateResources();
+				
 
 			}
 			else if (acquireResult == vk::Result::eSuboptimalKHR) {
@@ -237,8 +246,11 @@ namespace Polyboid
 			// must be recreated:
 			Renderer::GetSwapChain()->Resize();
 			Imgui::RecreateVulkanRenderer();
+			for (auto& cmdSet : s_Data->m_CommandBuffers)
+			{
+				cmdSet.As<VulkanCommandBufferSet>()->Recreate();
+			}
 			RecreateResources();
-			s_Data->m_SubmittingBuffer.clear();
 		}
 		else if (result == vk::Result::eSuboptimalKHR) {
 			// SUBOPTIMAL could be due to resize
@@ -269,11 +281,7 @@ namespace Polyboid
 
 		if (m_CanRender)
 		{
-			s_Data->m_SubmittingBuffer.clear();
-			s_Data->m_RenderPasses.clear();
-			s_Data->m_Framebuffers.clear();
-			s_Data->m_CommandLists.clear();
-			s_Data->m_Pipelines.clear();
+			ClearResources();
 		} 
 
 

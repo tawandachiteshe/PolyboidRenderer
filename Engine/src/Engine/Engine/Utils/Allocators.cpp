@@ -14,6 +14,7 @@ void operator delete(void* memory, size_t size)
 {
     Polyboid::EngineMemoryManager::s_Freed += size;
     Polyboid::EngineMemoryManager::s_FreeCount += 1;
+    Polyboid::EngineMemoryManager::s_MemUsage -= size;
     std::free(memory);
 }
 

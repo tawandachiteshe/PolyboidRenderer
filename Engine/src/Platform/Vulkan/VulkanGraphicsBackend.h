@@ -57,6 +57,7 @@ namespace Polyboid
 
 		
 		void Init();
+		void ClearResources();
 
 	public:
 

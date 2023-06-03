@@ -264,6 +264,7 @@ namespace Polyboid
 		m_Formats.clear();
 		m_ColorTextures.clear();
 		m_DepthTextures.clear();
+		m_SwapchainImages.clear();
 	}
 
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)

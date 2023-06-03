@@ -197,6 +197,12 @@ namespace Polyboid
 			buffers->Get(GetCurrentFrame()));
 	}
 
+	void Renderer::BeginRenderPass(const Ref<Swapchain>& swapchain)
+	{
+		Renderer::BeginRenderPass(swapchain->GetRenderPass(),
+			Renderer::GetSwapChain()->GetFrameBuffer(GetGraphicsBackend()->GetCurrentImageIndex()));
+	}
+
 	void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipeline);
@@ -210,7 +216,6 @@ namespace Polyboid
 
 	void Renderer::EndRenderPass()
 	{
-		spdlog::info("Current buffer index {}", s_Data->m_CurrentFrame);
 		GetCurrentCommandBuffer()->EndRenderPass();
 	}
 
