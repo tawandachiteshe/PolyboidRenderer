@@ -19,11 +19,13 @@ namespace Polyboid
 		uint32_t m_Count = 0;
 		VmaAllocation m_Allocation{};
 		uint32_t m_Size = 0;
+		const std::variant<uint32_t*, uint16_t*> m_Data;
 
 	public:
 
-		VulkanIndexBuffer(const VkRenderAPI* context, IndexDataType type,const std::variant<uint32_t*, uint16_t*>& data, uint32_t count);
-
+		VulkanIndexBuffer(const VkRenderAPI* context, IndexDataType type, const std::variant<uint32_t*, uint16_t*>& data, uint32_t count);
+		void Init(const VkRenderAPI* context, IndexDataType type, const std::variant<uint32_t*, uint16_t*>& data, uint32_t count);
+		void Recreate();
 
 		~VulkanIndexBuffer() override;
 		void Bind() const override;

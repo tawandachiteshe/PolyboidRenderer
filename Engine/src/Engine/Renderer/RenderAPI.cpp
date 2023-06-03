@@ -2,6 +2,7 @@
 #include "RenderAPI.h"
 
 #include <intrin.h>
+#include <spdlog/spdlog.h>
 
 #include "Engine/Engine/Application.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
@@ -10,6 +11,8 @@ namespace Polyboid
 {
 
 	RenderAPI* RenderAPI::s_RenderAPI = nullptr;
+
+
 
 
 	RenderAPI* RenderAPI::Create(const RenderAPIType& renderType, const std::any& nativeWindow)

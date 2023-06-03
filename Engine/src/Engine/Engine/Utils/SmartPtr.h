@@ -12,24 +12,24 @@ namespace Polyboid
 	{
 
 	private:
-		RefPtrCounter<T> m_RefCount;
+		RefPtrCounter m_RefCount;
 		T* m_Ptr = nullptr;
 
 	public:
 
 		using ElementType = T;
 
-		constexpr RefPtr() noexcept = default;
+		constexpr RefPtr() noexcept {}
 
 		constexpr RefPtr(nullptr_t) noexcept {}
 
 
-		RefPtr(T* ptr, const RefPtrCounter<T>& refCount): m_RefCount(refCount), m_Ptr(ptr)
+		RefPtr(T* ptr, const RefPtrCounter& refCount): m_RefCount(refCount), m_Ptr(ptr)
 		{
 			
 		}
 
-		explicit RefPtr(T* ptr) : m_RefCount(ptr), m_Ptr(ptr)
+		explicit RefPtr(T* ptr): m_Ptr(ptr)
 		{
 
 		}
@@ -38,23 +38,30 @@ namespace Polyboid
 			m_RefCount.AddRef();
 		}
 		template<typename V>
-		RefPtr(const RefPtr<V>& other, T* ptr) : m_RefCount(other.GetRefCount(), ptr), m_Ptr(ptr) {
+		RefPtr(const RefPtr<V>& other, T* ptr) : m_RefCount(other.GetRefCount()), m_Ptr(ptr) {
 			m_RefCount.AddRef();
 		}
 
 
 		template<typename U,
 			typename std::enable_if<std::is_base_of<T, U>::value && !std::is_same<T, U>::value>::type* = nullptr>
-		RefPtr(RefPtr<U>& other) : m_RefCount(other.GetRefCount()), m_Ptr(other.Get()) {
+		RefPtr(RefPtr<U>& other) : m_RefCount(other.GetRefCount()) {
 			m_RefCount.AddRef();
 		}
 
 
 
-		RefPtrCounter<T> GetRefCount() const { return m_RefCount; }
+		RefPtrCounter GetRefCount() const { return m_RefCount; }
 
 		T* Get() const {
-			return m_RefCount.Get();
+			if (*m_RefCount.GetCount() > 0)
+			{
+
+				return m_Ptr;
+			}
+
+			__debugbreak();
+			return nullptr;
 		}
 
 		T* operator->() const {
@@ -98,8 +105,8 @@ namespace Polyboid
 
 			if (this != &other) {
 				m_RefCount.RemoveRef();
-				m_Ptr = other.m_Ptr;
-				m_RefCount = other.m_RefCount;
+				m_Ptr = other.Get();
+				m_RefCount = other.GetRefCount();
 				m_RefCount.AddRef();
 			}
 			return *this;
@@ -118,20 +125,6 @@ namespace Polyboid
 			}
 			return *this;
 		}
-
-		template<typename U>
-		RefPtr& operator=(RefPtr<U>&& other) {
-
-			if (this != &other) {
-				m_RefCount.RemoveRef();
-				m_Ptr = other.m_Ptr;
-				m_RefCount = other.m_RefCount;
-				m_RefCount.AddRef();
-			}
-			return *this;
-		}
-
-
 
 
 
@@ -164,8 +157,8 @@ namespace Polyboid
 
 		using ElementType = T;
 
-		ScopePtr<T>& operator=(const RefPtr<T>& other) = delete;
-		ScopePtr(const RefPtr<T>& other) = delete;
+		ScopePtr<T>& operator=(const ScopePtr<T>& other) = delete;
+		ScopePtr(const ScopePtr<T>& other) = delete;
 
 		explicit ScopePtr(T* ptr) : m_Ptr(ptr)
 		{

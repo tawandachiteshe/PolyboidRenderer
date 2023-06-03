@@ -5,19 +5,21 @@
 #include <vulkan/vulkan_raii.hpp>
 
 
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
 #include "VulkanStagingBuffer.h"
-#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandBufferSet.h"
+#include "Engine/Renderer/GraphicsBackend.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
 namespace Polyboid
 {
-	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size): m_Context(context)
+	void VulkanVertexBuffer::Init(const VkRenderAPI* context, const void* data, uint32_t size)
 	{
 		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator();
-		
+
 
 		vk::BufferCreateInfo createInfo;
 		createInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer;
@@ -40,17 +42,27 @@ namespace Polyboid
 		}
 
 
-		Ref<VulkanStagingBuffer> staging =  CreateRef<VulkanStagingBuffer>(context, data, size);
-		Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
+		Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer>(context, data, size);
+		Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
 
 		cmdList->GetCommandBufferAt(0)->Begin();
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 		cmdBuffer->CopyVertexBuffer(staging.As<StagingBuffer>(), this);
 		cmdList->GetCommandBufferAt(0)->End();
-		RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+		Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 		staging->Destroy();
 		cmdList->Destroy(device);
+	}
+
+	void VulkanVertexBuffer::Recreate()
+	{
+		Init(m_Context, m_Data, m_Size);
+	}
+
+	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size) : m_Context(context), m_Data(data), m_Size(size)
+	{
+		Init(context, data, size);
 	}
 
 	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size)

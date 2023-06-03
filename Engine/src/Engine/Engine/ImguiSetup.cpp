@@ -21,7 +21,7 @@
 #include "Platform/Vulkan/Utils/VulkanPhysicalDevice.h"
 #include "Platform/Vulkan/Utils/VulkanSurfaceKHR.h"
 #include "Platform/Vulkan/VkSwapChain.h"
-#include "Platform/Vulkan/VulkanCommandList.h"
+#include "Platform/Vulkan/VulkanCommandBufferSet.h"
 #include "vulkan/vulkan_raii.hpp"
 
 
@@ -30,8 +30,7 @@ namespace Polyboid
 
 
 	Imgui::ImguiData Imgui::s_Data;
-
-    static ImGui_ImplVulkanH_Window g_MainWindowData;
+    
 
     static void check_vk_result(VkResult err)
     {
@@ -113,89 +112,15 @@ namespace Polyboid
         if (type == RenderAPIType::Vulkan)
         {
             auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
-            VkDescriptorPoolSize pool_sizes[] =
-            {
-                { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-                { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-                { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-                { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-            };
+  
 
-            VkDescriptorPoolCreateInfo pool_info = {};
-            pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-            pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-            pool_info.maxSets = 1000;
-            pool_info.poolSizeCount = std::size(pool_sizes);
-            pool_info.pPoolSizes = pool_sizes;
-
-            VkDescriptorPool imguiPool;
-            (vkCreateDescriptorPool(renderAPI->GetDevice()->GetVulkanDevice(), &pool_info, nullptr, &imguiPool));
-            vk::DescriptorPool pool = imguiPool;
-            s_Data.m_CommandPool = pool;
-
-            s_Data.m_RenderPass = Renderer::GetSwapChain()->GetDefaultRenderPass().As<VulkanRenderPass>();
+           
 
 
             // Select Surface Format
-            ImGui_ImplGlfw_InitForVulkan(std::any_cast<GLFWwindow*>(window), true);
-           
-            ImGui_ImplVulkan_InitInfo init_info = {};
-           
-            init_info.Instance = renderAPI->GetInstance()->GetVKInstance();
-            init_info.PhysicalDevice = renderAPI->GetPhysicalDevice()->GetPhysicalDevice();
-            init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
-            init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
-            init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
-            init_info.DescriptorPool = pool;
-            init_info.MinImageCount = 2;
-            init_info.ImageCount = 3;
-            init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-            init_info.CheckVkResultFn = check_vk_result;
-            init_info.Subpass = 0;
+            ImGui_ImplGlfw_InitForVulkan((s_Data.window), true);
 
-           
-            ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());
-
-            // Upload Fonts
-            {
-                Ref<VulkanCommandList> uploadList = CommandList::Create({ 1 }).As<VulkanCommandList>();
-                auto cmd = uploadList->GetCommandBufferAt(0);
-
-
-                vk::CommandBuffer cmdbuffer = std::any_cast<vk::CommandBuffer>(cmd->GetHandle());
-                VkCommandBuffer command_buffer = cmdbuffer;
-
-                VkCommandBufferBeginInfo begin_info = {};
-                begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-                VkResult  err = vkBeginCommandBuffer(command_buffer, &begin_info);
-                check_vk_result(err);
-
-                ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-
-                VkSubmitInfo end_info = {};
-                end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                end_info.commandBufferCount = 1;
-                end_info.pCommandBuffers = &command_buffer;
-                err = vkEndCommandBuffer(command_buffer);
-                check_vk_result(err);
-                err = vkQueueSubmit(renderAPI->GetDevice()->GetGraphicsQueue(), 1, &end_info, VK_NULL_HANDLE);
-                check_vk_result(err);
-
-                err = vkDeviceWaitIdle(renderAPI->GetDevice()->GetVulkanDevice());
-                check_vk_result(err);
-                ImGui_ImplVulkan_DestroyFontUploadObjects();
-
-                uploadList->Destroy(renderAPI->GetDevice()->GetVulkanDevice());
-            }
-
+            InitVulkanRenderer();
 
         }
 
@@ -203,9 +128,109 @@ namespace Polyboid
 
     }
 
-    void Imgui::Begin(const Ref<CommandList>& cmdList)
+    void Imgui::InitVulkanRenderer()
     {
-        s_Data.m_CommandList = cmdList.As<VulkanCommandList>();
+
+       
+
+        auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
+        ImGui_ImplVulkan_InitInfo init_info = {};
+
+        VkDescriptorPoolSize pool_sizes[] =
+        {
+            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+        };
+
+        VkDescriptorPoolCreateInfo pool_info = {};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        pool_info.maxSets = 1000;
+        pool_info.poolSizeCount = std::size(pool_sizes);
+        pool_info.pPoolSizes = pool_sizes;
+        s_Data.m_RenderPass = Renderer::GetSwapChain()->GetRenderPass().As<VulkanRenderPass>();
+
+        VkDescriptorPool imguiPool;
+        (vkCreateDescriptorPool(renderAPI->GetDevice()->GetVulkanDevice(), &pool_info, nullptr, &imguiPool));
+        vk::DescriptorPool pool = imguiPool;
+        s_Data.m_CommandPool = pool;
+
+
+        init_info.Instance = renderAPI->GetInstance()->GetVKInstance();
+        init_info.PhysicalDevice = renderAPI->GetPhysicalDevice()->GetPhysicalDevice();
+        init_info.Device = renderAPI->GetDevice()->GetVulkanDevice();
+        init_info.QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
+        init_info.Queue = renderAPI->GetDevice()->GetGraphicsQueue();
+        init_info.DescriptorPool = std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool);
+        init_info.MinImageCount = 2;
+        init_info.ImageCount = 3;
+        init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+        init_info.CheckVkResultFn = check_vk_result;
+        init_info.Subpass = 0;
+
+
+        ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());
+
+        // Upload Fonts
+        {
+            Ref<VulkanCommandBufferSet> uploadList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
+            auto cmd = uploadList->GetCommandBufferAt(0);
+
+
+            vk::CommandBuffer cmdbuffer = std::any_cast<vk::CommandBuffer>(cmd->GetHandle());
+            VkCommandBuffer command_buffer = cmdbuffer;
+
+            VkCommandBufferBeginInfo begin_info = {};
+            begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+            begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+            VkResult  err = vkBeginCommandBuffer(command_buffer, &begin_info);
+            check_vk_result(err);
+
+            ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+
+            VkSubmitInfo end_info = {};
+            end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+            end_info.commandBufferCount = 1;
+            end_info.pCommandBuffers = &command_buffer;
+            err = vkEndCommandBuffer(command_buffer);
+            check_vk_result(err);
+            err = vkQueueSubmit(renderAPI->GetDevice()->GetGraphicsQueue(), 1, &end_info, VK_NULL_HANDLE);
+            check_vk_result(err);
+
+            err = vkDeviceWaitIdle(renderAPI->GetDevice()->GetVulkanDevice());
+            check_vk_result(err);
+            ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+            uploadList->Destroy(renderAPI->GetDevice()->GetVulkanDevice());
+        }
+
+    }
+
+    void Imgui::DestroyVulkanRenderer()
+    {
+        VkRenderAPI::GetVulkanDevice().destroyDescriptorPool(std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool));
+        ImGui_ImplVulkan_Shutdown();
+        
+    }
+
+    void Imgui::RecreateVulkanRenderer()
+    {
+        DestroyVulkanRenderer();
+        InitVulkanRenderer();
+    }
+
+    void Imgui::Begin(const Ref<CommandBufferSet>& cmdList)
+    {
+        s_Data.m_CommandList = cmdList.As<VulkanCommandBufferSet>();
 
         ImGui_ImplGlfw_NewFrame();
     	ImGui_ImplVulkan_NewFrame();
@@ -223,7 +248,7 @@ namespace Polyboid
         ImGui::Render();
 
         auto cmd = s_Data.m_CommandList;
-        auto frame = Renderer::GetSwapChainImageIndex();
+        auto frame = Renderer::GetCurrentFrame();
         auto cmdBuffer = cmd->GetCommandBufferAt(frame);
         VkCommandBuffer command_buffer = std::any_cast<vk::CommandBuffer>(cmdBuffer->GetHandle());
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), command_buffer);
@@ -250,8 +275,8 @@ namespace Polyboid
             // s_Data.m_CommandList->Destroy(device);
             device.destroyDescriptorPool(std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool));
             
-
-            ImGui_ImplVulkan_Shutdown();
+            DestroyVulkanRenderer();
+           
         }
        
         ImGui_ImplGlfw_Shutdown();

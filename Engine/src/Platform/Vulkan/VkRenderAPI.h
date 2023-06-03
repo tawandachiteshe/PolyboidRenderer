@@ -16,7 +16,7 @@ namespace Polyboid
 	class VulkanVertexBuffer;
 	class VulkanIndexBuffer;
 	class VulkanTexture2D;
-	class VulkanCommandList;
+	class VulkanCommandBufferSet;
 	class VulkanFramebuffer;
 	class VulkanRenderPass;
 	class VulkanAllocatorInstance;
@@ -33,7 +33,7 @@ namespace Polyboid
 		std::vector<Ref<VkSwapChain>> m_Swapchains;
 		std::vector<Ref<VulkanRenderPass>> m_RenderPasses;
 		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
-		std::vector<Ref<VulkanCommandList>> m_CommandLists;
+		std::vector<Ref<VulkanCommandBufferSet>> m_CommandLists;
 		std::vector<Ref<VulkanTexture2D>> m_Textures2D;
 		std::vector<Ref<VulkanIndexBuffer>> m_IndexBuffers;
 		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
@@ -57,6 +57,8 @@ namespace Polyboid
 		Ref<VulkanSurfaceKHR> m_Surface;
 		Ref<VulkanAllocatorInstance> m_Allocator;
 		std::any m_Window;
+		bool m_CanContinueRender = true;
+		uint32_t m_SwapchainImageIndex = 0;
 
 
 	public:
@@ -73,13 +75,6 @@ namespace Polyboid
 		static vk::PhysicalDevice GetVulkanPhysicalDevice();
 		static vk::Instance GetVulkanInstance();
 		static VmaAllocator GetVulkanAllocator();
-
-		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
-			const Ref<Fence>& inFlight) override;
-		void SubmitCommandBuffer(const std::vector<Ref<CommandBuffer>>& cmdBuffers,
-			const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished,
-			const Ref<Fence>& inFlight) override;
-		void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) override;
 
 
 		VkRenderAPI(const std::any& window);
@@ -103,7 +98,7 @@ namespace Polyboid
 		Ref<VertexBuffer> CreateVertexBuffer(const void* data, uint32_t dataSize) override;
 		Ref<VertexBuffer> CreateVertexBuffer(uint32_t dataSize) override;
 		Ref<VertexBufferArray> CreateVertexBufferArray() override;
-		Ref<CommandList> CreateCommandList(const CommandListSettings& settings) override;
+		Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) override;
 		Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) override;
 
 		Ref<PipelineState> CreatePipelineState() override;
@@ -114,11 +109,9 @@ namespace Polyboid
 		Ref<Semaphore> CreateGraphicsSemaphore() override;
 		Ref<Image2D> CreateImage2D(const ImageSettings& imageSettings) override;
 		Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) override;
-		Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) override;
-		void WaitForFences(const Ref<Fence>& fence) override;
+		Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) override;;
 
 		void Destroy() override;
-
 
 		RenderAPIType GetRenderAPIType() override;
 		RenderAPIType GetRenderAPIType() const override;

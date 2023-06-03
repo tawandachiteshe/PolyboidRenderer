@@ -7,7 +7,7 @@
 namespace Polyboid
 {
 	class Framebuffer;
-	class VulkanCommandList;
+	class VulkanCommandBufferSet;
 	class VulkanCommandBuffer;
 	class VulkanFence;
 	class VulkanSemaphore;
@@ -51,7 +51,7 @@ namespace Polyboid
 
 		virtual vk::SwapchainKHR GetSwapChainHandle();
 
-		Ref<RenderPass> GetDefaultRenderPass() override;
+		Ref<RenderPass> GetRenderPass() override;
 
 		void Destroy(vk::Device device);
 
@@ -59,12 +59,7 @@ namespace Polyboid
 
 		vk::SwapchainKHR GetVulkanSwapChain() { return m_Swapchain; }
 
-		void Present(const Ref<Semaphore>& renderSemaphore) override;
-
-
-		uint32_t GetImageIndex(const Ref<Semaphore>& imageSemaphore) override;
-
-		uint32_t GetCurrentImageIndex() override;
+		std::any GetHandle() override;
 
 		std::vector<Ref<Framebuffer>> GetFrameBuffers() override;
 

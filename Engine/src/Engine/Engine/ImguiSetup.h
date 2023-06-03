@@ -9,10 +9,10 @@ struct ImGuiIO;
 namespace Polyboid
 {
 	class Texture;
-	class CommandList;
+	class CommandBufferSet;
 	class VulkanRenderPass;
 	class VulkanCommandBuffer;
-	class VulkanCommandList;
+	class VulkanCommandBufferSet;
 
 
 
@@ -31,8 +31,9 @@ namespace Polyboid
         {
             ImGuiIO* io = nullptr;
             GLFWwindow* window = nullptr;
-        	Ref<VulkanCommandList> m_CommandList = nullptr;
+        	Ref<VulkanCommandBufferSet> m_CommandList = nullptr;
             Ref<VulkanRenderPass> m_RenderPass = nullptr;
+            std::any m_DescPool;
             uint32_t swapChainImage = 0;
             std::any m_CommandPool;
 
@@ -43,7 +44,10 @@ namespace Polyboid
         static  ImguiData& GetData() { return s_Data; }
 
         static void Init(const std::any& window);
-        static void Begin(const Ref<CommandList>& cmdList);
+        static void InitVulkanRenderer();
+        static void DestroyVulkanRenderer();
+        static void RecreateVulkanRenderer();
+        static void Begin(const Ref<CommandBufferSet>& cmdList);
         static void End();
         static void ShutDown();
     

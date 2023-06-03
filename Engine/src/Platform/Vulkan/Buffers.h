@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <vulkan/vulkan_raii.hpp>
+#include <vulkan/vulkan.hpp>
 #include "Engine/Renderer/UniformBuffer.h"
 #include <vma/vk_mem_alloc.h>
 
@@ -17,11 +17,14 @@ namespace Polyboid
 		const VkRenderAPI* m_Context = nullptr;
 		VmaAllocation m_Allocation = nullptr;
 		vk::DeviceMemory m_Memory;
-
 		uint32_t m_Size = 0, m_Slot = 0;
 
 	public:
 		VulkanUniformBuffer(const VkRenderAPI* context, uint32_t size, uint32_t slot = 0);
+
+		void Init(const VkRenderAPI* context, uint32_t size);
+		void Recreate();
+
 		void SetData(const void* data, uint32_t size, uint32_t offset) override;
 		uint32_t GetBindingSlot() override;
 		uint32_t GetDataSize() override;
@@ -43,6 +46,8 @@ namespace Polyboid
 
 	public:
 		VulkanShaderStorage(const VkRenderAPI* context, uint32_t size);
+		void Init(const VkRenderAPI* context, uint32_t size);
+		void Recreate();
 		void Bind(uint32_t slot) const override;
 		void Unbind() const override;
 		void SetData(const void* data, uint32_t sizeData, uint32_t offset) override;

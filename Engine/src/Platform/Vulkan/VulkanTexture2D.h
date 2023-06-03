@@ -22,8 +22,14 @@ namespace Polyboid
 		Ref<VulkanSamplerState> m_SamplerState = nullptr;
 		VkDescriptorSet m_ImguiDS = nullptr;
 		vk::DescriptorImageInfo m_ImageDescriptorInfo;
+		const void* m_Data = nullptr;
+		TextureSettings m_Settings;
 
 	public:
+
+		void Init(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
+		void Recreate();
+
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
 		VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle);
 

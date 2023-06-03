@@ -2,7 +2,7 @@
 
 #include  <vulkan/vulkan.hpp>
 
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
 #include <spdlog/spdlog.h>
 #include "VkRenderAPI.h"
 #include "VulkanCommandBuffer.h"
@@ -12,9 +12,9 @@
 
 namespace Polyboid
 {
-	void VulkanCommandList::Destroy(vk::Device device)
+	void VulkanCommandBufferSet::Destroy(vk::Device device)
 	{
-		for (auto& commandBuffer : m_CommandBuffers)
+		for (const auto& commandBuffer : m_CommandBuffers)
 		{
 			commandBuffer->Destroy(device);
 		}
@@ -24,12 +24,20 @@ namespace Polyboid
 			device.destroyCommandPool(m_CommandList);
 			m_CommandList = nullptr;
 		}
+
+		m_CommandBuffers.clear();
 		
 	}
 
-	VulkanCommandList::VulkanCommandList(const VkRenderAPI* context, const CommandListSettings& settings): m_Context(context)
+	VulkanCommandBufferSet::VulkanCommandBufferSet(const VkRenderAPI* context, const CommandListSettings& settings): m_Context(context), m_Settings(settings)
 	{
 
+		Init(context, m_Settings);
+
+	}
+
+	void VulkanCommandBufferSet::Init(const VkRenderAPI* context, const CommandListSettings& settings)
+	{
 		vk::Device device = *context->GetDevice();
 		auto indices = context->GetPhysicalDevice()->GetFamilyIndices();
 
@@ -51,19 +59,24 @@ namespace Polyboid
 			auto vulkanCommandBuffer = CreateRef<VulkanCommandBuffer>(m_Context, this);
 			m_CommandBuffers.push_back(vulkanCommandBuffer);
 		}
+	}
 
-
+	void VulkanCommandBufferSet::Recreate()
+	{
+		for (const auto& commandBuffer : m_CommandBuffers)
+		{
+			commandBuffer->Destroy(VkRenderAPI::GetVulkanDevice());
+		}
 	}
 
 
-
-	Ref<CommandBuffer> VulkanCommandList::GetCommandBufferAt(uint32_t index)
+	Ref<CommandBuffer> VulkanCommandBufferSet::GetCommandBufferAt(uint32_t index)
 	{
 		return m_CommandBuffers.at(index).As<CommandBuffer>();
 	}
 
 
-	VulkanCommandList::~VulkanCommandList()
+	VulkanCommandBufferSet::~VulkanCommandBufferSet()
 	{
 		
 	}

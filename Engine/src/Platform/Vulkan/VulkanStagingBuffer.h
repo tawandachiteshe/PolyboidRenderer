@@ -19,7 +19,8 @@ namespace Polyboid
 		VulkanAllocator m_Allocator;
 
 	public:
-
+		void Init(const VkRenderAPI* context, uint32_t size);
+		void Recreate();
 		VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
 		VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size);
 		void SetData(const void* data) override;

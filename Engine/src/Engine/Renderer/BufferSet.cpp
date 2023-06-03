@@ -2,6 +2,8 @@
 #include "BufferSet.h"
 
 #include "Renderer.h"
+#include "Platform/Vulkan/Buffers.h"
+#include "Platform/Vulkan/VulkanFramebuffer.h"
 
 namespace Polyboid
 {
@@ -12,6 +14,14 @@ namespace Polyboid
 			m_Buffers.push_back(UniformBuffer::Create(size));
 		}
 
+	}
+
+	void UniformBufferSet::Recreate()
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanUniformBuffer>()->Recreate();
+		}
 	}
 
 	Ref<UniformBufferSet> UniformBufferSet::Create(uint32_t size)
@@ -53,6 +63,31 @@ namespace Polyboid
 			m_Buffers.push_back(StagingBuffer::Create(size));
 		}
 	}
+
+	void StagingBufferSet::Recreate()
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanShaderStorage>()->Recreate();
+		}
+	}
+
+	void FrameBufferSet::Recreate()
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanFramebuffer>()->Recreate();
+		}
+	}
+
+	void FrameBufferSet::ReSize(uint32_t width, uint32_t height)
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanFramebuffer>()->ReSize(width, height);
+		}
+	}
+
 
 	Ref<StagingBufferSet> StagingBufferSet::Create(uint32_t size)
 	{

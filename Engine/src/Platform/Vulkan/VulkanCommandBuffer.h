@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 
-#include <vulkan/vulkan_raii.hpp>
-#include "Engine/Renderer/CommandList.h"
+#include <vulkan/vulkan.hpp>
+#include "Engine/Renderer/CommandBufferSet.h"
 #include <any>
 
 namespace Polyboid
@@ -11,21 +11,23 @@ namespace Polyboid
 	class VkSwapChain;
 	class VulkanSemaphore;
 	class VulkanFence;
-	class VulkanCommandList;
+	class VulkanCommandBufferSet;
 	class VkRenderAPI;
 
 	class VulkanCommandBuffer : public CommandBuffer
 	{
 	private:
 		vk::CommandBuffer m_CommandBuffer;
-		const CommandList* m_CommandList = nullptr;
+		const VulkanCommandBufferSet* m_CommandList = nullptr;
 		const VkRenderAPI* m_Context;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
 
 	public:
 
 		void Destroy(const vk::Device& device);
-		VulkanCommandBuffer(const VkRenderAPI* context, const VulkanCommandList* commands);
+		VulkanCommandBuffer(const VkRenderAPI* context, const VulkanCommandBufferSet* commands);
+		void Init(const VkRenderAPI* context, const VulkanCommandBufferSet* commands);
+		virtual void Recreate();
 		void Begin() override;
 		void End() override;
 		void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) override;

@@ -18,7 +18,7 @@ namespace Polyboid
 	struct CommandListSettings;
 	class CommandBuffer;
 	class Fence;
-	class CommandList;
+	class CommandBufferSet;
 	struct RenderPassSettings;
 	class RenderPass;
 	struct ClearSettings;
@@ -90,7 +90,7 @@ namespace Polyboid
 		virtual Ref<PipelineState> CreatePipelineState() = 0;
 		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
-		virtual Ref<CommandList> CreateCommandList(const CommandListSettings& settings) = 0;
+		virtual Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) = 0;
 		virtual Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) = 0;
 
 		virtual Ref<Fence> CreateGraphicsFence() = 0;
@@ -99,14 +99,6 @@ namespace Polyboid
 		virtual Ref<Shader> CreateShader(const ShaderBinaryAndReflectionInfo& info) = 0;
 		virtual Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) = 0;
 
-		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
-		virtual void SubmitCommandBuffer(const std::vector<Ref<CommandBuffer>>& cmdBuffers, const Ref<Semaphore>& imageAvailable, const Ref<Semaphore>& renderFinished, const Ref<Fence>& inFlight) = 0;
-		virtual void SubmitCommandBuffer(const Ref<CommandBuffer>& cmdBuffer) = 0;
-
-		virtual void WaitForFences(const Ref<Fence>& fence) = 0;
-
-
-		//virtual void ClearRenderTarget(const ClearSettings& settings) = 0;
 		virtual Ref<StorageBuffer> CreateStorageBuffer(uint32_t size) = 0;
 
 		virtual RenderAPIType GetRenderAPIType() = 0;

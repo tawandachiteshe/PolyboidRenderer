@@ -13,6 +13,11 @@ namespace Polyboid
 	VulkanUniformBuffer::VulkanUniformBuffer(const VkRenderAPI* context, uint32_t size, uint32_t slot):
 		m_Context(context), m_Size(size), m_Slot(slot)
 	{
+		Init(context, size);
+	}
+
+	void VulkanUniformBuffer::Init(const VkRenderAPI* context, uint32_t size)
+	{
 		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator();
 
@@ -22,7 +27,6 @@ namespace Polyboid
 		//vk::
 		createInfo.size = size;
 		m_Size = size;
-		m_Slot = slot;
 
 		vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
 		VmaAllocationCreateInfo vmaCreateInfo{};
@@ -57,9 +61,12 @@ namespace Polyboid
 		// vk::resultCheck(bindResult, "Failed to bind memory");
 
 		m_Memory = memAllocInfo.deviceMemory;
+	}
 
-		
-	
+	void VulkanUniformBuffer::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_Size);
 	}
 
 	void VulkanUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
@@ -121,6 +128,11 @@ namespace Polyboid
 	VulkanShaderStorage::VulkanShaderStorage(const VkRenderAPI* context, uint32_t size): m_Size(size),
 		m_Context(context)
 	{
+		Init(context, m_Size);
+	}
+
+	void VulkanShaderStorage::Init(const VkRenderAPI* context, uint32_t size)
+	{
 		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator();
 		m_Allocator = allocator;
@@ -154,7 +166,11 @@ namespace Polyboid
 		m_DescBufferInfo.buffer = buffer;
 		m_DescBufferInfo.offset = 0;
 		m_DescBufferInfo.range = m_Size;
-		
+	}
+
+	void VulkanShaderStorage::Recreate()
+	{
+		Init(m_Context, m_Size);
 	}
 
 	void VulkanShaderStorage::Bind(uint32_t slot) const

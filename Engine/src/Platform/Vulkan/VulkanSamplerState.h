@@ -9,7 +9,7 @@ namespace Polyboid
 	class VulkanSamplerState : public SamplerState
 	{
 
-		const VkRenderAPI* m_Context;
+		const VkRenderAPI* m_Context = nullptr;
 		SamplerSettings m_Settings;
 		MinFilterMode m_MinMode = MinFilterMode::Linear;
 		MagFilterMode m_MagMode = MagFilterMode::Linear;
@@ -21,6 +21,9 @@ namespace Polyboid
 		vk::Sampler m_Handle;
 
 	public:
+
+		void Init(const VkRenderAPI* context, const SamplerSettings& samplerSettings);
+		void Recreate();
 
 		VulkanSamplerState(const VkRenderAPI* context, const SamplerSettings& samplerSettings);
 		void SetFilterMode(const std::pair<MinFilterMode, MagFilterMode>& filter) override;

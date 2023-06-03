@@ -5,9 +5,11 @@
 
 #include "VkRenderAPI.h"
 #include "VulkanStagingBuffer.h"
-#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/RenderAPI.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
+#include "Engine/Renderer/GraphicsBackend.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
@@ -15,9 +17,14 @@
 namespace Polyboid
 {
 	VulkanIndexBuffer::VulkanIndexBuffer(const VkRenderAPI* context, IndexDataType type, const std::variant<uint32_t*, uint16_t*>& data,
-		uint32_t count): m_IndexType(type), m_Count(count)
+		uint32_t count): m_IndexType(type), m_Count(count), m_Context(context), m_Data(data)
 	{
+		Init(context, type, data, count);
+	}
 
+	void VulkanIndexBuffer::Init(const VkRenderAPI* context, IndexDataType type,
+		const std::variant<uint32_t*, uint16_t*>& data, uint32_t count)
+	{
 		auto device = context->GetDevice()->GetVulkanDevice();
 		VmaAllocator allocator = *context->GetAllocator();
 
@@ -39,10 +46,10 @@ namespace Polyboid
 		VmaAllocationCreateInfo vmaCreateInfo{};
 		vmaCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 		vmaCreateInfo.priority = 1.0f;
-		
+
 
 		VkBuffer buffer;
-		
+
 		auto result = vmaCreateBuffer(allocator, &vkCreateInfo, &vmaCreateInfo, &buffer, &m_Allocation, nullptr);
 
 		if (result != VK_SUCCESS)
@@ -54,17 +61,22 @@ namespace Polyboid
 
 
 		Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer>(context, IndicesData, static_cast<uint32_t>(createInfo.size));
-		Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
+		Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
 
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 		cmdBuffer->Begin();
 		cmdBuffer->CopyIndexBuffer(staging.As<StagingBuffer>(), this);
 		cmdBuffer->End();
-		RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+		Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 		staging->Destroy();
 		cmdList->Destroy(device);
+	}
 
+	void VulkanIndexBuffer::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_IndexType, m_Data, m_Count);
 	}
 
 

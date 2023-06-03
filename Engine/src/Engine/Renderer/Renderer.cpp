@@ -6,7 +6,7 @@
 
 #include "Buffer.h"
 #include "BufferSet.h"
-#include "CommandList.h"
+#include "CommandBufferSet.h"
 #include "Framebuffer.h"
 #include "PipelineState.h"
 #include "RenderAPI.h"
@@ -17,6 +17,7 @@
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Engine.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
+#include "Platform/Vulkan/VulkanGraphicsBackend.h"
 #include "Platform/Vulkan/Utils/VulkanDevice.h"
 
 
@@ -33,10 +34,6 @@ namespace Polyboid
 		return s_Data->m_Swapchain;
 	}
 
-	void Renderer::SetCanPresent(bool canPreset)
-	{
-		s_Data->m_CanSubmitToQueue = canPreset;
-	}
 
 	void Renderer::Init(RenderAPI* context, const ApplicationSettings& appSettings)
 	{
@@ -50,9 +47,11 @@ namespace Polyboid
 		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
 
 		s_Data->m_Swapchain = Swapchain::Create(settings);
-		s_Data->m_CurrentSyncObjects = RendererSyncObjects::Create(s_Data->m_MaxFramesInFlight);
-
 		s_Data->m_CommandBuffers.reserve(20);
+
+		
+		s_Data->m_GraphicsBackend = CreateRef<VulkanGraphicsBackend>().As<GraphicsBackend>();
+		
 	}
 
 
@@ -84,9 +83,10 @@ namespace Polyboid
 	{
 	}
 
-	void Renderer::BeginCommands(const Ref<CommandList>& cmdLists)
+	void Renderer::BeginCommands(const Ref<CommandBufferSet>& cmdLists)
 	{
 		s_Data->m_CurrentCommandList = cmdLists;
+		s_Data->m_CommandBuffers.emplace_back(cmdLists);
 		SetCurrentCommandBuffer(s_Data->m_CurrentFrame);
 		GetCurrentCommandBuffer()->Begin();
 	}
@@ -106,45 +106,22 @@ namespace Polyboid
 	{
 		GetCurrentCommandBuffer()->End();
 
-		SubmitCommandList(s_Data->m_CurrentCommandList);
 	}
 
-	void Renderer::SubmitCommandList(const Ref<CommandList>& cmdList)
-	{
-
-		auto cmdBuffer = cmdList->GetCommandBufferAt(GetSwapChainImageIndex());
-		s_Data->m_CommandBuffers.emplace_back(cmdBuffer);
-		
-	}
 
 	void Renderer::BeginFrame()
 	{
-
-		auto& frame = s_Data->m_CurrentFrame;
-		const auto& imageFence = s_Data->m_CurrentSyncObjects->GetInFlightFence(frame);
-		RenderAPI::Get()->WaitForFences(imageFence);
-
-		const auto& imageSemaphore = s_Data->m_CurrentSyncObjects->GetImageSemaphore(frame);
-		s_Data->m_ImageIndex = s_Data->m_Swapchain->GetImageIndex(imageSemaphore);
+		s_Data->m_GraphicsBackend->GetSwapchainImageIndex(s_Data->m_CurrentFrame);
 	}
 
 	void Renderer::EndFrame()
 	{
 		auto frame = s_Data->m_CurrentFrame;
 
-		const auto& syncObjects = s_Data->m_CurrentSyncObjects;
-		const auto& renderSemaphore = syncObjects->GetRenderSemaphore(frame);
-		const auto& inFlightFence = syncObjects->GetInFlightFence(frame);
-		const auto& imageSemaphore = syncObjects->GetImageSemaphore(frame);
 
-	
-		s_Data->m_Context->SubmitCommandBuffer(s_Data->m_CommandBuffers, imageSemaphore, renderSemaphore, inFlightFence);
-		s_Data->m_Swapchain->Present(renderSemaphore);
-		
+		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CommandBuffers);
 
-		
-
-		auto maxFrames = s_Data->m_MaxFramesInFlight;
+		const auto& maxFrames = s_Data->m_MaxFramesInFlight;
 		frame = (frame + 1) % maxFrames;
 
 		s_Data->m_CurrentFrame = frame;
@@ -155,7 +132,7 @@ namespace Polyboid
 
 	void Renderer::BeginSwapChainRenderPass()
 	{
-		GetCurrentCommandBuffer()->BeginRenderPass(GetSwapChain()->GetDefaultRenderPass(),
+		GetCurrentCommandBuffer()->BeginRenderPass(GetSwapChain()->GetRenderPass(),
 		                                           GetSwapChain()->GetCurrentFrameBuffer());
 	}
 
@@ -174,15 +151,20 @@ namespace Polyboid
 		s_Data->m_CommandBuffer = s_Data->m_CurrentCommandList->GetCommandBufferAt(currentFrame);
 	}
 
-	uint32_t Renderer::GetSwapChainImageIndex()
+	bool Renderer::IsGraphicsBackendReady()
 	{
-		return s_Data->m_ImageIndex;
+		return s_Data->m_GraphicsBackend->IsReady();
+	}
+
+	Ref<GraphicsBackend> Renderer::GetGraphicsBackend()
+	{
+		return s_Data->m_GraphicsBackend;
 	}
 
 
 	void Renderer::Clear(ClearSettings settings)
 	{
-		GetSwapChain()->GetDefaultRenderPass()->Clear(settings);
+		GetSwapChain()->GetRenderPass()->Clear(settings);
 	}
 
 	void Renderer::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
@@ -322,7 +304,7 @@ namespace Polyboid
 
 	void Renderer::Resize(uint32_t width, uint32_t height)
 	{
-		s_Data->m_CanSubmitToQueue = false;
+		
 		//std::this_thread::sleep_for(std::chrono_literals::operator ""ms(200ull));
 		//s_Data->m_CanSubmitToQueue = true;
 		

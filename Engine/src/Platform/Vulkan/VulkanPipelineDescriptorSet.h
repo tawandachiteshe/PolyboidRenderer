@@ -23,6 +23,7 @@ namespace Polyboid
 		void WriteStorageBuffer(uint32_t binding, const Ref<StorageBuffer>& buffer) override;
 		void WriteTexture2D(uint32_t binding, const Ref<Texture>& texture) override;
 		void Commit() override;
+		void Recreate();
 		~VulkanPipelineDescriptorSet() override = default;
 
 		virtual  vk::PipelineLayout GetDescLayout();

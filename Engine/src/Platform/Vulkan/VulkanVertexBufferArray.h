@@ -26,6 +26,7 @@ namespace Polyboid
 		uint32_t GetIndexCount() override;
 		void SetIndexCount(uint32_t count) override;
 		~VulkanVertexBufferArray() override;
+		void Recreate();
 
 		virtual vk::PipelineVertexInputStateCreateInfo GetVulkanInfo();
 

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandBufferSet.h"
 #include "vulkan/vulkan.hpp"
 #include <vector>
 
@@ -8,7 +8,7 @@ namespace Polyboid
 	class VulkanCommandBuffer;
 	class VkRenderAPI;
 
-	class VulkanCommandList : public CommandList
+	class VulkanCommandBufferSet : public CommandBufferSet
 	{
 	private:
 
@@ -18,14 +18,17 @@ namespace Polyboid
 		vk::Queue m_PresentQueue;
 		vk::Queue m_GraphicsQueue;
 		bool m_CanPresent = false;
+		CommandListSettings m_Settings{};
 
 	public:
 
 		void Destroy(vk::Device device);
 
-		VulkanCommandList(const VkRenderAPI* context, const CommandListSettings& settings);
+		VulkanCommandBufferSet(const VkRenderAPI* context, const CommandListSettings& settings);
+		void Init(const VkRenderAPI* context, const CommandListSettings& settings);
+		void Recreate();
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
-		~VulkanCommandList() override;
+		~VulkanCommandBufferSet() override;
 
 		friend class VulkanCommandBuffer;
 	};

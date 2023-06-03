@@ -21,7 +21,18 @@ namespace Polyboid
 		return m_Framebuffer.As<Framebuffer>();
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height): m_Context(context)
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height): m_Context(context), m_Width(width), m_Height(height)
+	{
+		InitSwapchain(context, width, height);
+	}
+
+	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings):
+		m_Settings(settings), m_Context(context)
+	{
+		Init(context, m_Settings);
+	}
+
+	void VulkanRenderPass::InitSwapchain(const VkRenderAPI* context, uint32_t width, uint32_t height)
 	{
 		vk::Device device = (*context->GetDevice());
 
@@ -101,9 +112,8 @@ namespace Polyboid
 		m_ClearValues[1] = m_DepthValue;
 	}
 
-	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings): m_Context(context), m_Settings(settings)
+	void VulkanRenderPass::Init(const VkRenderAPI* context, const RenderPassSettings& settings)
 	{
-
 		vk::Device device = (*context->GetDevice());
 
 		std::array<vk::SubpassDependency, 2> dependencies = {
@@ -172,6 +182,12 @@ namespace Polyboid
 
 		m_ClearValues[0] = m_ColorValue;
 		m_ClearValues[1] = m_DepthValue;
+	}
+
+	void VulkanRenderPass::Recreate()
+	{
+		Destroy(VkRenderAPI::GetVulkanDevice());
+		Init(m_Context, m_Settings);
 	}
 
 	void VulkanRenderPass::Destroy(vk::Device device)

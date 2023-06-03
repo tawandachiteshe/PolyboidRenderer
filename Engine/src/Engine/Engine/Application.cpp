@@ -16,7 +16,7 @@
 #include "imgui_impl_vulkan.h"
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/BufferSet.h"
-#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
 #include "Engine/Renderer/PipelineState.h"
@@ -136,10 +136,10 @@ namespace Polyboid
 
 		Engine::Init();
 
-		m_CommandList = CommandList::Create({3});
-		auto secondCommandList = CommandList::Create({3});
-		auto offscreenCommandBuffer = CommandList::Create({3});
-		auto imGuiCommandList = CommandList::Create({3});
+		m_CommandList = CommandBufferSet::Create({3});
+		auto secondCommandList = CommandBufferSet::Create({3});
+		auto offscreenCommandBuffer = CommandBufferSet::Create({3});
+		auto imGuiCommandList = CommandBufferSet::Create({3});
 
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
@@ -254,13 +254,18 @@ namespace Polyboid
 
 		while (m_Running)
 		{
-			OPTICK_FRAME("Main Frame")
 
 			m_MainWindow->PollEvents();
 
 			const double currentFrame = glfwGetTime();
 			double m_GameTime = currentFrame - m_LastFrameTime;
 			m_LastFrameTime = currentFrame;
+
+			if (!Renderer::IsGraphicsBackendReady())
+			{
+				return;
+			}
+
 
 			rotation += (float)m_GameTime * (float)100.0f;
 
@@ -280,60 +285,60 @@ namespace Polyboid
 			//camerData.view = camerData.view * glm::rotate(glm::mat4(), 0.12f, glm::vec3({0.0f, 0.0f, 1.0f}));
 
 			//Note these commands are executed later
-			// Renderer::BeginFrame();
-			//
-			//
-			// Renderer::BeginCommands(secondCommandList);
-			// Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
-			// Renderer::SetStagingBufferData(storageStagingBuffers, vert);
-			// Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
-			// Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
-			//
-			// Renderer::EndCommands();
+			Renderer::BeginFrame();
+			
+			
+			Renderer::BeginCommands(secondCommandList);
+			Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
+			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
+			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
+			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
+			
+			Renderer::EndCommands();
 
 
 			Renderer::BeginCommands(m_CommandList);
-			//
-			// Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
-			// Renderer::BindGraphicsPipeline(skyBoxPipeline);
-			// Renderer::BindGraphicsDescriptorSets(0, descSets);
-			// Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
-			//
-			// Viewport viewport{};
-			// viewport.Width = 800;
-			// viewport.Height = 600;
-			// viewport.MinDepth = 0.0;
-			// viewport.MaxDepth = 1.0f;
-			//
-			// Renderer::SetViewport(viewport);
-			// Rect rect{};
-			// rect.Width = 800;
-			// rect.Height = 600;
-			// Renderer::SetScissor(rect);
-			// Renderer::BindVertexBuffer(triVerts);
-			// Renderer::BindIndexBuffer(triIdxs);
-			// Renderer::DrawIndexed(6);
-			// Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
-			// Renderer::DrawIndexed(6);
-			// Renderer::EndRenderPass();
-			//
+			
+			Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
+			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+			Renderer::BindGraphicsDescriptorSets(0, descSets);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
+			
+			Viewport viewport{};
+			viewport.Width = 800;
+			viewport.Height = 600;
+			viewport.MinDepth = 0.0;
+			viewport.MaxDepth = 1.0f;
+			
+			Renderer::SetViewport(viewport);
+			Rect rect{};
+			rect.Width = 800;
+			rect.Height = 600;
+			Renderer::SetScissor(rect);
+			Renderer::BindVertexBuffer(triVerts);
+			Renderer::BindIndexBuffer(triIdxs);
+			Renderer::DrawIndexed(6);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
+			Renderer::DrawIndexed(6);
+			Renderer::EndRenderPass();
+			
 
 			//Swapchain renderpass
 			Renderer::BeginSwapChainRenderPass();
 			Renderer::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
 
-			Imgui::Begin(m_CommandList);
-
-			ImGui::Begin("Texture display");
-			ImGui::Image(m_FramebufferTextures.at(Renderer::GetCurrentFrame()), {800, 600});
-			ImGui::End();
-
-
-			for (auto layer : m_Layers)
-			{
-				layer->OnImguiRender();
-			}
-			Imgui::End();
+			// Imgui::Begin(m_CommandList);
+			//
+			// ImGui::Begin("Texture display");
+			// ImGui::Image(m_FramebufferTextures.at(Renderer::GetCurrentFrame()), {800, 600});
+			// ImGui::End();
+			//
+			//
+			// for (auto layer : m_Layers)
+			// {
+			// 	layer->OnImguiRender();
+			// }
+			// Imgui::End();
 
 
 			Renderer::EndSwapChainRenderPass();
@@ -343,7 +348,6 @@ namespace Polyboid
 			Renderer::EndFrame();
 
 
-			m_MainWindow->PollEvents();
 		}
 
 		int a = 2000;

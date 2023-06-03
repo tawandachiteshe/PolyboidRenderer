@@ -10,6 +10,7 @@
 
 namespace Polyboid
 {
+	class GraphicsBackend;
 	class FrameBufferSet;
 	class StorageBufferSet;
 	class StagingBufferSet;
@@ -31,10 +32,9 @@ namespace Polyboid
         Ref<RenderPass> m_CurrentRenderPass;
         Ref<PipelineState> m_DefaultPipelineState;
         Ref<Swapchain> m_Swapchain;
-        Ref<CommandList> m_CurrentCommandList;
+        Ref<CommandBufferSet> m_CurrentCommandList;
         Ref<CommandBuffer> m_CommandBuffer;
-        std::vector<Ref<CommandBuffer>> m_CommandBuffers;
-        bool m_CanSubmitToQueue = true;
+        std::vector<Ref<CommandBufferSet>> m_CommandBuffers;
 
         RendererStorage() = default;
 		RenderAPI* m_Context = nullptr;
@@ -44,6 +44,7 @@ namespace Polyboid
         Ref<RendererSyncObjects> m_CurrentSyncObjects;
         Ref<PipelineState> m_CurrentPipeline;
         bool m_IsMainRenderPass = false;
+        Ref<GraphicsBackend> m_GraphicsBackend;
     };
 	
     
@@ -56,7 +57,6 @@ namespace Polyboid
 
     public:
         static Ref<Swapchain> GetSwapChain();
-        static void SetCanPresent(bool canPreset);
 
     	static void Init(RenderAPI* context, const ApplicationSettings& settings);
         static void BeginDraw(const Ref<Camera>& camera);
@@ -65,18 +65,18 @@ namespace Polyboid
         static uint32_t& GetCurrentFrame();
         static void SetCurrentFrame(uint32_t currentFrame);
         static void EndDraw();
-        static void BeginCommands(const Ref<CommandList>& cmdList);
+        static void BeginCommands(const Ref<CommandBufferSet>& cmdList);
         static void BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
         static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
     	static void EndCommands();
-        static void SubmitCommandList(const Ref<CommandList>& cmdList);
         static void BeginFrame();
         static void EndFrame();
         static void BeginSwapChainRenderPass();
         static void EndSwapChainRenderPass();
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
         static void SetCurrentCommandBuffer(uint32_t currentFrame);
-        static uint32_t GetSwapChainImageIndex();
+        static bool IsGraphicsBackendReady();
+        static Ref<GraphicsBackend> GetGraphicsBackend();
 
         static void Clear(ClearSettings settings = {});
 

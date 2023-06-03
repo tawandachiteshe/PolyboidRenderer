@@ -34,7 +34,7 @@ namespace Polyboid
 	};
 
 
-	class CommandList;
+	class CommandBufferSet;
 	class PipelineState;
 	class RenderPass;
 	class Swapchain;
@@ -85,7 +85,7 @@ namespace Polyboid
 
 		double m_LastFrameTime = 0.0;
 		Ref<PipelineState> m_Pipeline = nullptr;
-		Ref<CommandList> m_CommandList = nullptr;
+		Ref<CommandBufferSet> m_CommandList = nullptr;
 
 	private:
 		static Application* s_Instance;

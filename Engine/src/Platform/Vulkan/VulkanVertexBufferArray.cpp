@@ -2,6 +2,7 @@
 #include "VulkanVertexBufferArray.h"
 
 #include "VulkanIndexBuffer.h"
+#include "VulkanVertexBuffer.h"
 
 
 namespace Polyboid
@@ -32,6 +33,8 @@ namespace Polyboid
 		case ShaderDataType::Bool:
 			return vk::Format::eR32Sint;
 		}
+
+		return vk::Format::eUndefined;
 	}
 
 	bool VulkanVertexBufferArray::IsUsingVertexPulling()
@@ -107,6 +110,15 @@ namespace Polyboid
 
 	VulkanVertexBufferArray::~VulkanVertexBufferArray()
 	{
+	}
+
+	void VulkanVertexBufferArray::Recreate()
+	{
+		m_IndexBuffer->Recreate();
+		for (const auto& vertexBuffer : m_VertexBuffers)
+		{
+			vertexBuffer->Recreate();
+		}
 	}
 
 	vk::PipelineVertexInputStateCreateInfo VulkanVertexBufferArray::GetVulkanInfo()

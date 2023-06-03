@@ -16,9 +16,12 @@ namespace Polyboid
 		const VkRenderAPI* m_Context = nullptr;
 		BufferLayout m_Layout;
 		uint32_t m_Size = 0;
-
+		const void* m_Data = nullptr;
 
 	public:
+
+		void Init(const VkRenderAPI* context, const void* data, uint32_t size);
+		void Recreate();
 
 		VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
 		VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size);

@@ -7,8 +7,20 @@
 
 namespace Polyboid
 {
+	void VulkanStagingBuffer::Init(const VkRenderAPI* context, uint32_t size)
+	{
+		auto [buffer, allocation] = m_Allocator.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc);
+		m_Buffer = buffer;
+	}
+
+	void VulkanStagingBuffer::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_Size);
+	}
+
 	VulkanStagingBuffer::VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size): m_Size(size),
-		m_Context(context), m_AllocInfo(), m_Allocator(std::format("Staging buffer {}", size))
+	                                                                                                       m_Context(context), m_AllocInfo(), m_Allocator(std::format("Staging buffer {}", size))
 	{
 
 		auto [buffer, allocation] = m_Allocator.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc);
@@ -19,9 +31,8 @@ namespace Polyboid
 	VulkanStagingBuffer::VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size): m_Size(size), m_Context(context),
 		m_Allocator(std::format("Staging buffer {}", size))
 	{
-		auto [buffer, allocation] = m_Allocator.CreateBuffer(size, vk::BufferUsageFlagBits::eTransferSrc);
-		m_Buffer = buffer;
-
+		
+		Init(m_Context, m_Size);
 	}
 
 	void VulkanStagingBuffer::SetData(const void* data)

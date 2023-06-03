@@ -65,14 +65,14 @@ namespace Polyboid
 		uint32_t ImageCount = 3;
 	};
 
-	class CommandList
+	class CommandBufferSet
 	{
 	public:
 
 		virtual Ref<CommandBuffer> GetCommandBufferAt(uint32_t index = 0) = 0;
-		virtual ~CommandList() = default;
+		virtual ~CommandBufferSet() = default;
 
-		static Ref<CommandList> Create(const CommandListSettings& settings);
+		static Ref<CommandBufferSet> Create(const CommandListSettings& settings);
 
 	};
 

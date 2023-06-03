@@ -14,14 +14,15 @@
 #include <algorithm> // Necessary for std::clamp
 #include <GLFW/glfw3.h>
 
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
 #include "VulkanFence.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanSemaphore.h"
 #include "VulkanTexture2D.h"
 #include "Engine/Engine/Application.h"
-#include "Engine/Renderer/CommandList.h"
+#include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/Framebuffer.h"
+#include "Engine/Renderer/GraphicsBackend.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/SyncObjects.h"
 
@@ -30,25 +31,31 @@ namespace Polyboid
 
 
 	VkExtent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities, GLFWwindow* window) {
+
+
+		
+
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
 		{
-			return capabilities.currentExtent;
+			VkExtent2D currentExtent = capabilities.currentExtent;
+
+			return currentExtent;
 		}
-		else 
-		{
-			int width, height;
-			glfwGetFramebufferSize(window, &width, &height);
 
-			VkExtent2D actualExtent = {
-				static_cast<uint32_t>(width),
-				static_cast<uint32_t>(height)
-			};
 
-			actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-			actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+		int width, height;
+		glfwGetFramebufferSize(window, &width, &height);
+		VkExtent2D actualExtent = {
+			static_cast<uint32_t>(width),
+			static_cast<uint32_t>(height)
+		};
 
-			return actualExtent;
-		}
+		actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+
+		return actualExtent;
+
 	}
 
 	void VkSwapChain::Init(VkRenderAPI* context, const SwapchainSettings& settings)
@@ -63,26 +70,8 @@ namespace Polyboid
 		uint32_t queueFamilyIndices[] = { indices.GraphicsFamily.value(), indices.PresentFamily.value() };
 		m_PresentQueue = context->GetDevice()->GetGraphicsQueue();
 
-		Destroy(device);
 
 
-
-		int width = 0, height = 0;
-		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(m_Context->GetWindow()), &width, &height);
-		while (width == 0 || height == 0) {
-		 	glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(m_Context->GetWindow()), &width, &height);
-			glfwWaitEvents();
-		}
-
-		vk::Result result = device.waitIdle();
-
-		if (result != vk::Result::eSuccess)
-		{
-			spdlog::error("Error failed to wait for device");
-			__debugbreak();
-		}
-
-		
 		auto[capResults, capabilities] =  physicalDevice.getSurfaceCapabilitiesKHR(surface);
 		vk::resultCheck(capResults, "Failed to get capabilities");
 		m_Capabilities = capabilities;
@@ -241,7 +230,7 @@ namespace Polyboid
 	}
 
 
-	Ref<RenderPass> VkSwapChain::GetDefaultRenderPass()
+	Ref<RenderPass> VkSwapChain::GetRenderPass()
 	{
 		return m_RenderPass.As<RenderPass>();
 	}
@@ -279,77 +268,27 @@ namespace Polyboid
 
 	void VkSwapChain::Resize(uint32_t width, uint32_t height)
 	{
+
 		m_Resize = true;
-		m_Settings.Width = width;
-		m_Settings.Height = height;
-		//Init(m_Context, m_Settings);
-	}
+		Destroy(VkRenderAPI::GetVulkanDevice());
 
-
-	void VkSwapChain::Present(const Ref<Semaphore>& _renderSemaphore)
-	{
-
-		uint32_t imageIndex = m_SwapchainCurrentImageIndex;
-
-		
-		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
-
-		vk::PresentInfoKHR presentInfo{};
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &renderSemaphore;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pSwapchains = &m_Swapchain;
-		presentInfo.swapchainCount = 1;
-
-		vk::Result result = m_PresentQueue.presentKHR(&presentInfo);
-
+		if (width != 0 || height != 0)
+		{
+			m_Settings.Width = width;
+			m_Settings.Height = height;
+		}
 	
-		if (result == vk::Result::eErrorOutOfDateKHR) {
+		//Init(m_Context, m_Settings);
 
-			Init(m_Context, m_Settings);
-		}
-		else if (result != vk::Result::eSuccess && result == vk::Result::eSuboptimalKHR)
-		{
-			spdlog::error("Failed to present");
-			__debugbreak();
-		}
-
-		if (result != vk::Result::eSuccess && result != vk::Result::eErrorOutOfDateKHR)
-		{
-			__debugbreak();
-		}
-
+		Init(m_Context, m_Settings);
 	}
 
-	uint32_t VkSwapChain::GetImageIndex(const Ref<Semaphore>& _imageSemaphore)
+	std::any VkSwapChain::GetHandle()
 	{
-
-		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
-
-
-		vk::Device device = (*m_Context->GetDevice());
-		auto [ImageResult, index] = device.acquireNextImageKHR(m_Swapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore);
-
-
-		if (ImageResult != vk::Result::eSuccess)
-		{
-			Renderer::SetCanPresent(false);
-			m_SwapchainCurrentImageIndex = true;
-		}
-		else
-		{
-			m_SwapchainCurrentImageIndex = index;
-			
-		}
-
-		
-		return  m_SwapchainCurrentImageIndex;
+		return m_Swapchain;
 	}
 
-	uint32_t VkSwapChain::GetCurrentImageIndex()
-	{
-		return  m_SwapchainCurrentImageIndex;
-	}
+
 
 	std::vector<Ref<Framebuffer>> VkSwapChain::GetFrameBuffers()
 	{
@@ -359,7 +298,7 @@ namespace Polyboid
 
 	Ref<Framebuffer> VkSwapChain::GetCurrentFrameBuffer()
 	{
-		return m_Framebuffers.at(m_SwapchainCurrentImageIndex).As<Framebuffer>();
+		return m_Framebuffers.at(Renderer::GetGraphicsBackend()->GetCurrentImageIndex()).As<Framebuffer>();
 	}
 
 

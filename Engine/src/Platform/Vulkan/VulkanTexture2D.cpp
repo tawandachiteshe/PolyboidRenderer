@@ -7,19 +7,20 @@
 
 #include "imgui_impl_vulkan.h"
 #include "VkRenderAPI.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
 #include "VulkanImage2D.h"
 #include "VulkanSamplerState.h"
 #include "VulkanStagingBuffer.h"
+#include "Engine/Renderer/GraphicsBackend.h"
+#include "Engine/Renderer/Renderer.h"
 #include "Utils/Common.h"
 #include "stb/stb_image.h"
 
 
 namespace Polyboid
 {
-	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data): m_Context(context)
+	void VulkanTexture2D::Init(const VkRenderAPI* context, const TextureSettings& settings, const void* data)
 	{
-
 		vk::Device device = (*context->GetDevice());
 		VmaAllocator allocator = (*context->GetAllocator());
 
@@ -39,7 +40,7 @@ namespace Polyboid
 
 			auto staging = CreateRef<VulkanStagingBuffer>(context, data, size);
 
-			Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
+			Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 			cmdBuffer->Begin();
@@ -47,7 +48,7 @@ namespace Polyboid
 			cmdBuffer->CopyBufferToImage2D(staging.As<StagingBuffer>(), m_Image.As<Image2D>());
 			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 			cmdBuffer->End();
-			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+			Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 			staging->Destroy();
 			cmdList->Destroy(device);
@@ -57,11 +58,11 @@ namespace Polyboid
 		{
 			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 		}
-		
+
 
 		if (!settings.path.empty())
 		{
-		
+
 			std::string imagePath = settings.path;
 			int32_t w = 0, h = 0, c = 0;
 			uint8_t* pixels = stbi_load(imagePath.data(), &w, &h, &c, 4);
@@ -70,8 +71,8 @@ namespace Polyboid
 			imageSettings.height = static_cast<uint32_t>(h);
 			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 
-			Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer> (context, pixels, size);
-			Ref<VulkanCommandList> cmdList = CommandList::Create({ 1 }).As<VulkanCommandList>();
+			Ref<VulkanStagingBuffer> staging = CreateRef<VulkanStagingBuffer>(context, pixels, size);
+			Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0);
 			cmdBuffer->Begin();
@@ -81,15 +82,14 @@ namespace Polyboid
 			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 
 			cmdBuffer->End();
-			RenderAPI::Get()->SubmitCommandBuffer(cmdBuffer);
+			Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
-		
-		
+
 			stbi_image_free(pixels);
 
 			staging->Destroy();
 			cmdList->Destroy(device);
-		
+
 		}
 		// char* stats = nullptr;
 		// vmaBuildStatsString(allocator, &stats, true);
@@ -114,7 +114,7 @@ namespace Polyboid
 
 		m_View = view;
 
-		
+
 
 		if (data || !settings.path.empty() || settings.usage == ImageUsage::ColorAttachmentSampling || settings.usage == ImageUsage::DepthStencilAttachmentSampling)
 		{
@@ -128,13 +128,23 @@ namespace Polyboid
 			Ref<VulkanSamplerState> sampler = CreateRef<VulkanSamplerState>(context, samplerSettings);
 			m_SamplerState = sampler;
 			auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
-		
+
 
 			m_ImageDescriptorInfo.sampler = vulkanSampler;
 			m_ImageDescriptorInfo.imageView = view;
 			m_ImageDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 		}
-	
+	}
+
+	void VulkanTexture2D::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_Settings, m_Data);
+	}
+
+	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data): m_Context(context), m_Settings(settings), m_Data(data)
+	{
+		Init(context, settings, data);
 	}
 
 	VulkanTexture2D::VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle): m_Context(context), m_ImageMemory(nullptr)

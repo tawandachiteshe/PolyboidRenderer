@@ -27,6 +27,7 @@ namespace Polyboid
 		std::vector<vk::DescriptorSetLayout> m_DescriptorSetLayouts;
 		std::unordered_map < uint32_t, std::vector<Ref<PipelineDescriptorSet>>> m_Sets;
 		DescWriteMap m_DescWriteMap;
+		vk::GraphicsPipelineCreateInfo m_CreatePipelineInfo{};
 
 		VulkanDepthStencilState m_DepthStencil;
 		VulkanBlendState m_BlendState;
@@ -38,14 +39,19 @@ namespace Polyboid
 		std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> m_Bindings;
 		std::map<uint32_t, vk::DescriptorSetLayout> m_SetIndexWithLayout;
 		std::vector<vk::PushConstantRange> m_PushConstantRanges;
-
 		Ref<VulkanPipelineDescriptorSetPool> m_DescPool;
+
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<UniformBufferSet>>> m_UniformBufferSets;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<StorageBufferSet>>> m_StorageBufferSets;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture>>> m_TextureSets;
 
 
 	public:
 		explicit VulkanGraphicsPipeline(const VkRenderAPI* context);
 
 		void Bake() override;
+		void Init();
+		void Recreate();
 
 
 		void SetShader(const ShaderType& type, const Ref<Shader>& shader) override;
@@ -97,5 +103,6 @@ namespace Polyboid
 		std::any GetHandle() override;
 	};
 
+	
 }
 

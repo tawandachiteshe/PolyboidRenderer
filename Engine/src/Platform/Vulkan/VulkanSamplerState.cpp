@@ -18,6 +18,8 @@ namespace Polyboid
 		case TextureWrap::MirrorClampToEdge: return vk::SamplerAddressMode::eMirrorClampToEdge;
 		case TextureWrap::ClampToBorder: return vk::SamplerAddressMode::eClampToBorder;
 		}
+
+		return {};
 	}
 
 	vk::Filter toMinFilter(MinFilterMode filter)
@@ -31,6 +33,8 @@ namespace Polyboid
 		case MinFilterMode::Anisotropic:
 			__debugbreak();
 		}
+
+		return {};
 	}
 
 	vk::SamplerMipmapMode toMipMapMode(MinFilterMode filter)
@@ -45,6 +49,8 @@ namespace Polyboid
 		case MinFilterMode::Anisotropic:
 			__debugbreak();
 		}
+
+		return {};
 	}
 
 	vk::Filter toMagFilter(MagFilterMode filter)
@@ -54,13 +60,13 @@ namespace Polyboid
 		case MagFilterMode::Nearest: return vk::Filter::eNearest;
 		case MagFilterMode::Linear: return vk::Filter::eLinear;
 		}
+
+		return {};
 	}
 
 
-	VulkanSamplerState::VulkanSamplerState(const VkRenderAPI* context, const SamplerSettings& samplerSettings)
-		: m_Context(context), m_Settings(samplerSettings)
+	void VulkanSamplerState::Init(const VkRenderAPI* context, const SamplerSettings& samplerSettings)
 	{
-
 		auto device = context->GetDevice()->GetVulkanDevice();
 
 		vk::SamplerCreateInfo createInfo;
@@ -90,7 +96,18 @@ namespace Polyboid
 		vk::resultCheck(result, "Failed to create Sampler");
 
 		m_Handle = sampler;
+	}
 
+	void VulkanSamplerState::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_Settings);
+	}
+
+	VulkanSamplerState::VulkanSamplerState(const VkRenderAPI* context, const SamplerSettings& samplerSettings)
+		: m_Context(context), m_Settings(samplerSettings)
+	{
+		Init(context, m_Settings);
 	}
 
 	void VulkanSamplerState::SetFilterMode(const std::pair<MinFilterMode, MagFilterMode>& filter)

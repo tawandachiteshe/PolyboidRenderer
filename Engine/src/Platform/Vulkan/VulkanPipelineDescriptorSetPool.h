@@ -14,10 +14,14 @@ namespace Polyboid
 		DescriptorSetPoolSettings m_Settings;
 		vk::DescriptorPool m_DescPool;
 		std::vector<Ref<PipelineDescriptorSet>> m_Sets;
+		std::vector<vk::DescriptorPoolSize> m_PoolSizes;
 
 	public:
 
 		VulkanPipelineDescriptorSetPool(const VkRenderAPI* context, DescriptorSetPoolSettings settings);
+
+		void Init();
+		void Recreate();
 
 		Ref<PipelineDescriptorSet> GetDescriptorSet(uint32_t index) override;
 		std::any GetHandle() override;

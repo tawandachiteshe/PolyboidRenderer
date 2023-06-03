@@ -3,7 +3,7 @@
 
 
 #include "VkRenderAPI.h"
-#include "VulkanCommandList.h"
+#include "VulkanCommandBufferSet.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanPipelineDescriptorSet.h"
@@ -22,14 +22,20 @@ namespace Polyboid
 {
 	void VulkanCommandBuffer::Destroy(const vk::Device& device)
 	{
-		
+		device.freeCommandBuffers(m_CommandList->m_CommandList,{m_CommandBuffer});
 	}
 
-	VulkanCommandBuffer::VulkanCommandBuffer(const VkRenderAPI* context, const VulkanCommandList* commands): m_Context(context), m_CommandList(commands)
+	VulkanCommandBuffer::VulkanCommandBuffer(const VkRenderAPI* context, const VulkanCommandBufferSet* commands): m_CommandList(commands), m_Context(context)
 	{
 
 
-		vk::Device device = *context->GetDevice();
+		Init(context, commands);
+
+	}
+
+	void VulkanCommandBuffer::Init(const VkRenderAPI* context, const VulkanCommandBufferSet* commands)
+	{
+		const vk::Device device = *context->GetDevice();
 
 		vk::CommandBufferAllocateInfo allocInfo{};
 		allocInfo.sType = vk::StructureType::eCommandBufferAllocateInfo;
@@ -40,9 +46,11 @@ namespace Polyboid
 		auto [result, commandbuffer] = device.allocateCommandBuffers(allocInfo);
 		vk::resultCheck(result, "Failed to  alloc command buffer");
 		m_CommandBuffer = commandbuffer.at(0);
+	}
 
-
-
+	void VulkanCommandBuffer::Recreate()
+	{
+		Init(m_Context, m_CommandList);
 	}
 
 	void VulkanCommandBuffer::Begin()

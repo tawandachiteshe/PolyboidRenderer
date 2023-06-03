@@ -25,8 +25,7 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::Bake()
 	{
-		auto device = m_Context->GetDevice()->GetVulkanDevice();
-
+	
 
 		auto vulkanVtxShader = m_Shaders.at(ShaderType::Vertex).As<VulkanShader>(); 
 		auto vulkanFragShader = m_Shaders.at(ShaderType::Fragment).As<VulkanShader>();
@@ -80,11 +79,17 @@ namespace Polyboid
 				m_Bindings[setIndex].insert(m_Bindings[0].end(), binding.begin(), binding.end());
 			}
 
-
 		}
 
+		Init();
 
-		for (const auto& [set,binding] : m_Bindings)
+	}
+
+	void VulkanGraphicsPipeline::Init()
+	{
+		auto device = m_Context->GetDevice()->GetVulkanDevice();
+
+		for (const auto& [set, binding] : m_Bindings)
 		{
 			vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
 			layoutCreateInfo.bindingCount = static_cast<uint32_t>(binding.size());
@@ -96,7 +101,9 @@ namespace Polyboid
 			m_SetIndexWithLayout[set] = descLayout;
 			m_DescriptorSetLayouts.emplace_back(descLayout);
 		}
+
 	
+
 
 
 		vk::PipelineLayoutCreateInfo pipelineCreateInfo{};
@@ -110,8 +117,6 @@ namespace Polyboid
 		m_PipelineLayout = pipelineLayout;
 
 
-
-		vk::GraphicsPipelineCreateInfo createInfo{};
 		vk::PipelineVertexInputStateCreateInfo vtxInput{};
 		vtxInput.vertexAttributeDescriptionCount = 0;
 		vtxInput.vertexBindingDescriptionCount = 0;
@@ -130,28 +135,64 @@ namespace Polyboid
 		vk::PipelineInputAssemblyStateCreateInfo vtxInputAssState{};
 		vtxInputAssState.primitiveRestartEnable = false;
 		vtxInputAssState.topology = vk::PrimitiveTopology::eTriangleList;
-		createInfo.pInputAssemblyState = &vtxInputAssState;
-		createInfo.pVertexInputState = &vtxInput;
+		m_CreatePipelineInfo.pInputAssemblyState = &vtxInputAssState;
+		m_CreatePipelineInfo.pVertexInputState = &vtxInput;
+		m_CreatePipelineInfo.pColorBlendState = &colorStateInfo;
+		m_CreatePipelineInfo.pDepthStencilState = &depthStateInfo;
+		m_CreatePipelineInfo.pMultisampleState = &multiSampleStateInfo;
+		m_CreatePipelineInfo.pDynamicState = &rasterizerStateInfo.m_CreateDynamicStateInfo;
+		m_CreatePipelineInfo.pRasterizationState = &rasterizerStateInfo.m_CreateRasterizeInfo;
+		m_CreatePipelineInfo.pViewportState = &rasterizerStateInfo.m_ViewportCreateInfo;
+		m_CreatePipelineInfo.layout = pipelineLayout;
+		m_CreatePipelineInfo.pStages = m_Stages.data();
+		m_CreatePipelineInfo.stageCount = static_cast<uint32_t>(m_Stages.size());
+		m_CreatePipelineInfo.renderPass = m_RenderPass->GetHandle();
+		m_CreatePipelineInfo.subpass = 0;
 
 
-		createInfo.pColorBlendState = &colorStateInfo;
-		createInfo.pDepthStencilState = &depthStateInfo;
-		createInfo.pMultisampleState = &multiSampleStateInfo;
-		createInfo.pDynamicState = &rasterizerStateInfo.m_CreateDynamicStateInfo;
-		createInfo.pRasterizationState = &rasterizerStateInfo.m_CreateRasterizeInfo;
-		createInfo.pViewportState = &rasterizerStateInfo.m_ViewportCreateInfo;
-		createInfo.layout = pipelineLayout;
-		createInfo.pStages = m_Stages.data();
-		createInfo.stageCount = static_cast<uint32_t>(m_Stages.size());
-		createInfo.renderPass = m_RenderPass->GetHandle();
-		createInfo.subpass = 0;
-
-	
-		auto [graphicsPipelineResult, gfxPipeline] = device.createGraphicsPipeline(nullptr, createInfo);
+		auto [graphicsPipelineResult, gfxPipeline] = device.createGraphicsPipeline(nullptr, m_CreatePipelineInfo);
 		vk::resultCheck(graphicsPipelineResult, "Failed to create");
 
 		m_Pipeline = gfxPipeline;
 		m_PipelineLayout = pipelineLayout;
+	}
+
+	void VulkanGraphicsPipeline::Recreate()
+	{
+		m_VertexInput->Recreate();
+		m_DescPool->Recreate();
+		Destroy();
+		Init();
+
+		for (const auto& binding : m_Sets | std::views::keys)
+		{
+			m_Sets[binding] = AllocateDescriptorSets(binding);
+		}
+
+		for (const auto& set : m_Sets | std::views::keys)
+		{
+			for (auto [binding, buffer] : m_UniformBufferSets[set])
+			{
+				BindUniformBufferSet(binding, buffer, set);
+			}
+
+
+			for (auto [binding, buffer] : m_StorageBufferSets[set])
+			{
+				BindStorageBufferSet(binding, buffer, set);
+			}
+
+
+			for (auto [binding, texture] : m_TextureSets[set])
+			{
+				BindTexture2D(binding, texture, set);
+			}
+
+
+
+			WriteSetResourceBindings(set);
+		}
+
 	}
 
 	void VulkanGraphicsPipeline::SetShader(const ShaderType& type, const Ref<Shader>& shader)
@@ -276,6 +317,7 @@ namespace Polyboid
 	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescriptorSets(uint32_t setBinding)
 	{
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
+		m_Sets.clear();
 
 		vk::DescriptorSetLayout vulkanLayout = m_SetIndexWithLayout[setBinding];
 		vk::DescriptorSetAllocateInfo allocateInfo{};
@@ -315,6 +357,8 @@ namespace Polyboid
 		{
 			m_Sets[setBinding].at(i)->WriteUniformBuffer(binding, bufferSet->Get(i));
 		}
+
+		m_UniformBufferSets[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
@@ -324,6 +368,8 @@ namespace Polyboid
 		{
 			m_Sets[setBinding].at(i)->WriteStorageBuffer(binding, bufferSet->Get(i));
 		}
+
+		m_StorageBufferSets[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding)
@@ -332,6 +378,8 @@ namespace Polyboid
 		{
 			m_Sets[setBinding].at(i)->WriteTexture2D(binding, bufferSet);
 		}
+
+		m_TextureSets[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)

@@ -35,6 +35,7 @@ namespace Polyboid
 
 
 		m_WriteSets.emplace_back(writeDescriptor);
+		
 
 	}
 
@@ -51,6 +52,7 @@ namespace Polyboid
 		writeDescriptor.pBufferInfo = &m_Buffers.at(binding);
 
 		m_WriteSets.emplace_back(writeDescriptor);
+		
 	}
 
 	void VulkanPipelineDescriptorSet::WriteTexture2D(uint32_t binding, const Ref<Texture>& texture)
@@ -73,6 +75,11 @@ namespace Polyboid
 
 		device.updateDescriptorSets(m_WriteSets, {});
 
+	}
+
+	void VulkanPipelineDescriptorSet::Recreate()
+	{
+	
 	}
 
 	vk::PipelineLayout VulkanPipelineDescriptorSet::GetDescLayout()

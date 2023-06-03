@@ -20,6 +20,10 @@ namespace Polyboid
 		VmaAllocation m_ImageMemory;
 
 	public:
+
+		void Init(const VkRenderAPI* context, const ImageSettings& imageSettings);
+		void Recreate();
+
 		VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings);
 		std::any GetHandle() override;
 		virtual void Destroy();

@@ -91,6 +91,18 @@ namespace Polyboid
 
 	}
 
+	void VulkanFramebuffer::SwapchainRecreate()
+	{
+		Destroy(VkRenderAPI::GetVulkanDevice());
+		SwapChainInit(m_Context, m_Settings);
+	}
+
+	void VulkanFramebuffer::Recreate()
+	{
+		Destroy(VkRenderAPI::GetVulkanDevice());
+		Init(m_Context, m_RenderPass);
+	}
+
 	void VulkanFramebuffer::Destroy(vk::Device device)
 	{
 
@@ -103,7 +115,7 @@ namespace Polyboid
 	}
 
 	VulkanFramebuffer::VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass):
-		m_Context(context)
+		m_Context(context), m_RenderPass(renderPass)
 	{
 		Init(context, renderPass);
 	}
@@ -148,8 +160,7 @@ namespace Polyboid
 
 		m_Settings.height = height;
 		m_Settings.width = width;
-
-		SwapChainInit(m_Context, m_Settings);
+		Recreate();
 	}
 
 	std::any VulkanFramebuffer::GetHandle()

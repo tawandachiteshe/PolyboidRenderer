@@ -11,9 +11,8 @@
 
 namespace Polyboid
 {
-	VulkanImage2D::VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings): m_Context(context), m_Settings(imageSettings)
+	void VulkanImage2D::Init(const VkRenderAPI* context, const ImageSettings& imageSettings)
 	{
-
 		vk::Device device = (*context->GetDevice());
 		VmaAllocator allocator = (*context->GetAllocator());
 
@@ -53,7 +52,7 @@ namespace Polyboid
 		case ImageUsage::TransferDst: createInfo.usage = eTransferDst; break;
 		case ImageUsage::ColorAttachmentSampling: createInfo.usage = eColorAttachment | eSampled;  break;
 		case ImageUsage::DepthStencilAttachmentSampling: createInfo.usage = eDepthStencilAttachment | eSampled;  break;
-		default: ;
+		default:;
 		}
 
 		createInfo.sharingMode = vk::SharingMode::eExclusive;
@@ -72,7 +71,17 @@ namespace Polyboid
 		vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
 		m_Image = vulkanImage;
 		m_ImageMemory = allocation;
+	}
 
+	void VulkanImage2D::Recreate()
+	{
+		Destroy();
+		Init(m_Context, m_Settings);
+	}
+
+	VulkanImage2D::VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings): m_Context(context), m_Settings(imageSettings)
+	{
+		Init(context, m_Settings);
 	}
 
 	std::any VulkanImage2D::GetHandle()

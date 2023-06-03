@@ -12,6 +12,7 @@ namespace Polyboid
 
 	class PipelineDescriptorSet
 	{
+
 	public:
 		virtual std::any GetHandle() = 0;
 		virtual void WriteUniformBuffer(uint32_t binding, const Ref<UniformBuffer>& buffer) = 0;
