@@ -109,12 +109,22 @@ namespace Polyboid
 			cmdSet.As<VulkanCommandBufferSet>()->Recreate();
 		}
 
-		s_Data->m_SubmittingBuffer.clear();
+		for (auto& func : m_FreeFunctions)
+		{
+			func();
+		}
+
+		//s_Data->m_SubmittingBuffer.clear();
 
 		ClearResources();
 
 		m_SwapchainIndex = 0;
 		m_CanRender = true;
+	}
+
+	void VulkanGraphicsBackend::RegisterResizeFunc(const RenderBackendFreeFunc& freeFunc)
+	{
+		m_FreeFunctions.emplace_back(freeFunc);
 	}
 
 	bool VulkanGraphicsBackend::IsReady()
@@ -282,7 +292,9 @@ namespace Polyboid
 		if (m_CanRender)
 		{
 			ClearResources();
-		} 
+		}
+
+		
 
 
 	}

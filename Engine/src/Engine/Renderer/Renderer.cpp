@@ -203,6 +203,11 @@ namespace Polyboid
 			Renderer::GetSwapChain()->GetFrameBuffer(GetGraphicsBackend()->GetCurrentImageIndex()));
 	}
 
+	void Renderer::RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc)
+	{
+		GetGraphicsBackend()->RegisterResizeFunc(freeFunc);
+	}
+
 	void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipeline);
@@ -240,8 +245,18 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->SetScissor(rect);
 	}
 
+	void Renderer::PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer)
+	{
+		s_Data->m_CurrentCommandLists.emplace_back(commandBuffer);
+	}
+
+	void Renderer::PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	{
+		s_Data->m_CurrentCommandLists.insert(s_Data->m_CurrentCommandLists.end(), commandBuffers.begin(), commandBuffers.end());
+	}
+
 	void Renderer::SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data,
-		uint32_t dataSize)
+	                                    uint32_t dataSize)
 	{
 		buffers.at(GetCurrentFrame())->SetData(data, dataSize);
 	}
@@ -317,8 +332,8 @@ namespace Polyboid
 
 	}
 
-	void Renderer::WaitAndRender(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	void Renderer::WaitAndRender()
 	{
-		s_Data->m_GraphicsBackend->SubmitGraphicsWork(commandBuffers);
+		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
 	}
 }

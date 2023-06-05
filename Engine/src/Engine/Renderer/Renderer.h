@@ -5,6 +5,7 @@
 #include "Engine/Engine/Base.h"
 #include "Engine/Engine/MeshImporter/MeshImporter.h"
 #include <Engine/Renderer/RenderPass.h>
+#include <Engine/Renderer/GraphicsBackend.h>
 
 #include "imgui.h"
 
@@ -33,6 +34,7 @@ namespace Polyboid
         Ref<PipelineState> m_DefaultPipelineState;
         Ref<Swapchain> m_Swapchain;
         Ref<CommandBufferSet> m_CurrentCommandList;
+        std::vector<Ref<CommandBufferSet>> m_CurrentCommandLists;
         Ref<CommandBuffer> m_CommandBuffer;
 
         RendererStorage() = default;
@@ -88,6 +90,7 @@ namespace Polyboid
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers);
         static void BeginRenderPass(const Ref<Swapchain>& swapchain);
 
+        static void RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc);
 
         static void BindGraphicsPipeline(const Ref<PipelineState>& pipeline);
         static void BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets);
@@ -96,6 +99,8 @@ namespace Polyboid
         static void BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
         static void SetViewport(const Viewport& viewport);
         static void SetScissor(const Rect& rect);
+        static void PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer);
+        static void PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffer);
 
     	static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data);
@@ -116,7 +121,7 @@ namespace Polyboid
 
         static void Resize(uint32_t width, uint32_t height);
 
-        static void WaitAndRender(const std::vector<Ref<CommandBufferSet>>& commandBuffers);
+        static void WaitAndRender();
     };
 
 }

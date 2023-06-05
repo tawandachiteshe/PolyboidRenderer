@@ -249,7 +249,7 @@ namespace Polyboid
         //float fov, float aspectRatio, float nearClip, float farClip
 
         m_Name = name;
-
+        m_EditorCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
     }
 
 	void EditorLayer::OnAttach()

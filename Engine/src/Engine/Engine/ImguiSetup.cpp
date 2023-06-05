@@ -93,6 +93,16 @@ namespace Polyboid
         return ImguiDS;
     }
 
+    void Imgui::FreeVulkanTextureID(const ImTextureID& texture)
+    {
+
+        auto descPool = std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool);
+        auto descSet = static_cast<vk::DescriptorSet::NativeType>(texture);
+
+        VkRenderAPI::GetVulkanDevice().freeDescriptorSets(descPool, { descSet });
+    }
+
+
     //TODO make this api agnostic
     void Imgui::Init(const std::any& window)
     {

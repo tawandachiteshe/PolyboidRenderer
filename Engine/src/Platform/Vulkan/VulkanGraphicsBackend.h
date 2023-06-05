@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <functional>
 #include <vulkan/vulkan.hpp>
 
 #include "Engine/Engine/Base.h"
@@ -48,12 +49,15 @@ namespace Polyboid
 
 	class VulkanGraphicsBackend : public GraphicsBackend
 	{
+	public:
+		
 	private:
 		Ref<GraphicsBackendData> s_Data;
 		uint32_t m_SwapchainIndex = 0;
 		vk::Queue m_GraphicsQueue;
 		vk::Device m_Device;
 		bool m_CanRender = true;
+		std::vector<RenderBackendFreeFunc> m_FreeFunctions;
 
 		
 		void Init();
@@ -61,8 +65,11 @@ namespace Polyboid
 
 	public:
 
+		
+		 
 		VulkanGraphicsBackend();
 		void RecreateResources();
+		void RegisterResizeFunc(const RenderBackendFreeFunc& freeFunc) override;
 
 		void SubmitPipeline(const Ref<PipelineState>& pipeline) override;
 		void SubmitRenderpass(const Ref<RenderPass>& renderpass) override;

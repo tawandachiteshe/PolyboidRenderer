@@ -250,17 +250,21 @@ namespace Polyboid
 				Imgui::GetVulkanTextureID(offscreenBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
 		}
 
+		Renderer::RegisterFreeFunc([]
+		{
+			spdlog::info("Freeing Resources");
+		});
 
-		offscreenBuffers->Recreate();
+		//TODO be careful
+		//offscreenBuffers->Recreate();
 		m_Pipeline.As<VulkanGraphicsPipeline>()->Recreate();
+
+		
+
+		Renderer::PushCommandBufferSets({ m_CommandList, secondCommandList, offscreenCommandBuffer });
 
 
 		static float rotation = 0;
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
-		{
-	
-		}
-
 
 		while (m_Running)
 		{
@@ -301,6 +305,11 @@ namespace Polyboid
 			{
 				layer->OnImguiRender();
 			}
+
+			ImGui::Begin("User");
+			ImGui::Image(m_FramebufferTextures.at(Renderer::GetCurrentFrame()), { 400, 400 });
+			ImGui::End();
+
 			Imgui::End();
 
 
@@ -309,48 +318,47 @@ namespace Polyboid
 			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
 			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
 			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
-
 			Renderer::EndFrameCommands();
+
+			Renderer::BeginFrameCommands(offscreenCommandBuffer);
+			Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
+
+			Renderer::BindGraphicsPipeline(skyBoxPipeline);
+			Renderer::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
+
+			Viewport viewport{};
+			viewport.Width = 800;
+			viewport.Height = 600;
+			viewport.MinDepth = 0.0;
+			viewport.MaxDepth = 1.0f;
+
+			Renderer::SetViewport(viewport);
+			Rect rect{};
+			rect.Width = 800;
+			rect.Height = 600;
+			Renderer::SetScissor(rect);
+			Renderer::BindVertexBuffer(triVerts);
+			Renderer::BindIndexBuffer(triIdxs);
+			Renderer::DrawIndexed(6);
+			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
+			Renderer::DrawIndexed(6);
+
+			Renderer::EndRenderPass();
+			Renderer::EndCommands();
+
 
 			Renderer::BeginFrameCommands(m_CommandList);
 			Renderer::BeginRenderPass(Renderer::GetSwapChain());
-			Renderer::Clear(ClearSettings{ {0.2, 0.2, 0.2, 1.0f} });
+			Renderer::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
 
 			Imgui::SubmitToCommandBuffer(Renderer::GetCurrentCommandBuffer());
 
 			Renderer::EndRenderPass();
 			Renderer::EndFrameCommands();
 
-			
 
-			// Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
-			// Renderer::BindGraphicsPipeline(skyBoxPipeline);
-			// Renderer::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
-			// Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
-			//
-			// Viewport viewport{};
-			// viewport.Width = 800;
-			// viewport.Height = 600;
-			// viewport.MinDepth = 0.0;
-			// viewport.MaxDepth = 1.0f;
-			//
-			// Renderer::SetViewport(viewport);
-			// Rect rect{};
-			// rect.Width = 800;
-			// rect.Height = 600;
-			// Renderer::SetScissor(rect);
-			// Renderer::BindVertexBuffer(triVerts);
-			// Renderer::BindIndexBuffer(triIdxs);
-			// Renderer::DrawIndexed(6);
-			// Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
-			// Renderer::DrawIndexed(6);
-			// Renderer::EndRenderPass();
-
-
-			//Swapchain renderpass
-
-
-			Renderer::WaitAndRender({m_CommandList, secondCommandList});
+			Renderer::WaitAndRender();
 		}
 
 		int a = 2000;

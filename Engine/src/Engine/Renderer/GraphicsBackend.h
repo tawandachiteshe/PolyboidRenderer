@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <functional>
+
 #include "Engine/Engine/Base.h"
 
 
@@ -18,6 +20,10 @@ namespace Polyboid
 	class GraphicsBackend
 	{
 	public:
+
+		using RenderBackendFreeFunc = std::function<void()>;
+
+		virtual void RegisterResizeFunc(const RenderBackendFreeFunc& freeFunc) = 0;
 		virtual void SubmitPipeline(const Ref<PipelineState>& pipeline) = 0;
 		virtual void SubmitRenderpass(const Ref<RenderPass>& renderpass) = 0;
 		virtual void SubmitFramebuffer(const Ref<FrameBufferSet>& framebuffer) = 0;

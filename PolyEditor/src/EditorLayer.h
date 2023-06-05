@@ -6,6 +6,7 @@
 
 #include "Editor/EditorCamera.h"
 #include "Engine/Engine/Base.h"
+#include "Engine/Renderer/CommandBufferSet.h"
 
 
 namespace Polyboid 
@@ -21,7 +22,7 @@ namespace Polyboid
 		bool m_PlayMode = false;
 		void OnEditorEnterPlayMode(const Event& event);
 		void OnEditorExitPlayMode(const Event& event);
-
+		Ref<CommandBufferSet> m_EditorCommandBuffer;
 
 
 	public:
