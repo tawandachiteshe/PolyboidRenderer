@@ -84,7 +84,6 @@ namespace Polyboid
 		std::atomic_bool m_ShouldRender = true;
 
 		double m_LastFrameTime = 0.0;
-		Ref<PipelineState> m_Pipeline = nullptr;
 		Ref<CommandBufferSet> m_CommandList = nullptr;
 
 	private:

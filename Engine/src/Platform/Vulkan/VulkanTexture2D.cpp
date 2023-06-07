@@ -12,7 +12,7 @@
 #include "VulkanSamplerState.h"
 #include "VulkanStagingBuffer.h"
 #include "Engine/Renderer/GraphicsBackend.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Utils/Common.h"
 #include "stb/stb_image.h"
 
@@ -48,7 +48,7 @@ namespace Polyboid
 			cmdBuffer->CopyBufferToImage2D(staging.As<StagingBuffer>(), m_Image.As<Image2D>());
 			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 			cmdBuffer->End();
-			Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
+			RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 			staging->Destroy();
 			cmdList->Destroy(device);
@@ -82,7 +82,7 @@ namespace Polyboid
 			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
 
 			cmdBuffer->End();
-			Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
+			RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 
 			stbi_image_free(pixels);

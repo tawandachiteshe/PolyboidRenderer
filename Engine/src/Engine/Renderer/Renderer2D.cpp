@@ -15,7 +15,7 @@
 #include "FrustumCulling.h"
 #include "PipelineState.h"
 #include "RasterizerState.h"
-#include "Renderer.h"
+#include "RenderCommand.h"
 #include "VertexBufferArray.h"
 #include "Engine/Engine/Registry/ShaderRegistry.h"
 
@@ -285,14 +285,14 @@ namespace Polyboid
 			viewPort.Width = 1600;
 			pipeLine->GetRasterizerState().SetViewport(viewPort);
 
-			Renderer::SetPipelineState(pipeLine);
+			RenderCommand::SetPipelineState(pipeLine);
 
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
 			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
-			Renderer::DrawIndexed(count);
+			RenderCommand::DrawIndexed(count);
 		}
 	}
 
@@ -323,14 +323,14 @@ namespace Polyboid
 			viewPort.Width = 1600;
 			pipeLine->GetRasterizerState().SetViewport(viewPort);
 
-			Renderer::SetPipelineState(pipeLine);
+			RenderCommand::SetPipelineState(pipeLine);
 
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
 			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
-			Renderer::DrawIndexed(count);
+			RenderCommand::DrawIndexed(count);
 		}
 	}
 
@@ -359,14 +359,14 @@ namespace Polyboid
 			viewPort.Width = 1600;
 			pipeLine->GetRasterizerState().SetViewport(viewPort);
 			pipeLine->GetRasterizerState().SetLineWidth(3.0f);
-			Renderer::SetPipelineState(pipeLine);
+			RenderCommand::SetPipelineState(pipeLine);
 
 			(*s_RenderData.m_CameraData).projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 			(*s_RenderData.m_CameraData).view = s_RenderData.m_Renderer2DCamera->GetView();
 			(*s_RenderData.m_CameraData).pos = s_RenderData.m_Renderer2DCamera->GetPosition();
 			//RenderCommand::AddCommand(ALLOC_COMMAND(PushUniformBufferCommand, pipeLine, "CameraBuffer", s_RenderData.m_CameraData, sizeof(Renderer2DCameraData)));
 
-			Renderer::DrawArrays(s_LineData.lineCount);
+			RenderCommand::DrawArrays(s_LineData.lineCount);
 		}
 	}
 

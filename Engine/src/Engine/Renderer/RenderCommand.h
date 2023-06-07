@@ -49,7 +49,7 @@ namespace Polyboid
     };
 	
     
-    class Renderer
+    class RenderCommand
     {
     private:
 

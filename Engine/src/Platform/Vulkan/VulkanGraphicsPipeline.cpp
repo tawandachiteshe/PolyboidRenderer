@@ -8,7 +8,7 @@
 #include "VulkanRenderPass.h"
 #include "VulkanShader.h"
 #include "Engine/Renderer/BufferSet.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "Utils/VulkanDevice.h"
 
@@ -20,7 +20,7 @@ namespace Polyboid
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VkRenderAPI* context): m_Context(context)
 	{
 
-		m_DescPool = CreateRef<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ Renderer::GetMaxFramesInFlight() });
+		m_DescPool = CreateRef<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ RenderCommand::GetMaxFramesInFlight() });
 	}
 
 	void VulkanGraphicsPipeline::Bake()
@@ -162,7 +162,7 @@ namespace Polyboid
 	{
 		Destroy();
 		m_RenderPass->Recreate();
-		m_VertexInput->Recreate();
+	//	m_VertexInput->Recreate();
 		m_DescPool->Recreate();
 		Bake();
 
@@ -175,12 +175,14 @@ namespace Polyboid
 		{
 			for (auto [binding, buffer] : m_UniformBufferSets[set])
 			{
+				buffer->Recreate();
 				BindUniformBufferSet(binding, buffer, set);
 			}
 
 
 			for (auto [binding, buffer] : m_StorageBufferSets[set])
 			{
+				buffer->Recreate();
 				BindStorageBufferSet(binding, buffer, set);
 			}
 
@@ -356,7 +358,7 @@ namespace Polyboid
 	void VulkanGraphicsPipeline::BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet,
 		uint32_t setBinding)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[setBinding].at(i)->WriteUniformBuffer(binding, bufferSet->Get(i));
 		}
@@ -367,7 +369,7 @@ namespace Polyboid
 	void VulkanGraphicsPipeline::BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
 		uint32_t setBinding)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[setBinding].at(i)->WriteStorageBuffer(binding, bufferSet->Get(i));
 		}
@@ -377,7 +379,7 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[setBinding].at(i)->WriteTexture2D(binding, bufferSet);
 		}
@@ -387,7 +389,7 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[set].at(i)->Commit();
 		}

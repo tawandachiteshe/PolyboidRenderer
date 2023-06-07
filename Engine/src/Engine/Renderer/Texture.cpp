@@ -1,7 +1,7 @@
 ﻿#include "boidpch.h"
 #include "Texture.h"
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 #include "Engine/Engine/Application.h"
 
 namespace Polyboid

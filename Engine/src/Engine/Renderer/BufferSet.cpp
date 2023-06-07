@@ -1,7 +1,7 @@
 ﻿#include "boidpch.h"
 #include "BufferSet.h"
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 #include "Platform/Vulkan/Buffers.h"
 #include "Platform/Vulkan/VulkanFramebuffer.h"
 
@@ -9,7 +9,7 @@ namespace Polyboid
 {
 	UniformBufferSet::UniformBufferSet(uint32_t size)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Buffers.push_back(UniformBuffer::Create(size));
 		}
@@ -38,9 +38,17 @@ namespace Polyboid
 	// Storage buffers here
 	StorageBufferSet::StorageBufferSet(uint32_t size)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Buffers.push_back(StorageBuffer::Create(size));
+		}
+	}
+
+	void StorageBufferSet::Recreate()
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanShaderStorage>()->Recreate();
 		}
 	}
 
@@ -58,7 +66,7 @@ namespace Polyboid
 	//Staging buffer
 	StagingBufferSet::StagingBufferSet(uint32_t size)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Buffers.push_back(StagingBuffer::Create(size));
 		}
@@ -103,7 +111,7 @@ namespace Polyboid
 	//Frame buffers
 	FrameBufferSet::FrameBufferSet(const Ref<RenderPass>& renderPass)
 	{
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Buffers.push_back(Framebuffer::Create(renderPass));
 		}

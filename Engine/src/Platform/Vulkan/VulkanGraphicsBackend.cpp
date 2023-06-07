@@ -12,7 +12,7 @@
 #include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Renderer/BufferSet.h"
 #include "Engine/Renderer/CommandBufferSet.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/RendererSyncObjects.h"
 #include "Engine/Renderer/SyncObjects.h"
 #include "Utils/VulkanDevice.h"
@@ -28,24 +28,23 @@ namespace Polyboid
 		m_Device = vkRenderAPI->GetDevice()->GetVulkanDevice();
 
 		s_Data = CreateRef<GraphicsBackendData>();
-		s_Data->m_Swapchain = Renderer::GetSwapChain();
+		s_Data->m_Swapchain = RenderCommand::GetSwapChain();
 
 
-		s_Data->m_SyncObjects = RendererSyncObjects::Create(Renderer::GetMaxFramesInFlight());
+		s_Data->m_SyncObjects = RendererSyncObjects::Create(RenderCommand::GetMaxFramesInFlight());
 		
 
 		s_Data->m_RenderPasses.reserve(20);
 		s_Data->m_Framebuffers.reserve(20);
-		s_Data->m_CommandLists.reserve(20);
+		s_Data->m_CommandBuffers.reserve(20);
 		s_Data->m_Pipelines.reserve(20);
 	}
 
 	void VulkanGraphicsBackend::ClearResources()
 	{
-		s_Data->m_SubmittingBuffer.clear();
+		s_Data->m_CommandBuffers.clear();
 		s_Data->m_RenderPasses.clear();
 		s_Data->m_Framebuffers.clear();
-		s_Data->m_CommandLists.clear();
 		s_Data->m_Pipelines.clear();
 	}
 
@@ -98,12 +97,7 @@ namespace Polyboid
 			buffer->Recreate();
 		}
 
-
-		for (auto& pool : s_Data->m_CommandLists)
-		{
-			pool->Recreate();
-		}
-
+		
 		for (auto& cmdSet : s_Data->m_CommandBuffers)
 		{
 			cmdSet.As<VulkanCommandBufferSet>()->Recreate();
@@ -113,6 +107,7 @@ namespace Polyboid
 		{
 			func();
 		}
+
 
 		//s_Data->m_SubmittingBuffer.clear();
 
@@ -163,7 +158,7 @@ namespace Polyboid
 			if (acquireResult == vk::Result::eErrorOutOfDateKHR) {
 				// demo.swapchain is out of date (e.g. the window was resized) and
 				// must be recreated:
-				Renderer::GetSwapChain()->Resize();
+				RenderCommand::GetSwapChain()->Resize();
 				Imgui::RecreateVulkanRenderer();
 				RecreateResources();
 				
@@ -189,7 +184,7 @@ namespace Polyboid
 
 	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
 	{
-		auto frame = Renderer::GetCurrentFrame();
+		auto frame = RenderCommand::GetCurrentFrame();
 
 		s_Data->m_CommandBuffers = commandBuffers;
 		auto& syncObjects = s_Data->m_SyncObjects;
@@ -212,8 +207,7 @@ namespace Polyboid
 		const uint32_t imageIndex = m_SwapchainIndex;
 
 
-
-		for (const auto& commandSet : commandBuffers)
+		for (const auto& commandSet : s_Data->m_CommandBuffers)
 		{
 			vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(commandSet->GetCommandBufferAt(m_SwapchainIndex)->GetHandle());
 			s_Data->m_SubmittingBuffer.emplace_back(buffer);
@@ -247,14 +241,14 @@ namespace Polyboid
 
 
 		
-		const auto& maxFrames = Renderer::GetMaxFramesInFlight();
+		const auto& maxFrames = RenderCommand::GetMaxFramesInFlight();
 		frame = (frame + 1) % maxFrames;
-		Renderer::SetCurrentFrame(frame);
+		RenderCommand::SetCurrentFrame(frame);
 
 		if (result == vk::Result::eErrorOutOfDateKHR) {
 			// swapchain is out of date (e.g. the window was resized) and
 			// must be recreated:
-			Renderer::GetSwapChain()->Resize();
+			RenderCommand::GetSwapChain()->Resize();
 			Imgui::RecreateVulkanRenderer();
 			for (auto& cmdSet : s_Data->m_CommandBuffers)
 			{
@@ -270,7 +264,7 @@ namespace Polyboid
 			auto caps_result = VkRenderAPI::GetVulkanPhysicalDevice().getSurfaceCapabilitiesKHR(surface, &surfCapabilities);
 			vk::resultCheck(caps_result, "failed to check");
 			if (surfCapabilities.currentExtent.width != width || surfCapabilities.currentExtent.height != height) {
-				Renderer::GetSwapChain()->Resize();
+				RenderCommand::GetSwapChain()->Resize();
 				Imgui::RecreateVulkanRenderer();
 				RecreateResources();
 			}
@@ -294,7 +288,7 @@ namespace Polyboid
 			ClearResources();
 		}
 
-		
+		s_Data->m_SubmittingBuffer.clear();
 
 
 	}

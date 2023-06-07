@@ -3,6 +3,7 @@
 #include "Engine/Engine/Base.h"
 #include "shaderc/shaderc.hpp"
 #include <filesystem>
+#include <map>
 
 namespace Polyboid
 {

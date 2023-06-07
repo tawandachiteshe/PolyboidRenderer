@@ -39,7 +39,6 @@ namespace Polyboid
 		Ref<Swapchain> m_Swapchain;
 		std::vector<Ref<VulkanRenderPass>> m_RenderPasses;
 		std::vector<Ref<FrameBufferSet>> m_Framebuffers;
-		std::vector<Ref<VulkanCommandBufferSet>> m_CommandLists;
 		std::vector<Ref<VulkanGraphicsPipeline>> m_Pipelines;
 		std::vector<Ref<CommandBufferSet>> m_CommandBuffers;
 

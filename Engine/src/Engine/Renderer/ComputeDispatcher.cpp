@@ -1,7 +1,7 @@
 #include "boidpch.h"
 #include "ComputeDispatcher.h"
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 
 namespace Polyboid
 {

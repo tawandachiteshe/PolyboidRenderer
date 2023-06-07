@@ -6,7 +6,7 @@
 #include <spdlog/spdlog.h>
 
 #include "Engine.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Swapchain.h"
 
 #include "ImguiSetup.h"
@@ -78,7 +78,7 @@ namespace Polyboid
 		const auto nativeWindow = m_MainWindow->GetNativeWindow();
 		m_RenderAPI = RenderAPI::Create(RenderAPIType::Vulkan, nativeWindow);
 
-		Renderer::Init(m_RenderAPI, m_Settings);
+		RenderCommand::Init(m_RenderAPI, m_Settings);
 		ShaderRegistry::Init(m_RenderAPI);
 		Imgui::Init(m_MainWindow->GetNativeWindow());
 	}
@@ -106,7 +106,7 @@ namespace Polyboid
 	{
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
-		Renderer::Resize(m_Settings.WindowWidth, m_Settings.WindowHeight);
+		RenderCommand::Resize(m_Settings.WindowWidth, m_Settings.WindowHeight);
 	}
 
 	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
@@ -138,130 +138,9 @@ namespace Polyboid
 		Engine::Init();
 
 		m_CommandList = CommandBufferSet::Create({3, CommandType::ManyTime});
-		auto secondCommandList = CommandBufferSet::Create({3, CommandType::ManyTime});
-		auto offscreenCommandBuffer = CommandBufferSet::Create({3});
-		auto imGuiCommandList = CommandBufferSet::Create({3});
 
 
-		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
-		RenderPassSettings renderPassSettings{};
-		renderPassSettings.Height = 600;
-		renderPassSettings.Width = 800;
-		renderPassSettings.TextureAttachments = {{TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8}};
-		renderPassSettings.debugName = "Offscreen render pass";
-
-		auto offRenderPass = RenderPass::Create(renderPassSettings);
-		auto offscreenBuffers = FrameBufferSet::Create(offRenderPass);
-
-
-		struct Vertex
-		{
-			glm::vec3 pos;
-			glm::vec4 norm;
-			glm::vec2 uv;
-		};
-
-		Vertex vert[] = {
-			{{-1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 0.0f}},
-			{{-1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-			{{1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 1.0f}},
-			{{1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 0.0f}}
-		};
-
-		unsigned int indices[] = {
-			0, 1, 3, // Triangle 1
-			1, 2, 3 // Triangle 2
-		};
-
-		auto triVerts = VertexBuffer::Create(vert, sizeof(vert));
-		triVerts->SetLayout({
-			{ShaderDataType::Float3, "aPosition"},
-			{ShaderDataType::Float4, "aNormal"},
-			{ShaderDataType::Float2, "aUV"}
-		});
-		auto triIdxs = IndexBuffer::Create(indices, 6);
-		auto vtxArray = VertexBufferArray::Create();
-		vtxArray->AddVertexBuffer(triVerts);
-		vtxArray->SetIndexBuffer(triIdxs);
-
-		const uint32_t green = 0xFF'00'FF'00;
-
-		auto greenTexture = Texture::Create({
-			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
-			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
-
-		                                    }, &green);
-
-		auto checkerTexture = Texture::Create({
-			.sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling,
-			.path = "Assets/Textures/checker.jpg"
-		});
-
-
-		auto skyBoxPipeline = PipelineState::CreateGraphicsPipeline();
-		skyBoxPipeline->SetGraphicsShaders(skyboxShaders);
-		skyBoxPipeline->SetVertexArray(vtxArray);
-		skyBoxPipeline->SetRenderPass(offRenderPass);
-		skyBoxPipeline->Bake();
-
-		m_Pipeline = skyBoxPipeline;
-
-
-		//ShaderRegistry::Exist("Renderer3D/skybox");
-		//ShaderRegistry::LoadGraphicsShaders("");
-
-		struct CameraBufferData
-		{
-			glm::mat4 projection;
-			glm::mat4 view;
-		};
-
-		struct EntityBufferData
-		{
-			glm::mat4 transform;
-			glm::mat4 padding;
-		};
-
-
-		CameraBufferData camerData{};
-		EntityBufferData entityBufferData{};
-		EntityBufferData entityBufferData2{};
-
-		Ref<UniformBufferSet> uniformBuffers = UniformBufferSet::Create(sizeof(CameraBufferData));
-		Ref<StorageBufferSet> storageBuffers = StorageBufferSet::Create(sizeof(vert));
-		Ref<StagingBufferSet> uniformStagingBuffers = StagingBufferSet::Create(sizeof(CameraBufferData));
-		Ref<StagingBufferSet> storageStagingBuffers = StagingBufferSet::Create(sizeof(vert));
-
-		const auto descSets = skyBoxPipeline->AllocateDescriptorSets();
-		skyBoxPipeline->BindUniformBufferSet(0, uniformBuffers);
-		skyBoxPipeline->BindStorageBufferSet(1, storageBuffers);
-		skyBoxPipeline->BindTexture2D(2, checkerTexture);
-		skyBoxPipeline->WriteSetResourceBindings();
-		//
-
-		camerData.projection = glm::perspective(900.f / 1600.f, glm::radians(45.0f), 0.01f, 1000.0f);
-		camerData.view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -10.0f});
-
-		std::vector<ImTextureID> m_FramebufferTextures;
-
-		for (uint32_t i = 0; i < Renderer::GetMaxFramesInFlight(); ++i)
-		{
-			m_FramebufferTextures.push_back(
-				Imgui::GetVulkanTextureID(offscreenBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
-		}
-
-		Renderer::RegisterFreeFunc([]
-		{
-			spdlog::info("Freeing Resources");
-		});
-
-		//TODO be careful
-		//offscreenBuffers->Recreate();
-		m_Pipeline.As<VulkanGraphicsPipeline>()->Recreate();
-
-		
-
-		Renderer::PushCommandBufferSets({ m_CommandList, secondCommandList, offscreenCommandBuffer });
+		RenderCommand::PushCommandBufferSets({ m_CommandList });
 
 
 		static float rotation = 0;
@@ -274,31 +153,19 @@ namespace Polyboid
 			double m_GameTime = currentFrame - m_LastFrameTime;
 			m_LastFrameTime = currentFrame;
 
-			if (!Renderer::IsGraphicsBackendReady())
+			if (!RenderCommand::IsGraphicsBackendReady())
 			{
 				continue;
 			}
 
-			Renderer::AcquireImageIndex();
+			RenderCommand::AcquireImageIndex();
 
-			rotation += (float)m_GameTime * (float)100.0f;
-
-			entityBufferData.transform = glm::mat4(1.0f) * glm::rotate(glm::mat4(1.0f), glm::radians(rotation),
-			                                                           {0, 0.0f, 1.0}) * glm::scale(
-				glm::mat4(1.0f), {0.2, 0.2, 0.2});
-
-			// update here.....
 			for (auto layer : m_Layers)
 			{
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
-			entityBufferData2.transform = glm::translate(glm::mat4(1.0f), {0.0, 0.5f, 0.0f}) * glm::scale(
-				glm::mat4(1.0f), {0.2, 0.2, 0.2});
 
-			//camerData.view = camerData.view * glm::rotate(glm::mat4(), 0.12f, glm::vec3({0.0f, 0.0f, 1.0f}));
-
-			//Note these commands are executed later
 
 			Imgui::Begin();
 			for (auto layer : m_Layers)
@@ -306,59 +173,20 @@ namespace Polyboid
 				layer->OnImguiRender();
 			}
 
-			ImGui::Begin("User");
-			ImGui::Image(m_FramebufferTextures.at(Renderer::GetCurrentFrame()), { 400, 400 });
-			ImGui::End();
-
 			Imgui::End();
 
 
-			Renderer::BeginFrameCommands(secondCommandList);
-			Renderer::SetStagingBufferData(uniformStagingBuffers, &camerData);
-			Renderer::SetStagingBufferData(storageStagingBuffers, vert);
-			Renderer::CopyStagingBuffer(uniformStagingBuffers, uniformBuffers);
-			Renderer::CopyStagingBuffer(storageStagingBuffers, storageBuffers);
-			Renderer::EndFrameCommands();
+			RenderCommand::BeginFrameCommands(m_CommandList);
+			RenderCommand::BeginRenderPass(RenderCommand::GetSwapChain());
+			RenderCommand::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
 
-			Renderer::BeginFrameCommands(offscreenCommandBuffer);
-			Renderer::BeginRenderPass(offRenderPass, offscreenBuffers);
+			Imgui::SubmitToCommandBuffer(RenderCommand::GetCurrentCommandBuffer());
 
-			Renderer::BindGraphicsPipeline(skyBoxPipeline);
-			Renderer::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
-			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData, sizeof(entityBufferData));
-
-			Viewport viewport{};
-			viewport.Width = 800;
-			viewport.Height = 600;
-			viewport.MinDepth = 0.0;
-			viewport.MaxDepth = 1.0f;
-
-			Renderer::SetViewport(viewport);
-			Rect rect{};
-			rect.Width = 800;
-			rect.Height = 600;
-			Renderer::SetScissor(rect);
-			Renderer::BindVertexBuffer(triVerts);
-			Renderer::BindIndexBuffer(triIdxs);
-			Renderer::DrawIndexed(6);
-			Renderer::VertexShaderPushConstants(skyBoxPipeline, &entityBufferData2, sizeof(entityBufferData));
-			Renderer::DrawIndexed(6);
-
-			Renderer::EndRenderPass();
-			Renderer::EndCommands();
+			RenderCommand::EndRenderPass();
+			RenderCommand::EndFrameCommands();
 
 
-			Renderer::BeginFrameCommands(m_CommandList);
-			Renderer::BeginRenderPass(Renderer::GetSwapChain());
-			Renderer::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
-
-			Imgui::SubmitToCommandBuffer(Renderer::GetCurrentCommandBuffer());
-
-			Renderer::EndRenderPass();
-			Renderer::EndFrameCommands();
-
-
-			Renderer::WaitAndRender();
+			RenderCommand::WaitAndRender();
 		}
 
 		int a = 2000;

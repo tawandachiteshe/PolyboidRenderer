@@ -1,6 +1,6 @@
 ﻿#include "boidpch.h"
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 
 #include <spdlog/spdlog.h>
 
@@ -23,19 +23,19 @@
 
 namespace Polyboid
 {
-	Unique<RendererStorage> Renderer::s_Data = nullptr;
+	Unique<RendererStorage> RenderCommand::s_Data = nullptr;
 
 
 	//TODO: Manage lifetimes of these
 
 
-	Ref<Swapchain> Renderer::GetSwapChain()
+	Ref<Swapchain> RenderCommand::GetSwapChain()
 	{
 		return s_Data->m_Swapchain;
 	}
 
 
-	void Renderer::Init(RenderAPI* context, const ApplicationSettings& appSettings)
+	void RenderCommand::Init(RenderAPI* context, const ApplicationSettings& appSettings)
 	{
 		s_Data = std::make_unique<RendererStorage>();
 		s_Data->m_Context = context;
@@ -54,36 +54,36 @@ namespace Polyboid
 	}
 
 
-	void Renderer::BeginDraw(const Ref<Camera>& camera)
+	void RenderCommand::BeginDraw(const Ref<Camera>& camera)
 	{
 	}
 
-	void Renderer::SetMaxFramesInFlight(uint32_t frames)
+	void RenderCommand::SetMaxFramesInFlight(uint32_t frames)
 	{
 		s_Data->m_MaxFramesInFlight = frames;
 	}
 
-	uint32_t Renderer::GetMaxFramesInFlight()
+	uint32_t RenderCommand::GetMaxFramesInFlight()
 	{
 		return s_Data->m_MaxFramesInFlight;
 	}
 
-	uint32_t& Renderer::GetCurrentFrame()
+	uint32_t& RenderCommand::GetCurrentFrame()
 	{
 		return s_Data->m_CurrentFrame;
 	}
 
-	void Renderer::SetCurrentFrame(uint32_t currentFrame)
+	void RenderCommand::SetCurrentFrame(uint32_t currentFrame)
 	{
 		s_Data->m_CurrentFrame = currentFrame;
 		
 	}
 
-	void Renderer::EndDraw()
+	void RenderCommand::EndDraw()
 	{
 	}
 
-	void Renderer::BeginCommands(const Ref<CommandBufferSet>& cmdLists, uint32_t index)
+	void RenderCommand::BeginCommands(const Ref<CommandBufferSet>& cmdLists, uint32_t index)
 	{
 
 		s_Data->m_CurrentCommandList = cmdLists;
@@ -91,238 +91,238 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->Begin();
 	}
 
-	void Renderer::BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+	void RenderCommand::BeginCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
 	{
 		cmdBuffer->Begin();
 	
 	}
 
-	void Renderer::BeginFrameCommands(const Ref<CommandBufferSet>& cmdList)
+	void RenderCommand::BeginFrameCommands(const Ref<CommandBufferSet>& cmdList)
 	{
 		s_Data->m_CurrentCommandList = cmdList;
 		SetCurrentCommandBuffer(GetGraphicsBackend()->GetCurrentImageIndex());
 		GetCurrentCommandBuffer()->Begin();
 	}
 
-	void Renderer::EndFrameCommands()
+	void RenderCommand::EndFrameCommands()
 	{
 		GetCurrentCommandBuffer()->End();
 	}
 
-	void Renderer::EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
+	void RenderCommand::EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer)
 	{
 		cmdBuffer->End();
 	}
 
-	void Renderer::EndCommands()
+	void RenderCommand::EndCommands()
 	{
 		GetCurrentCommandBuffer()->End();
 	}
 
-	void Renderer::AcquireImageIndex()
+	void RenderCommand::AcquireImageIndex()
 	{
 		GetGraphicsBackend()->GetSwapchainImageIndex(GetCurrentFrame());
 	}
 
 
-	void Renderer::BeginSwapChainRenderPass()
+	void RenderCommand::BeginSwapChainRenderPass()
 	{
 		GetCurrentCommandBuffer()->BeginRenderPass(GetSwapChain()->GetRenderPass(),
 		                                           GetSwapChain()->GetCurrentFrameBuffer());
 	}
 
-	void Renderer::EndSwapChainRenderPass()
+	void RenderCommand::EndSwapChainRenderPass()
 	{
 		GetCurrentCommandBuffer()->EndRenderPass();
 	}
 
-	Ref<CommandBuffer> Renderer::GetCurrentCommandBuffer()
+	Ref<CommandBuffer> RenderCommand::GetCurrentCommandBuffer()
 	{
 		
 		
 		return s_Data->m_CommandBuffer;
 	}
 
-	void Renderer::SetCurrentCommandBuffer(uint32_t currentFrame)
+	void RenderCommand::SetCurrentCommandBuffer(uint32_t currentFrame)
 	{
 		s_Data->m_CommandBuffer = s_Data->m_CurrentCommandList->GetCommandBufferAt(currentFrame);
 	}
 
-	bool Renderer::IsGraphicsBackendReady()
+	bool RenderCommand::IsGraphicsBackendReady()
 	{
 		return s_Data->m_GraphicsBackend->IsReady();
 	}
 
-	Ref<GraphicsBackend> Renderer::GetGraphicsBackend()
+	Ref<GraphicsBackend> RenderCommand::GetGraphicsBackend()
 	{
 		return s_Data->m_GraphicsBackend;
 	}
 
 
-	void Renderer::Clear(ClearSettings settings)
+	void RenderCommand::Clear(ClearSettings settings)
 	{
 		GetSwapChain()->GetRenderPass()->Clear(settings);
 	}
 
-	void Renderer::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
+	void RenderCommand::DrawIndexed(uint32_t count, const PrimitiveType& primitive)
 	{
 		GetCurrentCommandBuffer()->DrawIndexed(count, IndexDataType::UnsignedInt);
 	}
 
-	void Renderer::DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive)
+	void RenderCommand::DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive)
 	{
 		GetCurrentCommandBuffer()->DrawArrays(vertexCount);
 	}
 
-	void Renderer::SetPipelineState(const Ref<PipelineState>& pipelineState)
+	void RenderCommand::SetPipelineState(const Ref<PipelineState>& pipelineState)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipelineState);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipelineState);
 	}
 
-	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer)
+	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer)
 	{
 		GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffer);
 	}
 
 
-	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers)
+	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers)
 	{
 		GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffers.at(GetCurrentFrame()));
 	}
 
-	void Renderer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers)
+	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers)
 	{
 		GetCurrentCommandBuffer()->BeginRenderPass(renderPass,
 			buffers->Get(GetCurrentFrame()));
 	}
 
-	void Renderer::BeginRenderPass(const Ref<Swapchain>& swapchain)
+	void RenderCommand::BeginRenderPass(const Ref<Swapchain>& swapchain)
 	{
-		Renderer::BeginRenderPass(swapchain->GetRenderPass(),
-			Renderer::GetSwapChain()->GetFrameBuffer(GetGraphicsBackend()->GetCurrentImageIndex()));
+		RenderCommand::BeginRenderPass(swapchain->GetRenderPass(),
+			RenderCommand::GetSwapChain()->GetFrameBuffer(GetGraphicsBackend()->GetCurrentImageIndex()));
 	}
 
-	void Renderer::RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc)
+	void RenderCommand::RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc)
 	{
 		GetGraphicsBackend()->RegisterResizeFunc(freeFunc);
 	}
 
-	void Renderer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
+	void RenderCommand::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipeline);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipeline);
 	}
 
-	void Renderer::BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets)
+	void RenderCommand::BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets)
 	{
 		GetCurrentCommandBuffer()->BindDescriptorSet(set, sets.at(GetCurrentFrame()));
 	}
 
-	void Renderer::EndRenderPass()
+	void RenderCommand::EndRenderPass()
 	{
 		GetCurrentCommandBuffer()->EndRenderPass();
 	}
 
 
-	void Renderer::BindVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
+	void RenderCommand::BindVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
 		GetCurrentCommandBuffer()->BindVertexBuffer(vertexBuffer);
 	}
 
-	void Renderer::BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
+	void RenderCommand::BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
 		GetCurrentCommandBuffer()->BindIndexBuffer(indexBuffer);
 	}
 
-	void Renderer::SetViewport(const Viewport& viewport)
+	void RenderCommand::SetViewport(const Viewport& viewport)
 	{
 		GetCurrentCommandBuffer()->SetViewPort(viewport);
 	}
 
-	void Renderer::SetScissor(const Rect& rect)
+	void RenderCommand::SetScissor(const Rect& rect)
 	{
 		GetCurrentCommandBuffer()->SetScissor(rect);
 	}
 
-	void Renderer::PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer)
+	void RenderCommand::PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer)
 	{
 		s_Data->m_CurrentCommandLists.emplace_back(commandBuffer);
 	}
 
-	void Renderer::PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	void RenderCommand::PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
 	{
 		s_Data->m_CurrentCommandLists.insert(s_Data->m_CurrentCommandLists.end(), commandBuffers.begin(), commandBuffers.end());
 	}
 
-	void Renderer::SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data,
+	void RenderCommand::SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data,
 	                                    uint32_t dataSize)
 	{
 		buffers.at(GetCurrentFrame())->SetData(data, dataSize);
 	}
 
-	void Renderer::SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data)
+	void RenderCommand::SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data)
 	{
 		buffers.at(GetCurrentFrame())->SetData(data);
 	}
 
-	void Renderer::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
+	void RenderCommand::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
 		const std::vector<Ref<UniformBuffer>>& buffers)
 	{
 		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers.at(GetCurrentFrame()), buffers.at(GetCurrentFrame()));
 	}
 
-	void Renderer::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
+	void RenderCommand::CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers,
 		const std::vector<Ref<StorageBuffer>>& buffers)
 	{
 		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers.at(GetCurrentFrame()), buffers.at(GetCurrentFrame()));
 	}
 
-	void Renderer::SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize)
+	void RenderCommand::SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize)
 	{
 		buffers->Get(GetCurrentFrame())->SetData(data, dataSize);
 	}
 
-	void Renderer::SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data)
+	void RenderCommand::SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data)
 	{
 		buffers->Get(GetCurrentFrame())->SetData(data);
 	}
 
-	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
+	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
 	{
 		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
-	void Renderer::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers)
+	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers)
 	{
 		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
 
-	void Renderer::VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
+	void RenderCommand::VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
 	                                         uint32_t dataSize, uint32_t offset)
 	{
 		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Vertex,data, dataSize, offset);
 	}
 
-	void Renderer::FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
+	void RenderCommand::FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
 		uint32_t dataSize, uint32_t offset)
 	{
 		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Fragment, data, dataSize, offset);
 	}
 
 
-	Ref<RenderPass> Renderer::GetDefaultRenderTarget()
+	Ref<RenderPass> RenderCommand::GetDefaultRenderTarget()
 	{
 		return s_Data->m_CurrentRenderPass;
 	}
 
-	Ref<PipelineState> Renderer::GetDefaultPipeline()
+	Ref<PipelineState> RenderCommand::GetDefaultPipeline()
 	{
 		return s_Data->m_DefaultPipelineState;
 	}
 
-	void Renderer::Resize(uint32_t width, uint32_t height)
+	void RenderCommand::Resize(uint32_t width, uint32_t height)
 	{
 		
 		//std::this_thread::sleep_for(std::chrono_literals::operator ""ms(200ull));
@@ -332,7 +332,7 @@ namespace Polyboid
 
 	}
 
-	void Renderer::WaitAndRender()
+	void RenderCommand::WaitAndRender()
 	{
 		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
 	}

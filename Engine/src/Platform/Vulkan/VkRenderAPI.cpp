@@ -14,7 +14,7 @@
 #include "VulkanSemaphore.h"
 #include "VulkanTexture2D.h"
 #include "VulkanVertexBuffer.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "VulkanImage2D.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanStagingBuffer.h"

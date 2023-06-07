@@ -4,17 +4,36 @@
 #include "EditorWIndows/EditorWindow.h"
 #include <vector>
 
+#include "imgui.h"
 #include "Editor/EditorCamera.h"
 #include "Engine/Engine/Base.h"
+#include "Engine/Renderer/BufferSet.h"
 #include "Engine/Renderer/CommandBufferSet.h"
 
 
-namespace Polyboid 
+namespace Polyboid
 {
-
-	class EditorLayer: public Layer
+	struct Vertex
 	{
+		glm::vec3 pos;
+		glm::vec4 norm;
+		glm::vec2 uv;
+	};
 
+	struct CameraBufferData
+	{
+		glm::mat4 projection;
+		glm::mat4 view;
+	};
+
+	struct EntityBufferData
+	{
+		glm::mat4 transform;
+		glm::mat4 padding;
+	};
+
+	class EditorLayer : public Layer
+	{
 	private:
 		std::vector<EditorWindow*> m_Windows;
 		void EditorDockSpaceUI(bool* p_open);
@@ -22,7 +41,6 @@ namespace Polyboid
 		bool m_PlayMode = false;
 		void OnEditorEnterPlayMode(const Event& event);
 		void OnEditorExitPlayMode(const Event& event);
-		Ref<CommandBufferSet> m_EditorCommandBuffer;
 
 
 	public:
@@ -38,7 +56,4 @@ namespace Polyboid
 
 		~EditorLayer() override = default;
 	};
-
-	
 }
-

@@ -12,7 +12,7 @@
 #include "Engine/Renderer/RenderAPI.h"
 #include "GLFW/glfw3.h"
 #include "imgui_impl_vulkan.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
 #include "Platform/Vulkan/VulkanCommandBuffer.h"
 #include "Platform/Vulkan/VulkanRenderPass.h"
@@ -202,7 +202,7 @@ namespace Polyboid
         pool_info.maxSets = 1000;
         pool_info.poolSizeCount = std::size(pool_sizes);
         pool_info.pPoolSizes = pool_sizes;
-        s_Data.m_RenderPass = Renderer::GetSwapChain()->GetRenderPass().As<VulkanRenderPass>();
+        s_Data.m_RenderPass = RenderCommand::GetSwapChain()->GetRenderPass().As<VulkanRenderPass>();
 
         VkDescriptorPool imguiPool;
         (vkCreateDescriptorPool(renderAPI->GetDevice()->GetVulkanDevice(), &pool_info, nullptr, &imguiPool));
@@ -277,7 +277,7 @@ namespace Polyboid
 
     void Imgui::DestroyVulkanRenderer()
     {
-        VkRenderAPI::GetVulkanDevice().destroyDescriptorPool(std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool));
+      
         ImGui_ImplVulkan_Shutdown();
         
     }

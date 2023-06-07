@@ -3,7 +3,7 @@
 
 #include "ComputeDispatcher.h"
 #include "Primitives.h"
-#include "Renderer.h"
+#include "RenderCommand.h"
 #include "Renderer2D.h"
 #include "Shader.h"
 #include "Engine/Engine/Application.h"
@@ -245,9 +245,9 @@ namespace Polyboid
 		const auto& camera = GameStatics::GetCurrentCamera();
 		//Render skybox
 		//temp solution
-		Renderer::BeginDraw(camera);
+		RenderCommand::BeginDraw(camera);
 		RenderMeshes(camera, shader);
-		Renderer::EndDraw();
+		RenderCommand::EndDraw();
 	}
 
 	void WorldRendererLegacy::Render2D()

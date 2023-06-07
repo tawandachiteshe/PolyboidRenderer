@@ -38,7 +38,7 @@ namespace Polyboid
 
 		if (m_EnableInput)
 		{
-			float delta = e.GetYoffset() * 0.1f;
+			float delta = e.GetYoffset() * 0.6f;
 			MouseZoom(delta);
 			UpdateView();
 		}

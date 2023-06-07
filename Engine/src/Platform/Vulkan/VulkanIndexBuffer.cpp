@@ -9,7 +9,7 @@
 #include "Engine/Renderer/RenderAPI.h"
 #include "VulkanCommandBufferSet.h"
 #include "Engine/Renderer/GraphicsBackend.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Utils/VulkanAllocatorInstance.h"
 #include "Utils/VulkanDevice.h"
 
@@ -67,7 +67,7 @@ namespace Polyboid
 		cmdBuffer->Begin();
 		cmdBuffer->CopyIndexBuffer(staging.As<StagingBuffer>(), this);
 		cmdBuffer->End();
-		Renderer::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
+		RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 		staging->Destroy();
 		cmdList->Destroy(device);

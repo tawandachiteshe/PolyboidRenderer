@@ -23,7 +23,7 @@
 #include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/Framebuffer.h"
 #include "Engine/Renderer/GraphicsBackend.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/SyncObjects.h"
 
 namespace Polyboid
@@ -304,7 +304,7 @@ namespace Polyboid
 
 	Ref<Framebuffer> VkSwapChain::GetCurrentFrameBuffer()
 	{
-		return m_Framebuffers.at(Renderer::GetGraphicsBackend()->GetCurrentImageIndex()).As<Framebuffer>();
+		return m_Framebuffers.at(RenderCommand::GetGraphicsBackend()->GetCurrentImageIndex()).As<Framebuffer>();
 	}
 
 

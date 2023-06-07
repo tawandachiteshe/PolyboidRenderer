@@ -6,7 +6,7 @@
 #include <spdlog/spdlog.h>
 #include "VkRenderAPI.h"
 #include "VulkanCommandBuffer.h"
-#include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Utils/VulkanDevice.h"
 #include "Utils/VulkanPhysicalDevice.h"
 
@@ -25,7 +25,7 @@ namespace Polyboid
 			m_CommandList = nullptr;
 		}
 
-		m_CommandBuffers.clear();
+		//m_CommandBuffers.clear();
 		
 	}
 
@@ -54,19 +54,28 @@ namespace Polyboid
 		m_GraphicsQueue = context->GetDevice()->GetGraphicsQueue();
 		m_PresentQueue = context->GetDevice()->GetPresentQueue();
 
-		for (uint32_t i = 0; i < settings.ImageCount; ++i)
+		if (!m_CommandBuffers.empty())
 		{
-			auto vulkanCommandBuffer = CreateRef<VulkanCommandBuffer>(m_Context, this);
-			m_CommandBuffers.push_back(vulkanCommandBuffer);
+			for (uint32_t i = 0; i < settings.ImageCount; ++i)
+			{
+				m_CommandBuffers.at(i)->Recreate();
+			}
 		}
+		else
+		{
+			for (uint32_t i = 0; i < settings.ImageCount; ++i)
+			{
+				auto vulkanCommandBuffer = CreateRef<VulkanCommandBuffer>(m_Context, this);
+				m_CommandBuffers.push_back(vulkanCommandBuffer);
+			}
+		}
+
+		
 	}
 
 	void VulkanCommandBufferSet::Recreate()
 	{
-		for (const auto& commandBuffer : m_CommandBuffers)
-		{
-			commandBuffer->Destroy(VkRenderAPI::GetVulkanDevice());
-		}
+	
 
 		Destroy(VkRenderAPI::GetVulkanDevice());
 		Init(m_Context, m_Settings);
