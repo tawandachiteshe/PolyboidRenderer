@@ -309,6 +309,11 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->CopyVertexBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
+	void RenderCommand::LineWidth(float lineWidth)
+	{
+		GetCurrentCommandBuffer()->SetLineWidth(lineWidth);
+	}
+
 
 	void RenderCommand::VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
 	                                              uint32_t dataSize, uint32_t offset)

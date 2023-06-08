@@ -38,7 +38,7 @@ namespace Polyboid
 		void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) override;
 
 		void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer) override;
-
+		void SetLineWidth(float lineWidth) override;
 
 		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const IndexBuffer* dstIndexBuffer) override;
 		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) override;

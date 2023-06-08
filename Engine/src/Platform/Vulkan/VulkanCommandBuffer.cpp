@@ -211,6 +211,11 @@ namespace Polyboid
 		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
 	}
 
+	void VulkanCommandBuffer::SetLineWidth(float lineWidth)
+	{
+		m_CommandBuffer.setLineWidth(lineWidth);
+	}
+
 
 	void VulkanCommandBuffer::CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer,
 	                                          const IndexBuffer* dstIndexBuffer)

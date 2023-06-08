@@ -39,13 +39,15 @@ namespace Polyboid
 			queueCreateInfos.push_back(queueCreateInfo);
 		}
 
-
+		vk::PhysicalDeviceFeatures features;
+		features.wideLines = true;
 
 		vk::DeviceCreateInfo createInfo{};
 		createInfo.flags = vk::DeviceCreateFlags();
 		createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
 		createInfo.setPQueueCreateInfos(queueCreateInfos.data());
 		createInfo.setPEnabledExtensionNames(deviceExtensions);
+		createInfo.pEnabledFeatures = &features;
 
 #if POLY_DEBUG
 		createInfo.setPEnabledLayerNames(validationLayers);

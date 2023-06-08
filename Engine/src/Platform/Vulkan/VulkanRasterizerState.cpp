@@ -165,7 +165,8 @@ namespace Polyboid
 			//Require version 1.3
 			//vk::DynamicState::eCullMode,
 			vk::DynamicState::eViewport,
-			vk::DynamicState::eScissor
+			vk::DynamicState::eScissor,
+			vk::DynamicState::eLineWidth
 		};
 
 		m_Info.m_CreateDynamicStateInfo.pDynamicStates = m_DynamicStates.data();

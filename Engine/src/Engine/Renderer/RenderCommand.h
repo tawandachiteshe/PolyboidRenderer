@@ -116,6 +116,7 @@ namespace Polyboid
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<VertexBufferSet>& buffers);
+        static void LineWidth(float lineWidth = 1.0f);
 
 
         static void VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);

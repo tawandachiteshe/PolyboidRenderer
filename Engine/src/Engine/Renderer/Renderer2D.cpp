@@ -265,8 +265,9 @@ namespace Polyboid
 		s_LineData.LinePipelineState = GraphicsPipeline::Create();
 		s_LineData.LinePipelineState->SetGraphicsShaders(LoadShader("rendererLine"));
 		s_LineData.LinePipelineState->SetRenderPass(s_RenderData.m_RenderPass);
-		s_LineData.LinePipelineState->SetVertexArray(s_CircleData.CircleVertexBufferArray);
+		s_LineData.LinePipelineState->SetVertexArray(s_LineData.LineVertexBufferArray);
 		s_LineData.LinePipelineState->SetGeometryTopology(PrimitiveType::Lines);
+		s_LineData.LinePipelineState->GetRasterizerState().SetLineWidth(2.0f);
 		s_LineData.LinePipelineState->Bake();
 
 		s_LineData.LinePipelineState->AllocateDescriptorSets();
@@ -321,7 +322,7 @@ namespace Polyboid
 
 			RenderCommand::BindGraphicsPipeline(pipeLine);
 			RenderCommand::BindGraphicsDescriptorSets(0, pipeLine->GetDescriptorSets(0));
-
+			RenderCommand::LineWidth(2.0);
 			RenderCommand::BindVertexBuffer(s_LineData.LineVertexBuffer);
 
 			RenderCommand::DrawArrays(s_LineData.lineCount);

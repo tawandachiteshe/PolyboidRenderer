@@ -56,6 +56,7 @@ namespace Polyboid
 		virtual void DrawIndexed(uint32_t count, const IndexDataType& type) = 0;
 		virtual void DrawArrays(uint32_t count) = 0;
 		virtual void PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
+		virtual void SetLineWidth(float lineWidth = 1.0) = 0;
 
 		virtual ~CommandBuffer() = default;
 
