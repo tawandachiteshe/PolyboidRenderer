@@ -6,6 +6,7 @@
 #include "VulkanCommandBufferSet.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
+#include "VulkanKomputePipeline.h"
 #include "VulkanPipelineDescriptorSet.h"
 #include "VulkanRenderPass.h"
 #include "Engine/Engine/ImguiSetup.h"
@@ -343,7 +344,7 @@ namespace Polyboid
 		m_CommandBuffer.setScissor(0, 1, &rect2d);
 	}
 
-	void VulkanCommandBuffer::BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set)
+	void VulkanCommandBuffer::BindGraphicsDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set)
 	{
 		const auto vulkanEngineSet = set.As<VulkanPipelineDescriptorSet>();
 		const auto vulkanSet = std::any_cast<vk::DescriptorSet>(set->GetHandle());
@@ -362,7 +363,7 @@ namespace Polyboid
 		m_CommandBuffer.draw(count, 1, 0, 0);
 	}
 
-	void VulkanCommandBuffer::PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
+	void VulkanCommandBuffer::GraphicsPushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
 	{
 		const auto vkPipeline = pipeline.As<VulkanGraphicsPipeline>();
 		auto pipelineLayout = vkPipeline->GetPipelineLayout();
@@ -373,10 +374,22 @@ namespace Polyboid
 		{
 		case ShaderType::Vertex: stage = vk::ShaderStageFlagBits::eVertex; break;
 		case ShaderType::Fragment: stage = vk::ShaderStageFlagBits::eFragment; break;
-		case ShaderType::Compute: stage = vk::ShaderStageFlagBits::eCompute; break;
+		case ShaderType::Compute: __debugbreak(); break;
 		case ShaderType::None: break;
 		default: ;
 		}
+
+		m_CommandBuffer.pushConstants(pipelineLayout, stage, offset, size, data);
+	}
+
+	void VulkanCommandBuffer::KomputePushConstant(const Ref<KomputePipeline>& pipeline, const void* data, uint32_t size,
+		uint32_t offset)
+	{
+		const auto vkPipeline = pipeline.As<VulkanKomputePipeline>();
+		auto pipelineLayout = vkPipeline->GetPipelineLayout();
+
+		vk::ShaderStageFlagBits stage = vk::ShaderStageFlagBits::eCompute;
+
 
 		m_CommandBuffer.pushConstants(pipelineLayout, stage, offset, size, data);
 	}
@@ -385,6 +398,19 @@ namespace Polyboid
 	{
 		vk::Result result = m_CommandBuffer.reset();
 		vk::resultCheck(result, "Failed to reset CommandBuffer");
+	}
+
+	void VulkanCommandBuffer::DispatchKompute(const glm::uvec3& workGroup)
+	{
+		m_CommandBuffer.dispatch(workGroup.x, workGroup.y, workGroup.z);
+	}
+
+	void VulkanCommandBuffer::BindKomputeDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set)
+	{
+		const auto vulkanEngineSet = set.As<VulkanPipelineDescriptorSet>();
+		const auto vulkanSet = std::any_cast<vk::DescriptorSet>(set->GetHandle());
+
+		m_CommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, vulkanEngineSet->GetDescLayout(), setBinding, { vulkanSet }, {});
 	}
 
 

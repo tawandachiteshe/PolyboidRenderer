@@ -147,6 +147,8 @@ namespace Polyboid
 		return RefPtr<T>(new T(std::forward<Args>(args)...));
 	}
 
+	
+
 	template<typename  T>
 	class ScopePtr
 	{
@@ -156,6 +158,10 @@ namespace Polyboid
 	public:
 
 		using ElementType = T;
+
+		constexpr ScopePtr() noexcept {}
+
+		constexpr ScopePtr(nullptr_t) noexcept {}
 
 		ScopePtr<T>& operator=(const ScopePtr<T>& other) = delete;
 		ScopePtr(const ScopePtr<T>& other) = delete;
@@ -194,12 +200,12 @@ namespace Polyboid
 		}
 
 
-		template<typename T, typename... Args>
-		ScopePtr<T> CreateRef(Args&&... args) {
-			return ScopePtr<T>(new T(std::forward<Args>(args)...));
-		}
-
 	};
+
+	template<typename T, typename... Args>
+	ScopePtr<T> CreateScope(Args&&... args) {
+		return ScopePtr<T>(new T(std::forward<Args>(args)...));
+	}
 
 
 }

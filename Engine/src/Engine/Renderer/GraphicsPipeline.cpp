@@ -9,6 +9,6 @@ namespace Polyboid
 
 	Ref<GraphicsPipeline> GraphicsPipeline::Create()
 	{
-		return RenderAPI::Get()->CreatePipelineState();
+		return RenderAPI::Get()->CreateGraphicsPipeline();
 	}
 }

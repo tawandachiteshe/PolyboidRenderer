@@ -16,6 +16,7 @@
 #include "VulkanVertexBuffer.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "VulkanImage2D.h"
+#include "VulkanKomputePipeline.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanStagingBuffer.h"
 #include "Utils/VkDebugMessenger.h"
@@ -203,13 +204,21 @@ namespace Polyboid
 		return buffer.As<StagingBuffer>();
 	}
 
-	Ref<GraphicsPipeline> VkRenderAPI::CreatePipelineState()
+	Ref<GraphicsPipeline> VkRenderAPI::CreateGraphicsPipeline()
 	{
 		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
 
-		m_Pipelines.push_back(graphicsPipeline);
+		m_GraphicsPipelines.push_back(graphicsPipeline);
 
 		return graphicsPipeline.As<GraphicsPipeline>();
+	}
+
+	Ref<KomputePipeline> VkRenderAPI::CreateKomputePipeline()
+	{
+		auto komputePipeline = ALLOC_API(VulkanKomputePipeline);
+		m_KomputePipelines.push_back(komputePipeline);
+
+		return komputePipeline;
 	}
 
 	Ref<Swapchain> VkRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
@@ -312,6 +321,11 @@ namespace Polyboid
 			vtx->Destroy();
 		}
 
+		for (const auto& kompute : m_KomputePipelines)
+		{
+			kompute->Destroy();
+		}
+
 		// for (const auto& texture : m_Textures2D)
 		// {
 		// 	texture->Destroy();
@@ -349,7 +363,7 @@ namespace Polyboid
 			pool->Destroy();
 		}
 
-		for (const auto& pipelines : m_Pipelines)
+		for (const auto& pipelines : m_GraphicsPipelines)
 		{
 			pipelines->Destroy();
 
@@ -377,7 +391,7 @@ namespace Polyboid
 		m_Semaphores.clear();
 		m_Image2Ds.clear();
 		m_VulkanShaders.clear();
-		m_Pipelines.clear();
+		m_GraphicsPipelines.clear();
 		m_DescPools.clear();
 		m_StorageBuffers.clear();
 		m_UniformBuffers.clear();

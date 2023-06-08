@@ -5,6 +5,7 @@
 
 namespace Polyboid
 {
+	class VulkanKomputePipeline;
 	class VulkanStagingBuffer;
 	class VulkanPipelineDescriptorSetPool;
 	class VulkanGraphicsPipeline;
@@ -41,7 +42,8 @@ namespace Polyboid
 		std::vector<Ref<VulkanSemaphore>> m_Semaphores;
 		std::vector<Ref<VulkanImage2D>> m_Image2Ds;
 		std::vector<Ref<VulkanShader>> m_VulkanShaders;
-		std::vector<Ref<VulkanGraphicsPipeline>> m_Pipelines;
+		std::vector<Ref<VulkanGraphicsPipeline>> m_GraphicsPipelines;
+		std::vector<Ref<VulkanKomputePipeline>> m_KomputePipelines;
 		std::vector<Ref<VulkanPipelineDescriptorSetPool>> m_DescPools;
 		std::vector<Ref<VulkanShaderStorage>> m_StorageBuffers;
 		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
@@ -102,7 +104,8 @@ namespace Polyboid
 		Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) override;
 		Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) override;
 
-		Ref<GraphicsPipeline> CreatePipelineState() override;
+		Ref<GraphicsPipeline> CreateGraphicsPipeline() override;
+		Ref<KomputePipeline> CreateKomputePipeline() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;
 		Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) override;
 

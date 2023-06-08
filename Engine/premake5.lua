@@ -40,7 +40,8 @@ project "Engine"
 	{
 		"_CRT_SECURE_NO_WARNINGS",
         "VULKAN_HPP_NO_EXCEPTIONS",
-		"GLFW_INCLUDE_NONE"
+		"GLFW_INCLUDE_NONE",
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE"
 	}
 
     links

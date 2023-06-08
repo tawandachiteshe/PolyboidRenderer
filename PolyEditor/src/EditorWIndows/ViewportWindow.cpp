@@ -162,7 +162,7 @@ namespace Polyboid
 		const auto mainRenderTarget = RenderCommand::GetDefaultRenderTarget();
 		const auto windowSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()), windowSize, {1.0f, 0.0f}, {0.0f, 1.0f});
+		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()), windowSize);
 
 		ImGui::End();
 
@@ -257,13 +257,15 @@ namespace Polyboid
 
 		glm::mat4 pos = glm::translate(glm::mat4(1.0f), { 0.0, 1.5f, 0.0 });
 		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), { 0.0, 2.5f, 0.0 });
+		glm::mat4 pos3 = glm::translate(glm::mat4(1.0f), { 0.0, 3.5f, 0.0 });
 
 		static float rotation = 0.0f;
-		rotation += 100 * 0.01;
+		rotation += 10 * 0.01;
 
 
 		Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
 		Renderer2D::DrawCube(pos2);
+		Renderer2D::DrawCube(pos3);
 		Renderer2D::DrawCircle(pos);
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});
 		Renderer2D::DrawQuad(pos2, glm::vec4{1.2, 1.2, 0.2, 1.0f});

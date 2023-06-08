@@ -52,12 +52,17 @@ namespace Polyboid
 		void SetViewPort(const Viewport& viewport) override;
 		void SetScissor(const Rect& rect) override;
 		
-		void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
+		void BindGraphicsDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
 		void DrawIndexed(uint32_t count, const IndexDataType& type) override;
 		void DrawArrays(uint32_t count) override;
-		void PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) override;
+		void GraphicsPushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) override;
+		void KomputePushConstant(const Ref<KomputePipeline>& pipeline, const void* data, uint32_t size,
+			uint32_t offset) override;
 
 		void Reset() override;
+
+		void DispatchKompute(const glm::uvec3& workGroup) override;
+		void BindKomputeDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
 
 		std::any GetHandle() override;
 

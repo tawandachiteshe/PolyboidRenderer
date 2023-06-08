@@ -1,6 +1,7 @@
 #pragma once
 #include <any>
 #include <cstdint>
+#include <glm/vec3.hpp>
 
 #include "Rect.h"
 #include "Viewport.h"
@@ -9,6 +10,7 @@
 
 namespace Polyboid
 {
+	class KomputePipeline;
 	class StorageBuffer;
 	enum class ShaderType : uint8_t;
 	class UniformBuffer;
@@ -48,14 +50,17 @@ namespace Polyboid
 
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;
+		virtual void DispatchKompute(const glm::uvec3& workGroup) = 0;
+		virtual void BindKomputeDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
 
 		virtual void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) = 0;
 		virtual void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) = 0;
 		virtual void BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline) = 0;
-		virtual void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
+		virtual void BindGraphicsDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
 		virtual void DrawIndexed(uint32_t count, const IndexDataType& type) = 0;
 		virtual void DrawArrays(uint32_t count) = 0;
-		virtual void PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
+		virtual void GraphicsPushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
+		virtual void KomputePushConstant(const Ref<KomputePipeline>& pipeline, const void* data, uint32_t size, uint32_t offset) = 0;
 		virtual void SetLineWidth(float lineWidth = 1.0) = 0;
 
 		virtual ~CommandBuffer() = default;
