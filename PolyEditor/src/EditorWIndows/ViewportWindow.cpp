@@ -258,13 +258,16 @@ namespace Polyboid
 		glm::mat4 pos = glm::translate(glm::mat4(1.0f), { 0.0, 1.5f, 0.0 });
 		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), { 0.0, 2.5f, 0.0 });
 
+		static float rotation = 0.0f;
+		rotation += 100 * 0.01;
 
 
-		// Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
-		// Renderer2D::DrawCube(pos2);
+		Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
+		Renderer2D::DrawCube(pos2);
 		Renderer2D::DrawCircle(pos);
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});
 		Renderer2D::DrawQuad(pos2, glm::vec4{1.2, 1.2, 0.2, 1.0f});
+		Renderer2D::DrawRotatedQuad({ 0.0, 2.5f, 0.0 }, rotation);
 		
 
 		Renderer2D::EndDraw();

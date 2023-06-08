@@ -36,6 +36,8 @@ namespace Polyboid
 		Ref<VulkanVertexBufferArray> m_VertexInput;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
 
+		vk::PrimitiveTopology m_Topology = vk::PrimitiveTopology::eTriangleList;
+
 		std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> m_Bindings;
 		std::map<uint32_t, vk::DescriptorSetLayout> m_SetIndexWithLayout;
 		std::vector<vk::PushConstantRange> m_PushConstantRanges;
@@ -54,7 +56,7 @@ namespace Polyboid
 		void Init();
 		void Recreate() override;
 
-
+		void SetGeometryTopology(const PrimitiveType& primitiveType) override;
 		void SetShader(const ShaderType& type, const Ref<Shader>& shader) override;
 		void SetShader(const Ref<Shader>& shader) override;
 

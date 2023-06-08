@@ -134,7 +134,7 @@ namespace Polyboid
 
 		vk::PipelineInputAssemblyStateCreateInfo vtxInputAssState{};
 		vtxInputAssState.primitiveRestartEnable = false;
-		vtxInputAssState.topology = vk::PrimitiveTopology::eTriangleList;
+		vtxInputAssState.topology = m_Topology;
 		m_CreatePipelineInfo.pInputAssemblyState = &vtxInputAssState;
 		m_CreatePipelineInfo.pVertexInputState = &vtxInput;
 		m_CreatePipelineInfo.pColorBlendState = &colorStateInfo;
@@ -197,6 +197,22 @@ namespace Polyboid
 			WriteSetResourceBindings(set);
 		}
 
+	}
+
+	void VulkanGraphicsPipeline::SetGeometryTopology(const PrimitiveType& primitiveType)
+	{
+		switch (primitiveType)
+		{
+		case PrimitiveType::Points: m_Topology = vk::PrimitiveTopology::ePointList; break;
+		case PrimitiveType::Lines: m_Topology = vk::PrimitiveTopology::eLineList; break;
+		case PrimitiveType::LineLoop:  m_Topology = vk::PrimitiveTopology::eLineStrip; break;
+		case PrimitiveType::LineStrip:  m_Topology = vk::PrimitiveTopology::eLineStrip; break;
+		case PrimitiveType::Triangles:  m_Topology = vk::PrimitiveTopology::eTriangleList; break;
+		case PrimitiveType::TriangleStrip:  m_Topology = vk::PrimitiveTopology::eTriangleStrip; break;
+		case PrimitiveType::TriangleFan:  m_Topology = vk::PrimitiveTopology::eTriangleFan; break;
+		case PrimitiveType::Patches:  m_Topology = vk::PrimitiveTopology::ePatchList; break;
+		default: ;
+		}
 	}
 
 	void VulkanGraphicsPipeline::SetShader(const ShaderType& type, const Ref<Shader>& shader)

@@ -202,7 +202,6 @@ namespace Polyboid
 		}
 
 
-
 		s_CircleData.CircleVertexBufferArray->Bind();
 		const Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(quadIndices, idxSize);
 		delete[] quadIndices;
@@ -236,12 +235,10 @@ namespace Polyboid
 		s_CircleData.CirclePipelineState->AllocateDescriptorSets();
 		s_CircleData.CirclePipelineState->BindUniformBufferSet(0, s_RenderData.m_CameraUB);
 		s_CircleData.CirclePipelineState->WriteSetResourceBindings();
-
 	}
 
 	void Renderer2D::PrepareLines()
 	{
-
 		s_LineData.LineVertexBufferArray = VertexBufferArray::Create();
 
 		const uint32_t vtxSize = s_LineData.vtxSize;
@@ -269,6 +266,7 @@ namespace Polyboid
 		s_LineData.LinePipelineState->SetGraphicsShaders(LoadShader("rendererLine"));
 		s_LineData.LinePipelineState->SetRenderPass(s_RenderData.m_RenderPass);
 		s_LineData.LinePipelineState->SetVertexArray(s_CircleData.CircleVertexBufferArray);
+		s_LineData.LinePipelineState->SetGeometryTopology(PrimitiveType::Lines);
 		s_LineData.LinePipelineState->Bake();
 
 		s_LineData.LinePipelineState->AllocateDescriptorSets();
@@ -280,8 +278,6 @@ namespace Polyboid
 	{
 		if (s_QuadData.quadCount)
 		{
-
-
 			auto pipeLine = s_QuadData.QuadPipelineState;
 
 
@@ -292,7 +288,7 @@ namespace Polyboid
 			RenderCommand::BindVertexBuffer(s_QuadData.QuadVertexBuffer);
 			RenderCommand::BindIndexBuffer(s_QuadData.QuadVertexBufferArray->GetIndexBuffer());
 
-		
+
 			RenderCommand::DrawIndexed(count);
 		}
 	}
@@ -336,17 +332,17 @@ namespace Polyboid
 	{
 		if (s_LineData.lineCount)
 		{
-
 			const uint32_t vertexSize = sizeof(LineVertex) * s_LineData.lineOffset;
-			RenderCommand::SetStagingBufferData(s_LineData.LineVerticesBuffer, s_LineData.LineVerticesData.data(), vertexSize);
+			RenderCommand::SetStagingBufferData(s_LineData.LineVerticesBuffer, s_LineData.LineVerticesData.data(),
+			                                    vertexSize);
 			RenderCommand::CopyStagingBuffer(s_LineData.LineVerticesBuffer, s_LineData.LineVertexBuffer);
 		}
 
 		if (s_CircleData.circleCount)
 		{
-
 			const uint32_t vertexSize = sizeof(CircleVertex) * s_CircleData.circleOffset;
-			RenderCommand::SetStagingBufferData(s_CircleData.CircleVerticesBuffer, s_CircleData.CircleVerticesData.data(), vertexSize);
+			RenderCommand::SetStagingBufferData(s_CircleData.CircleVerticesBuffer,
+			                                    s_CircleData.CircleVerticesData.data(), vertexSize);
 			RenderCommand::CopyStagingBuffer(s_CircleData.CircleVerticesBuffer, s_CircleData.CircleVertexBuffer);
 		}
 
@@ -354,7 +350,8 @@ namespace Polyboid
 		{
 			uint32_t vertexSize = sizeof(QuadVertex) * s_QuadData.quadOffset;
 			//s_QuadData.QuadVertexBuffer->SetData(s_QuadData.QuadVerticesData.data(), vertexSize);
-			RenderCommand::SetStagingBufferData(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVerticesData.data(), vertexSize);
+			RenderCommand::SetStagingBufferData(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVerticesData.data(),
+			                                    vertexSize);
 			RenderCommand::CopyStagingBuffer(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVertexBuffer);
 		}
 
@@ -367,7 +364,6 @@ namespace Polyboid
 
 
 		Reset();
-
 	}
 
 	GraphicsShaders Renderer2D::LoadShader(const std::string& shaderName)
@@ -395,12 +391,10 @@ namespace Polyboid
 
 
 		//temp solution
-		
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
-
 		s_RenderData.m_Renderer2DCamera = camera;
 		//s_RenderData.m_CameraUB->Bind(0);
 	}

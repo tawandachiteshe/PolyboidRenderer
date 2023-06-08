@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	enum class PrimitiveType;
 	class StorageBufferSet;
 	class UniformBufferSet;
 	class PipelineDescriptorSet;
@@ -55,6 +56,8 @@ namespace Polyboid
         
         virtual void Bind() = 0;
         virtual void UnBind() = 0;
+
+        virtual void SetGeometryTopology(const PrimitiveType& primitiveType) = 0;
 
         virtual void BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet, uint32_t setBinding = 0) = 0;
         virtual void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet, uint32_t setBinding = 0) = 0;
