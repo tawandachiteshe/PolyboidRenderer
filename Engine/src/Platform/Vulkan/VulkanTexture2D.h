@@ -28,12 +28,12 @@ namespace Polyboid
 	public:
 
 		void Init(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
-		void Recreate();
+		void Recreate() override;
+		void Destroy() override;
 
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
 		VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle);
 
-		void Destroy();
 
 		virtual vk::DescriptorImageInfo GetVulkanDescriptorImageInfo();
 

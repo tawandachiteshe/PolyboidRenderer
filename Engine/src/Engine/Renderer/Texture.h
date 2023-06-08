@@ -145,7 +145,7 @@ namespace Polyboid
         uint32_t Height = 0;
     };
     
-    class Texture
+    class Texture : public RenderResource
     {
     public:
 

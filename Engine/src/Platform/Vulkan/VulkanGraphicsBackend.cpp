@@ -53,7 +53,7 @@ namespace Polyboid
 		Init();
 	}
 
-	void VulkanGraphicsBackend::SubmitPipeline(const Ref<PipelineState>& pipeline)
+	void VulkanGraphicsBackend::SubmitPipeline(const Ref<GraphicsPipeline>& pipeline)
 	{
 		s_Data->m_Pipelines.emplace_back(pipeline.As<VulkanGraphicsPipeline>());
 	}
@@ -290,6 +290,8 @@ namespace Polyboid
 
 		s_Data->m_SubmittingBuffer.clear();
 
+		vk::MemoryBarrier2 b{};
+		
 
 	}
 

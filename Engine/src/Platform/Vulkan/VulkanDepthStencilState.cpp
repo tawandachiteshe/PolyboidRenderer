@@ -117,7 +117,7 @@ namespace Polyboid
 		m_CreateInfo.stencilTestEnable = m_StencilMode.StencilEnabled;
 
 		vk::StencilOpState front;
-		auto frontFace = m_StencilMode.FrontFace;
+		const auto frontFace = m_StencilMode.FrontFace;
 		front.compareOp = stencilFunctionToVkCompareOp(frontFace.stencilFunction);
 		front.depthFailOp = stencilOpToVkStencilOp(frontFace.StencilPassDepthFail);
 		front.failOp = stencilOpToVkStencilOp(frontFace.StencilFail);
@@ -128,7 +128,7 @@ namespace Polyboid
 		m_CreateInfo.front = front;
 
 		vk::StencilOpState back;
-		auto backFace = m_StencilMode.BackFace;
+		const auto backFace = m_StencilMode.BackFace;
 		back.compareOp = stencilFunctionToVkCompareOp(backFace.stencilFunction);
 		back.depthFailOp = stencilOpToVkStencilOp(backFace.StencilPassDepthFail);
 		back.failOp = stencilOpToVkStencilOp(backFace.StencilFail);

@@ -25,7 +25,7 @@ namespace Polyboid
 
 		VulkanIndexBuffer(const VkRenderAPI* context, IndexDataType type, const std::variant<uint32_t*, uint16_t*>& data, uint32_t count);
 		void Init(const VkRenderAPI* context, IndexDataType type, const std::variant<uint32_t*, uint16_t*>& data, uint32_t count);
-		void Recreate();
+		void Recreate() override;
 
 		~VulkanIndexBuffer() override;
 		void Bind() const override;
@@ -34,8 +34,7 @@ namespace Polyboid
 		uint32_t GetCount() const override;
 		uint32_t GetSizeInBytes() const override;
 		std::any GetHandle() const override;
-
-		virtual void Destroy();
+		void Destroy() override;
 	};
 
 }

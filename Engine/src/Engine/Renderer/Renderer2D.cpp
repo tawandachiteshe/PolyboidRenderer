@@ -13,7 +13,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "FrustumCulling.h"
-#include "PipelineState.h"
+#include "GraphicsPipeline.h"
 #include "RasterizerState.h"
 #include "RenderCommand.h"
 #include "VertexBufferArray.h"
@@ -47,7 +47,7 @@ namespace Polyboid
 		std::vector<QuadVertex> QuadVerticesData;
 		uint32_t quadIndexCount = 0;
 
-		Ref<PipelineState> QuadPipelineState;
+		Ref<GraphicsPipeline> QuadPipelineState;
 	};
 
 	struct LineData
@@ -68,7 +68,7 @@ namespace Polyboid
 
 		uint32_t LineIndexCount = 0;
 
-		Ref<PipelineState> LinePipelineState;
+		Ref<GraphicsPipeline> LinePipelineState;
 	};
 
 	struct CircleData
@@ -92,7 +92,7 @@ namespace Polyboid
 
 
 		std::vector<CircleVertex> CircleVerticesData;
-		Ref<PipelineState> CirclePipelineState;
+		Ref<GraphicsPipeline> CirclePipelineState;
 
 		uint32_t circleIndexCount = 0;
 	};

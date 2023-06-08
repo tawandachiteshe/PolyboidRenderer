@@ -52,21 +52,56 @@ namespace Polyboid
 		RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 		staging->Destroy();
-		cmdList->Destroy(device);
+		cmdList->Destroy();
+	}
+
+	void VulkanVertexBuffer::Init(const VkRenderAPI* context, uint32_t size)
+	{
+		
+		const VmaAllocator allocator = *context->GetAllocator();
+
+		vk::BufferCreateInfo createInfo;
+		createInfo.usage = vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer;
+		createInfo.size = size;
+		m_Size = size;
+
+		const vk::BufferCreateInfo::NativeType vkCreateInfo = createInfo;
+		VmaAllocationCreateInfo vmaCreateInfo{};
+		vmaCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+		vmaCreateInfo.priority = 1.0f;
+		VkBuffer buffer;
+		const VkResult result = vmaCreateBuffer(allocator, &vkCreateInfo, &vmaCreateInfo, &buffer, &m_Allocation, nullptr);
+
+		m_Handle = buffer;
+
+		if (result != VK_SUCCESS)
+		{
+			spdlog::info("Failed to create indexBuffer");
+			__debugbreak();
+		}
 	}
 
 	void VulkanVertexBuffer::Recreate()
 	{
-		Init(m_Context, m_Data, m_Size);
+		Destroy();
+
+		if (m_HasData)
+			Init(m_Context, m_Data, m_Size);
+		else
+			Init(m_Context, m_Size);
+		
 	}
 
-	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size) : m_Context(context), m_Data(data), m_Size(size)
+	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size) : m_Context(context), m_Data(data), m_Size(size), m_HasData(true)
 	{
 		Init(context, data, size);
 	}
 
-	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size)
+	VulkanVertexBuffer::VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size): m_HasData(false)
 	{
+
+		Init(context, size);
+
 	}
 
 	VulkanVertexBuffer::~VulkanVertexBuffer()

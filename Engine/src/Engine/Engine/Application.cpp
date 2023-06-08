@@ -19,7 +19,7 @@
 #include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
-#include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"

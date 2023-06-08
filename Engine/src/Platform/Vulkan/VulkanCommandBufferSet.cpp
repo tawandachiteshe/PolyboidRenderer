@@ -12,22 +12,6 @@
 
 namespace Polyboid
 {
-	void VulkanCommandBufferSet::Destroy(vk::Device device)
-	{
-		for (const auto& commandBuffer : m_CommandBuffers)
-		{
-			commandBuffer->Destroy(device);
-		}
-
-		if (m_CommandList)
-		{
-			device.destroyCommandPool(m_CommandList);
-			m_CommandList = nullptr;
-		}
-
-		//m_CommandBuffers.clear();
-		
-	}
 
 	VulkanCommandBufferSet::VulkanCommandBufferSet(const VkRenderAPI* context, const CommandListSettings& settings): m_Context(context), m_Settings(settings)
 	{
@@ -77,7 +61,7 @@ namespace Polyboid
 	{
 	
 
-		Destroy(VkRenderAPI::GetVulkanDevice());
+		Destroy();
 		Init(m_Context, m_Settings);
 	}
 
@@ -96,5 +80,21 @@ namespace Polyboid
 	VulkanCommandBufferSet::~VulkanCommandBufferSet()
 	{
 		
+	}
+
+	void VulkanCommandBufferSet::Destroy()
+	{
+		const auto device = VkRenderAPI::GetVulkanDevice();
+
+		for (const auto& commandBuffer : m_CommandBuffers)
+		{
+			commandBuffer->Destroy(device);
+		}
+
+		if (m_CommandList)
+		{
+			device.destroyCommandPool(m_CommandList);
+			m_CommandList = nullptr;
+		}
 	}
 }

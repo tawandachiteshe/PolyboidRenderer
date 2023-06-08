@@ -29,6 +29,17 @@ namespace Polyboid
 		Ref<StorageBuffer> Get(uint32_t frame);
 	};
 
+	class VertexBufferSet
+	{
+		std::vector<Ref<VertexBuffer>> m_Buffers;
+	public:
+		VertexBufferSet(uint32_t size);
+		void Recreate();
+		void SetLayout(const BufferLayout& layout);
+		static Ref<VertexBufferSet> Create(uint32_t size);
+		Ref<VertexBuffer> Get(uint32_t frame);
+	};
+
 
 	class StagingBufferSet
 	{

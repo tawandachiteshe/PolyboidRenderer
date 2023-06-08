@@ -3,6 +3,7 @@
 
 #include "VulkanIndexBuffer.h"
 #include "VulkanVertexBuffer.h"
+#include "Engine/Renderer/BufferSet.h"
 
 
 namespace Polyboid
@@ -85,6 +86,7 @@ namespace Polyboid
 	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<IndexBuffer>& iBuffer)
 	{
 		m_IndexBuffer = iBuffer.As<VulkanIndexBuffer>();
+		SetIndexCount(m_IndexBuffer->GetCount());
 	}
 
 	void VulkanVertexBufferArray::SetIndexBuffer(const Ref<StorageBuffer>& buffer, uint32_t count,
@@ -108,17 +110,27 @@ namespace Polyboid
 		
 	}
 
+	void VulkanVertexBufferArray::AddVertexBufferSet(const Ref<VertexBufferSet>& vbufferSet)
+	{
+		m_VertexBuffersSets.emplace_back(vbufferSet);
+		AddVertexBuffer(vbufferSet->Get(0));
+	}
+
 	VulkanVertexBufferArray::~VulkanVertexBufferArray()
 	{
 	}
 
 	void VulkanVertexBufferArray::Recreate()
 	{
-		m_IndexBuffer->Recreate();
+		//m_IndexBuffer->Recreate();
 		for (const auto& vertexBuffer : m_VertexBuffers)
 		{
 			vertexBuffer->Recreate();
 		}
+	}
+
+	void VulkanVertexBufferArray::Destroy()
+	{
 	}
 
 	vk::PipelineVertexInputStateCreateInfo VulkanVertexBufferArray::GetVulkanInfo()

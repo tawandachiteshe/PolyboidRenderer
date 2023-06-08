@@ -270,7 +270,7 @@ namespace Polyboid
             check_vk_result(err);
             ImGui_ImplVulkan_DestroyFontUploadObjects();
 
-            uploadList->Destroy(renderAPI->GetDevice()->GetVulkanDevice());
+            uploadList->Destroy();
         }
 
     }

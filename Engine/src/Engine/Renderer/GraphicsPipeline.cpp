@@ -1,5 +1,5 @@
 #include "boidpch.h"
-#include "PipelineState.h"
+#include "GraphicsPipeline.h"
 
 #include "RenderAPI.h"
 
@@ -7,7 +7,7 @@
 namespace Polyboid
 {
 
-	Ref<PipelineState> PipelineState::CreateGraphicsPipeline()
+	Ref<GraphicsPipeline> GraphicsPipeline::CreateGraphicsPipeline()
 	{
 		return RenderAPI::Get()->CreatePipelineState();
 	}

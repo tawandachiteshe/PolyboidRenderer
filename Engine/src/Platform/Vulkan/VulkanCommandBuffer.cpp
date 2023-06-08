@@ -12,7 +12,7 @@
 #include "Engine/Renderer/Buffer.h"
 #include "Engine/Renderer/Image2D.h"
 #include "Engine/Renderer/PipelineDescriptorSet.h"
-#include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "vulkan/vulkan.hpp"
 #include "Utils/VulkanDevice.h"
@@ -180,10 +180,10 @@ namespace Polyboid
 		barrier.srcAccessMask = vk::AccessFlagBits::eNone; //TODO: important wangu
 		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite; //TODO: important wangu
 
-		vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTransfer; //TODO: importang again we need to know;
-		vk::PipelineStageFlags srcStageFlags = vk::PipelineStageFlagBits::eTopOfPipe; //TODO: importang again we need to know;
+	 	const vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTransfer; //TODO: importang again we need to know;
+		const vk::PipelineStageFlags srcStageFlags = vk::PipelineStageFlagBits::eTopOfPipe; //TODO: importang again we need to know;
 
-		vk::DependencyFlags dependencyFlags = static_cast<vk::DependencyFlags>(0);
+		constexpr auto dependencyFlags = static_cast<vk::DependencyFlags>(0);
 
 		m_CommandBuffer.pipelineBarrier(
 			srcStageFlags,
@@ -198,9 +198,24 @@ namespace Polyboid
 
 	}
 
-	void VulkanCommandBuffer::CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer,
-		const IndexBuffer* dstIndexBuffer)
+	void VulkanCommandBuffer::CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer)
 	{
+		vk::BufferMemoryBarrier memBarrier{};
+
+		memBarrier.setOffset(0);
+		memBarrier.size = VK_WHOLE_SIZE;
+		memBarrier.buffer = std::any_cast<vk::Buffer>(srcBuffer->GetHandle());
+		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
+		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+
+		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
+	}
+
+
+	void VulkanCommandBuffer::CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer,
+	                                          const IndexBuffer* dstIndexBuffer)
+	{
+		CopyHostMemoryBarrier(srcIndexBuffer);
 
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
@@ -221,6 +236,7 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer)
 	{
+		CopyHostMemoryBarrier(srcVtxBuffer);
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;
@@ -240,9 +256,9 @@ namespace Polyboid
 	void VulkanCommandBuffer::BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer)
 	{
 
-		auto buffer = std::any_cast<vk::Buffer>(idxBuffer->GetHandle());
+		const auto buffer = std::any_cast<vk::Buffer>(idxBuffer->GetHandle());
 
-		auto idxType = idxBuffer->GetIndexDataType() == IndexDataType::UnsignedInt ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
+		const auto idxType = idxBuffer->GetIndexDataType() == IndexDataType::UnsignedInt ? vk::IndexType::eUint32 : vk::IndexType::eUint16;
 
 		m_CommandBuffer.bindIndexBuffer(buffer, 0, idxType);
 	}
@@ -255,7 +271,7 @@ namespace Polyboid
 
 	}
 
-	void VulkanCommandBuffer::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
+	void VulkanCommandBuffer::BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline)
 	{
 		
 
@@ -267,18 +283,10 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo)
 	{
-		vk::BufferMemoryBarrier memBarrier{};
-
-		memBarrier.setOffset(0);
-		memBarrier.size = VK_WHOLE_SIZE;
-		memBarrier.buffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
-		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
-		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
 		
-		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
-
-		auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
-		auto dstBuffer = std::any_cast<vk::Buffer>(dstUbo->GetHandle());
+		CopyHostMemoryBarrier(srcUbo);
+		const auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
+		const auto dstBuffer = std::any_cast<vk::Buffer>(dstUbo->GetHandle());
 
 		vk::BufferCopy bufferCopy{};
 		bufferCopy.size = srcUbo->GetSizeInBytes();
@@ -293,15 +301,7 @@ namespace Polyboid
 	void VulkanCommandBuffer::CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo,
 		const Ref<StorageBuffer>& storageBuffer)
 	{
-		vk::BufferMemoryBarrier memBarrier{};
-
-		memBarrier.setOffset(0);
-		memBarrier.size = VK_WHOLE_SIZE;
-		memBarrier.buffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
-		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
-		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-
-		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
+		CopyHostMemoryBarrier(srcUbo);
 
 		auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
 		auto dstBuffer = std::any_cast<vk::Buffer>(storageBuffer->GetHandle());
@@ -357,7 +357,7 @@ namespace Polyboid
 		m_CommandBuffer.draw(count, 1, 0, 0);
 	}
 
-	void VulkanCommandBuffer::PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
+	void VulkanCommandBuffer::PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset)
 	{
 		const auto vkPipeline = pipeline.As<VulkanGraphicsPipeline>();
 		auto pipelineLayout = vkPipeline->GetPipelineLayout();

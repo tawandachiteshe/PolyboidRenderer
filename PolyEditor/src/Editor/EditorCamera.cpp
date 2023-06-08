@@ -28,7 +28,7 @@ namespace Polyboid
 		// m_Yaw = m_Pitch = 0.0f; // Lock the camera's rotation
 		m_Position = CalculatePosition();
 
-		glm::quat orientation = GetOrientation();
+		const glm::quat orientation = GetOrientation();
 		m_ViewMatrix = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
 		m_ViewMatrix = glm::inverse(m_ViewMatrix);
 	}
@@ -38,7 +38,7 @@ namespace Polyboid
 
 		if (m_EnableInput)
 		{
-			float delta = e.GetYoffset() * 0.6f;
+			float delta = e.GetYoffset() * 0.09f;
 			MouseZoom(delta);
 			UpdateView();
 		}

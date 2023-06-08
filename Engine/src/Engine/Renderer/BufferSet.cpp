@@ -62,7 +62,41 @@ namespace Polyboid
 		return m_Buffers.at(frame);
 	}
 
- 
+	VertexBufferSet::VertexBufferSet(uint32_t size)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Buffers.push_back(VertexBuffer::Create(size));
+		}
+	}
+
+	void VertexBufferSet::Recreate()
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer.As<VulkanShaderStorage>()->Recreate();
+		}
+	}
+
+	void VertexBufferSet::SetLayout(const BufferLayout& layout)
+	{
+		for (const auto& buffer : m_Buffers)
+		{
+			buffer->SetLayout(layout);
+		}
+	}
+
+	Ref<VertexBufferSet> VertexBufferSet::Create(uint32_t size)
+	{
+		return CreateRef<VertexBufferSet>(size);
+	}
+
+	Ref<VertexBuffer> VertexBufferSet::Get(uint32_t frame)
+	{
+		return m_Buffers.at(frame);
+	}
+
+
 	//Staging buffer
 	StagingBufferSet::StagingBufferSet(uint32_t size)
 	{

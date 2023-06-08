@@ -10,7 +10,6 @@
 #include "Engine/Engine/Math/Math.h"
 #include "Engine/Engine/MeshImporter/MeshImporter.h"
 #include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/WorldRenderer.h"
 #include "Engine/Engine/ECS/Components.h"
 #include "Engine/Engine/ECS/GameObject.h"
 #include <tuple>

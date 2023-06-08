@@ -7,6 +7,7 @@
 #include <Engine/Renderer/RenderPass.h>
 #include <Engine/Renderer/GraphicsBackend.h>
 
+#include "BufferSet.h"
 #include "imgui.h"
 
 namespace Polyboid
@@ -31,7 +32,7 @@ namespace Polyboid
 	struct RendererStorage
     {
         Ref<RenderPass> m_CurrentRenderPass;
-        Ref<PipelineState> m_DefaultPipelineState;
+        Ref<GraphicsPipeline> m_DefaultPipelineState;
         Ref<Swapchain> m_Swapchain;
         Ref<CommandBufferSet> m_CurrentCommandList;
         std::vector<Ref<CommandBufferSet>> m_CurrentCommandLists;
@@ -43,7 +44,7 @@ namespace Polyboid
         uint32_t m_MaxFramesInFlight = 3;
         uint32_t m_ImageIndex = 0;
         Ref<RendererSyncObjects> m_CurrentSyncObjects;
-        Ref<PipelineState> m_CurrentPipeline;
+        Ref<GraphicsPipeline> m_CurrentPipeline;
         bool m_IsMainRenderPass = false;
         Ref<GraphicsBackend> m_GraphicsBackend;
     };
@@ -84,7 +85,7 @@ namespace Polyboid
 
         static void DrawIndexed(uint32_t count, const PrimitiveType& primitive = PrimitiveType::Triangles);
         static void DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive = PrimitiveType::Lines);
-        static void SetPipelineState(const Ref<PipelineState>& pipelineState);
+        static void SetPipelineState(const Ref<GraphicsPipeline>& pipelineState);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers);
         static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers);
@@ -92,32 +93,35 @@ namespace Polyboid
 
         static void RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc);
 
-        static void BindGraphicsPipeline(const Ref<PipelineState>& pipeline);
+        static void BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline);
         static void BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets);
         static void EndRenderPass();
         static void BindVertexBuffer(const Ref<VertexBuffer>& vertexBuffer);
+        static void BindVertexBuffer(const Ref<VertexBufferSet>& vertexBuffer);
         static void BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer);
         static void SetViewport(const Viewport& viewport);
         static void SetScissor(const Rect& rect);
         static void PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer);
         static void PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffer);
 
-    	static void SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data, uint32_t dataSize);
+
         static void SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data);
         static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<UniformBuffer>>& buffers);
         static void CopyStagingBuffer(const std::vector<Ref<StagingBuffer>>& stagingBuffers, const std::vector<Ref<StorageBuffer>>& buffers);
+
 
         static void SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<VertexBufferSet>& buffers);
 
 
-        static void VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
-        static void FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
+        static void VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
+        static void FragmentShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data, uint32_t dataSize, uint32_t offset = 0);
 
         static Ref<RenderPass> GetDefaultRenderTarget();
-        static Ref<PipelineState> GetDefaultPipeline();
+        static Ref<GraphicsPipeline> GetDefaultPipeline();
 
         static void Resize(uint32_t width, uint32_t height);
 

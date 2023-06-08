@@ -70,7 +70,7 @@ namespace Polyboid
 		RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 		staging->Destroy();
-		cmdList->Destroy(device);
+		cmdList->Destroy();
 	}
 
 	void VulkanIndexBuffer::Recreate()

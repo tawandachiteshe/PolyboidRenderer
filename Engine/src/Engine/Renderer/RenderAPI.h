@@ -23,7 +23,7 @@ namespace Polyboid
 	class RenderPass;
 	struct ClearSettings;
 	class Swapchain;
-	class PipelineState;
+	class GraphicsPipeline;
 	class VertexBufferArray;
 	class VertexBuffer;
 	class IndexBuffer;
@@ -87,7 +87,7 @@ namespace Polyboid
 		virtual Ref<VertexBuffer> CreateVertexBuffer(uint32_t dataSize) = 0;
 
 		virtual Ref<VertexBufferArray> CreateVertexBufferArray() = 0;
-		virtual Ref<PipelineState> CreatePipelineState() = 0;
+		virtual Ref<GraphicsPipeline> CreatePipelineState() = 0;
 		virtual Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings = SwapchainSettings{}) = 0;
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
 		virtual Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) = 0;

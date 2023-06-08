@@ -22,7 +22,6 @@ namespace Polyboid
 
 	public:
 
-		void Destroy(vk::Device device);
 
 		VulkanCommandBufferSet(const VkRenderAPI* context, const CommandListSettings& settings);
 		void Init(const VkRenderAPI* context, const CommandListSettings& settings);
@@ -30,6 +29,8 @@ namespace Polyboid
 		CommandListSettings& GetSettings() override;
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
 		~VulkanCommandBufferSet() override;
+
+		void Destroy() override;
 
 		friend class VulkanCommandBuffer;
 	};

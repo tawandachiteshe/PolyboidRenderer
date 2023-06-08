@@ -10,6 +10,10 @@
 
 namespace Polyboid
 {
+	Ref<Shader> Shader::Create(const ShaderType& shader, const std::string& shaderSourcePath)
+	{
+        return nullptr;
+	}
 
     Ref<Shader> Shader::Create(const ShaderBinaryAndReflectionInfo& info)
     {

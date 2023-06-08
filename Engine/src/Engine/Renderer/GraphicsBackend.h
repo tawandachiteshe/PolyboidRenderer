@@ -15,7 +15,7 @@ namespace Polyboid
 	class CommandBufferSet;
 	class FrameBufferSet;
 	class RenderPass;
-	class PipelineState;
+	class GraphicsPipeline;
 
 	class GraphicsBackend
 	{
@@ -24,7 +24,7 @@ namespace Polyboid
 		using RenderBackendFreeFunc = std::function<void()>;
 
 		virtual void RegisterResizeFunc(const RenderBackendFreeFunc& freeFunc) = 0;
-		virtual void SubmitPipeline(const Ref<PipelineState>& pipeline) = 0;
+		virtual void SubmitPipeline(const Ref<GraphicsPipeline>& pipeline) = 0;
 		virtual void SubmitRenderpass(const Ref<RenderPass>& renderpass) = 0;
 		virtual void SubmitFramebuffer(const Ref<FrameBufferSet>& framebuffer) = 0;
 		virtual void GetSwapchainImageIndex(uint32_t frameIndex) = 0;

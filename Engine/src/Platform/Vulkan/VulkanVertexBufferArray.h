@@ -14,6 +14,7 @@ namespace Polyboid
 		std::vector<vk::VertexInputAttributeDescription> m_VkLayouts;
 		vk::PipelineVertexInputStateCreateInfo m_VertexInputInfo;
 		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
+		std::vector<Ref<VertexBufferSet>> m_VertexBuffersSets;
 		Ref<VulkanIndexBuffer> m_IndexBuffer;
 
 	public:
@@ -25,8 +26,10 @@ namespace Polyboid
 		IndexDataType GetIndexDataType() override;
 		uint32_t GetIndexCount() override;
 		void SetIndexCount(uint32_t count) override;
+		void AddVertexBufferSet(const Ref<VertexBufferSet>& vbufferSet) override;
 		~VulkanVertexBufferArray() override;
-		void Recreate();
+		void Recreate() override;
+		void Destroy() override;
 
 		virtual vk::PipelineVertexInputStateCreateInfo GetVulkanInfo();
 

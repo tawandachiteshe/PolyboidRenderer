@@ -102,7 +102,7 @@ namespace Polyboid
 		Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) override;
 		Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) override;
 
-		Ref<PipelineState> CreatePipelineState() override;
+		Ref<GraphicsPipeline> CreatePipelineState() override;
 		Ref<Swapchain> CreateSwapChain(const SwapchainSettings& settings) override;
 		Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) override;
 

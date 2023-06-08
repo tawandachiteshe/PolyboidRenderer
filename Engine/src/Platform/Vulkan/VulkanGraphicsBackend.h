@@ -10,7 +10,7 @@ namespace Polyboid
 {
 	class Swapchain;
 	class RenderPass;
-	class PipelineState;
+	class GraphicsPipeline;
 	class VulkanPipelineDescriptorSetPool;
 	class CommandBufferSet;
 	class RendererSyncObjects;
@@ -70,7 +70,7 @@ namespace Polyboid
 		void RecreateResources();
 		void RegisterResizeFunc(const RenderBackendFreeFunc& freeFunc) override;
 
-		void SubmitPipeline(const Ref<PipelineState>& pipeline) override;
+		void SubmitPipeline(const Ref<GraphicsPipeline>& pipeline) override;
 		void SubmitRenderpass(const Ref<RenderPass>& renderpass) override;
 		void SubmitFramebuffer(const Ref<FrameBufferSet>& framebuffer) override;
 		void GetSwapchainImageIndex(uint32_t frameIndex) override;

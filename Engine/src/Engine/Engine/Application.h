@@ -35,7 +35,7 @@ namespace Polyboid
 
 
 	class CommandBufferSet;
-	class PipelineState;
+	class GraphicsPipeline;
 	class RenderPass;
 	class Swapchain;
 	class RenderAPI;

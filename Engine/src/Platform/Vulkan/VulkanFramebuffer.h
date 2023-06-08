@@ -27,11 +27,12 @@ namespace Polyboid
 		void Init(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass);
 
 	public:
+		void Destroy() override;
 
 		void SwapchainRecreate();
 		void Recreate();
 
-		void Destroy(vk::Device device);
+		
 		VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass);
 		VulkanFramebuffer(const VkRenderAPI* context, const FramebufferSettings& settings, const VulkanRenderPass* renderPass, std::vector<Ref<VulkanTexture2D>>& textures);
 

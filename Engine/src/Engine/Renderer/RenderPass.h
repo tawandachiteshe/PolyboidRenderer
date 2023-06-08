@@ -52,7 +52,7 @@ namespace Polyboid
         bool IsSwapchainRenderPass = true;
     };
     
-    class RenderPass
+    class RenderPass : public RenderResource
     {
     public:
 

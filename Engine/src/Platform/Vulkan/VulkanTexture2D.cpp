@@ -51,7 +51,7 @@ namespace Polyboid
 			RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer);
 
 			staging->Destroy();
-			cmdList->Destroy(device);
+			cmdList->Destroy();
 
 		}
 		else
@@ -88,7 +88,7 @@ namespace Polyboid
 			stbi_image_free(pixels);
 
 			staging->Destroy();
-			cmdList->Destroy(device);
+			cmdList->Destroy();
 
 		}
 		// char* stats = nullptr;

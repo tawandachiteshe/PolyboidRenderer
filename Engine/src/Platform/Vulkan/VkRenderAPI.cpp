@@ -172,7 +172,11 @@ namespace Polyboid
 
 	Ref<VertexBuffer> VkRenderAPI::CreateVertexBuffer(uint32_t dataSize)
 	{
-		return nullptr;
+
+		auto vertexBuffer = ALLOC_API(VulkanVertexBuffer, this, dataSize);
+		m_VertexBuffers.push_back(vertexBuffer);
+
+		return vertexBuffer.As<VertexBuffer>();
 	}
 
 	Ref<VertexBufferArray> VkRenderAPI::CreateVertexBufferArray()
@@ -199,13 +203,13 @@ namespace Polyboid
 		return buffer.As<StagingBuffer>();
 	}
 
-	Ref<PipelineState> VkRenderAPI::CreatePipelineState()
+	Ref<GraphicsPipeline> VkRenderAPI::CreatePipelineState()
 	{
 		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
 
 		m_Pipelines.push_back(graphicsPipeline);
 
-		return graphicsPipeline.As<PipelineState>();
+		return graphicsPipeline.As<GraphicsPipeline>();
 	}
 
 	Ref<Swapchain> VkRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
@@ -285,7 +289,7 @@ namespace Polyboid
 
 		for (const auto& renderPass : m_RenderPasses)
 		{
-			renderPass->Destroy(device);
+			renderPass->Destroy();
 		}
 
 		for (auto& fence : m_Fences)
@@ -320,7 +324,7 @@ namespace Polyboid
 
 		for (const auto& framebuffer : m_Framebuffers)
 		{
-			framebuffer->Destroy(device);
+			framebuffer->Destroy();
 		}
 
 
@@ -358,7 +362,7 @@ namespace Polyboid
 
 		for (const auto& command : m_CommandLists)
 		{
-			command->Destroy(device);
+			command->Destroy();
 		}
 
 

@@ -18,7 +18,7 @@ namespace Polyboid
     class RasterizerState;
     class DepthStencilState;
 
-    class PipelineState
+    class GraphicsPipeline : public RenderResource
     {
     public:
         using ShaderMap = std::map<ShaderType, Ref<Shader>>;
@@ -48,7 +48,7 @@ namespace Polyboid
         virtual void SetRenderPass(const Ref<RenderPass>& renderPass) = 0;
         virtual  Ref<RenderPass> GetRenderPass() = 0;
 
-        virtual  ~PipelineState() = default;
+        virtual  ~GraphicsPipeline() = default;
 
         virtual void Bake() = 0;
         virtual std::any GetHandle() = 0;
@@ -66,7 +66,7 @@ namespace Polyboid
         virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding = 0) = 0;
         virtual std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) = 0;
 
-        static Ref<PipelineState> CreateGraphicsPipeline();
+        static Ref<GraphicsPipeline> CreateGraphicsPipeline();
 
     };
 

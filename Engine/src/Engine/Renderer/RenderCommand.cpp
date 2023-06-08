@@ -8,7 +8,7 @@
 #include "BufferSet.h"
 #include "CommandBufferSet.h"
 #include "Framebuffer.h"
-#include "PipelineState.h"
+#include "GraphicsPipeline.h"
 #include "RenderAPI.h"
 #include "RendererSyncObjects.h"
 #include "RenderPass.h"
@@ -174,7 +174,7 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->DrawArrays(vertexCount);
 	}
 
-	void RenderCommand::SetPipelineState(const Ref<PipelineState>& pipelineState)
+	void RenderCommand::SetPipelineState(const Ref<GraphicsPipeline>& pipelineState)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipelineState);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipelineState);
@@ -208,7 +208,7 @@ namespace Polyboid
 		GetGraphicsBackend()->RegisterResizeFunc(freeFunc);
 	}
 
-	void RenderCommand::BindGraphicsPipeline(const Ref<PipelineState>& pipeline)
+	void RenderCommand::BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline)
 	{
 		s_Data->m_GraphicsBackend->SubmitPipeline(pipeline);
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipeline);
@@ -228,6 +228,11 @@ namespace Polyboid
 	void RenderCommand::BindVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
 	{
 		GetCurrentCommandBuffer()->BindVertexBuffer(vertexBuffer);
+	}
+
+	void RenderCommand::BindVertexBuffer(const Ref<VertexBufferSet>& vertexBuffer)
+	{
+		GetCurrentCommandBuffer()->BindVertexBuffer(vertexBuffer->Get(GetCurrentFrame()));
 	}
 
 	void RenderCommand::BindIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
@@ -255,11 +260,6 @@ namespace Polyboid
 		s_Data->m_CurrentCommandLists.insert(s_Data->m_CurrentCommandLists.end(), commandBuffers.begin(), commandBuffers.end());
 	}
 
-	void RenderCommand::SetUniformBufferData(const std::vector<Ref<UniformBuffer>>& buffers, const void* data,
-	                                    uint32_t dataSize)
-	{
-		buffers.at(GetCurrentFrame())->SetData(data, dataSize);
-	}
 
 	void RenderCommand::SetStagingBufferData(const std::vector<Ref<StagingBuffer>>& buffers, const void* data)
 	{
@@ -298,14 +298,20 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}
 
+	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers,
+		const Ref<VertexBufferSet>& buffers)
+	{
+		GetCurrentCommandBuffer()->CopyVertexBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
+	}
 
-	void RenderCommand::VertexShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
-	                                         uint32_t dataSize, uint32_t offset)
+
+	void RenderCommand::VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
+	                                              uint32_t dataSize, uint32_t offset)
 	{
 		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Vertex,data, dataSize, offset);
 	}
 
-	void RenderCommand::FragmentShaderPushConstants(const Ref<PipelineState>& pipelineState, const void* data,
+	void RenderCommand::FragmentShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
 		uint32_t dataSize, uint32_t offset)
 	{
 		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Fragment, data, dataSize, offset);
@@ -317,7 +323,7 @@ namespace Polyboid
 		return s_Data->m_CurrentRenderPass;
 	}
 
-	Ref<PipelineState> RenderCommand::GetDefaultPipeline()
+	Ref<GraphicsPipeline> RenderCommand::GetDefaultPipeline()
 	{
 		return s_Data->m_DefaultPipelineState;
 	}

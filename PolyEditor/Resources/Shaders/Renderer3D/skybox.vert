@@ -57,7 +57,7 @@ void main() {
 	//mat4(mat3(view))
 	//vTextureCoord = aPosition; //getPosition(gl_VertexIndex);
 
-	gl_Position = projection * view * entity.transform * vec4(getPosition(gl_VertexIndex), 1.0);//projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
+	gl_Position = projection * view * entity.transform * vec4(aPosition, 1.0);//projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
 
 	
 	vTextureCoord2D =  aUV; //getUV(gl_VertexIndex);

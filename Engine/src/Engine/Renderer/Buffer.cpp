@@ -16,6 +16,12 @@ namespace Polyboid
 		return RenderAPI::Get()->CreateVertexBuffer(data, size);
 	}
 
+	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	{
+		auto vtx = RenderAPI::Get()->CreateVertexBuffer(size);
+		return vtx;
+	}
+
 	Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
 	{
 		return RenderAPI::Get()->CreateIndexBuffer(IndexDataType::UnsignedInt, count, indices);

@@ -2,6 +2,8 @@
 #include <any>
 #include <vulkan/vulkan.hpp>
 
+#include "RenderResource.h"
+
 
 namespace Polyboid
 {
@@ -39,16 +41,17 @@ namespace Polyboid
 		bool generateMips = false;
 		EngineGraphicsFormats format;
 		ImageLayout layout = ImageLayout::Undefined;
+
+		ImageSettings() = default;
 	};
 
-	class Image2D
+	class Image2D : public RenderResource
 	{
 	private:
 
 
 	public:
 		virtual  std::any GetHandle() = 0;
-		virtual ~Image2D() = default;
 		virtual EngineGraphicsFormats GetImageFormat() = 0;
 		virtual ImageLayout GetLayout() = 0;
 		virtual uint32_t GetHeight() = 0;

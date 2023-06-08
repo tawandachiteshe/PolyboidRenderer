@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/GraphicsPipeline.h"
 #include <vulkan/vulkan_raii.hpp>
 
 #include "VkRenderAPI.h"
@@ -11,7 +11,7 @@
 
 namespace Polyboid
 {
-	class VulkanGraphicsPipeline : public PipelineState
+	class VulkanGraphicsPipeline : public GraphicsPipeline
 	{
 
 	private:
@@ -52,7 +52,7 @@ namespace Polyboid
 
 		void Bake() override;
 		void Init();
-		void Recreate();
+		void Recreate() override;
 
 
 		void SetShader(const ShaderType& type, const Ref<Shader>& shader) override;
@@ -99,7 +99,9 @@ namespace Polyboid
 
 		void WriteSetResourceBindings(uint32_t set) override;
 
-		virtual void Destroy();
+		void Destroy() override;
+
+
 
 		std::any GetHandle() override;
 	};

@@ -7,7 +7,7 @@
 #include "Engine/Engine/Engine.h"
 #include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Engine/Registry/ShaderRegistry.h"
-#include "Engine/Renderer/PipelineState.h"
+#include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/VertexBufferArray.h"
@@ -52,7 +52,7 @@ namespace Polyboid
 			1, 2, 3 // Triangle 2
 		};
 
-		m_VertexBuffer = VertexBuffer::Create(m_Vertices, sizeof(m_Vertices));
+		m_VertexBuffer = VertexBufferSet::Create(sizeof(m_Vertices));
 		m_VertexBuffer->SetLayout({
 			{ShaderDataType::Float3, "aPosition"},
 			{ShaderDataType::Float4, "aNormal"},
@@ -60,7 +60,7 @@ namespace Polyboid
 			});
 		m_IndexBuffer = IndexBuffer::Create(indices, 6);
 		auto vtxArray = VertexBufferArray::Create();
-		vtxArray->AddVertexBuffer(m_VertexBuffer);
+		vtxArray->AddVertexBufferSet(m_VertexBuffer);
 		vtxArray->SetIndexBuffer(m_IndexBuffer);
 
 		const uint32_t green = 0xFF'00'FF'00;
@@ -77,7 +77,7 @@ namespace Polyboid
 			});
 
 
-		m_Pipeline = PipelineState::CreateGraphicsPipeline();
+		m_Pipeline = GraphicsPipeline::CreateGraphicsPipeline();
 		m_Pipeline->SetGraphicsShaders(skyboxShaders);
 		m_Pipeline->SetVertexArray(vtxArray);
 		m_Pipeline->SetRenderPass(m_RenderPass);
@@ -93,6 +93,7 @@ namespace Polyboid
 		m_StorageBuffers = StorageBufferSet::Create(sizeof(m_Vertices));
 		m_UniformStagingBuffers = StagingBufferSet::Create(sizeof(CameraBufferData));
 		m_StorageStagingBuffers = StagingBufferSet::Create(sizeof(m_Vertices));
+		m_StorageStagingBuffersVB = StagingBufferSet::Create(sizeof(m_Vertices));
 
 		m_Pipeline->AllocateDescriptorSets();
 		m_Pipeline->BindUniformBufferSet(0, m_UniformBuffers);
@@ -199,8 +200,10 @@ namespace Polyboid
 
 		RenderCommand::SetStagingBufferData(m_UniformStagingBuffers, &m_CameraData);
 		RenderCommand::SetStagingBufferData(m_StorageStagingBuffers, m_Vertices);
+		RenderCommand::SetStagingBufferData(m_StorageStagingBuffersVB, m_Vertices);
 		RenderCommand::CopyStagingBuffer(m_UniformStagingBuffers, m_UniformBuffers);
 		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffers, m_StorageBuffers);
+		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffersVB, m_VertexBuffer);
 
 
 		RenderCommand::BeginRenderPass(m_RenderPass, m_FrameBuffers);

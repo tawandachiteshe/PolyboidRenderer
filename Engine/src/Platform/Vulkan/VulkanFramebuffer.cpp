@@ -93,20 +93,22 @@ namespace Polyboid
 
 	void VulkanFramebuffer::SwapchainRecreate()
 	{
-		Destroy(VkRenderAPI::GetVulkanDevice());
+		Destroy();
 		SwapChainInit(m_Context, m_Settings);
 	}
 
 	void VulkanFramebuffer::Recreate()
 	{
-		Destroy(VkRenderAPI::GetVulkanDevice());
+		Destroy();
 		Init(m_Context, m_RenderPass);
 	}
 
-	void VulkanFramebuffer::Destroy(vk::Device device)
+	void VulkanFramebuffer::Destroy()
 	{
 
-		for (auto texture : m_Textures)
+		const vk::Device device = VkRenderAPI::GetVulkanDevice();
+
+		for (const auto& texture : m_Textures)
 		{
 			texture->Destroy();
 		}

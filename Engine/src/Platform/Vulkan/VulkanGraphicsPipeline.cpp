@@ -227,7 +227,7 @@ namespace Polyboid
 		return m_Shaders.at(type).As<Shader>();
 	}
 
-	const PipelineState::ShaderMap& VulkanGraphicsPipeline::GetShaders() const
+	const GraphicsPipeline::ShaderMap& VulkanGraphicsPipeline::GetShaders() const
 	{
 		return m_Shaders;
 	}

@@ -22,11 +22,12 @@ namespace Polyboid
 	public:
 
 		void Init(const VkRenderAPI* context, const ImageSettings& imageSettings);
-		void Recreate();
+		void Recreate() override;
+
 
 		VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings);
 		std::any GetHandle() override;
-		virtual void Destroy();
+		void Destroy() override;
 		EngineGraphicsFormats GetImageFormat() override;
 		ImageLayout GetLayout() override;
 		uint32_t GetHeight() override;

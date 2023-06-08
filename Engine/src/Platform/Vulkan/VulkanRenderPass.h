@@ -32,9 +32,9 @@ namespace Polyboid
 		void InitSwapchain(const VkRenderAPI* context, uint32_t width, uint32_t height);
 		void Init(const VkRenderAPI* context, const RenderPassSettings& settings);
 
-		void Recreate();
+		void Recreate() override;
 
-		void Destroy(vk::Device device);
+		void Destroy() override;
 
 		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
 		void Clear(const ClearSettings& settings) override;

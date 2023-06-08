@@ -17,11 +17,14 @@ namespace Polyboid
 		BufferLayout m_Layout;
 		uint32_t m_Size = 0;
 		const void* m_Data = nullptr;
+		bool m_HasData = false;
 
 	public:
 
 		void Init(const VkRenderAPI* context, const void* data, uint32_t size);
-		void Recreate();
+		void Init(const VkRenderAPI* context, uint32_t size);
+		void Recreate() override;
+		void Destroy() override;
 
 		VulkanVertexBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
 		VulkanVertexBuffer(const VkRenderAPI* context, uint32_t size);
@@ -35,7 +38,7 @@ namespace Polyboid
 		uint32_t GetSizeInBytes() const override;
 		std::any GetHandle() const override;
 
-		virtual void Destroy();
+		
 	};
 
 }

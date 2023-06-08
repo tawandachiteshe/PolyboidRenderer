@@ -31,17 +31,19 @@ namespace Polyboid
 		ImVec2 m_WindowOffset = { 0, 0 };
 
 		Ref<CommandBufferSet> m_EditorCommandBuffer;
-		Ref<PipelineState> m_Pipeline = nullptr;
+		Ref<GraphicsPipeline> m_Pipeline = nullptr;
 		Ref<UniformBufferSet> m_UniformBuffers;
 		Ref<StorageBufferSet> m_StorageBuffers;
 		Ref<StagingBufferSet> m_UniformStagingBuffers;
 		Ref<StagingBufferSet> m_StorageStagingBuffers;
+		Ref<StagingBufferSet> m_StorageStagingBuffersVB;
 		std::vector<ImTextureID> m_FramebufferTextures;
 		Ref<RenderPass> m_RenderPass;
 		Ref<FrameBufferSet> m_FrameBuffers;
-		Ref<VertexBuffer> m_VertexBuffer;
+		Ref<VertexBufferSet> m_VertexBuffer;
 		Ref<IndexBuffer> m_IndexBuffer;
 		Vertex m_Vertices[4];
+		Vertex m_VerticesBuffer[4];
 		CameraBufferData m_CameraData{};
 		EntityBufferData m_EntityBufferData{};
 		EntityBufferData m_EntityBufferData2{};

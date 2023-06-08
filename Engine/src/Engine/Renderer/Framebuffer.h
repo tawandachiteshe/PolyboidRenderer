@@ -49,7 +49,7 @@ namespace Polyboid
 		uint32_t height = 0;
 	};
 	
-	class Framebuffer
+	class Framebuffer : public RenderResource
 	{
 	public:
 

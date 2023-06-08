@@ -5,7 +5,7 @@
 
 namespace Polyboid
 {
-	class PipelineState;
+	class GraphicsPipeline;
 	class PipelineDescriptorSet;
 
 	struct DescriptorSetPoolSettings

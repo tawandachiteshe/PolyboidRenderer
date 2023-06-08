@@ -186,13 +186,13 @@ namespace Polyboid
 
 	void VulkanRenderPass::Recreate()
 	{
-		Destroy(VkRenderAPI::GetVulkanDevice());
+		Destroy();
 		Init(m_Context, m_Settings);
 	}
 
-	void VulkanRenderPass::Destroy(vk::Device device)
+	void VulkanRenderPass::Destroy()
 	{
-		device.destroyRenderPass(m_RenderPass);
+		VkRenderAPI::GetVulkanDevice().destroyRenderPass(m_RenderPass);
 	}
 
 

@@ -20,12 +20,14 @@ namespace Polyboid
 
 	public:
 		void Init(const VkRenderAPI* context, uint32_t size);
-		void Recreate();
+		void Recreate() override;
+		~VulkanStagingBuffer() override {};
+
 		VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
 		VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size);
 		void SetData(const void* data) override;
 
-		virtual void Destroy();
+		void Destroy() override;
 		uint32_t GetSizeInBytes() override;
 		std::any GetHandle() override;
 	};

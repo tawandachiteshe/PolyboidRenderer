@@ -250,12 +250,12 @@ namespace Polyboid
 
 		for (auto& framebuffer : m_Framebuffers)
 		{
-			framebuffer->Destroy(device);
+			framebuffer->Destroy();
 		}
 
 		if (m_RenderPass.Get())
 		{
-			m_RenderPass->Destroy(device);
+			m_RenderPass->Destroy();
 			m_RenderPass = nullptr;
 		}
 

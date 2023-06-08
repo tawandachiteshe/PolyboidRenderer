@@ -4,6 +4,7 @@
 
 #include "Rect.h"
 #include "Viewport.h"
+#include "RenderResource.h"
 #include "Engine/Engine/Base.h"
 
 namespace Polyboid
@@ -13,7 +14,7 @@ namespace Polyboid
 	class UniformBuffer;
 	enum class IndexDataType;
 	class PipelineDescriptorSet;
-	class PipelineState;
+	class GraphicsPipeline;
 	enum class ImageLayout;
 	class Image2D;
 	class StagingBuffer;
@@ -43,16 +44,18 @@ namespace Polyboid
 		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) = 0;
 		virtual void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) = 0;
 
+		virtual void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer) = 0;
+
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;
 
 		virtual void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) = 0;
 		virtual void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) = 0;
-		virtual void BindGraphicsPipeline(const Ref<PipelineState>& pipeline) = 0;
+		virtual void BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline) = 0;
 		virtual void BindDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
 		virtual void DrawIndexed(uint32_t count, const IndexDataType& type) = 0;
 		virtual void DrawArrays(uint32_t count) = 0;
-		virtual void PushConstant(const Ref<PipelineState>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
+		virtual void PushConstant(const Ref<GraphicsPipeline>& pipeline, ShaderType type, const void* data, uint32_t size, uint32_t offset) = 0;
 
 		virtual ~CommandBuffer() = default;
 
@@ -72,7 +75,7 @@ namespace Polyboid
 		CommandType SubmissionType = CommandType::OneTime;
 	};
 
-	class CommandBufferSet
+	class CommandBufferSet : public RenderResource
 	{
 
 	public:
