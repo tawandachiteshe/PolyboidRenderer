@@ -9,12 +9,12 @@ layout(location = 0) in VS_OUT {
 	vec2 vUV;
 } vs_in; 
 
-layout(binding = 0) uniform sampler2D uTexture;
+//layout(binding = 0) uniform sampler2D uTexture;
 
 
 void main() {
 	
-	vec4 tex = texture(uTexture, vs_in.vUV);
+	//vec4 tex = texture(uTexture, vs_in.vUV);
 
 	FragColor = vs_in.vColor; 
 

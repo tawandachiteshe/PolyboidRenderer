@@ -112,6 +112,7 @@ namespace Polyboid
 
         static void SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data);
+        static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data, uint32_t dataSize);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers);
         static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<VertexBufferSet>& buffers);

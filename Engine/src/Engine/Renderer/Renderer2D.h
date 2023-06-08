@@ -2,12 +2,14 @@
 #include "Camera3D.h"
 #include "Engine/Engine/Base.h"
 #include "Engine/Engine/Math/AABB.h"
+#include "Engine/Engine/Registry/ShaderRegistry.h"
 #include "Engine/Renderer/Shader.h"
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
 
 namespace Polyboid
 {
+	class RenderPass;
 	class RenderAPI;
 	class EditorCamera;
 
@@ -60,7 +62,6 @@ namespace Polyboid
 		}
 	};
 
-	using Render2DShaderType = std::pair<Ref<Shader>, Ref<Shader>>;
 
 	class Renderer2D
 	{
@@ -72,9 +73,10 @@ namespace Polyboid
 		static void PrepareQuadsForRendering();
 		static void PrepareCircleForRendering();
 		static void PrepareLineForRendering();
+	
 
 		//This is an internal thing it won't load your custom shaders
-		static Render2DShaderType  LoadShader(const std::string& shaderName);
+		static GraphicsShaders  LoadShader(const std::string& shaderName);
 
 		static void ResetQuads();
 		static void ResetCircles();
@@ -86,10 +88,11 @@ namespace Polyboid
 			Renderer2DCameraData() = default;
 			glm::mat4 projection;
 			glm::mat4 view;
-			glm::vec3 pos;
 		};
 
-		static void Init(RenderAPI* context);
+		static void UploadDataToGpu();
+
+		static void Init(const Ref<RenderPass>& renderPass);
 		static void BeginDraw(const Ref<Camera>& camera);
 		static void DebugWindow();
 		static void DrawQuad(const glm::mat4& transform, const glm::vec4& color = glm::vec4{ 1.0f });

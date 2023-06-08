@@ -28,6 +28,7 @@ namespace Polyboid
 		void SetIndexCount(uint32_t count) override;
 		void AddVertexBufferSet(const Ref<VertexBufferSet>& vbufferSet) override;
 		~VulkanVertexBufferArray() override;
+		Ref<IndexBuffer> GetIndexBuffer() override;
 		void Recreate() override;
 		void Destroy() override;
 

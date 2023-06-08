@@ -66,7 +66,7 @@ namespace Polyboid
         virtual std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding = 0) = 0;
         virtual std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) = 0;
 
-        static Ref<GraphicsPipeline> CreateGraphicsPipeline();
+        static Ref<GraphicsPipeline> Create();
 
     };
 

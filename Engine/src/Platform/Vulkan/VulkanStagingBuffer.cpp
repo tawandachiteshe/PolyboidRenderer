@@ -42,6 +42,11 @@ namespace Polyboid
 
 	}
 
+	void VulkanStagingBuffer::SetData(const void* data, uint32_t size)
+	{
+		m_Allocator.MapData(data, size);
+	}
+
 	void VulkanStagingBuffer::Destroy()
 	{
 		m_Allocator.DestroyBuffer();

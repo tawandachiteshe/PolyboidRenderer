@@ -120,6 +120,11 @@ namespace Polyboid
 	{
 	}
 
+	Ref<IndexBuffer> VulkanVertexBufferArray::GetIndexBuffer()
+	{
+		return m_IndexBuffer.As<IndexBuffer>();
+	}
+
 	void VulkanVertexBufferArray::Recreate()
 	{
 		//m_IndexBuffer->Recreate();

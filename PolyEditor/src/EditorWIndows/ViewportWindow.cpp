@@ -77,7 +77,7 @@ namespace Polyboid
 			});
 
 
-		m_Pipeline = GraphicsPipeline::CreateGraphicsPipeline();
+		m_Pipeline = GraphicsPipeline::Create();
 		m_Pipeline->SetGraphicsShaders(skyboxShaders);
 		m_Pipeline->SetVertexArray(vtxArray);
 		m_Pipeline->SetRenderPass(m_RenderPass);
@@ -133,6 +133,8 @@ namespace Polyboid
 		// });
 
 		RenderCommand::PushCommandBufferSets({ m_EditorCommandBuffer });
+
+		Renderer2D::Init(m_RenderPass);
 		
 	}
 
@@ -198,13 +200,6 @@ namespace Polyboid
 
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 
-		RenderCommand::SetStagingBufferData(m_UniformStagingBuffers, &m_CameraData);
-		RenderCommand::SetStagingBufferData(m_StorageStagingBuffers, m_Vertices);
-		RenderCommand::SetStagingBufferData(m_StorageStagingBuffersVB, m_Vertices);
-		RenderCommand::CopyStagingBuffer(m_UniformStagingBuffers, m_UniformBuffers);
-		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffers, m_StorageBuffers);
-		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffersVB, m_VertexBuffer);
-
 
 		RenderCommand::BeginRenderPass(m_RenderPass, m_FrameBuffers);
 		RenderCommand::BindGraphicsPipeline(m_Pipeline);
@@ -228,7 +223,19 @@ namespace Polyboid
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData2, sizeof(m_EntityBufferData2));
 		RenderCommand::DrawIndexed(6);
 
+		OnRender();
+
 		RenderCommand::EndRenderPass();
+
+		RenderCommand::SetStagingBufferData(m_UniformStagingBuffers, &m_CameraData);
+		RenderCommand::SetStagingBufferData(m_StorageStagingBuffers, m_Vertices);
+		RenderCommand::SetStagingBufferData(m_StorageStagingBuffersVB, m_Vertices);
+		RenderCommand::CopyStagingBuffer(m_UniformStagingBuffers, m_UniformBuffers);
+		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffers, m_StorageBuffers);
+		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffersVB, m_VertexBuffer);
+
+		Renderer2D::UploadDataToGpu();
+
 		RenderCommand::EndFrameCommands();
 
 
@@ -253,10 +260,11 @@ namespace Polyboid
 
 
 
-		Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
-		Renderer2D::DrawCube(pos2);
+		// Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
+		// Renderer2D::DrawCube(pos2);
 		Renderer2D::DrawCircle(pos);
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});
+		Renderer2D::DrawQuad(pos2, glm::vec4{1.2, 1.2, 0.2, 1.0f});
 		
 
 		Renderer2D::EndDraw();

@@ -288,6 +288,11 @@ namespace Polyboid
 		buffers->Get(GetCurrentFrame())->SetData(data);
 	}
 
+	void RenderCommand::SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data, uint32_t dataSize)
+	{
+		buffers->Get(GetCurrentFrame())->SetData(data, dataSize);
+	}
+
 	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
 	{
 		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));

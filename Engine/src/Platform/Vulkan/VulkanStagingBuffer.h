@@ -26,6 +26,7 @@ namespace Polyboid
 		VulkanStagingBuffer(const VkRenderAPI* context, const void* data, uint32_t size);
 		VulkanStagingBuffer(const VkRenderAPI* context, uint32_t size);
 		void SetData(const void* data) override;
+		void SetData(const void* data, uint32_t size) override;
 
 		void Destroy() override;
 		uint32_t GetSizeInBytes() override;
