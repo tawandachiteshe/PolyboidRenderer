@@ -35,6 +35,11 @@ layout(std430, binding = 1) readonly buffer Vertices {
   Vertex in_Vertices[];
 };
 
+layout(std430, binding = 3) readonly buffer Ages {
+  uint ages[];
+};
+
+
 vec3 getPosition(int i) {
 	return vec3( in_Vertices[i].sPosition[0], in_Vertices[i].sPosition[1], in_Vertices[i].sPosition[2]);
 }

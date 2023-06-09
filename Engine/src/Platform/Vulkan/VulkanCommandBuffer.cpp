@@ -413,6 +413,12 @@ namespace Polyboid
 		m_CommandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eCompute, vulkanEngineSet->GetDescLayout(), setBinding, { vulkanSet }, {});
 	}
 
+	void VulkanCommandBuffer::BindKomputePipline(const Ref<KomputePipeline>& pipeline)
+	{
+		auto vulkanPipeline = std::any_cast<vk::Pipeline>(pipeline->GetHandle());
+		m_CommandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, vulkanPipeline);
+	}
+
 
 	std::any VulkanCommandBuffer::GetHandle()
 	{

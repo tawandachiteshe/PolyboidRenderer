@@ -21,7 +21,7 @@ namespace Polyboid
 	struct Viewport;
 	class PipelineDescriptorSet;
 	class LayerContainer;
-	class RendererSyncObjects;
+	class GraphicsSyncObjects;
 	struct ApplicationSettings;
 	class Fence;
 	class Material;
@@ -43,7 +43,7 @@ namespace Polyboid
         uint32_t m_CurrentFrame = 0;
         uint32_t m_MaxFramesInFlight = 3;
         uint32_t m_ImageIndex = 0;
-        Ref<RendererSyncObjects> m_CurrentSyncObjects;
+        Ref<GraphicsSyncObjects> m_CurrentSyncObjects;
         Ref<GraphicsPipeline> m_CurrentPipeline;
         bool m_IsMainRenderPass = false;
         Ref<GraphicsBackend> m_GraphicsBackend;

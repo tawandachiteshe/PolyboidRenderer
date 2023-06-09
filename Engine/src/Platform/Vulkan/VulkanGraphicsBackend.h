@@ -13,7 +13,7 @@ namespace Polyboid
 	class GraphicsPipeline;
 	class VulkanPipelineDescriptorSetPool;
 	class CommandBufferSet;
-	class RendererSyncObjects;
+	class GraphicsSyncObjects;
 	class UniformBufferSet;
 	class StagingBufferSet;
 	class StorageBufferSet;
@@ -43,7 +43,7 @@ namespace Polyboid
 		std::vector<Ref<CommandBufferSet>> m_CommandBuffers;
 
 		std::vector<vk::CommandBuffer> m_SubmittingBuffer;
-		Ref<RendererSyncObjects> m_SyncObjects;
+		Ref<GraphicsSyncObjects> m_SyncObjects;
 	};
 
 	class VulkanGraphicsBackend : public GraphicsBackend
@@ -57,6 +57,7 @@ namespace Polyboid
 		vk::Device m_Device;
 		bool m_CanRender = true;
 		std::vector<RenderBackendFreeFunc> m_FreeFunctions;
+		std::vector<vk::Semaphore> m_WaitSemaphores;
 
 		
 		void Init();

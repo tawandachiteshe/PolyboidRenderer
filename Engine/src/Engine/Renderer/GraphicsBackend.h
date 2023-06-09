@@ -11,6 +11,7 @@ namespace vk
 
 namespace Polyboid
 {
+	class ComputeSyncObjects;
 	class CommandBuffer;
 	class CommandBufferSet;
 	class FrameBufferSet;
@@ -33,7 +34,17 @@ namespace Polyboid
 		virtual void SubmitOneTimeWork(const Ref<CommandBuffer>& buffer) = 0;
 		virtual uint32_t GetCurrentImageIndex() = 0;
 
-		virtual ~GraphicsBackend() {}
+		virtual ~GraphicsBackend() = default;
+	};
+
+	class ComputeBackend
+	{
+	public:
+		virtual void WaitAndResetFence() = 0;
+		virtual Ref<ComputeSyncObjects> GetSyncObjects() = 0;
+		virtual void SubmitComputeWork(const std::vector<Ref<CommandBufferSet>>& commandBuffer) = 0;
+		virtual void ComputeOneTime(const std::vector<Ref<CommandBufferSet>>& commandBuffer, uint32_t frameIndex) = 0;
+		virtual ~ComputeBackend();
 	};
 
 	

@@ -74,6 +74,7 @@ namespace Polyboid
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
 
 		static vk::Device GetVulkanDevice();
+		static vk::Queue GetVulkanQueue();
 		static vk::PhysicalDevice GetVulkanPhysicalDevice();
 		static vk::SurfaceKHR GetVulkanSurface();
 		static vk::Instance GetVulkanInstance();

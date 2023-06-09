@@ -13,7 +13,8 @@
 #include "Engine/Renderer/BufferSet.h"
 #include "Engine/Renderer/CommandBufferSet.h"
 #include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/RendererSyncObjects.h"
+#include "Engine/Renderer/GraphicsSyncObjects.h"
+#include "Engine/Renderer/KomputeCommand.h"
 #include "Engine/Renderer/SyncObjects.h"
 #include "Utils/VulkanDevice.h"
 
@@ -31,7 +32,7 @@ namespace Polyboid
 		s_Data->m_Swapchain = RenderCommand::GetSwapChain();
 
 
-		s_Data->m_SyncObjects = RendererSyncObjects::Create(RenderCommand::GetMaxFramesInFlight());
+		s_Data->m_SyncObjects = GraphicsSyncObjects::Create();
 		
 
 		s_Data->m_RenderPasses.reserve(20);
@@ -51,6 +52,7 @@ namespace Polyboid
 	VulkanGraphicsBackend::VulkanGraphicsBackend()
 	{
 		Init();
+		m_WaitSemaphores.reserve(2);
 	}
 
 	void VulkanGraphicsBackend::SubmitPipeline(const Ref<GraphicsPipeline>& pipeline)
@@ -192,6 +194,7 @@ namespace Polyboid
 		const auto& _fence = syncObjects->GetInFlightFence(frame);
 		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(frame);
 		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
+		auto computeFinishedSemaphore = std::any_cast<vk::Semaphore>(KomputeCommand::GetComputeBackend()->GetSyncObjects()->GetComputeFinishedSemaphore(frame)->GetHandle());
 
 		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
 		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
@@ -215,9 +218,11 @@ namespace Polyboid
 
 
 		vk::SubmitInfo submitInfo{};
-		vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput };
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &imageSemaphore;
+		const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eVertexShader };
+		const vk::Semaphore waitSemaphores[] = {imageSemaphore, computeFinishedSemaphore };
+
+		submitInfo.waitSemaphoreCount = 2;
+		submitInfo.pWaitSemaphores = waitSemaphores;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.setCommandBuffers(s_Data->m_SubmittingBuffer);
 
@@ -239,11 +244,6 @@ namespace Polyboid
 
 		result = m_GraphicsQueue.presentKHR(&presentInfo);
 
-
-		
-		const auto& maxFrames = RenderCommand::GetMaxFramesInFlight();
-		frame = (frame + 1) % maxFrames;
-		RenderCommand::SetCurrentFrame(frame);
 
 		if (result == vk::Result::eErrorOutOfDateKHR) {
 			// swapchain is out of date (e.g. the window was resized) and

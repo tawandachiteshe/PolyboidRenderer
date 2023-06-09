@@ -2,6 +2,8 @@
 #include "KomputeCommand.h"
 
 #include "CommandBufferSet.h"
+#include "RenderCommand.h"
+#include "Platform/Vulkan/VulkanComputeBackend.h"
 
 
 namespace Polyboid
@@ -12,7 +14,7 @@ namespace Polyboid
 
 	void KomputeCommand::Init()
 	{
-		
+		s_Data->m_Backend = CreateRef<VulkanComputeBackend>();
 	}
 
 	void KomputeCommand::BeginCommands(const Ref<CommandBufferSet>& currentCommand, uint32_t index)
@@ -46,6 +48,51 @@ namespace Polyboid
 	void KomputeCommand::EndCommands()
 	{
 		GetCurrentCommandBuffer()->End();
+	}
+
+	void KomputeCommand::BeginFrameCommands(const Ref<CommandBufferSet>& currentCommand)
+	{
+		BeginCommands(currentCommand, RenderCommand::GetCurrentFrame());
+	}
+
+	void KomputeCommand::EndFrameCommands()
+	{
+		EndCommands();
+	}
+
+	void KomputeCommand::WaitForWork()
+	{
+		GetComputeBackend()->WaitAndResetFence();
+	}
+
+	void KomputeCommand::BindKomputePipeline(const Ref<KomputePipeline>& komputePipeline)
+	{
+		GetCurrentCommandBuffer()->BindKomputePipline(komputePipeline);
+	}
+
+	void KomputeCommand::PushCommandBufferSet(const Ref<CommandBufferSet>& commandBuffer)
+	{
+		s_Data->m_CurrentCommandLists.emplace_back(commandBuffer);
+	}
+
+	void KomputeCommand::PushCommandBufferSets(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
+	{
+		s_Data->m_CurrentCommandLists.insert(s_Data->m_CurrentCommandLists.end(), commandBuffers.begin(), commandBuffers.end());
+	}
+
+	Ref<ComputeBackend> KomputeCommand::GetComputeBackend()
+	{
+		return s_Data->m_Backend;
+	}
+
+	void KomputeCommand::WaitAndCompute()
+	{
+		GetComputeBackend()->SubmitComputeWork(s_Data->m_CurrentCommandLists);
+	}
+
+	void KomputeCommand::ComputeOneTime(const std::vector<Ref<CommandBufferSet>>& commandBuffer, uint32_t frameIndex)
+	{
+		GetComputeBackend()->ComputeOneTime(commandBuffer, frameIndex);
 	}
 
 	Ref<CommandBuffer> KomputeCommand::GetCurrentCommandBuffer()

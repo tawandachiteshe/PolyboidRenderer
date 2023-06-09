@@ -63,6 +63,7 @@ namespace Polyboid
 
 		void DispatchKompute(const glm::uvec3& workGroup) override;
 		void BindKomputeDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) override;
+		void BindKomputePipline(const Ref<KomputePipeline>& pipeline) override;
 
 		std::any GetHandle() override;
 

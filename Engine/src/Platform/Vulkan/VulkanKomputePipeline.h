@@ -45,9 +45,11 @@ namespace Polyboid
 		void Destroy() override;
 		void Recreate() override;
 		vk::PipelineLayout GetPipelineLayout();
+		std::any GetHandle() override;
 
 		std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding) override;
 		std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set) override;
+
 		void BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet,
 			uint32_t setBinding) override;
 		void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,

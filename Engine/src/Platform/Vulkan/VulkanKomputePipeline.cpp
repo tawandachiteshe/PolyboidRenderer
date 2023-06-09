@@ -85,6 +85,7 @@ namespace Polyboid
 		auto [result, pipeline] = device.createComputePipeline(nullptr, komputeInfo);
 		vk::resultCheck(result, "Failed to create kompute pipeline");
 
+		m_Pipeline = pipeline;
 	}
 
 	void VulkanKomputePipeline::SetComputeShader(const Ref<Shader>& computeShader)
@@ -120,6 +121,11 @@ namespace Polyboid
 	vk::PipelineLayout VulkanKomputePipeline::GetPipelineLayout()
 	{
 		return m_PipelineLayout;
+	}
+
+	std::any VulkanKomputePipeline::GetHandle()
+	{
+		return m_Pipeline;
 	}
 
 	std::vector<Ref<PipelineDescriptorSet>> VulkanKomputePipeline::AllocateDescriptorSets(uint32_t setBinding)

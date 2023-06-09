@@ -46,6 +46,12 @@ namespace Polyboid
 		return api->GetDevice()->GetVulkanDevice();
 	}
 
+	vk::Queue VkRenderAPI::GetVulkanQueue()
+	{
+		auto api = reinterpret_cast<VkRenderAPI*>(Get());
+		return api->GetDevice()->GetGraphicsQueue();
+	}
+
 	vk::PhysicalDevice VkRenderAPI::GetVulkanPhysicalDevice()
 	{
 		auto api = reinterpret_cast<VkRenderAPI*>(Get());

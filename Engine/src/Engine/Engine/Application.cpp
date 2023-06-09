@@ -20,6 +20,7 @@
 #include "Engine/Renderer/PipelineDescriptorSet.h"
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
 #include "Engine/Renderer/GraphicsPipeline.h"
+#include "Engine/Renderer/KomputeCommand.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
@@ -79,6 +80,7 @@ namespace Polyboid
 		m_RenderAPI = RenderAPI::Create(RenderAPIType::Vulkan, nativeWindow);
 
 		RenderCommand::Init(m_RenderAPI, m_Settings);
+		KomputeCommand::Init();
 		ShaderRegistry::Init(m_RenderAPI);
 		Imgui::Init(m_MainWindow->GetNativeWindow());
 	}
@@ -158,6 +160,7 @@ namespace Polyboid
 				continue;
 			}
 
+			KomputeCommand::WaitForWork();
 			RenderCommand::AcquireImageIndex();
 
 			for (auto layer : m_Layers)
@@ -185,7 +188,7 @@ namespace Polyboid
 			RenderCommand::EndRenderPass();
 			RenderCommand::EndFrameCommands();
 
-
+			KomputeCommand::WaitAndCompute();
 			RenderCommand::WaitAndRender();
 		}
 

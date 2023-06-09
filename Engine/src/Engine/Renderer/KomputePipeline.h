@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <any>
+
 #include "RenderResource.h"
 #include "Engine/Engine/Base.h"
 
@@ -17,6 +19,7 @@ namespace Polyboid
 		virtual void Bake() = 0;
 		virtual void SetComputeShader(const Ref<Shader>& computeShader) = 0;
 		virtual  std::vector<Ref<PipelineDescriptorSet>> AllocateDescriptorSets(uint32_t setBinding) = 0;
+		virtual std::any GetHandle() = 0;
 
 		virtual  std::vector<Ref<PipelineDescriptorSet>> GetDescriptorSets(uint32_t set)  = 0;
 

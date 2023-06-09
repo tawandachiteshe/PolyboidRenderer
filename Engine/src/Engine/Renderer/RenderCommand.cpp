@@ -10,7 +10,7 @@
 #include "Framebuffer.h"
 #include "GraphicsPipeline.h"
 #include "RenderAPI.h"
-#include "RendererSyncObjects.h"
+#include "GraphicsSyncObjects.h"
 #include "RenderPass.h"
 #include "SyncObjects.h"
 #include "UniformBuffer.h"
@@ -216,7 +216,7 @@ namespace Polyboid
 
 	void RenderCommand::BindGraphicsDescriptorSets(uint32_t set, const std::vector<Ref<PipelineDescriptorSet>>& sets)
 	{
-		GetCurrentCommandBuffer()->BindDescriptorSet(set, sets.at(GetCurrentFrame()));
+		GetCurrentCommandBuffer()->BindGraphicsDescriptorSet(set, sets.at(GetCurrentFrame()));
 	}
 
 	void RenderCommand::EndRenderPass()
@@ -318,13 +318,13 @@ namespace Polyboid
 	void RenderCommand::VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
 	                                              uint32_t dataSize, uint32_t offset)
 	{
-		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Vertex,data, dataSize, offset);
+		GetCurrentCommandBuffer()->GraphicsPushConstant(pipelineState, ShaderType::Vertex,data, dataSize, offset);
 	}
 
 	void RenderCommand::FragmentShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
 		uint32_t dataSize, uint32_t offset)
 	{
-		GetCurrentCommandBuffer()->PushConstant(pipelineState, ShaderType::Fragment, data, dataSize, offset);
+		GetCurrentCommandBuffer()->GraphicsPushConstant(pipelineState, ShaderType::Fragment, data, dataSize, offset);
 	}
 
 
@@ -350,6 +350,10 @@ namespace Polyboid
 
 	void RenderCommand::WaitAndRender()
 	{
-		s_Data->m_GraphicsBackend->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
+		GetGraphicsBackend()->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
+		const auto& maxFrames = RenderCommand::GetMaxFramesInFlight();
+		auto frame = GetCurrentFrame();
+		frame = (frame + 1) % maxFrames;
+		SetCurrentFrame(frame);
 	}
 }

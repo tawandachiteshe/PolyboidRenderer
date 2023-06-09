@@ -8,6 +8,8 @@
 #include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Engine/Registry/ShaderRegistry.h"
 #include "Engine/Renderer/GraphicsPipeline.h"
+#include "Engine/Renderer/KomputeCommand.h"
+#include "Engine/Renderer/KomputePipeline.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/VertexBufferArray.h"
@@ -28,6 +30,25 @@ namespace Polyboid
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 
 		m_EditorCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		m_KomputeCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		m_AgeBuffer = StorageBufferSet::Create(sizeof(uint32_t) * 100);
+
+		m_RefComputePipeline = KomputePipeline::Create();
+		m_RefComputePipeline->SetComputeShader(ShaderRegistry::Load("Renderer3D/Compute/testKompute.comp"));
+		m_RefComputePipeline->Bake();
+
+		m_RefComputePipeline->AllocateDescriptorSets(0);
+		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
+		m_RefComputePipeline->WriteSetResourceBindings(0);
+
+		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
+
+		for (uint32_t i = 0; i < 3; ++i)
+		{
+		
+		}
+
+
 
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
@@ -99,6 +120,7 @@ namespace Polyboid
 		m_Pipeline->BindUniformBufferSet(0, m_UniformBuffers);
 		m_Pipeline->BindStorageBufferSet(1, m_StorageBuffers);
 		m_Pipeline->BindTexture2D(2, checkerTexture);
+		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
 		m_Pipeline->WriteSetResourceBindings();
 		//
 
@@ -197,6 +219,12 @@ namespace Polyboid
 
 		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f }) * glm::scale(
 			glm::mat4(1.0f), { 0.2, 0.2, 0.2 });
+
+		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
+		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
+		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
+		KomputeCommand::Dispatch({ 100, 1, 1 });
+		KomputeCommand::EndFrameCommands();
 
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 

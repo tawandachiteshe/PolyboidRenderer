@@ -126,6 +126,19 @@ namespace Polyboid
 			return *this;
 		}
 
+		template<typename U,
+			typename std::enable_if<std::is_base_of<T, U>::value && !std::is_same<T, U>::value>::type* = nullptr>
+		RefPtr<U>& operator=(const RefPtr<T>& other) {
+
+			if (this != &other) {
+				m_RefCount.RemoveRef();
+				m_Ptr = other.Get();
+				m_RefCount = other.GetRefCount();
+				m_RefCount.AddRef();
+			}
+			return *this;
+		}
+
 
 
 		~RefPtr() {

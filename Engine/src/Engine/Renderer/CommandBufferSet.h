@@ -51,6 +51,7 @@ namespace Polyboid
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;
 		virtual void DispatchKompute(const glm::uvec3& workGroup) = 0;
+		virtual void BindKomputePipline(const Ref<KomputePipeline>& pipeline) = 0;
 		virtual void BindKomputeDescriptorSet(uint32_t setBinding, const Ref<PipelineDescriptorSet>& set) = 0;
 
 		virtual void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) = 0;

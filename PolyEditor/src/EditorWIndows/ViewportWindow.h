@@ -31,6 +31,9 @@ namespace Polyboid
 		ImVec2 m_WindowOffset = { 0, 0 };
 
 		Ref<CommandBufferSet> m_EditorCommandBuffer;
+		Ref<CommandBufferSet> m_KomputeCommandBuffer;
+		Ref<KomputePipeline> m_RefComputePipeline;
+		Ref<StorageBufferSet> m_AgeBuffer;
 		Ref<GraphicsPipeline> m_Pipeline = nullptr;
 		Ref<UniformBufferSet> m_UniformBuffers;
 		Ref<StorageBufferSet> m_StorageBuffers;
