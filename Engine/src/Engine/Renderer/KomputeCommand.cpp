@@ -26,7 +26,6 @@ namespace Polyboid
 		SetCurrentCommandBuffer(index);
 		GetCurrentCommandBuffer()->Begin();
 
-		spdlog::info("Image index {}", index);
 	}
 
 	void KomputeCommand::SetCurrentFrame(uint32_t frameIndex)

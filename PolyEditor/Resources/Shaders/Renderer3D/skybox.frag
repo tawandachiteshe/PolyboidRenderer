@@ -16,15 +16,15 @@ void main() {
 
 	//vec3 envColor = textureLod(skybox, -vTextureCoord, 1.2).xyz;
 	
-	vec3 envSampler = texture(skybox, vTextureCoord2D).xyz;
+	vec3 envSampler = texture(skybox, vTextureCoord2D * float(vAge + 1)).xyz;
 
 	//envColor = envColor / (envColor + vec3(1.0));
 	//envColor = pow(envColor, vec3(1.0/2.2));
 	//FragColor = vec4(envColor, 1.0);
 
-	float a = (vAge + 1) / 6;
+	float a = float(vAge + 1) / float(6);
 
 	
-	FragColor = vec4(a, envSampler.y, envSampler.z, 255.0f);
+	FragColor = vec4(envSampler, 255.0f);
 
 }

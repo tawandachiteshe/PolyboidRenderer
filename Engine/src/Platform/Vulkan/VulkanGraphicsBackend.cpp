@@ -24,7 +24,6 @@ namespace Polyboid
 {
 	void VulkanGraphicsBackend::Init()
 	{
-
 		auto vkRenderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
 		m_GraphicsQueue = vkRenderAPI->GetDevice()->GetGraphicsQueue();
 		m_Device = vkRenderAPI->GetDevice()->GetVulkanDevice();
@@ -34,7 +33,7 @@ namespace Polyboid
 
 
 		s_Data->m_SyncObjects = GraphicsSyncObjects::Create();
-		
+
 
 		s_Data->m_RenderPasses.reserve(20);
 		s_Data->m_Framebuffers.reserve(20);
@@ -73,8 +72,8 @@ namespace Polyboid
 
 	void VulkanGraphicsBackend::RecreateResources()
 	{
-
-		if (!m_CanRender) {
+		if (!m_CanRender)
+		{
 			return;
 		}
 
@@ -89,7 +88,7 @@ namespace Polyboid
 			renderpass->Recreate();
 		}
 
-	
+
 		for (const auto& framebuffer : s_Data->m_Framebuffers)
 		{
 			framebuffer->Recreate();
@@ -100,7 +99,7 @@ namespace Polyboid
 			buffer->Recreate();
 		}
 
-		
+
 		for (auto& cmdSet : s_Data->m_CommandBuffers)
 		{
 			cmdSet.As<VulkanCommandBufferSet>()->Recreate();
@@ -130,10 +129,87 @@ namespace Polyboid
 		return m_CanRender;
 	}
 
+	void VulkanGraphicsBackend::Present()
+	{
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width,
+		                       &height);
+		while (width == 0 || height == 0)
+		{
+			glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()),
+			                       &width, &height);
+			glfwWaitEvents();
+		}
+
+		auto& syncObjects = s_Data->m_SyncObjects;
+		const auto& _renderSemaphore = syncObjects->GetRenderSemaphore(RenderCommand::GetCurrentFrame());
+
+
+		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
+		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
+
+		vk::PresentInfoKHR presentInfo{};
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &renderSemaphore;
+		presentInfo.pImageIndices = &m_SwapchainIndex;
+		presentInfo.pSwapchains = &vkSwapchain;
+		presentInfo.swapchainCount = 1;
+
+		auto result = m_GraphicsQueue.presentKHR(&presentInfo);
+
+
+		if (result == vk::Result::eErrorOutOfDateKHR)
+		{
+			// swapchain is out of date (e.g. the window was resized) and
+			// must be recreated:
+			RenderCommand::GetSwapChain()->Resize();
+			Imgui::RecreateVulkanRenderer();
+			for (auto& cmdSet : s_Data->m_CommandBuffers)
+			{
+				cmdSet.As<VulkanCommandBufferSet>()->Recreate();
+			}
+			RecreateResources();
+			ClearResources();
+		}
+		else if (result == vk::Result::eSuboptimalKHR)
+		{
+			// SUBOPTIMAL could be due to resize
+
+			vk::SurfaceCapabilitiesKHR surfCapabilities;
+			auto surface = VkRenderAPI::GetVulkanSurface();
+			auto caps_result = VkRenderAPI::GetVulkanPhysicalDevice().getSurfaceCapabilitiesKHR(
+				surface, &surfCapabilities);
+			vk::resultCheck(caps_result, "failed to check");
+			if (surfCapabilities.currentExtent.width != width || surfCapabilities.currentExtent.height != height)
+			{
+				RenderCommand::GetSwapChain()->Resize();
+				Imgui::RecreateVulkanRenderer();
+				RecreateResources();
+				ClearResources();
+			}
+		}
+		else if (result == vk::Result::eErrorSurfaceLostKHR)
+		{
+			// inst.destroySurfaceKHR(surface);
+			// create_surface();
+			// resize();
+			__debugbreak();
+		}
+		else
+		{
+			vk::resultCheck(result, "Failed to present");
+		}
+
+
+		if (m_CanRender)
+		{
+			ClearResources();
+		}
+	}
+
 
 	void VulkanGraphicsBackend::GetSwapchainImageIndex(uint32_t currentImage)
 	{
-
 		auto& syncObjects = s_Data->m_SyncObjects;
 		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(currentImage);
 		const auto& _fence = syncObjects->GetInFlightFence(currentImage);
@@ -142,7 +218,7 @@ namespace Polyboid
 		auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
 
 		auto result = m_Device.waitForFences(fence, VK_TRUE, UINT64_MAX);
-		result = m_Device.resetFences({ fence });
+		result = m_Device.resetFences({fence});
 
 
 		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
@@ -154,81 +230,76 @@ namespace Polyboid
 
 
 		vk::Result acquireResult;
-		do {
-			auto [ImageResult, index] = device.acquireNextImageKHR(vkSwapchain, std::numeric_limits<uint64_t>::max(), imageSemaphore);
+		do
+		{
+			auto [ImageResult, index] = device.acquireNextImageKHR(vkSwapchain, std::numeric_limits<uint64_t>::max(),
+			                                                       imageSemaphore);
 			m_SwapchainIndex = index;
 			acquireResult = ImageResult;
-			if (acquireResult == vk::Result::eErrorOutOfDateKHR) {
+			if (acquireResult == vk::Result::eErrorOutOfDateKHR)
+			{
 				// demo.swapchain is out of date (e.g. the window was resized) and
 				// must be recreated:
 				RenderCommand::GetSwapChain()->Resize();
 				Imgui::RecreateVulkanRenderer();
 				RecreateResources();
-				
-
+				ClearResources();
 			}
-			else if (acquireResult == vk::Result::eSuboptimalKHR) {
+			else if (acquireResult == vk::Result::eSuboptimalKHR)
+			{
 				// swapchain is not as optimal as it could be, but the platform's
 				// presentation engine will still present the image correctly.
 				break;
 			}
-			else if (acquireResult == vk::Result::eErrorSurfaceLostKHR) {
+			else if (acquireResult == vk::Result::eErrorSurfaceLostKHR)
+			{
 				// inst.destroySurfaceKHR(surface);
 				// create_surface();
 				// resize();
 				__debugbreak();
 				// surface recreation heer
 			}
-			else {
+			else
+			{
 				vk::resultCheck(acquireResult, "Failed to acquire image");
 			}
-		} while (acquireResult != vk::Result::eSuccess);
+		}
+		while (acquireResult != vk::Result::eSuccess);
 	}
 
 	void VulkanGraphicsBackend::SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffers)
 	{
-		auto frame = RenderCommand::GetCurrentFrame();
+		if (!m_CanRender)
+		{
+			return;
+		}
+
+		const auto frame = RenderCommand::GetCurrentFrame();
 
 		s_Data->m_CommandBuffers = commandBuffers;
-		auto& syncObjects = s_Data->m_SyncObjects;
+		const auto& syncObjects = s_Data->m_SyncObjects;
 		const auto& _imageSemaphore = syncObjects->GetImageSemaphore(frame);
 		const auto& _fence = syncObjects->GetInFlightFence(frame);
 		const auto& _renderSemaphore = s_Data->m_SyncObjects->GetRenderSemaphore(frame);
-		auto vkSwapchain = std::any_cast<vk::SwapchainKHR>(s_Data->m_Swapchain->GetHandle());
-		auto computeFinishedSemaphore = std::any_cast<vk::Semaphore>(KomputeCommand::GetComputeBackend()->GetSyncObjects()->GetComputeFinishedSemaphore(frame)->GetHandle());
 
-		auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
-		vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
-		auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
-
-		int width = 0, height = 0;
-		glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
-		while (width == 0 || height == 0) {
-			glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
-			glfwWaitEvents();
-		}
-
-		const uint32_t imageIndex = m_SwapchainIndex;
+		const auto imageSemaphore = std::any_cast<vk::Semaphore>(_imageSemaphore->GetHandle());
+		const vk::Semaphore renderSemaphore = std::any_cast<vk::Semaphore>(_renderSemaphore->GetHandle());
+		const auto fence = std::any_cast<vk::Fence>(_fence->GetHandle());
 
 
 		for (const auto& commandSet : s_Data->m_CommandBuffers)
 		{
-			vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(commandSet->GetCommandBufferAt(m_SwapchainIndex)->GetHandle());
+			vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(
+				commandSet->GetCommandBufferAt(m_SwapchainIndex)->GetHandle());
 			s_Data->m_SubmittingBuffer.emplace_back(buffer);
 		}
 
 
 		vk::SubmitInfo submitInfo{};
-		const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eVertexShader };
+		const vk::PipelineStageFlags waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
 		m_WaitSemaphores.emplace_back(imageSemaphore);
 
-		if (KomputeCommand::GetComputeBackend().As<VulkanComputeBackend>()->CanAddWaitSemaphore())
-		{
-			m_WaitSemaphores.emplace_back(computeFinishedSemaphore);
-		}
-
-		
 
 		submitInfo.waitSemaphoreCount = static_cast<uint32_t>(m_WaitSemaphores.size());
 		submitInfo.pWaitSemaphores = m_WaitSemaphores.data();
@@ -239,75 +310,17 @@ namespace Polyboid
 		submitInfo.pSignalSemaphores = &renderSemaphore;
 
 
-	   vk::Result result = m_GraphicsQueue.submit(1, &submitInfo, fence);
+		vk::Result result = m_GraphicsQueue.submit(1, &submitInfo, fence);
 		vk::resultCheck(result, "Failed to submit commands");
 
 		m_WaitSemaphores.clear();
-
-
-		vk::PresentInfoKHR presentInfo{};
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &renderSemaphore;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.pSwapchains = &vkSwapchain;
-		presentInfo.swapchainCount = 1;
-
-		result = m_GraphicsQueue.presentKHR(&presentInfo);
-
-
-		if (result == vk::Result::eErrorOutOfDateKHR) {
-			// swapchain is out of date (e.g. the window was resized) and
-			// must be recreated:
-			RenderCommand::GetSwapChain()->Resize();
-			Imgui::RecreateVulkanRenderer();
-			for (auto& cmdSet : s_Data->m_CommandBuffers)
-			{
-				cmdSet.As<VulkanCommandBufferSet>()->Recreate();
-			}
-			RecreateResources();
-		}
-		else if (result == vk::Result::eSuboptimalKHR) {
-			// SUBOPTIMAL could be due to resize
-
-			vk::SurfaceCapabilitiesKHR surfCapabilities;
-			auto surface = VkRenderAPI::GetVulkanSurface();
-			auto caps_result = VkRenderAPI::GetVulkanPhysicalDevice().getSurfaceCapabilitiesKHR(surface, &surfCapabilities);
-			vk::resultCheck(caps_result, "failed to check");
-			if (surfCapabilities.currentExtent.width != width || surfCapabilities.currentExtent.height != height) {
-				RenderCommand::GetSwapChain()->Resize();
-				Imgui::RecreateVulkanRenderer();
-				RecreateResources();
-			}
-
-		}
-		else if (result == vk::Result::eErrorSurfaceLostKHR) {
-			// inst.destroySurfaceKHR(surface);
-			// create_surface();
-			// resize();
-			__debugbreak();
-		}
-		else {
-			vk::resultCheck(result, "Failed to present");
-			
-		}
-
-		
-
-		if (m_CanRender)
-		{
-			ClearResources();
-		}
-
 		s_Data->m_SubmittingBuffer.clear();
 
-		vk::MemoryBarrier2 b{};
-		
-
+		ClearResources();
 	}
 
 	void VulkanGraphicsBackend::SubmitOneTimeWork(const Ref<CommandBuffer>& buffer)
 	{
-	
 		const auto cmdBuffer = std::any_cast<vk::CommandBuffer>(buffer->GetHandle());
 
 		vk::SubmitInfo submitInfo{};

@@ -190,6 +190,7 @@ namespace Polyboid
 
 			KomputeCommand::WaitAndCompute();
 			RenderCommand::WaitAndRender();
+			RenderCommand::PresentImage();
 		}
 
 		int a = 2000;

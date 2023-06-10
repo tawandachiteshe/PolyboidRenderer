@@ -32,6 +32,7 @@ namespace Polyboid
 		virtual bool IsReady() = 0;
 		virtual void SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffer) = 0;
 		virtual void SubmitOneTimeWork(const Ref<CommandBuffer>& buffer) = 0;
+		virtual void Present() = 0;
 		virtual uint32_t GetCurrentImageIndex() = 0;
 
 		virtual ~GraphicsBackend() = default;

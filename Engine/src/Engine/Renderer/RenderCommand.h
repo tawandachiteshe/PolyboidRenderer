@@ -128,6 +128,7 @@ namespace Polyboid
         static void Resize(uint32_t width, uint32_t height);
 
         static void WaitAndRender();
+        static void PresentImage();
     };
 
 }

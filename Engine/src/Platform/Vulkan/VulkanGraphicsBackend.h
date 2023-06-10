@@ -77,6 +77,7 @@ namespace Polyboid
 		void GetSwapchainImageIndex(uint32_t frameIndex) override;
 		bool IsReady() override;
 
+		void Present() override;
 		void SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffer) override;
 		void SubmitOneTimeWork(const Ref<CommandBuffer>& buffer) override;
 		uint32_t GetCurrentImageIndex() override;

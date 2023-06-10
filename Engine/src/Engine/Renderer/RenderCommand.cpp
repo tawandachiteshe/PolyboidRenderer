@@ -351,6 +351,14 @@ namespace Polyboid
 	void RenderCommand::WaitAndRender()
 	{
 		GetGraphicsBackend()->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
+	
+	}
+
+	void RenderCommand::PresentImage()
+	{
+
+		GetGraphicsBackend()->Present();
+
 		const auto& maxFrames = RenderCommand::GetMaxFramesInFlight();
 		auto frame = GetCurrentFrame();
 		frame = (frame + 1) % maxFrames;

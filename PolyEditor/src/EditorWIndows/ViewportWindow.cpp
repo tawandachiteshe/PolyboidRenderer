@@ -39,7 +39,7 @@ namespace Polyboid
 		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
-		//KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
+		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
 
 		for (uint32_t i = 0; i < 3; ++i)
 		{
@@ -214,6 +214,11 @@ namespace Polyboid
 		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), {0.0, 0.5f, 0.0f}) * glm::scale(
 			glm::mat4(1.0f), {0.2, 0.2, 0.2});
 
+		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
+		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
+		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
+		KomputeCommand::Dispatch({ 100, 1, 1 });
+		KomputeCommand::EndFrameCommands();
 
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 
