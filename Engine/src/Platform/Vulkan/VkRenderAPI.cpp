@@ -19,6 +19,7 @@
 #include "VulkanKomputePipeline.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanStagingBuffer.h"
+#include "VulkanTexture3D.h"
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
 #include "Utils/VulkanAllocatorInstance.h"
@@ -113,22 +114,25 @@ namespace Polyboid
 		return framebuffer.As<Framebuffer>();
 	}
 
-	Ref<Texture> VkRenderAPI::CreateTexture2D(const TextureSettings& settings, const void* data)
+	Ref<Texture2D> VkRenderAPI::CreateTexture2D(const TextureSettings& settings, const void* data)
 	{
 		auto texture = ALLOC_API(VulkanTexture2D, this, settings, data);
 		//m_Textures2D.push_back(texture);
 
-		return texture.As<Texture>();
+		return texture.As<Texture2D>();
 	}
 
-	Ref<Texture> VkRenderAPI::CreateTexture2D(const std::any& handle)
+	Ref<Texture2D> VkRenderAPI::CreateTexture2D(const std::any& handle)
 	{
 		return nullptr;
 	}
 
-	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void** data, const TextureSettings& settings)
+	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void* data, const TextureSettings& settings)
 	{
-		return nullptr;
+		auto texture = ALLOC_API(VulkanTexture3D, data, settings);
+		m_Textures3D.push_back(texture);
+
+		return texture;
 	}
 
 	Ref<SamplerState> VkRenderAPI::CreateSampler(const SamplerSettings& settings)
@@ -336,6 +340,11 @@ namespace Polyboid
 		// {
 		// 	texture->Destroy();
 		// }
+
+		for (const auto& texture : m_Textures3D)
+		{
+			texture->Destroy();
+		}
 
 		for (const auto& idx : m_IndexBuffers)
 		{

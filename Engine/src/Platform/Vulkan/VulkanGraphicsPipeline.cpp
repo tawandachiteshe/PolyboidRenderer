@@ -192,6 +192,11 @@ namespace Polyboid
 				BindTexture2D(binding, texture, set);
 			}
 
+			for (auto [binding, texture] : m_TextureSets3D[set])
+			{
+				BindTexture3D(binding, texture, set);
+			}
+
 
 
 			WriteSetResourceBindings(set);
@@ -393,7 +398,7 @@ namespace Polyboid
 		m_StorageBufferSets[setBinding][binding] = (bufferSet);
 	}
 
-	void VulkanGraphicsPipeline::BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding)
+	void VulkanGraphicsPipeline::BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
@@ -401,6 +406,16 @@ namespace Polyboid
 		}
 
 		m_TextureSets[setBinding][binding] = (bufferSet);
+	}
+
+	void VulkanGraphicsPipeline::BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteTexture3D(binding, texture);
+		}
+
+		m_TextureSets3D[setBinding][binding] = (texture);
 	}
 
 	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)

@@ -6,7 +6,8 @@
 
 namespace Polyboid
 {
-	class Texture;
+	class Texture3D;
+	class Texture2D;
 	class StorageBuffer;
 	class UniformBuffer;
 
@@ -17,7 +18,8 @@ namespace Polyboid
 		virtual std::any GetHandle() = 0;
 		virtual void WriteUniformBuffer(uint32_t binding, const Ref<UniformBuffer>& buffer) = 0;
 		virtual void WriteStorageBuffer(uint32_t binding, const Ref<StorageBuffer>& buffer) = 0;
-		virtual void WriteTexture2D(uint32_t binding, const Ref<Texture>& texture) = 0;
+		virtual void WriteTexture2D(uint32_t binding, const Ref<Texture2D>& texture) = 0;
+		virtual void WriteTexture3D(uint32_t binding, const Ref<Texture3D>& texture) = 0;
 		virtual void Commit() = 0;
 		virtual ~PipelineDescriptorSet() = default;
 	};

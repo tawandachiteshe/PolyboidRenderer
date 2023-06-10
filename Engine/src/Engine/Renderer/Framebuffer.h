@@ -3,14 +3,14 @@
 #include <memory>
 
 #include "Framebuffer.h"
-#include "Texture.h"
+#include "Texture2D.h"
 #include "Engine/Engine/Base.h"
 
 namespace Polyboid 
 {
 	class RenderPass;
 	struct ClearSettings;
-	class Texture;
+	class Texture2D;
 	
 	
 	enum class TextureAttachmentSlot
@@ -56,7 +56,7 @@ namespace Polyboid
 		virtual ~Framebuffer() = default;
 
 		virtual void ReSize(uint32_t width, uint32_t height) =0;
-		virtual Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
+		virtual Ref<Texture2D> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
 		virtual std::any GetHandle() = 0;
 
 

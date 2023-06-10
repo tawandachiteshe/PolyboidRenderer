@@ -7,7 +7,7 @@
 namespace Polyboid
 {
 	class Swapchain;
-	class Texture;
+	class Texture2D;
     
 
     enum class ClearFlags : uint8_t

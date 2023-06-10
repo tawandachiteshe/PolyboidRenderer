@@ -35,6 +35,7 @@ namespace Polyboid
 		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const Ref<IndexBuffer>& dstIndexBuffer) override;
 		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const Ref<VertexBuffer>& dstVtxBuffer) override;
 		void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) override;
+		void VulkanCopyBufferToCubemap(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage, const std::vector<vk::BufferImageCopy>& regions);
 		void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevel = 1) override;
 		void VulkanBlitImage(vk::Image srcImage, vk::ImageLayout srcLayout, vk::Image dtsImage, vk::ImageLayout dstLayout, uint32_t width, uint32_t height,uint32_t mipIndex);
 		void VulkanImageBarrier(vk::Image image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags srcAccess, vk::AccessFlags dstAccess, vk::PipelineStageFlags srcFlags, vk::PipelineStageFlags dstFlags, uint32_t mipIndex, uint32_t mipLevels = 1);

@@ -84,7 +84,7 @@ namespace Polyboid
     }
 
 
-    ImTextureID Imgui::GetVulkanTextureID(const Ref<Texture>& texture)
+    ImTextureID Imgui::GetVulkanTextureID(const Ref<Texture2D>& texture)
     {
         auto vulkanSampler = std::any_cast<vk::Sampler>(texture->GetSamplerHandle());
         auto vulkanView = std::any_cast<vk::ImageView>(texture->GetViewHandle());

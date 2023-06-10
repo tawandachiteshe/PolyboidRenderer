@@ -2,28 +2,28 @@
 #include "imgui.h"
 #include "Engine/Engine/ImguiSetup.h"
 #include "Engine/Renderer/Image2D.h"
-#include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Texture2D.h"
 
 namespace Polyboid
 {
 	StatsWindow::StatsWindow()
 	{
 		m_Name = "Settings";
-		auto texture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" });
+		auto texture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" });
 		m_Texture = Imgui::GetVulkanTextureID(texture);
 		const uint32_t red = 0xFF'00'00'FF;
 
-		auto redTexture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &red);
+		auto redTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &red);
 		m_RedTexture = Imgui::GetVulkanTextureID(redTexture);
 
 		const uint32_t green = 0xFF'00'FF'00;
 
-		auto greenTexture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &green);
+		auto greenTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &green);
 		m_GreenTexture = Imgui::GetVulkanTextureID(greenTexture);
 
 		const uint32_t blue = 0xFF'FF'00'00;
 
-		auto blueTexture = Texture::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &blue);
+		auto blueTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &blue);
 		m_BlueTexture = Imgui::GetVulkanTextureID(blueTexture);
 
 	}

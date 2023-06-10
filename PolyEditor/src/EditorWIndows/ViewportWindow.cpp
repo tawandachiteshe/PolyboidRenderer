@@ -28,10 +28,10 @@ namespace Polyboid
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 
 		TextureSettings textureSettings = { .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" };
-		textureSettings.mipCount = 4;
+		textureSettings.mipCount = 10;
 		textureSettings.generateMips = true;
 
-		auto texture = Texture::Create(textureSettings);
+		auto texture = Texture2D::Create(textureSettings);
 
 		m_EditorCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
@@ -95,13 +95,21 @@ namespace Polyboid
 
 		const uint32_t green = 0xFF'00'FF'00;
 
-		auto greenTexture = Texture::Create({
+		const uint32_t greenRed[] = { 0xFF'00'FF'00, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45, 0xFF'00'FF'00, 0xFF'00'FF'FF };
+
+		auto greenTexture = Texture2D::Create({
 			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
 			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
 
 		                                    }, &green);
 
-		auto checkerTexture = Texture::Create({
+		auto greenTexture3D = Texture3D::Create({
+											.sizedFormat = EngineGraphicsFormats::RGBA8,
+											.usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
+
+			}, greenRed);
+
+		auto checkerTexture = Texture2D::Create({
 			.sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling,
 			.path = "Assets/Textures/checker.jpg"
 		});
@@ -129,6 +137,7 @@ namespace Polyboid
 		m_Pipeline->BindStorageBufferSet(1, m_StorageBuffers);
 		m_Pipeline->BindTexture2D(2, texture);
 		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
+		m_Pipeline->BindTexture3D(4, greenTexture3D);
 		m_Pipeline->WriteSetResourceBindings();
 		//
 

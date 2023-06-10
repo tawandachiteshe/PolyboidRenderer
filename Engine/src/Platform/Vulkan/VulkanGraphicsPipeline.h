@@ -46,7 +46,9 @@ namespace Polyboid
 
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<UniformBufferSet>>> m_UniformBufferSets;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<StorageBufferSet>>> m_StorageBufferSets;
-		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture>>> m_TextureSets;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture2D>>> m_TextureSets;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture3D>>> m_TextureSets3D;
+
 
 
 	public:
@@ -97,7 +99,9 @@ namespace Polyboid
 			uint32_t setBinding) override;
 		void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
 			uint32_t setBinding) override;
-		void BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding) override;
+		void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding) override;
+
+		void BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding) override;
 
 		void WriteSetResourceBindings(uint32_t set) override;
 

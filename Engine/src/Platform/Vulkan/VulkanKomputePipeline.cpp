@@ -184,7 +184,7 @@ namespace Polyboid
 		m_StorageBufferSets[setBinding][binding] = (bufferSet);
 	}
 
-	void VulkanKomputePipeline::BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding)
+	void VulkanKomputePipeline::BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{

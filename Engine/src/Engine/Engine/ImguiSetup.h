@@ -9,7 +9,7 @@ struct ImGuiIO;
 namespace Polyboid
 {
 	class CommandBuffer;
-	class Texture;
+	class Texture2D;
 	class CommandBufferSet;
 	class VulkanRenderPass;
 	class VulkanCommandBuffer;
@@ -25,7 +25,7 @@ namespace Polyboid
 
     public:
 
-        static ImTextureID GetVulkanTextureID(const Ref<Texture>& texture);
+        static ImTextureID GetVulkanTextureID(const Ref<Texture2D>& texture);
         static void FreeVulkanTextureID(const ImTextureID& texture);
 
 

@@ -41,7 +41,7 @@ namespace Polyboid
 
 
 		~VulkanFramebuffer() override;
-		Ref<Texture> GetColorAttachment(TextureAttachmentSlot attachment) override;
+		Ref<Texture2D> GetColorAttachment(TextureAttachmentSlot attachment) override;
 
 		void ReSize(uint32_t width, uint32_t height) override;
 		std::any GetHandle() override;

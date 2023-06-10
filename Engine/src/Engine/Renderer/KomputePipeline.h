@@ -9,7 +9,7 @@ namespace Polyboid
 {
 	class PipelineDescriptorSet;
 	class UniformBufferSet;
-	class Texture;
+	class Texture2D;
 	class StorageBufferSet;
 	class Shader;
 
@@ -27,7 +27,7 @@ namespace Polyboid
 			uint32_t setBinding) = 0;
 		virtual  void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
 			uint32_t setBinding) = 0;
-		virtual void BindTexture2D(uint32_t binding, const Ref<Texture>& bufferSet, uint32_t setBinding) = 0;
+		virtual void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding) = 0;
 
 		virtual void WriteSetResourceBindings(uint32_t set) = 0;
 

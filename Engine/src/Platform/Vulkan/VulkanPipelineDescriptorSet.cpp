@@ -7,6 +7,7 @@
 #include "Buffers.h"
 #include "VkRenderAPI.h"
 #include "VulkanTexture2D.h"
+#include "VulkanTexture3D.h"
 #include "Engine/Renderer/RenderAPI.h"
 #include "Utils/VulkanDevice.h"
 
@@ -55,12 +56,25 @@ namespace Polyboid
 		
 	}
 
-	void VulkanPipelineDescriptorSet::WriteTexture2D(uint32_t binding, const Ref<Texture>& texture)
+	void VulkanPipelineDescriptorSet::WriteTexture2D(uint32_t binding, const Ref<Texture2D>& texture)
 	{
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
 		auto vulkanBuffer = texture.As<VulkanTexture2D>();
+		auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
+		m_Images[binding] = (imageInfo);
+		writeDescriptor.pImageInfo = &m_Images.at(binding);
+
+		m_WriteSets.emplace_back(writeDescriptor);
+	}
+
+	void VulkanPipelineDescriptorSet::WriteTexture3D(uint32_t binding, const Ref<Texture3D>& texture)
+	{
+		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
+		writeDescriptor.dstSet = m_Set;
+
+		auto vulkanBuffer = texture.As<VulkanTexture3D>();
 		auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
 		m_Images[binding] = (imageInfo);
 		writeDescriptor.pImageInfo = &m_Images.at(binding);

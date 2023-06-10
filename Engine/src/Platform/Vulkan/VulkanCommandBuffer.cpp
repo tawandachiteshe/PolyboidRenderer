@@ -164,6 +164,17 @@ namespace Polyboid
 
 	}
 
+	void VulkanCommandBuffer::VulkanCopyBufferToCubemap(const Ref<StagingBuffer>& stagingBuffer,
+		const Ref<Image2D>& dstImage, const std::vector<vk::BufferImageCopy>& regions)
+	{
+		m_CommandBuffer.copyBufferToImage(
+			std::any_cast<vk::Buffer>(stagingBuffer->GetHandle()),
+			std::any_cast<vk::Image>(dstImage->GetHandle()),
+			vk::ImageLayout::eTransferDstOptimal, regions);
+	}
+
+
+
 	void VulkanCommandBuffer::TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout, uint32_t layerCount, uint32_t mipLevel )
 	{
 

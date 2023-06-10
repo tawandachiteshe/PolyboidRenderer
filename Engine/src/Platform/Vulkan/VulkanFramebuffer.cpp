@@ -5,7 +5,7 @@
 
 #include "VkRenderAPI.h"
 #include "Utils/VulkanDevice.h"
-#include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Texture2D.h"
 #include "Platform/Vulkan/VulkanTexture2D.h"
 
 namespace Polyboid
@@ -142,14 +142,14 @@ namespace Polyboid
 	{
 	}
 
-	Ref<Texture> VulkanFramebuffer::GetColorAttachment(TextureAttachmentSlot attachment)
+	Ref<Texture2D> VulkanFramebuffer::GetColorAttachment(TextureAttachmentSlot attachment)
 	{
 		if (m_Textures.empty())
 		{
 			__debugbreak();
 		}
 
-		return m_Textures.at(static_cast<uint32_t>(attachment)).As<Texture>();
+		return m_Textures.at(static_cast<uint32_t>(attachment)).As<Texture2D>();
 	}
 
 

@@ -6,7 +6,7 @@
 
 namespace Polyboid
 {
-	class Texture;
+	class Texture2D;
 
 	class StatsWindow : public EditorWindow
 	{

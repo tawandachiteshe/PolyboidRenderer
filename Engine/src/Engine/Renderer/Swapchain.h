@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <any>
 
-#include "Texture.h"
+#include "Texture2D.h"
 #include "Engine/Engine/Base.h"
 
 

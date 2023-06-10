@@ -128,6 +128,7 @@ namespace Polyboid
 
         uint32_t Width = 0;
         uint32_t Height = 0;
+        uint32_t Depth = 0;
 
         std::string path;
 
@@ -145,7 +146,7 @@ namespace Polyboid
         uint32_t Height = 0;
     };
     
-    class Texture : public RenderResource
+    class Texture2D : public RenderResource
     {
     public:
 
@@ -161,12 +162,12 @@ namespace Polyboid
 
         virtual void SetData(const void* data, uint32_t size) = 0;
 
-        virtual ~Texture() = default;
-        static Ref<Texture> Create(const TextureSettings& settings);
-        static Ref<Texture> Create(const TextureSettings& settings, const void* data);
+        virtual ~Texture2D() = default;
+        static Ref<Texture2D> Create(const TextureSettings& settings);
+        static Ref<Texture2D> Create(const TextureSettings& settings, const void* data);
     };
 
-    class Texture3D
+    class Texture3D : public RenderResource
     {
     public:
 
@@ -174,7 +175,9 @@ namespace Polyboid
         virtual void UnBind() = 0;
 
         virtual void SetData(const void** data, uint32_t size) = 0;
-
+        virtual std::any GetViewHandle() = 0;
+        virtual std::any GetSamplerHandle() = 0;
+        static Ref<Texture3D> Create(const TextureSettings& settings, const void* data);
         virtual ~Texture3D() = default;
     
     };

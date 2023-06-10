@@ -1,36 +1,24 @@
 ﻿#include "boidpch.h"
-#include "VulkanImage2D.h"
+#include "VulkanImage3D.h"
 
-#include <vulkan/vulkan_raii.hpp>
-#include "Utils/VulkanAllocatorInstance.h"
-#include "vma/vk_mem_alloc.h"
-#include "Utils/VulkanDevice.h"
-#include "VkRenderAPI.h"
-#include "Utils/Common.h"
+#include "Vulkan/VkRenderAPI.h"
+#include "Vulkan/Utils/Common.h"
 
 
 namespace Polyboid
 {
-	void VulkanImage2D::Init(const VkRenderAPI* context, const ImageSettings& imageSettings)
+	VulkanImage3D::VulkanImage3D(const ImageSettings& imageSettings): m_Settings(imageSettings)
 	{
-		vk::Device device = (*context->GetDevice());
-		VmaAllocator allocator = (*context->GetAllocator());
+
+		VmaAllocator allocator = VkRenderAPI::GetVulkanAllocator ();
 
 		vk::ImageCreateInfo createInfo{};
-		if (imageSettings.layerCount == 6)
-		{
-			createInfo.flags = vk::ImageCreateFlagBits::eCubeCompatible;
-		}
-		else
-		{
-			createInfo.flags = vk::ImageCreateFlags();
-		}
-	
+		createInfo.flags = vk::ImageCreateFlags();
 		createInfo.sType = vk::StructureType::eImageCreateInfo;
-		createInfo.imageType = vk::ImageType::e2D;
+		createInfo.imageType = vk::ImageType::e3D;
 		createInfo.extent.width = imageSettings.width;
 		createInfo.extent.height = imageSettings.height;
-		createInfo.extent.depth = 1;
+		createInfo.extent.depth = imageSettings.depth;
 
 		if (imageSettings.generateMips)
 		{
@@ -41,7 +29,7 @@ namespace Polyboid
 			createInfo.mipLevels = 1;
 		}
 
-		createInfo.arrayLayers = imageSettings.layerCount;
+		createInfo.arrayLayers = 1;
 		createInfo.format = Utils::ConvertToVulkanFormat(imageSettings.format);
 		createInfo.tiling = vk::ImageTiling::eOptimal;
 
@@ -85,59 +73,44 @@ namespace Polyboid
 
 		m_Image = vulkanImage;
 		m_ImageMemory = allocation;
+
 	}
 
-	void VulkanImage2D::Recreate()
+	void VulkanImage3D::Destroy()
 	{
-		Destroy();
-		Init(m_Context, m_Settings);
 	}
 
-	VulkanImage2D::VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings): m_Context(context), m_Settings(imageSettings)
+	void VulkanImage3D::Recreate()
 	{
-		Init(context, m_Settings);
 	}
 
-	std::any VulkanImage2D::GetHandle()
+	std::any VulkanImage3D::GetHandle()
 	{
 		return m_Image;
 	}
 
-	void VulkanImage2D::Destroy()
-	{
-		if (m_Image != vk::Image(nullptr) && m_ImageMemory != nullptr)
-		{
-			vk::Device device = (*m_Context->GetDevice());
-			VmaAllocator allocator = (*m_Context->GetAllocator());
-
-			vmaDestroyImage(allocator, m_Image, m_ImageMemory);
-			m_Image = nullptr;
-		}
-	}
-
-	EngineGraphicsFormats VulkanImage2D::GetImageFormat()
+	EngineGraphicsFormats VulkanImage3D::GetImageFormat()
 	{
 		return m_Settings.format;
 	}
 
-	ImageLayout VulkanImage2D::GetLayout()
+	ImageLayout VulkanImage3D::GetLayout()
 	{
-		return  m_Settings.layout;
+		return m_Settings.layout;
 	}
 
-	uint32_t VulkanImage2D::GetHeight()
+	uint32_t VulkanImage3D::GetHeight()
 	{
 		return m_Settings.height;
 	}
 
-	uint32_t VulkanImage2D::GetWidth()
+	uint32_t VulkanImage3D::GetWidth()
 	{
 		return m_Settings.width;
 	}
 
-	VulkanImage2D::~VulkanImage2D()
+	uint32_t VulkanImage3D::GetDepth()
 	{
-		
-		spdlog::info("Reloaded hahha");
+		return m_Settings.depth;
 	}
 }

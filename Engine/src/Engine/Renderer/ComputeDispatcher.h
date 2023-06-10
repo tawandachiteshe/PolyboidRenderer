@@ -6,7 +6,7 @@
 namespace Polyboid
 {
 	class Shader;
-	class Texture;
+	class Texture2D;
 	class ShaderBufferStorage;
 
 	class ComputeDispatcher

@@ -37,7 +37,7 @@ namespace Polyboid
 	class SamplerState;
 	class Texture3D;
 	struct TextureSettings;
-	class Texture;
+	class Texture2D;
 
 	enum class PrimitiveType
 	{
@@ -74,9 +74,9 @@ namespace Polyboid
 
 	public:
 
-		virtual Ref<Texture> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) = 0;
-		virtual Ref<Texture> CreateTexture2D(const std::any& handle) = 0;
-		virtual Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) = 0;
+		virtual Ref<Texture2D> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) = 0;
+		virtual Ref<Texture2D> CreateTexture2D(const std::any& handle) = 0;
+		virtual Ref<Texture3D> CreateTexture3D(const void* data, const TextureSettings& settings) = 0;
 		virtual Ref<SamplerState> CreateSampler(const SamplerSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const Ref<RenderPass>& renderPass) = 0;

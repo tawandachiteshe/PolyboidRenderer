@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Texture2D.h"
 #include <vulkan/vulkan_raii.hpp>
 #include <vma/vk_mem_alloc.h>
 
@@ -9,7 +9,7 @@ namespace Polyboid
 	class VulkanImage2D;
 	class VkRenderAPI;
 
-	class VulkanTexture2D : public Texture
+	class VulkanTexture2D : public Texture2D
 	{
 
 	private:

@@ -8,7 +8,7 @@
 
 namespace Polyboid
 {
-	class Texture;
+	class Texture2D;
 	class Camera;
 	class Texture3D;
 	class Shader;
@@ -153,22 +153,22 @@ namespace Polyboid
 		Ref<Texture3D> m_HDR;
 		Ref<Texture3D> m_IrradianceMap;
 		Ref<Texture3D> m_PrefilterMap;
-		Ref<Texture> m_Hdr2D;
-		Ref<Texture> m_BrdfLUT;
-		Ref<Texture> m_MainTexture;
+		Ref<Texture2D> m_Hdr2D;
+		Ref<Texture2D> m_BrdfLUT;
+		Ref<Texture2D> m_MainTexture;
 
 		//Texture stuuff
 
-		Ref<Texture> m_tPointLightGrid;
-		Ref<Texture> m_tSpotLightGrid;
-		Ref<Texture> m_tDirLightGrid;
+		Ref<Texture2D> m_tPointLightGrid;
+		Ref<Texture2D> m_tSpotLightGrid;
+		Ref<Texture2D> m_tDirLightGrid;
 
-		Ref<Texture> m_oPointLightGrid;
-		Ref<Texture> m_oSpotLightGrid;
-		Ref<Texture> m_oDirLightGrid;
+		Ref<Texture2D> m_oPointLightGrid;
+		Ref<Texture2D> m_oSpotLightGrid;
+		Ref<Texture2D> m_oDirLightGrid;
 
-		Ref<Texture> m_oLightHeatMap;
-		Ref<Texture> m_tLightHeatMap;
+		Ref<Texture2D> m_oLightHeatMap;
+		Ref<Texture2D> m_tLightHeatMap;
 
 
 		Ref<VertexBufferArray> m_Quad;

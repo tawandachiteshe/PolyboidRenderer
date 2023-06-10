@@ -36,6 +36,7 @@ namespace Polyboid
 		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
 		std::vector<Ref<VulkanCommandBufferSet>> m_CommandLists;
 		std::vector<Ref<VulkanTexture2D>> m_Textures2D;
+		std::vector<Ref<VulkanTexture3D>> m_Textures3D;
 		std::vector<Ref<VulkanIndexBuffer>> m_IndexBuffers;
 		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
 		std::vector<Ref<VulkanFence>> m_Fences;
@@ -87,9 +88,9 @@ namespace Polyboid
 		CreateFrameBuffer(const FramebufferSettings& settings) override;
 		Ref<Framebuffer>
 		CreateFrameBuffer(const Ref<RenderPass>& renderPass) override;
-		Ref<Texture> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) override;
-		Ref<Texture> CreateTexture2D(const std::any& handle) override;
-		Ref<Texture3D> CreateTexture3D(const void** data, const TextureSettings& settings) override;
+		Ref<Texture2D> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) override;
+		Ref<Texture2D> CreateTexture2D(const std::any& handle) override;
+		Ref<Texture3D> CreateTexture3D(const void* data, const TextureSettings& settings) override;
 		Ref<SamplerState> CreateSampler(const SamplerSettings& settings) override;
 
 

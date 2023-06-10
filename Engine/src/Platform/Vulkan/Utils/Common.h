@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Engine/Renderer/Image2D.h"
-#include "Engine/Renderer/Texture.h"
+#include "Engine/Renderer/Texture2D.h"
 #include "vulkan/vulkan.hpp"
 #include "spdlog/spdlog.h"
 

@@ -2,7 +2,7 @@
 
 
 #include "Shader.h"
-#include "Texture.h"
+#include "Texture2D.h"
 #include "RenderResource.h"
 
 

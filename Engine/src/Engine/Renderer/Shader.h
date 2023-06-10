@@ -9,7 +9,7 @@
 namespace Polyboid
 {
 	class Texture3D;
-	class Texture;
+	class Texture2D;
 	class SamplerState;
 	class StorageBuffer;
 	struct ShaderBinaryAndReflectionInfo;

@@ -9,6 +9,7 @@ layout(location = 2) flat in uint vAge;
 
 
 layout (binding = 2) uniform sampler2D skybox;
+layout (binding = 4) uniform samplerCube skyboxCube;
 
 const float PI = 3.14159265359;
 
@@ -16,13 +17,12 @@ void main() {
 
 	//vec3 envColor = textureLod(skybox, -vTextureCoord, 1.2).xyz;
 	
-	vec3 envSampler = texture(skybox, vTextureCoord2D * float(vAge + 1)).xyz;
+	vec3 envSampler = textureLod(skybox, vTextureCoord2D, 6.0f).xyz;
 
 	//envColor = envColor / (envColor + vec3(1.0));
 	//envColor = pow(envColor, vec3(1.0/2.2));
 	//FragColor = vec4(envColor, 1.0);
 
-	float a = float(vAge + 1) / float(6);
 
 	
 	FragColor = vec4(envSampler, 255.0f);
