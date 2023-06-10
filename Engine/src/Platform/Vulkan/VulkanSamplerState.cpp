@@ -42,8 +42,9 @@ namespace Polyboid
 		switch (filter)
 		{
 		case MinFilterMode::Nearest:
+			return vk::SamplerMipmapMode::eNearest;
 		case MinFilterMode::Linear:
-			__debugbreak();
+			return vk::SamplerMipmapMode::eLinear;
 		case MinFilterMode::MipNearest: return vk::SamplerMipmapMode::eNearest;
 		case MinFilterMode::MipLinear: return vk::SamplerMipmapMode::eLinear;
 		case MinFilterMode::Anisotropic:

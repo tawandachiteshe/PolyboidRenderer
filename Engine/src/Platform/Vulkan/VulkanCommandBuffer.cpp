@@ -1,6 +1,8 @@
 ﻿#include "boidpch.h"
 #include "VulkanCommandBuffer.h"
 
+#include <glm/common.hpp>
+
 
 #include "VkRenderAPI.h"
 #include "VulkanCommandBufferSet.h"
@@ -162,7 +164,7 @@ namespace Polyboid
 
 	}
 
-	void VulkanCommandBuffer::TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout)
+	void VulkanCommandBuffer::TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout, uint32_t layerCount, uint32_t mipLevel )
 	{
 
 		vk::ImageMemoryBarrier barrier{};
@@ -174,9 +176,9 @@ namespace Polyboid
 		barrier.image = std::any_cast<vk::Image>(src->GetHandle());
 		barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.levelCount = mipLevel;
 		barrier.subresourceRange.baseArrayLayer = 0;
-		barrier.subresourceRange.layerCount = 1;
+		barrier.subresourceRange.layerCount = layerCount;
 
 		barrier.srcAccessMask = vk::AccessFlagBits::eNone; //TODO: important wangu
 		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite; //TODO: important wangu
@@ -196,7 +198,97 @@ namespace Polyboid
 			nullptr,
 			1, &barrier);
 
+		
+	}
 
+	void VulkanCommandBuffer::VulkanBlitImage(vk::Image srcImage, vk::ImageLayout srcLayout, vk::Image dtsImage,
+		vk::ImageLayout dstLayout, uint32_t width, uint32_t height, uint32_t mipIndex)
+	{
+		if (mipIndex == 0)
+		{
+			__debugbreak();
+		}
+
+		vk::ImageBlit region{};
+		region.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		region.srcSubresource.mipLevel = mipIndex - 1;
+		region.srcSubresource.layerCount = 1;
+		region.srcOffsets[1].x = glm::max(width >> (mipIndex - 1), 1u);
+		region.srcOffsets[1].y = glm::max(height >> (mipIndex - 1), 1u);
+		region.srcOffsets[1].z = 1;
+
+		//Dst
+		region.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		region.dstSubresource.mipLevel = mipIndex;
+		region.dstSubresource.layerCount = 1;
+		region.dstOffsets[1].x = glm::max(width >> (mipIndex ), 1u);
+		region.dstOffsets[1].y = glm::max(height >> (mipIndex), 1u);
+		region.dstOffsets[1].z = 1;
+
+		m_CommandBuffer.blitImage(srcImage, srcLayout, dtsImage, dstLayout, { region }, vk::Filter::eLinear);
+
+
+	}
+
+	void VulkanCommandBuffer::VulkanImageBarrier(vk::Image image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags srcAccess, vk::AccessFlags dstAccess, vk::PipelineStageFlags srcFlags, vk::PipelineStageFlags dstFlags, uint32_t mipIndex, uint32_t mipLevels)
+	{
+		vk::ImageMemoryBarrier barrier{};
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
+
+		barrier.srcQueueFamilyIndex = 0;
+		barrier.dstQueueFamilyIndex = 0;
+		barrier.image = image;
+		barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		barrier.subresourceRange.baseMipLevel = mipIndex;
+		barrier.subresourceRange.levelCount = mipLevels;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+
+		barrier.srcAccessMask = srcAccess; //TODO: important wangu
+		barrier.dstAccessMask = dstAccess; //TODO: important wangu
+
+		const vk::PipelineStageFlags srcStageFlags = srcFlags; //TODO: importang again we need to know;
+		const vk::PipelineStageFlags dstStageFlags = dstFlags; //TODO: importang again we need to know;
+		 
+
+		constexpr auto dependencyFlags = static_cast<vk::DependencyFlags>(0);
+
+		m_CommandBuffer.pipelineBarrier(
+			srcStageFlags,
+			dstStageFlags,
+			dependencyFlags,
+			{},
+			{},
+			{barrier});
+	}
+
+	void VulkanCommandBuffer::VulkanGenerateMips(vk::Image image, uint32_t width, uint32_t height, uint32_t mipCount)
+	{
+		
+
+		for (uint32_t i = 1; i < mipCount; ++i)
+		{
+
+
+			VulkanImageBarrier(image, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal,
+				vk::AccessFlagBits::eNone, vk::AccessFlagBits::eTransferWrite,
+				vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, i, 1);
+
+
+			VulkanBlitImage(image, vk::ImageLayout::eTransferSrcOptimal, image, vk::ImageLayout::eTransferDstOptimal, width, height, i);
+
+
+			VulkanImageBarrier(image, vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eTransferSrcOptimal,
+				vk::AccessFlagBits::eTransferWrite, vk::AccessFlagBits::eTransferRead,
+				vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eTransfer, i);
+
+		}
+
+
+		VulkanImageBarrier(image, vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::AccessFlagBits::eTransferRead, vk::AccessFlagBits::eShaderRead,
+			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, 0, mipCount);
 	}
 
 	void VulkanCommandBuffer::CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer)

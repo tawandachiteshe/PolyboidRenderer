@@ -14,7 +14,6 @@ namespace Polyboid
 
 	private:
 		Ref<VulkanImage2D> m_Image = nullptr;
-		vk::Image m_VulkanImage = nullptr;
 		vk::ImageView m_View = nullptr;
 		vk::Sampler m_ImageSampler = nullptr;
 		const VkRenderAPI* m_Context = nullptr;
@@ -24,6 +23,7 @@ namespace Polyboid
 		vk::DescriptorImageInfo m_ImageDescriptorInfo;
 		const void* m_Data = nullptr;
 		TextureSettings m_Settings;
+		vk::Image m_VulkanImage;
 
 	public:
 

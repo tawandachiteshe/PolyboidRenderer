@@ -45,12 +45,12 @@ namespace Polyboid
 		{
 		case ImageUsage::Swapchain: break;
 		case ImageUsage::ColorDepthStencilAttachment:createInfo.usage = eColorAttachment | eDepthStencilAttachment; break;
-		case ImageUsage::Sampling: createInfo.usage = eSampled | eTransferDst; break;
+		case ImageUsage::Sampling: createInfo.usage = imageSettings.generateMips ? eTransferSrc | eSampled | eTransferDst : eSampled | eTransferDst; break;
 		case ImageUsage::ColorAttachment: createInfo.usage = eColorAttachment; break;
 		case ImageUsage::DepthStencilAttachment: createInfo.usage = eDepthStencilAttachment; break;
 		case ImageUsage::TransferSrc: createInfo.usage = eTransferSrc; break;
 		case ImageUsage::TransferDst: createInfo.usage = eTransferDst; break;
-		case ImageUsage::ColorAttachmentSampling: createInfo.usage = eColorAttachment | eSampled;  break;
+		case ImageUsage::ColorAttachmentSampling: createInfo.usage = imageSettings.generateMips ? eTransferSrc | eColorAttachment | eSampled : eColorAttachment | eSampled;  break;
 		case ImageUsage::DepthStencilAttachmentSampling: createInfo.usage = eDepthStencilAttachment | eSampled;  break;
 		default:;
 		}
@@ -68,7 +68,13 @@ namespace Polyboid
 
 
 		vk::Image::NativeType vulkanImage;
-		vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
+		auto result = vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
+
+		if (result != VK_SUCCESS)
+		{
+			__debugbreak();
+		}
+
 		m_Image = vulkanImage;
 		m_ImageMemory = allocation;
 	}

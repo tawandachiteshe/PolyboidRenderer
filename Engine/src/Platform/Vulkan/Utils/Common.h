@@ -14,7 +14,7 @@ namespace Polyboid
 {
 	namespace Utils
 	{
-		inline static vk::ImageAspectFlagBits ImageFormatToAspectBits(EngineGraphicsFormats format)
+		inline static vk::Flags<vk::ImageAspectFlagBits> ImageFormatToAspectBits(EngineGraphicsFormats format)
 		{
 			switch (format)
 			{
@@ -62,9 +62,11 @@ namespace Polyboid
 			case EngineGraphicsFormats::DepthComponent16:
 			case EngineGraphicsFormats::DepthComponent32F:
 			case EngineGraphicsFormats::DepthComponent24:
+				return vk::ImageAspectFlagBits::eDepth;
 			case EngineGraphicsFormats::Depth24Stencil8:
 			case EngineGraphicsFormats::Depth32FStencil8:
-				return vk::ImageAspectFlagBits::eDepth;
+				auto aspect = vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil;
+				return aspect;
 			}
 			return vk::ImageAspectFlagBits::eNone;
 		}
@@ -78,6 +80,8 @@ namespace Polyboid
 			case ImageLayout::DepthAttachmentOptimal: return vk::ImageLayout::eDepthAttachmentOptimal;
 			case ImageLayout::Undefined: return vk::ImageLayout::eUndefined;
 			case ImageLayout::ShaderReadOptimal: return vk::ImageLayout::eShaderReadOnlyOptimal;
+			case ImageLayout::TransferSrcOptimal: return vk::ImageLayout::eTransferSrcOptimal;
+			default: ;
 			}
 
 			__debugbreak();

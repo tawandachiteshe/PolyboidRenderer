@@ -27,6 +27,12 @@ namespace Polyboid
 		float fov = 45.0f;
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 
+		TextureSettings textureSettings = { .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" };
+		textureSettings.mipCount = 4;
+		textureSettings.generateMips = true;
+
+		auto texture = Texture::Create(textureSettings);
+
 		m_EditorCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_AgeBuffer = StorageBufferSet::Create(sizeof(uint32_t) * 100);
@@ -40,6 +46,8 @@ namespace Polyboid
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
 		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
+
+		
 
 		for (uint32_t i = 0; i < 3; ++i)
 		{
@@ -119,7 +127,7 @@ namespace Polyboid
 		m_Pipeline->AllocateDescriptorSets();
 		m_Pipeline->BindUniformBufferSet(0, m_UniformBuffers);
 		m_Pipeline->BindStorageBufferSet(1, m_StorageBuffers);
-		m_Pipeline->BindTexture2D(2, checkerTexture);
+		m_Pipeline->BindTexture2D(2, texture);
 		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
 		m_Pipeline->WriteSetResourceBindings();
 		//

@@ -13,6 +13,7 @@ namespace Polyboid
 	{
 		ColorAttachmentOptimal,
 		TransferDstOptimal,
+		TransferSrcOptimal,
 		DepthAttachmentOptimal,
 		ShaderReadOptimal,
 		Undefined

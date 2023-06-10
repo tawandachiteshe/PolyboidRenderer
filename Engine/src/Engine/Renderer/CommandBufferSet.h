@@ -42,7 +42,7 @@ namespace Polyboid
 		virtual void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const IndexBuffer* dstIndexBuffer) = 0;
 		virtual void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) = 0;
 		virtual void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) = 0;
-		virtual void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout) = 0;
+		virtual void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevel = 1) = 0;
 		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) = 0;
 		virtual void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) = 0;
 
