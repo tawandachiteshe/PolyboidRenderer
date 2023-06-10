@@ -21,13 +21,16 @@ namespace Polyboid
 	void VulkanComputeBackend::WaitAndResetFence()
 	{
 
-		const auto fence = std::any_cast<vk::Fence>(m_SyncObjects->GetInFlightFence(RenderCommand::GetCurrentFrame())->GetHandle());
+		if (!m_SubmittingBuffers.empty())
+		{
+			const auto fence = std::any_cast<vk::Fence>(m_SyncObjects->GetInFlightFence(RenderCommand::GetCurrentFrame())->GetHandle());
 
-		auto result = m_Device.waitForFences({ fence }, VK_TRUE, UINT64_MAX);
-		vk::resultCheck(result, "Failed to reset compute fences");
+			auto result = m_Device.waitForFences({ fence }, VK_TRUE, UINT64_MAX);
+			vk::resultCheck(result, "Failed to reset compute fences");
 
-		result = m_Device.resetFences({ fence });
-		vk::resultCheck(result, "Failed to reset fences");
+			result = m_Device.resetFences({ fence });
+			vk::resultCheck(result, "Failed to reset fences");
+		}
 
 	}
 
@@ -40,28 +43,31 @@ namespace Polyboid
 	{
 		m_CommandBuffers = commandBuffer;
 
-		const auto computeSemaphore = std::any_cast<vk::Semaphore>(m_SyncObjects->GetComputeFinishedSemaphore(RenderCommand::GetCurrentFrame())->GetHandle());
-		const auto fence = std::any_cast<vk::Fence>(m_SyncObjects->GetInFlightFence(RenderCommand::GetCurrentFrame())->GetHandle());
-
-		for (const auto& commandSet : m_CommandBuffers)
+		if (!m_SubmittingBuffers.empty())
 		{
+			const auto computeSemaphore = std::any_cast<vk::Semaphore>(m_SyncObjects->GetComputeFinishedSemaphore(RenderCommand::GetCurrentFrame())->GetHandle());
+			const auto fence = std::any_cast<vk::Fence>(m_SyncObjects->GetInFlightFence(RenderCommand::GetCurrentFrame())->GetHandle());
 
-			vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(commandSet->GetCommandBufferAt(RenderCommand::GetCurrentFrame())->GetHandle());
-			m_SubmittingBuffers.emplace_back(buffer);
+			for (const auto& commandSet : m_CommandBuffers)
+			{
+
+				vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(commandSet->GetCommandBufferAt(RenderCommand::GetCurrentFrame())->GetHandle());
+				m_SubmittingBuffers.emplace_back(buffer);
+			}
+
+
+			vk::SubmitInfo submitInfo{};
+			submitInfo.setCommandBuffers(m_SubmittingBuffers);
+
+			std::array semaphores{computeSemaphore};
+			submitInfo.setSignalSemaphores(semaphores);
+
+
+			const auto result = m_GraphicsQueue.submit({ submitInfo }, { fence });
+			vk::resultCheck(result, "Failed to submit work");
+
+			m_SubmittingBuffers.clear();
 		}
-
-
-		vk::SubmitInfo submitInfo{};
-		submitInfo.setCommandBuffers(m_SubmittingBuffers);
-
-		std::array semaphores{computeSemaphore};
-		submitInfo.setSignalSemaphores(semaphores);
-
-
-		const auto result = m_GraphicsQueue.submit({ submitInfo }, { fence });
-		vk::resultCheck(result, "Failed to submit work");
-
-		m_SubmittingBuffers.clear();
 
 ;
 	}
@@ -69,9 +75,8 @@ namespace Polyboid
 	void VulkanComputeBackend::ComputeOneTime(const std::vector<Ref<CommandBufferSet>>& commandBuffer,
 		uint32_t frameIndex)
 	{
-		auto computeSemaphore = std::any_cast<vk::Semaphore>(m_SyncObjects->GetComputeFinishedSemaphore(frameIndex)->GetHandle());
-
-		for (const auto& commandSet : m_CommandBuffers)
+		
+		for (const auto& commandSet : commandBuffer)
 		{
 
 			vk::CommandBuffer buffer = std::any_cast<vk::CommandBuffer>(commandSet->GetCommandBufferAt(frameIndex)->GetHandle());
@@ -81,9 +86,6 @@ namespace Polyboid
 
 		vk::SubmitInfo submitInfo{};
 		submitInfo.setCommandBuffers(m_SubmittingBuffers);
-		submitInfo.setSignalSemaphores({ computeSemaphore });
-
-		//submitInfo.setWaitDstStageMask(stages);
 
 		auto result = m_GraphicsQueue.submit({ submitInfo }, { });
 		vk::resultCheck(result, "Failed to submit work");

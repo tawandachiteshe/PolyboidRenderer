@@ -21,6 +21,7 @@ namespace Polyboid
 		void WaitAndResetFence() override;
 		Ref<ComputeSyncObjects> GetSyncObjects() override;
 
+		bool CanAddWaitSemaphore() const { return !m_SubmittingBuffers.empty(); }
 
 		void SubmitComputeWork(const std::vector<Ref<CommandBufferSet>>& commandBuffer) override;
 		void ComputeOneTime(const std::vector<Ref<CommandBufferSet>>& commandBuffer, uint32_t frameIndex) override;

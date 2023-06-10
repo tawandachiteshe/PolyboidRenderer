@@ -1,6 +1,8 @@
 ﻿#include "boidpch.h"
 #include "KomputeCommand.h"
 
+#include <spdlog/spdlog.h>
+
 #include "CommandBufferSet.h"
 #include "RenderCommand.h"
 #include "Platform/Vulkan/VulkanComputeBackend.h"
@@ -23,6 +25,8 @@ namespace Polyboid
 		SetCurrentFrame(index);
 		SetCurrentCommandBuffer(index);
 		GetCurrentCommandBuffer()->Begin();
+
+		spdlog::info("Image index {}", index);
 	}
 
 	void KomputeCommand::SetCurrentFrame(uint32_t frameIndex)

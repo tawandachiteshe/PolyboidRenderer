@@ -5,6 +5,7 @@
 
 #include "VkSwapChain.h"
 #include "VulkanCommandBufferSet.h"
+#include "VulkanComputeBackend.h"
 #include "VulkanGraphicsPipeline.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanRenderPass.h"
@@ -219,10 +220,18 @@ namespace Polyboid
 
 		vk::SubmitInfo submitInfo{};
 		const vk::PipelineStageFlags waitStages[] = { vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eVertexShader };
-		const vk::Semaphore waitSemaphores[] = {imageSemaphore, computeFinishedSemaphore };
 
-		submitInfo.waitSemaphoreCount = 2;
-		submitInfo.pWaitSemaphores = waitSemaphores;
+		m_WaitSemaphores.emplace_back(imageSemaphore);
+
+		if (KomputeCommand::GetComputeBackend().As<VulkanComputeBackend>()->CanAddWaitSemaphore())
+		{
+			m_WaitSemaphores.emplace_back(computeFinishedSemaphore);
+		}
+
+		
+
+		submitInfo.waitSemaphoreCount = static_cast<uint32_t>(m_WaitSemaphores.size());
+		submitInfo.pWaitSemaphores = m_WaitSemaphores.data();
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.setCommandBuffers(s_Data->m_SubmittingBuffer);
 
@@ -233,6 +242,7 @@ namespace Polyboid
 	   vk::Result result = m_GraphicsQueue.submit(1, &submitInfo, fence);
 		vk::resultCheck(result, "Failed to submit commands");
 
+		m_WaitSemaphores.clear();
 
 
 		vk::PresentInfoKHR presentInfo{};

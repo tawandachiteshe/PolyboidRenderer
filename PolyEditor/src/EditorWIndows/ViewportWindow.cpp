@@ -18,19 +18,17 @@
 
 namespace Polyboid
 {
-
-
 #define GetName(x) #x
 
 	ViewportWindow::ViewportWindow(const std::string& name)
 	{
 		m_Name = name;
-		
+
 		float fov = 45.0f;
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 
-		m_EditorCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
-		m_KomputeCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		m_EditorCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
+		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_AgeBuffer = StorageBufferSet::Create(sizeof(uint32_t) * 100);
 
 		m_RefComputePipeline = KomputePipeline::Create();
@@ -41,31 +39,34 @@ namespace Polyboid
 		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
-		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
+		//KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
 
 		for (uint32_t i = 0; i < 3; ++i)
 		{
-		
+			KomputeCommand::BeginCommands(m_KomputeCommandBuffer, i);
+			KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
+			KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
+			KomputeCommand::Dispatch({100, 1, 1});
+			KomputeCommand::EndCommands();
+			KomputeCommand::ComputeOneTime({m_KomputeCommandBuffer}, i);
 		}
-
-
 
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
 		RenderPassSettings renderPassSettings{};
 		renderPassSettings.Height = 600;
 		renderPassSettings.Width = 800;
-		renderPassSettings.TextureAttachments = { {TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8} };
+		renderPassSettings.TextureAttachments = {{TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8}};
 		renderPassSettings.debugName = "Offscreen render pass";
 
 		m_RenderPass = RenderPass::Create(renderPassSettings);
 		m_FrameBuffers = FrameBufferSet::Create(m_RenderPass);
 
 
-		m_Vertices[0] = { {-1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 0.0f} };
-		m_Vertices[1] = { {-1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 1.0f} };
-		m_Vertices[2] = { {1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 1.0f} };
-		m_Vertices[3] = { {1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 0.0f} };
+		m_Vertices[0] = {{-1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 0.0f}};
+		m_Vertices[1] = {{-1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 1.0f}};
+		m_Vertices[2] = {{1.0f, -1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 1.0f}};
+		m_Vertices[3] = {{1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {1.0f, 0.0f}};
 
 
 		unsigned int indices[] = {
@@ -78,7 +79,7 @@ namespace Polyboid
 			{ShaderDataType::Float3, "aPosition"},
 			{ShaderDataType::Float4, "aNormal"},
 			{ShaderDataType::Float2, "aUV"}
-			});
+		});
 		m_IndexBuffer = IndexBuffer::Create(indices, 6);
 		auto vtxArray = VertexBufferArray::Create();
 		vtxArray->AddVertexBufferSet(m_VertexBuffer);
@@ -87,15 +88,15 @@ namespace Polyboid
 		const uint32_t green = 0xFF'00'FF'00;
 
 		auto greenTexture = Texture::Create({
-												.sizedFormat = EngineGraphicsFormats::RGBA8,
-												.usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
+			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
+			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
 
-			}, &green);
+		                                    }, &green);
 
 		auto checkerTexture = Texture::Create({
 			.sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling,
 			.path = "Assets/Textures/checker.jpg"
-			});
+		});
 
 
 		m_Pipeline = GraphicsPipeline::Create();
@@ -107,7 +108,6 @@ namespace Polyboid
 
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
-
 
 
 		m_UniformBuffers = UniformBufferSet::Create(sizeof(CameraBufferData));
@@ -125,7 +125,7 @@ namespace Polyboid
 		//
 
 		m_CameraData.projection = glm::perspective(1600.f / 900.f, glm::radians(45.0f), 0.01f, 1000.0f);
-		m_CameraData.view = glm::translate(glm::mat4(1.0f), { 0.0f, 0.0f, -2.0f });
+		m_CameraData.view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -2.0f});
 
 
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
@@ -154,10 +154,9 @@ namespace Polyboid
 		// 	}
 		// });
 
-		RenderCommand::PushCommandBufferSets({ m_EditorCommandBuffer });
+		RenderCommand::PushCommandBufferSets({m_EditorCommandBuffer});
 
 		Renderer2D::Init(m_RenderPass);
-		
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -167,7 +166,6 @@ namespace Polyboid
 
 	void ViewportWindow::OnGameObjectSelected(const Event& event)
 	{
-		
 		m_CurrentGameObject = nullptr;
 	}
 
@@ -178,8 +176,7 @@ namespace Polyboid
 
 	void ViewportWindow::RenderImgui()
 	{
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.0f, 0.0f });
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
 		ImGui::Begin(m_Name.c_str());
 		const auto mainRenderTarget = RenderCommand::GetDefaultRenderTarget();
 		const auto windowSize = ImGui::GetContentRegionAvail();
@@ -189,15 +186,13 @@ namespace Polyboid
 		ImGui::End();
 
 		ImGui::PopStyleVar();
-
 	}
 
 	void ViewportWindow::Update(float ts)
 	{
-		static  float dt = 0.0;
+		static float dt = 0.0;
 		if (dt > 0.01f)
 		{
-			
 			m_ViewportCamera->OnUpdate(ts);
 			m_ViewportCamera->SetEnableInput(true);
 			dt = 0;
@@ -205,7 +200,6 @@ namespace Polyboid
 		else
 		{
 			dt += ts;
-			
 		}
 
 		m_CameraData.view = m_ViewportCamera->GetViewMatrix();
@@ -214,17 +208,12 @@ namespace Polyboid
 		m_Rotation += 100 * dt;
 
 		m_EntityBufferData.transform = glm::mat4(1.0f) * glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation),
-			{ 0, 0.0f, 1.0 }) * glm::scale(
-				glm::mat4(1.0f), { 0.2, 0.2, 0.2 });
+		                                                             {0, 0.0f, 1.0}) * glm::scale(
+			glm::mat4(1.0f), {0.2, 0.2, 0.2});
 
-		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f }) * glm::scale(
-			glm::mat4(1.0f), { 0.2, 0.2, 0.2 });
+		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), {0.0, 0.5f, 0.0f}) * glm::scale(
+			glm::mat4(1.0f), {0.2, 0.2, 0.2});
 
-		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
-		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
-		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
-		KomputeCommand::Dispatch({ 100, 1, 1 });
-		KomputeCommand::EndFrameCommands();
 
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 
@@ -265,8 +254,6 @@ namespace Polyboid
 		Renderer2D::UploadDataToGpu();
 
 		RenderCommand::EndFrameCommands();
-
-
 	}
 
 	void ViewportWindow::OnEvent(Event& event)
@@ -277,15 +264,13 @@ namespace Polyboid
 
 	void ViewportWindow::OnRender()
 	{
-
-
 		//spdlog::info("Mouse x: {} y: {}", Input::GetMouseX(), Input::GetMouseY());
 
 		Renderer2D::BeginDraw(m_ViewportCamera);
 
-		glm::mat4 pos = glm::translate(glm::mat4(1.0f), { 0.0, 1.5f, 0.0 });
-		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), { 0.0, 2.5f, 0.0 });
-		glm::mat4 pos3 = glm::translate(glm::mat4(1.0f), { 0.0, 3.5f, 0.0 });
+		glm::mat4 pos = glm::translate(glm::mat4(1.0f), {0.0, 1.5f, 0.0});
+		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), {0.0, 2.5f, 0.0});
+		glm::mat4 pos3 = glm::translate(glm::mat4(1.0f), {0.0, 3.5f, 0.0});
 
 		static float rotation = 0.0f;
 		rotation += 10 * 0.01;
@@ -297,10 +282,9 @@ namespace Polyboid
 		Renderer2D::DrawCircle(pos);
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});
 		Renderer2D::DrawQuad(pos2, glm::vec4{1.2, 1.2, 0.2, 1.0f});
-		Renderer2D::DrawRotatedQuad({ 0.0, 2.5f, 0.0 }, rotation);
-		
+		Renderer2D::DrawRotatedQuad({0.0, 2.5f, 0.0}, rotation);
+
 
 		Renderer2D::EndDraw();
 	}
 }
-

@@ -1,4 +1,4 @@
-#version 450
+#version 460
 
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec4 aNormal;
@@ -19,6 +19,7 @@ layout(push_constant) uniform EntityBuffer {
 } entity;
 
 layout(location = 0) out vec2 vTextureCoord2D;
+layout(location = 2) out uint vAge;
 
 struct Vertex {
   float sPosition[3]; 
@@ -64,6 +65,6 @@ void main() {
 
 	gl_Position = projection * view * entity.transform * vec4(aPosition, 1.0);//projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
 
-	
+	vAge = ages[gl_VertexIndex];
 	vTextureCoord2D =  aUV; //getUV(gl_VertexIndex);
 }
