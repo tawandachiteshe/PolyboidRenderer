@@ -56,10 +56,11 @@ namespace Polyboid
 				vk::BufferImageCopy bufferCopyRegion{};
 				bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 				bufferCopyRegion.imageSubresource.mipLevel = 0;
-				bufferCopyRegion.imageSubresource.baseArrayLayer = 0;
+				bufferCopyRegion.imageSubresource.baseArrayLayer = face;
 				bufferCopyRegion.imageSubresource.layerCount = 1;
 				bufferCopyRegion.imageExtent = vk::Extent3D{ settings.Width, settings.Height, 1 };
 				bufferCopyRegion.bufferOffset = offset;
+				
 				bufferCopyRegions.push_back(bufferCopyRegion);
 
 				offset += imageSettings.width * imageSettings.height * 4;
@@ -67,7 +68,7 @@ namespace Polyboid
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
 			cmdBuffer->Begin();
-			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal);
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal, 6);
 			cmdBuffer->VulkanCopyBufferToCubemap(staging.As<StagingBuffer>(), m_Image.As<Image2D>(), { bufferCopyRegions });
 
 			if (settings.generateMips)
@@ -76,7 +77,7 @@ namespace Polyboid
 			}
 			else
 			{
-				cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal);
+				cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::ShaderReadOptimal, 6);
 			}
 
 			cmdBuffer->End();
