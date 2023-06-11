@@ -38,7 +38,7 @@ namespace Polyboid
 
 		if (data)
 		{
-			auto size = imageSettings.width * imageSettings.height * 4 * 6;
+			auto size = imageSettings.width * imageSettings.height * 4 * 6 * imageSettings.mipCount;
 			m_Image = CreateRef<VulkanImage2D>(context, imageSettings);
 
 			auto staging = CreateRef<VulkanStagingBuffer>(context, data, size);
@@ -52,28 +52,32 @@ namespace Polyboid
 
 			for (uint32_t face = 0; face < 6; face++)
 			{
-	
-				vk::BufferImageCopy bufferCopyRegion{};
-				bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
-				bufferCopyRegion.imageSubresource.mipLevel = 0;
-				bufferCopyRegion.imageSubresource.baseArrayLayer = face;
-				bufferCopyRegion.imageSubresource.layerCount = 1;
-				bufferCopyRegion.imageExtent = vk::Extent3D{ settings.Width, settings.Height, 1 };
-				bufferCopyRegion.bufferOffset = offset;
-				
-				bufferCopyRegions.push_back(bufferCopyRegion);
+				for (uint32_t level = 0; level < settings.mipCount; ++level)
+				{
+					vk::BufferImageCopy bufferCopyRegion{};
+					bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+					bufferCopyRegion.imageSubresource.mipLevel = level;
+					bufferCopyRegion.imageSubresource.baseArrayLayer = face;
+					bufferCopyRegion.imageSubresource.layerCount = 1;
+					bufferCopyRegion.imageExtent = vk::Extent3D{ (settings.Width >> level), (settings.Height >> level), 1 };
+					bufferCopyRegion.bufferOffset = offset;
 
-				offset += imageSettings.width * imageSettings.height * 4;
+					bufferCopyRegions.push_back(bufferCopyRegion);
+
+					offset += (imageSettings.width >> level) * (imageSettings.height >> level) * 4;
+				}
+
+				
 			}
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
 			cmdBuffer->Begin();
-			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal, 6);
+			cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferDstOptimal, 6, settings.mipCount);
 			cmdBuffer->VulkanCopyBufferToCubemap(staging.As<StagingBuffer>(), m_Image.As<Image2D>(), { bufferCopyRegions });
 
 			if (settings.generateMips)
 			{
-				cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferSrcOptimal, 1, settings.mipCount);
+				cmdBuffer->TransitionImageLayout(m_Image.As<Image2D>(), ImageLayout::TransferSrcOptimal, 6, settings.mipCount);
 			}
 			else
 			{

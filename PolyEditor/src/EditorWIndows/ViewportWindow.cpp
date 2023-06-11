@@ -95,7 +95,14 @@ namespace Polyboid
 
 		const uint32_t green = 0xFF'00'FF'00;
 
-		const uint32_t greenRed[] = { 0xFF'00'FF'00, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45, 0xFF'00'FF'00, 0xFF'00'FF'FF };
+		const uint32_t greenRed[] = {
+			0xFF'00'FF'00, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45,
+			0xFF'00'FF'FF, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45,
+			0xFF'00'FF'FF, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45,
+			0xFF'00'FF'FF, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45,
+			0xFF'00'FF'FF, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45,
+			0xFF'00'FF'FF, 0xFF'FF'FF'00, 0xFF'00'00'FF, 0xFF'FF'00'45
+		};
 
 		auto greenTexture = Texture2D::Create({
 			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
@@ -103,11 +110,13 @@ namespace Polyboid
 
 		                                    }, &green);
 
-		auto greenTexture3D = Texture3D::Create({
-											.sizedFormat = EngineGraphicsFormats::RGBA8,
-											.usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
+		TextureSettings greenTexture3dSettings{ .sizedFormat = EngineGraphicsFormats::RGBA8,
+			.usage = ImageUsage::Sampling, .Width = 2, .Height = 2 };
 
-			}, greenRed);
+		greenTexture3dSettings.generateMips = true;
+		greenTexture3dSettings.mipCount = 2;
+
+		auto greenTexture3D = Texture3D::Create(greenTexture3dSettings, greenRed);
 
 		auto checkerTexture = Texture2D::Create({
 			.sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling,
