@@ -248,7 +248,33 @@ namespace Polyboid
 			1, &barrier);
 	}
 
-	
+	void VulkanCommandBuffer::VulkanCopyImage(const Ref<Image2D>& srcImage, vk::ImageLayout srcLayout,
+		const Ref<Image2D>& dstImage, vk::ImageLayout dstLayout)
+	{
+
+		vk::ImageCopy copyRegions{};
+		copyRegions.extent.width = srcImage->GetWidth();
+		copyRegions.extent.height = srcImage->GetHeight();
+		copyRegions.extent.depth = 1;
+
+		copyRegions.srcOffset = vk::Offset3D{};
+		copyRegions.srcSubresource.layerCount = 1;
+		copyRegions.srcSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		copyRegions.srcSubresource.mipLevel = 0;
+		copyRegions.srcSubresource.baseArrayLayer = 0;
+
+		copyRegions.dstOffset = vk::Offset3D{};
+		copyRegions.dstSubresource.layerCount = 1;
+		copyRegions.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		copyRegions.dstSubresource.mipLevel = 0;
+		copyRegions.dstSubresource.baseArrayLayer = 0;
+
+		m_CommandBuffer.copyImage(std::any_cast<vk::Image>(srcImage->GetHandle()), srcLayout, std::any_cast<vk::Image>(dstImage->GetHandle()), dstLayout, { copyRegions });
+
+	}
+
+
+
 
 	void VulkanCommandBuffer::VulkanBlitImage(vk::Image srcImage, vk::ImageLayout srcLayout, vk::Image dtsImage,
 	                                          vk::ImageLayout dstLayout, uint32_t width, uint32_t height, uint32_t mipIndex)

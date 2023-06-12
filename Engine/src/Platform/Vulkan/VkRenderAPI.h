@@ -5,6 +5,7 @@
 
 namespace Polyboid
 {
+	class VulkanSamplerState;
 	class VulkanTexelUniformBuffer;
 	class VulkanTexelStorageBuffer;
 	class VulkanKomputePipeline;
@@ -54,6 +55,7 @@ namespace Polyboid
 		std::vector<vk::CommandBuffer> m_CommandBuffersBatching;
 		std::vector<Ref<VulkanTexelStorageBuffer>> m_TexelStorageBuffers;
 		std::vector<Ref<VulkanTexelUniformBuffer>> m_TexelUniformBuffers;
+		std::vector<Ref<VulkanSamplerState>> m_Samplers;
 
 	private:
 		Ref<VkInstance> m_Instance;
@@ -76,6 +78,7 @@ namespace Polyboid
 		[[nodiscard]] Ref<VulkanDevice> GetDevice() const;
 		[[nodiscard]] std::any GetWindow() const { return m_Window; }
 		[[nodiscard]] Ref<VulkanSurfaceKHR> GetSurface() const;
+		Ref<Texture2D> CreateTexture2D(const Ref<Image2D>& image) override;
 
 		static vk::Device GetVulkanDevice();
 		static vk::Queue GetVulkanQueue();
@@ -92,7 +95,6 @@ namespace Polyboid
 		Ref<Framebuffer>
 		CreateFrameBuffer(const Ref<RenderPass>& renderPass) override;
 		Ref<Texture2D> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) override;
-		Ref<Texture2D> CreateTexture2D(const std::any& handle) override;
 		Ref<Texture3D> CreateTexture3D(const void* data, const TextureSettings& settings) override;
 		Ref<SamplerState> CreateSampler(const SamplerSettings& settings) override;
 

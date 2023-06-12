@@ -225,6 +225,74 @@ namespace Polyboid
 		spdlog::info("Image View {}", (uint64_t)v);
 	}
 
+	VulkanTexture2D::VulkanTexture2D(const Ref<Image2D>& image)
+	{
+
+		ImageSettings imageSettings;
+		imageSettings.height = image->GetHeight();
+		imageSettings.width = image->GetWidth();
+		imageSettings.sampleCount = 1;
+		imageSettings.format = image->GetImageFormat();
+		imageSettings.generateMips = false;
+		imageSettings.mipCount = 1;
+		imageSettings.usage = ImageUsage::Sampling;
+
+		m_Image = CreateRef<VulkanImage2D>(reinterpret_cast<VkRenderAPI*>(RenderAPI::Get()), imageSettings);
+
+		Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
+
+		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
+		cmdBuffer->Begin();
+		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()),  vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+
+		cmdBuffer->VulkanCopyImage(image, vk::ImageLayout::eTransferSrcOptimal, m_Image, vk::ImageLayout::eTransferDstOptimal);
+
+		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
+
+		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		cmdBuffer->End();
+		RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer.As<CommandBuffer>());
+
+		cmdList->Destroy();
+
+		vk::ImageViewCreateInfo createViewInfo;
+		createViewInfo.flags = vk::ImageViewCreateFlags();
+		createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
+		createViewInfo.viewType = vk::ImageViewType::e2D;
+		createViewInfo.format = Utils::ConvertToVulkanFormat(m_Image->GetImageFormat());
+		createViewInfo.image = std::any_cast<vk::Image>(m_Image->GetHandle());
+		createViewInfo.components = vk::ComponentMapping();
+		createViewInfo.subresourceRange.aspectMask = Utils::ImageFormatToAspectBits(m_Image->GetImageFormat()); //vk::ImageAspectFlagBits::eColor;
+		createViewInfo.subresourceRange.baseMipLevel = 0;
+		createViewInfo.subresourceRange.levelCount = 1;
+		createViewInfo.subresourceRange.baseArrayLayer = 0;
+		createViewInfo.subresourceRange.layerCount = 1;
+
+		auto [createViewResult, view] = VkRenderAPI::GetVulkanDevice().createImageView(createViewInfo);
+		vk::resultCheck(createViewResult, "Failed to create image view");
+
+		m_View = view;
+
+		SamplerSettings samplerSettings;
+		samplerSettings.wrap = TextureWrap::ClampToBorder;
+		samplerSettings.magFilter = MagFilterMode::Linear;
+		samplerSettings.minFilter = MinFilterMode::Linear;
+		samplerSettings.minLod = 0;
+	
+
+		Ref<VulkanSamplerState> sampler = CreateRef<VulkanSamplerState>(reinterpret_cast<VkRenderAPI*>(RenderAPI::Get()), samplerSettings);
+		m_SamplerState = sampler;
+		auto vulkanSampler = std::any_cast<vk::Sampler>(sampler->GetSamplerHandle());
+
+
+		m_ImageDescriptorInfo.sampler = vulkanSampler;
+		m_ImageDescriptorInfo.imageView = view;
+		m_ImageDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
+	}
+
 	void VulkanTexture2D::Destroy()
 	{
 

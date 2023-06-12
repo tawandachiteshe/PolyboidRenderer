@@ -8,6 +8,7 @@ namespace Polyboid
 	class VulkanSamplerState;
 	class VulkanImage2D;
 	class VkRenderAPI;
+	class Image2D;
 
 	class VulkanTexture2D : public Texture2D
 	{
@@ -33,7 +34,7 @@ namespace Polyboid
 
 		VulkanTexture2D(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
 		VulkanTexture2D(const VkRenderAPI* context, const vk::Image& imageHandle);
-
+		explicit VulkanTexture2D(const Ref<Image2D>& image);
 
 		virtual vk::DescriptorImageInfo GetVulkanDescriptorImageInfo();
 

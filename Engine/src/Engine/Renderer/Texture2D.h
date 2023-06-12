@@ -165,6 +165,7 @@ namespace Polyboid
         virtual ~Texture2D() = default;
         static Ref<Texture2D> Create(const TextureSettings& settings);
         static Ref<Texture2D> Create(const TextureSettings& settings, const void* data);
+        static Ref<Texture2D> Create(const Ref<Image2D>& image);
     };
 
     class Texture3D : public RenderResource

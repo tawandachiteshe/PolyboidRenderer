@@ -78,7 +78,7 @@ namespace Polyboid
 	public:
 
 		virtual Ref<Texture2D> CreateTexture2D(const TextureSettings& settings, const void* data = nullptr) = 0;
-		virtual Ref<Texture2D> CreateTexture2D(const std::any& handle) = 0;
+		virtual Ref<Texture2D> CreateTexture2D(const Ref<Image2D>& image) = 0;
 		virtual Ref<Texture3D> CreateTexture3D(const void* data, const TextureSettings& settings) = 0;
 		virtual Ref<SamplerState> CreateSampler(const SamplerSettings& settings) = 0;
 		virtual Ref<Framebuffer> CreateFrameBuffer(const FramebufferSettings& settings) = 0;

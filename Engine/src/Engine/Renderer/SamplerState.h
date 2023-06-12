@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <any>
 
+#include "Engine/Engine/Base.h"
 #include "glm/vec4.hpp"
 
 
@@ -89,6 +90,8 @@ namespace Polyboid
         virtual std::any GetSamplerHandle() = 0;
 
         virtual ~SamplerState() = default;
+
+        static Ref<SamplerState> Create(const SamplerSettings& settings);
     
     };
 

@@ -18,6 +18,7 @@
 #include "VulkanImage2D.h"
 #include "VulkanKomputePipeline.h"
 #include "VulkanPipelineDescriptorSetPool.h"
+#include "VulkanSamplerState.h"
 #include "VulkanStagingBuffer.h"
 #include "VulkanTexelBuffers.h"
 #include "VulkanTexture3D.h"
@@ -41,6 +42,8 @@ namespace Polyboid
 	{
 		return m_Surface;
 	}
+
+	
 
 	vk::Device VkRenderAPI::GetVulkanDevice()
 	{
@@ -123,10 +126,14 @@ namespace Polyboid
 		return texture.As<Texture2D>();
 	}
 
-	Ref<Texture2D> VkRenderAPI::CreateTexture2D(const std::any& handle)
+	Ref<Texture2D> VkRenderAPI::CreateTexture2D(const Ref<Image2D>& image)
 	{
-		return nullptr;
+		auto texture = ALLOC_API(VulkanTexture2D, image);
+		//m_Textures2D.push_back(texture);
+
+		return texture.As<Texture2D>();
 	}
+
 
 	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void* data, const TextureSettings& settings)
 	{
@@ -138,7 +145,9 @@ namespace Polyboid
 
 	Ref<SamplerState> VkRenderAPI::CreateSampler(const SamplerSettings& settings)
 	{
-		return nullptr;
+		auto sampler = ALLOC_API(VulkanSamplerState, this, settings);
+		m_Samplers.push_back(sampler);
+		return sampler.As<SamplerState>();
 	}
 
 
@@ -414,6 +423,11 @@ namespace Polyboid
 		for (auto& shader : m_VulkanShaders)
 		{
 			shader->Destroy();
+		}
+
+		for (auto& sampler : m_Samplers)
+		{
+			sampler->Destroy();
 		}
 
 		for (const auto& command : m_CommandLists)

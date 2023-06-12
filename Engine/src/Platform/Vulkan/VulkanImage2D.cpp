@@ -64,7 +64,7 @@ namespace Polyboid
 		case ImageUsage::TransferDst: createInfo.usage = eTransferDst; break;
 		case ImageUsage::ColorAttachmentSampling: createInfo.usage = imageSettings.generateMips ? eTransferSrc | eColorAttachment | eSampled : eColorAttachment | eSampled;  break;
 		case ImageUsage::DepthStencilAttachmentSampling: createInfo.usage = eDepthStencilAttachment | eSampled;  break;
-		case ImageUsage::StorageImage: createInfo.usage = eStorage | eSampled;
+		case ImageUsage::StorageImage: createInfo.usage = eStorage | eTransferSrc | eSampled;
 		default:;
 		}
 

@@ -71,7 +71,7 @@ namespace Polyboid
 			KomputeCommand::BeginCommands(m_KomputeCommandBuffer, i);
 			KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
 			KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
-			KomputeCommand::Dispatch({400, 400, 1});
+			KomputeCommand::Dispatch({100, 100, 1});
 			KomputeCommand::EndCommands();
 			KomputeCommand::ComputeOneTime({m_KomputeCommandBuffer}, i);
 		}
@@ -151,6 +151,8 @@ namespace Polyboid
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
 
+		auto image2dTexture = Texture2D::Create(image2d);
+
 
 		m_UniformBuffers = UniformBufferSet::Create(sizeof(CameraBufferData));
 		m_StorageBuffers = StorageBufferSet::Create(sizeof(m_Vertices));
@@ -164,6 +166,7 @@ namespace Polyboid
 		m_Pipeline->BindTexture2D(2, texture);
 		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
 		m_Pipeline->BindTexture3D(4, greenTexture3D);
+		m_Pipeline->BindTexture2D(5, image2dTexture);
 		m_Pipeline->WriteSetResourceBindings();
 		//
 
@@ -258,7 +261,7 @@ namespace Polyboid
 
 		m_EntityBufferData.transform = glm::mat4(1.0f) * glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation),
 		                                                             {0, 0.0f, 1.0}) * glm::scale(
-			glm::mat4(1.0f), {0.2, 0.2, 0.2});
+			glm::mat4(1.0f), {3.2, 3.2, 3.2});
 
 		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f });
 
