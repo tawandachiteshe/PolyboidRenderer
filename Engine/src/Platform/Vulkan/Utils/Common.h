@@ -184,5 +184,77 @@ namespace Polyboid
 				throw std::runtime_error("Invalid format");
 			}
 		}
+
+
+		inline static uint32_t ConvertToVulkanFormatToBytes(EngineGraphicsFormats format)
+		{
+			switch (format)
+			{
+			case EngineGraphicsFormats::R8:
+			case EngineGraphicsFormats::R8UI:
+			case EngineGraphicsFormats::R8I:
+				return 1;
+			case EngineGraphicsFormats::R16F:
+			case EngineGraphicsFormats::R16UI:
+			case EngineGraphicsFormats::R16I:
+			case EngineGraphicsFormats::RG8:
+			case EngineGraphicsFormats::RG8UI:
+			case EngineGraphicsFormats::RG8I:
+				return 2;
+			case EngineGraphicsFormats::R32F:
+			case EngineGraphicsFormats::R32UI:
+			case EngineGraphicsFormats::R32I:
+			case EngineGraphicsFormats::RG16F:
+			case EngineGraphicsFormats::RG16UI:
+			case EngineGraphicsFormats::RG16I:
+				return 4;
+			case EngineGraphicsFormats::RG32F:
+			case EngineGraphicsFormats::RG32UI:
+			case EngineGraphicsFormats::RG32I:
+				return 4 * 2;
+			case EngineGraphicsFormats::RGB8:
+			case EngineGraphicsFormats::RGB8UI:
+			case EngineGraphicsFormats::RGB8I:
+				return 3;
+			case EngineGraphicsFormats::RGB16F:
+			case EngineGraphicsFormats::RGB16UI:
+			case EngineGraphicsFormats::RGB16I:
+				return 2 * 3;
+			case EngineGraphicsFormats::RGB32F:
+			case EngineGraphicsFormats::RGB32UI:
+			case EngineGraphicsFormats::RGB32I:
+				return 4 * 3;
+			case EngineGraphicsFormats::RGBA8:
+			case EngineGraphicsFormats::RGBA8UI:
+			case EngineGraphicsFormats::RGBA8I:
+			case EngineGraphicsFormats::BGRA8ISrgb:
+				return 4;
+			case EngineGraphicsFormats::RGBA16F:
+			case EngineGraphicsFormats::RGBA16UI:
+			case EngineGraphicsFormats::RGBA16I:
+				return 4 * 2;
+			case EngineGraphicsFormats::RGBA32F:
+			case EngineGraphicsFormats::RGBA32UI:
+			case EngineGraphicsFormats::RGBA32I:
+				return 4 * 4;
+			case EngineGraphicsFormats::DepthComponent16:
+				return 2;
+			case EngineGraphicsFormats::DepthComponent32F:
+				return 4;
+			case EngineGraphicsFormats::DepthComponent24:
+				return  3;
+			case EngineGraphicsFormats::Depth24Stencil8:
+				return 4;
+			case EngineGraphicsFormats::Depth32FStencil8:
+				return 5;
+
+			case EngineGraphicsFormats::BGRA8: 
+			case EngineGraphicsFormats::BGRA8I: 
+			case EngineGraphicsFormats::BGRA8U:
+				return 4;
+			default:
+				throw std::runtime_error("Invalid format");
+			}
+		}
 	}
 }
