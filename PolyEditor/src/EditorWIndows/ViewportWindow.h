@@ -41,6 +41,8 @@ namespace Polyboid
 		Ref<StagingBufferSet> m_StorageStagingBuffers;
 		Ref<StagingBufferSet> m_StorageStagingBuffersVB;
 		std::vector<ImTextureID> m_FramebufferTextures;
+		Ref<Image2D> m_Image2D;
+		Ref<Texture2D> m_ImageTexture;
 		Ref<RenderPass> m_RenderPass;
 		Ref<FrameBufferSet> m_FrameBuffers;
 		Ref<VertexBufferSet> m_VertexBuffer;

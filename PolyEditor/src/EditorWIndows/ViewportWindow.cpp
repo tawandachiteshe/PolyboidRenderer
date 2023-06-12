@@ -46,7 +46,7 @@ namespace Polyboid
 		imageSettings.usage = ImageUsage::StorageImage;
 
 
-		auto image2d = Image2D::Create(imageSettings);
+		m_Image2D = Image2D::Create(imageSettings);
 
 		m_EditorCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
@@ -58,7 +58,7 @@ namespace Polyboid
 
 		m_RefComputePipeline->AllocateDescriptorSets(0);
 		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
-		m_RefComputePipeline->BindImage2D(1, image2d, 0);
+		m_RefComputePipeline->BindImage2D(1, m_Image2D, 0);
 		m_RefComputePipeline->BindTexelStorageBuffer(2, storageTexture, 0);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
@@ -151,7 +151,7 @@ namespace Polyboid
 		//ShaderRegistry::Exist("Renderer3D/skybox");
 		//ShaderRegistry::LoadGraphicsShaders("");
 
-		auto image2dTexture = Texture2D::Create(image2d);
+		m_ImageTexture = Texture2D::Create(m_Image2D);
 
 
 		m_UniformBuffers = UniformBufferSet::Create(sizeof(CameraBufferData));
@@ -166,7 +166,7 @@ namespace Polyboid
 		m_Pipeline->BindTexture2D(2, texture);
 		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
 		m_Pipeline->BindTexture3D(4, greenTexture3D);
-		m_Pipeline->BindTexture2D(5, image2dTexture);
+		m_Pipeline->BindTexture2D(5, m_ImageTexture);
 		m_Pipeline->WriteSetResourceBindings();
 		//
 
@@ -180,25 +180,6 @@ namespace Polyboid
 				Imgui::GetVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
 		}
 
-		// RenderCommand::RegisterFreeFunc([&]
-		// {
-		// 	spdlog::info("Freeing Resources");
-		//
-		//
-		// 	for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
-		// 	{
-		// 		Imgui::FreeVulkanTextureID(m_FramebufferTextures.at(i));
-		// 	}
-		//
-		// 	m_FramebufferTextures.clear();
-		//
-		// 	for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
-		// 	{
-		// 		m_FramebufferTextures.push_back(
-		// 			Imgui::GetVulkanTextureID(
-		// 				m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
-		// 	}
-		// });
 
 		RenderCommand::PushCommandBufferSets({m_EditorCommandBuffer});
 
@@ -236,7 +217,7 @@ namespace Polyboid
 		ImGui::PopStyleVar();
 
 		ImGui::Begin("Lod controller");
-		ImGui::SliderFloat("Texture lod", &lod.projection[0][0], 0.0, 10.0f);
+		ImGui::SliderFloat("Texture lod", &m_Rotation, 0.0, 10000.0f);
 		ImGui::End();
 	}
 
@@ -257,7 +238,6 @@ namespace Polyboid
 		m_CameraData.view = m_ViewportCamera->GetViewMatrix();
 		m_CameraData.projection = m_ViewportCamera->GetProjection();
 
-		m_Rotation += 100 * dt;
 
 		m_EntityBufferData.transform = glm::mat4(1.0f) * glm::rotate(glm::mat4(1.0f), glm::radians(m_Rotation),
 		                                                             {0, 0.0f, 1.0}) * glm::scale(
@@ -268,7 +248,7 @@ namespace Polyboid
 		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
 		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
 		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
-		KomputeCommand::Dispatch({ 100, 1, 1 });
+		KomputeCommand::Dispatch({ 100, 100, 1 });
 		KomputeCommand::EndFrameCommands();
 
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);

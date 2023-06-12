@@ -26,6 +26,9 @@ namespace Polyboid
 		TextureSettings m_Settings;
 		vk::Image m_VulkanImage;
 
+		//Non owns this
+		Ref<VulkanImage2D> m_CopyingImageNonOwning;
+
 	public:
 
 		void Init(const VkRenderAPI* context, const TextureSettings& settings, const void* data = nullptr);
@@ -37,6 +40,8 @@ namespace Polyboid
 		explicit VulkanTexture2D(const Ref<Image2D>& image);
 
 		virtual vk::DescriptorImageInfo GetVulkanDescriptorImageInfo();
+
+		void SetImageData(const Ref<CommandBuffer>& cmdBuffer) override;
 
 		void Bind(uint32_t slot) override;
 		void UnBind() override;

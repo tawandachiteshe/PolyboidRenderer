@@ -225,7 +225,7 @@ namespace Polyboid
 		spdlog::info("Image View {}", (uint64_t)v);
 	}
 
-	VulkanTexture2D::VulkanTexture2D(const Ref<Image2D>& image)
+	VulkanTexture2D::VulkanTexture2D(const Ref<Image2D>& image): m_CopyingImageNonOwning(image.As<VulkanImage2D>())
 	{
 
 		ImageSettings imageSettings;
@@ -243,14 +243,14 @@ namespace Polyboid
 
 		const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
 		cmdBuffer->Begin();
-		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()),  vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
-		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()),  vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
 
 		cmdBuffer->VulkanCopyImage(image, vk::ImageLayout::eTransferSrcOptimal, m_Image, vk::ImageLayout::eTransferDstOptimal);
 
-		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(image->GetHandle()), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
 
-		cmdBuffer->TransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		cmdBuffer->End();
 		RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer.As<CommandBuffer>());
@@ -277,8 +277,8 @@ namespace Polyboid
 
 		SamplerSettings samplerSettings;
 		samplerSettings.wrap = TextureWrap::ClampToBorder;
-		samplerSettings.magFilter = MagFilterMode::Linear;
-		samplerSettings.minFilter = MinFilterMode::Linear;
+		samplerSettings.magFilter = MagFilterMode::Nearest;
+		samplerSettings.minFilter = MinFilterMode::Nearest;
 		samplerSettings.minLod = 0;
 	
 
@@ -323,6 +323,21 @@ namespace Polyboid
 		m_ImageDescriptorInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
 		return m_ImageDescriptorInfo;
+	}
+
+	void VulkanTexture2D::SetImageData(const Ref<CommandBuffer>& _cmdBuffer)
+	{
+		const auto& cmdBuffer = _cmdBuffer.As<VulkanCommandBuffer>();
+
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_CopyingImageNonOwning->GetHandle()), vk::ImageLayout::eGeneral, vk::ImageLayout::eTransferSrcOptimal);
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+
+		cmdBuffer->VulkanCopyImage(m_CopyingImageNonOwning, vk::ImageLayout::eTransferSrcOptimal, m_Image, vk::ImageLayout::eTransferDstOptimal);
+
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_CopyingImageNonOwning->GetHandle()), vk::ImageLayout::eTransferSrcOptimal, vk::ImageLayout::eGeneral);
+
+		cmdBuffer->VulkanTransitionImageLayout(std::any_cast<vk::Image>(m_Image->GetHandle()), vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+
 	}
 
 

@@ -213,7 +213,7 @@ namespace Polyboid
 		
 	}
 
-	void VulkanCommandBuffer::TransitionImageLayout(vk::Image src, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+	void VulkanCommandBuffer::VulkanTransitionImageLayout(vk::Image src, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
 		uint32_t layerCount, uint32_t mipLevel)
 	{
 		vk::ImageMemoryBarrier barrier{};

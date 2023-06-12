@@ -100,7 +100,7 @@ namespace Polyboid
 
 			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
 			cmdBuffer->Begin();
-			cmdBuffer->TransitionImageLayout(m_Image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+			cmdBuffer->VulkanTransitionImageLayout(m_Image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
 
 			cmdBuffer->End();
 			RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer.As<CommandBuffer>());

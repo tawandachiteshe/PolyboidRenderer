@@ -7,8 +7,9 @@
 
 namespace Polyboid
 {
+	class CommandBuffer;
 
-    enum class TextureFilterMode
+	enum class TextureFilterMode
     {
         Nearest,
         Linear,
@@ -161,6 +162,7 @@ namespace Polyboid
 
 
         virtual void SetData(const void* data, uint32_t size) = 0;
+        virtual void SetImageData(const Ref<CommandBuffer>& cmdBuffer) = 0;
 
         virtual ~Texture2D() = default;
         static Ref<Texture2D> Create(const TextureSettings& settings);
