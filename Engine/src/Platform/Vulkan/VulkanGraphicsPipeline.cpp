@@ -52,8 +52,7 @@ namespace Polyboid
 
 		if (!vulkanFragShader->GetPushContantRange().empty())
 		{
-			m_PushConstantRanges.insert(std::end(m_PushConstantRanges),
-				vulkanFragShader->GetPushContantRange().begin(), vulkanFragShader->GetPushContantRange().end());
+			m_PushConstantRanges.push_back(vulkanFragShader->GetPushContantRange().at(0));
 		}
 
 
@@ -197,7 +196,10 @@ namespace Polyboid
 				BindTexture3D(binding, texture, set);
 			}
 
-
+			for (auto [binding, texture] : m_Image2D[set])
+			{
+				BindImage2D(binding, texture, set);
+			}
 
 			WriteSetResourceBindings(set);
 		}
@@ -416,6 +418,16 @@ namespace Polyboid
 		}
 
 		m_TextureSets3D[setBinding][binding] = (texture);
+	}
+
+	void VulkanGraphicsPipeline::BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteImage2D(binding, bufferSet);
+		}
+
+		m_Image2D[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)

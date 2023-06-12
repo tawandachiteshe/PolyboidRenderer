@@ -1,10 +1,12 @@
 ﻿#pragma once
 #include "Engine/Engine/Window.h"
-#include "GLFW/glfw3.h"
 
+
+struct GLFWwindow;
 
 namespace Polyboid
 {
+
     class WindowsWindow : public Window
     {
 

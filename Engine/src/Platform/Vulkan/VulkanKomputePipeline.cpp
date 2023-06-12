@@ -194,6 +194,16 @@ namespace Polyboid
 		m_TextureSets[setBinding][binding] = (bufferSet);
 	}
 
+	void VulkanKomputePipeline::BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteImage2D(binding, bufferSet);
+		}
+
+		m_ImageSets[setBinding][binding] = (bufferSet);
+	}
+
 	void VulkanKomputePipeline::WriteSetResourceBindings(uint32_t set)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)

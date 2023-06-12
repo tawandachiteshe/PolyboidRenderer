@@ -76,7 +76,7 @@ namespace Polyboid
 
 
 		vk::Image::NativeType vulkanImage;
-		auto result = vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
+		const auto result = vmaCreateImage(allocator, &vulkanImageInfo, &allocInfo, &vulkanImage, &allocation, nullptr);
 
 		if (result != VK_SUCCESS)
 		{
@@ -85,12 +85,35 @@ namespace Polyboid
 
 		m_Image = vulkanImage;
 		m_ImageMemory = allocation;
+
+		vk::ImageViewCreateInfo createViewInfo;
+		createViewInfo.flags = vk::ImageViewCreateFlags();
+		createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
+		createViewInfo.viewType = vk::ImageViewType::e2D;
+		createViewInfo.format = createInfo.format;
+		createViewInfo.image = m_Image;
+		createViewInfo.components = vk::ComponentMapping();
+		createViewInfo.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
+
+		auto [createViewResult, view] = device.createImageView(createViewInfo);
+		vk::resultCheck(createViewResult, "Failed to create image view");
+
+		m_View = view;
+
+
+		m_ImageDescInfo.imageLayout = createInfo.initialLayout;
+		m_ImageDescInfo.imageView = view;
 	}
 
 	void VulkanImage2D::Recreate()
 	{
 		Destroy();
 		Init(m_Context, m_Settings);
+	}
+
+	vk::DescriptorImageInfo VulkanImage2D::GetVulkanDescriptorImageInfo()
+	{
+		return m_ImageDescInfo;
 	}
 
 	VulkanImage2D::VulkanImage2D(const VkRenderAPI* context, const ImageSettings& imageSettings): m_Context(context), m_Settings(imageSettings)

@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "RenderResource.h"
+#include "Engine/Engine/Base.h"
 
 
 namespace Polyboid
@@ -59,6 +60,8 @@ namespace Polyboid
 		virtual ImageLayout GetLayout() = 0;
 		virtual uint32_t GetHeight() = 0;
 		virtual uint32_t GetWidth() = 0;
+
+		static Ref<Image2D> Create(const ImageSettings& settings);
 
 	};
 

@@ -39,9 +39,10 @@ namespace Polyboid
 		const auto& ubos = m_ShaderInfo.reflectionInfo.ubos;
 		const auto& ssbos = m_ShaderInfo.reflectionInfo.ssbos;
 		const auto& textures = m_ShaderInfo.reflectionInfo.textures;
+		const auto& images = m_ShaderInfo.reflectionInfo.images;
 		const auto& pushConstants = m_ShaderInfo.reflectionInfo.pushConstants;
 
-		for (auto& constant : pushConstants)
+		for (const auto& constant : pushConstants)
 		{
 			const auto& constantInfo = constant.second;
 			vk::PushConstantRange pushConstant{};
@@ -55,7 +56,7 @@ namespace Polyboid
 			
 		}
 
-		for (auto& ubo : ubos)
+		for (const auto& ubo : ubos)
 		{
 			auto& bufferInfo = ubo.second;
 			
@@ -80,7 +81,7 @@ namespace Polyboid
 		}
 
 
-		for (auto& ssbo : ssbos)
+		for (const auto& ssbo : ssbos)
 		{
 			auto& bufferInfo = ssbo.second;
 			vk::DescriptorSetLayoutBinding binding{};
@@ -109,6 +110,29 @@ namespace Polyboid
 			auto& bufferInfo = texture.second;
 			vk::DescriptorSetLayoutBinding binding{};
 			binding.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+			binding.descriptorCount = bufferInfo.arrayLength;
+			binding.stageFlags = m_ShaderStateInfo.stage;
+			binding.binding = bufferInfo.Binding;
+
+			vk::WriteDescriptorSet write{};
+			write.descriptorCount = bufferInfo.arrayLength;
+			write.dstArrayElement = 0;
+			write.pBufferInfo = nullptr;
+			write.pImageInfo = nullptr;
+			write.dstBinding = bufferInfo.Binding;
+			write.descriptorType = binding.descriptorType;
+
+			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
+
+			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
+		}
+
+
+		for (auto& image : images)
+		{
+			auto& bufferInfo = image.second;
+			vk::DescriptorSetLayoutBinding binding{};
+			binding.descriptorType = vk::DescriptorType::eSampledImage;
 			binding.descriptorCount = bufferInfo.arrayLength;
 			binding.stageFlags = m_ShaderStateInfo.stage;
 			binding.binding = bufferInfo.Binding;

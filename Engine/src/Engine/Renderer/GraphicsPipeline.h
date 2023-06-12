@@ -63,6 +63,7 @@ namespace Polyboid
         virtual void BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet, uint32_t setBinding = 0) = 0;
         virtual void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding = 0) = 0;
         virtual void BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding = 0) = 0;
+        virtual void BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding) = 0;
 
         virtual void WriteSetResourceBindings(uint32_t set = 0) = 0;
 

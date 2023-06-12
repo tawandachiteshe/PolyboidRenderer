@@ -33,6 +33,14 @@ namespace Polyboid
 
 		auto texture = Texture2D::Create(textureSettings);
 
+		ImageSettings imageSettings{};
+		imageSettings.height = 400;
+		imageSettings.width = 400;
+		imageSettings.format = EngineGraphicsFormats::RGBA8;
+
+
+		auto image2d = Image2D::Create(imageSettings);
+
 		m_EditorCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_AgeBuffer = StorageBufferSet::Create(sizeof(uint32_t) * 100);
@@ -43,6 +51,7 @@ namespace Polyboid
 
 		m_RefComputePipeline->AllocateDescriptorSets(0);
 		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
+		m_RefComputePipeline->BindImage2D(1, image2d, 0);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
 		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
@@ -54,7 +63,7 @@ namespace Polyboid
 			KomputeCommand::BeginCommands(m_KomputeCommandBuffer, i);
 			KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
 			KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
-			KomputeCommand::Dispatch({100, 1, 1});
+			KomputeCommand::Dispatch({400, 400, 1});
 			KomputeCommand::EndCommands();
 			KomputeCommand::ComputeOneTime({m_KomputeCommandBuffer}, i);
 		}
@@ -200,6 +209,8 @@ namespace Polyboid
 		m_CurrentGameObject = nullptr;
 	}
 
+	static CameraBufferData lod{};
+
 	void ViewportWindow::RenderImgui()
 	{
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
@@ -212,6 +223,10 @@ namespace Polyboid
 		ImGui::End();
 
 		ImGui::PopStyleVar();
+
+		ImGui::Begin("Lod controller");
+		ImGui::SliderFloat("Texture lod", &lod.projection[0][0], 0.0, 10.0f);
+		ImGui::End();
 	}
 
 	void ViewportWindow::Update(float ts)
@@ -237,8 +252,7 @@ namespace Polyboid
 		                                                             {0, 0.0f, 1.0}) * glm::scale(
 			glm::mat4(1.0f), {0.2, 0.2, 0.2});
 
-		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), {0.0, 0.5f, 0.0f}) * glm::scale(
-			glm::mat4(1.0f), {0.2, 0.2, 0.2});
+		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f });
 
 		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
 		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
@@ -253,6 +267,7 @@ namespace Polyboid
 		RenderCommand::BindGraphicsPipeline(m_Pipeline);
 		RenderCommand::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData, sizeof(m_EntityBufferData));
+		RenderCommand::FragmentShaderPushConstants(m_Pipeline, &lod, sizeof(lod));
 
 		Viewport viewport{};
 		viewport.Width = 800;

@@ -18,6 +18,7 @@
 #include "Engine/Renderer/KomputeCommand.h"
 #include "Engine/Renderer/SyncObjects.h"
 #include "Utils/VulkanDevice.h"
+#include <GLFW/glfw3.h>
 
 
 namespace Polyboid

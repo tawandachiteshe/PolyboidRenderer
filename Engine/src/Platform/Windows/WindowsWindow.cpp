@@ -5,7 +5,7 @@
 
 #include "Engine/Engine/Events/MouseEvents.h"
 #include "Engine/Engine/Events/WindowEvent.h"
-
+#include <GLFW/glfw3.h>
 
 namespace Polyboid
 {

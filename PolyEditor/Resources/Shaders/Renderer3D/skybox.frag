@@ -11,13 +11,20 @@ layout(location = 2) flat in uint vAge;
 layout (binding = 2) uniform sampler2D skybox;
 layout (binding = 4) uniform samplerCube skyboxCube;
 
+layout(push_constant) uniform EntityBuffer {
+
+	mat4 padding;
+	mat4 padding2;
+
+} entity;
+
 const float PI = 3.14159265359;
 
 void main() {
 
 	//vec3 envColor = textureLod(skybox, -vTextureCoord, 1.2).xyz;
 	
-	vec3 envSampler = textureLod(skybox, vTextureCoord2D, 6.0f).xyz;
+	vec3 envSampler = textureLod(skybox, vTextureCoord2D, 0).xyz;
 
 	//envColor = envColor / (envColor + vec3(1.0));
 	//envColor = pow(envColor, vec3(1.0/2.2));

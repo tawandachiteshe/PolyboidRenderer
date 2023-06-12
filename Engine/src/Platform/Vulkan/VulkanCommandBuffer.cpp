@@ -118,6 +118,7 @@ namespace Polyboid
 	void VulkanCommandBuffer::CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer,
 		const Ref<VertexBuffer>& dstVtxBuffer)
 	{
+		CopyHostMemoryBarrier(srcVtxBuffer);
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;

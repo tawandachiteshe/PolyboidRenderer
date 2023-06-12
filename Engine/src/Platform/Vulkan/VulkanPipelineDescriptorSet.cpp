@@ -6,6 +6,7 @@
 
 #include "Buffers.h"
 #include "VkRenderAPI.h"
+#include "VulkanImage2D.h"
 #include "VulkanTexture2D.h"
 #include "VulkanTexture3D.h"
 #include "Engine/Renderer/RenderAPI.h"
@@ -28,8 +29,8 @@ namespace Polyboid
 	{
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
-		auto vulkanBuffer = buffer.As<VulkanUniformBuffer>();
-		auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
+		const auto vulkanBuffer = buffer.As<VulkanUniformBuffer>();
+		const auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
 
 		m_Buffers[binding] = (bufferInfo);
 		writeDescriptor.pBufferInfo = &m_Buffers.at(binding);
@@ -45,9 +46,9 @@ namespace Polyboid
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
-		auto vulkanBuffer = buffer.As<VulkanShaderStorage>();
+		const auto vulkanBuffer = buffer.As<VulkanShaderStorage>();
 		
-		auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
+		const auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
 		m_Buffers[binding] = (bufferInfo);
 
 		writeDescriptor.pBufferInfo = &m_Buffers.at(binding);
@@ -61,8 +62,8 @@ namespace Polyboid
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
-		auto vulkanBuffer = texture.As<VulkanTexture2D>();
-		auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
+		const auto vulkanBuffer = texture.As<VulkanTexture2D>();
+		const auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
 		m_Images[binding] = (imageInfo);
 		writeDescriptor.pImageInfo = &m_Images.at(binding);
 
@@ -82,10 +83,25 @@ namespace Polyboid
 		m_WriteSets.emplace_back(writeDescriptor);
 	}
 
+	void VulkanPipelineDescriptorSet::WriteImage2D(uint32_t binding, const Ref<Image2D>& image2d)
+	{
+
+		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
+		writeDescriptor.dstSet = m_Set;
+
+		const auto vulkanBuffer = image2d.As<VulkanImage2D>();
+		const auto imageInfo = vulkanBuffer->GetVulkanDescriptorImageInfo();
+		m_Images[binding] = (imageInfo);
+		writeDescriptor.pImageInfo = &m_Images.at(binding);
+
+		m_WriteSets.emplace_back(writeDescriptor);
+
+	}
+
 	void VulkanPipelineDescriptorSet::Commit()
 	{
-		auto api = reinterpret_cast<VkRenderAPI*>(RenderAPI::Get());
-		auto device = api->GetDevice()->GetVulkanDevice();
+		const auto api = reinterpret_cast<VkRenderAPI*>(RenderAPI::Get());
+		const auto device = api->GetDevice()->GetVulkanDevice();
 
 		device.updateDescriptorSets(m_WriteSets, {});
 

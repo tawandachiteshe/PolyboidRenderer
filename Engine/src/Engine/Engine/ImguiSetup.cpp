@@ -8,9 +8,9 @@
 #include "Application.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include <GLFW/glfw3native.h>
 #include "imgui_impl_glfw.h"
 #include "Engine/Renderer/RenderAPI.h"
-#include "GLFW/glfw3.h"
 #include "imgui_impl_vulkan.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Platform/Vulkan/VkRenderAPI.h"
@@ -228,19 +228,10 @@ namespace Polyboid
         g_QueueFamily = init_info.QueueFamily;
         
 
-        int w, h;
-        glfwGetFramebufferSize(s_Data.window, &w, &h);
-        ImGui_ImplVulkanH_Window* wd = &s_MainWindowData;
-
-        vk::SurfaceKHR surface = renderAPI->GetSurface()->GetSurface();
-        
-
-        //SetupVulkanWindow(wd, surface, w, h);
 
         ImGui_ImplGlfw_InitForVulkan(s_Data.window, true);
         ImGui_ImplVulkan_Init(&init_info, s_Data.m_RenderPass->GetHandle());
 
-        // Upload Fonts
         {
             Ref<VulkanCommandBufferSet> uploadList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
             auto cmd = uploadList->GetCommandBufferAt(0);
@@ -284,27 +275,7 @@ namespace Polyboid
 
     void Imgui::RecreateVulkanRenderer()
     {
-        // DestroyVulkanRenderer();
-        // InitVulkanRenderer();
-        auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
 
-        auto Instance = renderAPI->GetInstance()->GetVKInstance();
-        auto PhysicalDevice = renderAPI->GetPhysicalDevice()->GetPhysicalDevice();
-        auto Device = renderAPI->GetDevice()->GetVulkanDevice();
-        auto QueueFamily = renderAPI->GetPhysicalDevice()->GetFamilyIndices().GraphicsFamily.value();
-        auto Queue = renderAPI->GetDevice()->GetGraphicsQueue();
-
-        int width = 0, height = 0;
-        glfwGetFramebufferSize(std::any_cast<GLFWwindow*>(Application::Get().GetWindow()->GetNativeWindow()), &width, &height);
-
-        if (width > 0 && height > 0)
-        {
-            // ImGui_ImplVulkan_SetMinImageCount(2);
-            // ImGui_ImplVulkanH_CreateOrResizeWindow(Instance, PhysicalDevice, Device, &s_Window, QueueFamily, nullptr, (int)width, (int)height, 2);
-            // s_MainWindowData.FrameIndex = 0;
-        }
-
-        
     }
 
     void Imgui::Begin()
@@ -341,14 +312,14 @@ namespace Polyboid
     void Imgui::ShutDown()
     {
         
-        auto type = RenderAPI::Get()->GetRenderAPIType();
+        const auto type = RenderAPI::Get()->GetRenderAPIType();
 
         if (type == RenderAPIType::Vulkan)
         {
            
-            auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
-            auto device = renderAPI->GetDevice()->GetVulkanDevice();
-            auto result = device.waitIdle();
+            const auto renderAPI = dynamic_cast<VkRenderAPI*>(RenderAPI::Get());
+            const auto device = renderAPI->GetDevice()->GetVulkanDevice();
+            const auto result = device.waitIdle();
             vk::resultCheck(result, "Failed to wait");
             // s_Data.m_CommandList->Destroy(device);
             device.destroyDescriptorPool(std::any_cast<vk::DescriptorPool>(s_Data.m_CommandPool));

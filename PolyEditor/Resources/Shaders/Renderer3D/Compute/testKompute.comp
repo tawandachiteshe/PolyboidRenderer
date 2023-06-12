@@ -6,11 +6,30 @@ layout(std430, binding = 0) buffer AgeSSBO {
    uint ages[100];
 };
 
+layout(rgba8, binding = 1) uniform image2D testImage;
+layout(set = 0, binding = 2) uniform samplerBuffer testImage2;
+
 
 void main()
 {
 	
 	ages[gl_GlobalInvocationID.x] = gl_WorkGroupID.x;
 
+	if(l.x < 10 || l.y < 10)
+	{
+		testImage2[0][0] = 255;
+	}
+
+	
+
+	ivec2 l = ivec2(gl_GlobalInvocationID.xy);
+
+	if(l.x % 10 == 0 || l.y % 10 == 0) {
+		imageStore(testImage, l , uvec4(255, 0, 100, 1000));
+	} else {
+		imageStore(testImage, l , uvec4(0, 255, 0, 255));
+	}
+
+	
 	
 }
