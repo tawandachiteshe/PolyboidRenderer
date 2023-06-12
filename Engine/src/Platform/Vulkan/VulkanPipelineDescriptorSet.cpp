@@ -7,6 +7,7 @@
 #include "Buffers.h"
 #include "VkRenderAPI.h"
 #include "VulkanImage2D.h"
+#include "VulkanTexelBuffers.h"
 #include "VulkanTexture2D.h"
 #include "VulkanTexture3D.h"
 #include "Engine/Renderer/RenderAPI.h"
@@ -14,9 +15,10 @@
 
 namespace Polyboid
 {
-
-	VulkanPipelineDescriptorSet::VulkanPipelineDescriptorSet(vk::DescriptorSet set, vk::PipelineLayout layout, const std::map<uint32_t, vk::WriteDescriptorSet>& writeSet): m_Set(set)
-	, m_WriteSetsMap(writeSet), m_Layout(layout)
+	VulkanPipelineDescriptorSet::VulkanPipelineDescriptorSet(vk::DescriptorSet set, vk::PipelineLayout layout,
+	                                                         const std::map<uint32_t, vk::WriteDescriptorSet>&
+	                                                         writeSet): m_Set(set)
+	                                                                    , m_WriteSetsMap(writeSet), m_Layout(layout)
 	{
 	}
 
@@ -37,8 +39,6 @@ namespace Polyboid
 
 
 		m_WriteSets.emplace_back(writeDescriptor);
-		
-
 	}
 
 	void VulkanPipelineDescriptorSet::WriteStorageBuffer(uint32_t binding, const Ref<StorageBuffer>& buffer)
@@ -47,14 +47,13 @@ namespace Polyboid
 		writeDescriptor.dstSet = m_Set;
 
 		const auto vulkanBuffer = buffer.As<VulkanShaderStorage>();
-		
+
 		const auto bufferInfo = vulkanBuffer->GetVulkanDescBuffer();
 		m_Buffers[binding] = (bufferInfo);
 
 		writeDescriptor.pBufferInfo = &m_Buffers.at(binding);
 
 		m_WriteSets.emplace_back(writeDescriptor);
-		
 	}
 
 	void VulkanPipelineDescriptorSet::WriteTexture2D(uint32_t binding, const Ref<Texture2D>& texture)
@@ -85,7 +84,6 @@ namespace Polyboid
 
 	void VulkanPipelineDescriptorSet::WriteImage2D(uint32_t binding, const Ref<Image2D>& image2d)
 	{
-
 		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
 		writeDescriptor.dstSet = m_Set;
 
@@ -95,7 +93,40 @@ namespace Polyboid
 		writeDescriptor.pImageInfo = &m_Images.at(binding);
 
 		m_WriteSets.emplace_back(writeDescriptor);
+	}
 
+	void VulkanPipelineDescriptorSet::WriteTexelStorageBuffer(uint32_t binding,
+	                                                          const Ref<TexelStorageBuffer>& texelStorage)
+	{
+		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
+		writeDescriptor.dstSet = m_Set;
+
+		const auto vulkanBuffer = texelStorage.As<VulkanTexelStorageBuffer>();
+		const auto bufferView = vulkanBuffer->GetBufferView();
+		m_BufferViews[binding] = bufferView;
+
+		writeDescriptor.pTexelBufferView = &m_BufferViews.at(binding);
+		writeDescriptor.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
+
+
+		m_WriteSets.emplace_back(writeDescriptor);
+	}
+
+	void VulkanPipelineDescriptorSet::WriteTexelUniformBuffer(uint32_t binding,
+	                                                          const Ref<TexelUniformBuffer>& texelStorage)
+	{
+		vk::WriteDescriptorSet writeDescriptor = m_WriteSetsMap.at(binding);
+		writeDescriptor.dstSet = m_Set;
+
+		const auto vulkanBuffer = texelStorage.As<VulkanTexelUniformBuffer>();
+		const auto bufferView = vulkanBuffer->GetBufferView();
+		m_BufferViews[binding] = bufferView;
+
+
+		writeDescriptor.pTexelBufferView = &bufferView;
+		writeDescriptor.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
+
+		m_WriteSets.emplace_back(writeDescriptor);
 	}
 
 	void VulkanPipelineDescriptorSet::Commit()
@@ -104,12 +135,10 @@ namespace Polyboid
 		const auto device = api->GetDevice()->GetVulkanDevice();
 
 		device.updateDescriptorSets(m_WriteSets, {});
-
 	}
 
 	void VulkanPipelineDescriptorSet::Recreate()
 	{
-	
 	}
 
 	vk::PipelineLayout VulkanPipelineDescriptorSet::GetDescLayout()

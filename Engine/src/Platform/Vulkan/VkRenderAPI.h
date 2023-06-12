@@ -5,6 +5,8 @@
 
 namespace Polyboid
 {
+	class VulkanTexelUniformBuffer;
+	class VulkanTexelStorageBuffer;
 	class VulkanKomputePipeline;
 	class VulkanStagingBuffer;
 	class VulkanPipelineDescriptorSetPool;
@@ -50,7 +52,8 @@ namespace Polyboid
 		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
 		std::vector<Ref<VulkanStagingBuffer>> m_StagingBuffers;
 		std::vector<vk::CommandBuffer> m_CommandBuffersBatching;
-
+		std::vector<Ref<VulkanTexelStorageBuffer>> m_TexelStorageBuffers;
+		std::vector<Ref<VulkanTexelUniformBuffer>> m_TexelUniformBuffers;
 
 	private:
 		Ref<VkInstance> m_Instance;
@@ -105,6 +108,9 @@ namespace Polyboid
 		Ref<VertexBufferArray> CreateVertexBufferArray() override;
 		Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) override;
 		Ref<StagingBuffer> CreateStagingBuffer(uint32_t size) override;
+
+		Ref<TexelStorageBuffer> CreateTexelStorageBuffer(const TexelBufferSettings& settings) override;
+		Ref<TexelUniformBuffer> CreateTexelUniformBuffer(const TexelBufferSettings& settings) override;
 
 		Ref<GraphicsPipeline> CreateGraphicsPipeline() override;
 		Ref<KomputePipeline> CreateKomputePipeline() override;

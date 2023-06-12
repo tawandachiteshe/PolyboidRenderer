@@ -16,7 +16,7 @@ namespace Polyboid
 	std::pair<vk::Buffer, VmaAllocation> VulkanAllocator::CreateBuffer(uint32_t size, vk::BufferUsageFlagBits usage)
 	{
 		vk::BufferCreateInfo createInfo;
-		createInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+		createInfo.usage = usage;
 		createInfo.size = static_cast<vk::DeviceSize>(size);
 		m_Size = size;
 

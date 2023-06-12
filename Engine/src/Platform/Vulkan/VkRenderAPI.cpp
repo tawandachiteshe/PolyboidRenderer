@@ -19,6 +19,7 @@
 #include "VulkanKomputePipeline.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanStagingBuffer.h"
+#include "VulkanTexelBuffers.h"
 #include "VulkanTexture3D.h"
 #include "Utils/VkDebugMessenger.h"
 #include "Utils/VkInstance.h"
@@ -214,6 +215,20 @@ namespace Polyboid
 		return buffer.As<StagingBuffer>();
 	}
 
+	Ref<TexelStorageBuffer> VkRenderAPI::CreateTexelStorageBuffer(const TexelBufferSettings& settings)
+	{
+		auto buffer = ALLOC_API(VulkanTexelStorageBuffer, settings);
+		m_TexelStorageBuffers.push_back(buffer);
+		return buffer.As<TexelStorageBuffer>();
+	}
+
+	Ref<TexelUniformBuffer> VkRenderAPI::CreateTexelUniformBuffer(const TexelBufferSettings& settings)
+	{
+		auto buffer = ALLOC_API(VulkanTexelUniformBuffer, settings);
+		m_TexelUniformBuffers.push_back(buffer);
+		return buffer.As<TexelUniformBuffer>();
+	}
+
 	Ref<GraphicsPipeline> VkRenderAPI::CreateGraphicsPipeline()
 	{
 		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
@@ -373,6 +388,18 @@ namespace Polyboid
 		}
 
 
+		for (const auto& buffer : m_TexelStorageBuffers)
+		{
+			buffer->Destroy();
+		}
+
+		for (const auto& buffer : m_TexelUniformBuffers)
+		{
+			buffer->Destroy();
+		}
+
+
+
 		for (const auto& pool : m_DescPools)
 		{
 			pool->Destroy();
@@ -394,7 +421,8 @@ namespace Polyboid
 			command->Destroy();
 		}
 
-
+		m_TexelUniformBuffers.clear();
+		m_TexelStorageBuffers.clear();
 		m_Swapchains.clear();
 		m_RenderPasses.clear();
 		m_Framebuffers.clear();

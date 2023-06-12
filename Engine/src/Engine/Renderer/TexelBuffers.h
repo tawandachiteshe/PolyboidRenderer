@@ -17,7 +17,7 @@ namespace Polyboid
 
 
 
-	class TexelStorageBuffer
+	class TexelStorageBuffer : public RenderResource
 	{
 	public:
 
@@ -27,10 +27,10 @@ namespace Polyboid
 		virtual uint32_t GetHeight() = 0;
 		virtual uint32_t GetWidth() = 0;
 
-		virtual ~TexelStorageBuffer() {}
+		static Ref<TexelStorageBuffer> Create(const TexelBufferSettings& settings);
 	};
-
-	class TexelUniformBuffer
+	 
+	class TexelUniformBuffer : public RenderResource
 	{
 	public:
 
@@ -40,7 +40,8 @@ namespace Polyboid
 		virtual uint32_t GetHeight() = 0;
 		virtual uint32_t GetWidth() = 0;
 
-		virtual ~TexelUniformBuffer() {}
+
+		static Ref<TexelUniformBuffer> Create(const TexelBufferSettings& settings);
 
 	};
 }

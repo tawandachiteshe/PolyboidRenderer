@@ -6,6 +6,8 @@
 
 namespace Polyboid
 {
+	class TexelUniformBuffer;
+	class TexelStorageBuffer;
 	class Image2D;
 	class Texture3D;
 	class Texture2D;
@@ -22,6 +24,8 @@ namespace Polyboid
 		virtual void WriteTexture2D(uint32_t binding, const Ref<Texture2D>& texture) = 0;
 		virtual void WriteTexture3D(uint32_t binding, const Ref<Texture3D>& texture) = 0;
 		virtual void WriteImage2D(uint32_t binding, const Ref<Image2D>& image2d) = 0;
+		virtual void WriteTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& texelStorage) = 0;
+		virtual void WriteTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& texelStorage) = 0;
 		virtual void Commit() = 0;
 		virtual ~PipelineDescriptorSet() = default;
 	};

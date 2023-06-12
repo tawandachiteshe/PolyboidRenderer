@@ -12,6 +12,9 @@
 
 namespace Polyboid
 {
+	class TexelUniformBuffer;
+	struct TexelBufferSettings;
+	class TexelStorageBuffer;
 	class KomputePipeline;
 	class StagingBuffer;
 	struct DescriptorSetPoolSettings;
@@ -95,6 +98,9 @@ namespace Polyboid
 		virtual Ref<RenderPass> CreateRenderPass(const RenderPassSettings& settings) = 0;
 		virtual Ref<CommandBufferSet> CreateCommandList(const CommandListSettings& settings) = 0;
 		virtual Ref<PipelineDescriptorSetPool> CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings) = 0;
+
+		virtual Ref<TexelStorageBuffer> CreateTexelStorageBuffer(const TexelBufferSettings& settings) = 0;
+		virtual Ref<TexelUniformBuffer> CreateTexelUniformBuffer(const TexelBufferSettings& settings) = 0;
 
 		virtual Ref<Fence> CreateGraphicsFence() = 0;
 		virtual Ref<Semaphore> CreateGraphicsSemaphore() = 0;

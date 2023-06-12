@@ -37,7 +37,10 @@ namespace Polyboid
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<UniformBufferSet>>> m_UniformBufferSets;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<StorageBufferSet>>> m_StorageBufferSets;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture2D>>> m_TextureSets;
-		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Image2D>>> m_ImageSets;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Image2D>>> m_Image;
+
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<TexelUniformBuffer>>> m_UniformTexel;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<TexelStorageBuffer>>> m_StorageTexel;
 
 	public:
 		VulkanKomputePipeline();
@@ -59,6 +62,11 @@ namespace Polyboid
 		void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding) override;
 
 		void BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding) override;
+
+		void BindTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& bufferSet,
+			uint32_t setBinding) override;
+		void BindTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& bufferSet,
+			uint32_t setBinding) override;
 
 		void WriteSetResourceBindings(uint32_t set) override;
 

@@ -6,6 +6,10 @@
 #include "vma/vk_mem_alloc.h"
 #include "Utils/VulkanDevice.h"
 #include "VkRenderAPI.h"
+#include "VulkanCommandBuffer.h"
+#include "VulkanCommandBufferSet.h"
+#include "Engine/Renderer/CommandBufferSet.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Utils/Common.h"
 
 
@@ -45,7 +49,7 @@ namespace Polyboid
 		createInfo.format = Utils::ConvertToVulkanFormat(imageSettings.format);
 		createInfo.tiling = vk::ImageTiling::eOptimal;
 
-		createInfo.initialLayout = Utils::ConvertToVulkanLayout(imageSettings.layout);
+		createInfo.initialLayout =  Utils::ConvertToVulkanLayout(imageSettings.layout);
 
 		using enum vk::ImageUsageFlagBits;
 
@@ -60,6 +64,7 @@ namespace Polyboid
 		case ImageUsage::TransferDst: createInfo.usage = eTransferDst; break;
 		case ImageUsage::ColorAttachmentSampling: createInfo.usage = imageSettings.generateMips ? eTransferSrc | eColorAttachment | eSampled : eColorAttachment | eSampled;  break;
 		case ImageUsage::DepthStencilAttachmentSampling: createInfo.usage = eDepthStencilAttachment | eSampled;  break;
+		case ImageUsage::StorageImage: createInfo.usage = eStorage | eSampled;
 		default:;
 		}
 
@@ -86,14 +91,33 @@ namespace Polyboid
 		m_Image = vulkanImage;
 		m_ImageMemory = allocation;
 
+
+		if (imageSettings.usage == ImageUsage::StorageImage)
+		{
+
+
+			Ref<VulkanCommandBufferSet> cmdList = CommandBufferSet::Create({ 1 }).As<VulkanCommandBufferSet>();
+
+			const auto& cmdBuffer = cmdList->GetCommandBufferAt(0).As<VulkanCommandBuffer>();
+			cmdBuffer->Begin();
+			cmdBuffer->TransitionImageLayout(m_Image, vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+
+			cmdBuffer->End();
+			RenderCommand::GetGraphicsBackend()->SubmitOneTimeWork(cmdBuffer.As<CommandBuffer>());
+
+			cmdList->Destroy();
+		}
+
+
 		vk::ImageViewCreateInfo createViewInfo;
 		createViewInfo.flags = vk::ImageViewCreateFlags();
 		createViewInfo.sType = vk::StructureType::eImageViewCreateInfo;
 		createViewInfo.viewType = vk::ImageViewType::e2D;
 		createViewInfo.format = createInfo.format;
 		createViewInfo.image = m_Image;
+		
 		createViewInfo.components = vk::ComponentMapping();
-		createViewInfo.subresourceRange = vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1);
+		createViewInfo.subresourceRange = vk::ImageSubresourceRange(Utils::ImageFormatToAspectBits(imageSettings.format), 0, 1, 0, 1);
 
 		auto [createViewResult, view] = device.createImageView(createViewInfo);
 		vk::resultCheck(createViewResult, "Failed to create image view");
@@ -101,7 +125,7 @@ namespace Polyboid
 		m_View = view;
 
 
-		m_ImageDescInfo.imageLayout = createInfo.initialLayout;
+		m_ImageDescInfo.imageLayout = imageSettings.usage == ImageUsage::StorageImage ? vk::ImageLayout::eGeneral : createInfo.initialLayout;
 		m_ImageDescInfo.imageView = view;
 	}
 

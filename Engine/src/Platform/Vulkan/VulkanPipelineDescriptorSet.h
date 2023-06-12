@@ -15,6 +15,7 @@ namespace Polyboid
 		std::map<uint32_t, vk::WriteDescriptorSet> m_WriteSetsMap;
 		std::map<uint32_t,vk::DescriptorBufferInfo> m_Buffers;
 		std::map<uint32_t,vk::DescriptorImageInfo> m_Images;
+		std::map<uint32_t, vk::BufferView> m_BufferViews;
 		
 		vk::PipelineLayout m_Layout;
 
@@ -26,6 +27,10 @@ namespace Polyboid
 		void WriteTexture2D(uint32_t binding, const Ref<Texture2D>& texture) override;
 		void WriteTexture3D(uint32_t binding, const Ref<Texture3D>& texture) override;
 		void WriteImage2D(uint32_t binding, const Ref<Image2D>& image2d) override;
+
+		void WriteTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& texelStorage) override;
+		void WriteTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& texelStorage) override;
+
 		void Commit() override;
 		void Recreate();
 		~VulkanPipelineDescriptorSet() override = default;

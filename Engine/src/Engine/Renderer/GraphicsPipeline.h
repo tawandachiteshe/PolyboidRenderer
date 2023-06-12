@@ -8,6 +8,8 @@
 
 namespace Polyboid
 {
+	class TexelStorageBuffer;
+	class TexelUniformBuffer;
 	enum class PrimitiveType;
 	class StorageBufferSet;
 	class UniformBufferSet;
@@ -64,6 +66,9 @@ namespace Polyboid
         virtual void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding = 0) = 0;
         virtual void BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding = 0) = 0;
         virtual void BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding) = 0;
+        virtual void BindTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& bufferSet, uint32_t setBinding) = 0;
+        virtual void BindTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& bufferSet, uint32_t setBinding) = 0;
+
 
         virtual void WriteSetResourceBindings(uint32_t set = 0) = 0;
 

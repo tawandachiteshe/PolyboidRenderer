@@ -17,7 +17,8 @@ namespace Polyboid
 		TransferSrcOptimal,
 		DepthAttachmentOptimal,
 		ShaderReadOptimal,
-		Undefined
+		Undefined,
+		General
 	};
 
 	enum class ImageUsage
@@ -30,7 +31,8 @@ namespace Polyboid
 		TransferSrc,
 		TransferDst,
 		ColorAttachmentSampling,
-		DepthStencilAttachmentSampling
+		DepthStencilAttachmentSampling,
+		StorageImage
 	};
 
 	struct ImageSettings

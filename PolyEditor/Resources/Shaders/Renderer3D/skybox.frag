@@ -11,12 +11,6 @@ layout(location = 2) flat in uint vAge;
 layout (binding = 2) uniform sampler2D skybox;
 layout (binding = 4) uniform samplerCube skyboxCube;
 
-layout(push_constant) uniform EntityBuffer {
-
-	mat4 padding;
-	mat4 padding2;
-
-} entity;
 
 const float PI = 3.14159265359;
 

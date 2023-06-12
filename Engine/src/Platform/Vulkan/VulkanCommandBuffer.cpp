@@ -213,8 +213,45 @@ namespace Polyboid
 		
 	}
 
+	void VulkanCommandBuffer::TransitionImageLayout(vk::Image src, vk::ImageLayout oldLayout, vk::ImageLayout newLayout,
+		uint32_t layerCount, uint32_t mipLevel)
+	{
+		vk::ImageMemoryBarrier barrier{};
+		barrier.oldLayout = oldLayout;
+		barrier.newLayout = newLayout;
+
+		barrier.srcQueueFamilyIndex = 0;
+		barrier.dstQueueFamilyIndex = 0;
+		barrier.image = src;
+		barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = mipLevel;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = layerCount;
+
+		barrier.srcAccessMask = vk::AccessFlagBits::eNone; //TODO: important wangu
+		barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite; //TODO: important wangu
+
+		const vk::PipelineStageFlags dstStageFlags = vk::PipelineStageFlagBits::eTransfer; //TODO: importang again we need to know;
+		const vk::PipelineStageFlags srcStageFlags = vk::PipelineStageFlagBits::eTopOfPipe; //TODO: importang again we need to know;
+
+		constexpr auto dependencyFlags = static_cast<vk::DependencyFlags>(0);
+
+		m_CommandBuffer.pipelineBarrier(
+			srcStageFlags,
+			dstStageFlags,
+			dependencyFlags,
+			0,
+			nullptr,
+			0,
+			nullptr,
+			1, &barrier);
+	}
+
+	
+
 	void VulkanCommandBuffer::VulkanBlitImage(vk::Image srcImage, vk::ImageLayout srcLayout, vk::Image dtsImage,
-		vk::ImageLayout dstLayout, uint32_t width, uint32_t height, uint32_t mipIndex)
+	                                          vk::ImageLayout dstLayout, uint32_t width, uint32_t height, uint32_t mipIndex)
 	{
 		if (mipIndex == 0)
 		{

@@ -132,7 +132,16 @@ namespace Polyboid
 		{
 			auto& bufferInfo = image.second;
 			vk::DescriptorSetLayoutBinding binding{};
-			binding.descriptorType = vk::DescriptorType::eSampledImage;
+
+			switch (bufferInfo.imageType)
+			{
+			case ShaderImageType::SamplerBuffer: binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer; break;
+			case ShaderImageType::ImageBuffer: binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer; break;
+			case ShaderImageType::SamplerImage: binding.descriptorType = vk::DescriptorType::eStorageImage; break;
+			default: binding.descriptorType = vk::DescriptorType::eSampledImage;
+			}
+
+			
 			binding.descriptorCount = bufferInfo.arrayLength;
 			binding.stageFlags = m_ShaderStateInfo.stage;
 			binding.binding = bufferInfo.Binding;

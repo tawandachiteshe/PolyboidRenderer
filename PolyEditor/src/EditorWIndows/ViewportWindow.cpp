@@ -12,6 +12,7 @@
 #include "Engine/Renderer/KomputePipeline.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/TexelBuffers.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -32,11 +33,17 @@ namespace Polyboid
 		textureSettings.generateMips = true;
 
 		auto texture = Texture2D::Create(textureSettings);
+		TexelBufferSettings settings{};
+		settings.format = EngineGraphicsFormats::RG8;
+		settings.height = 400;
+		settings.width = 400;
+		auto storageTexture = TexelStorageBuffer::Create(settings);
 
 		ImageSettings imageSettings{};
 		imageSettings.height = 400;
 		imageSettings.width = 400;
 		imageSettings.format = EngineGraphicsFormats::RGBA8;
+		imageSettings.usage = ImageUsage::StorageImage;
 
 
 		auto image2d = Image2D::Create(imageSettings);
@@ -52,6 +59,7 @@ namespace Polyboid
 		m_RefComputePipeline->AllocateDescriptorSets(0);
 		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
 		m_RefComputePipeline->BindImage2D(1, image2d, 0);
+		m_RefComputePipeline->BindTexelStorageBuffer(2, storageTexture, 0);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
 		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
@@ -267,7 +275,7 @@ namespace Polyboid
 		RenderCommand::BindGraphicsPipeline(m_Pipeline);
 		RenderCommand::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData, sizeof(m_EntityBufferData));
-		RenderCommand::FragmentShaderPushConstants(m_Pipeline, &lod, sizeof(lod));
+		//RenderCommand::FragmentShaderPushConstants(m_Pipeline, &lod, sizeof(lod));
 
 		Viewport viewport{};
 		viewport.Width = 800;

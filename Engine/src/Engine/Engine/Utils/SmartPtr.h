@@ -44,14 +44,19 @@ namespace Polyboid
 
 
 		template<typename U,
-			typename std::enable_if<std::is_base_of<T, U>::value && !std::is_same<T, U>::value>::type* = nullptr>
+		         std::enable_if_t<std::is_base_of_v<T, U> && !std::is_same_v<T, U>>* = nullptr>
 		RefPtr(RefPtr<U>& other) : m_RefCount(other.GetRefCount()), m_Ptr(other.Get()) {
 			m_RefCount.AddRef();
 		}
 
+		template<typename U,
+			std::enable_if_t<std::is_base_of_v<T, U> && !std::is_same_v<T, U>>* = nullptr>
+		RefPtr(RefPtr<T>& other) : m_RefCount(other.GetRefCount()), m_Ptr(other.Get()) {
+			m_RefCount.AddRef();
+		}
 
 
-		RefPtrCounter GetRefCount() const { return m_RefCount; }
+		[[nodiscard]] RefPtrCounter GetRefCount() const { return m_RefCount; }
 
 		T* Get() const {
 			if (*m_RefCount.GetCount() > 0)

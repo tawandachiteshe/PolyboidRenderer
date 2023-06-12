@@ -81,6 +81,7 @@ namespace Polyboid
 			case ImageLayout::Undefined: return vk::ImageLayout::eUndefined;
 			case ImageLayout::ShaderReadOptimal: return vk::ImageLayout::eShaderReadOnlyOptimal;
 			case ImageLayout::TransferSrcOptimal: return vk::ImageLayout::eTransferSrcOptimal;
+			case ImageLayout::General: return vk::ImageLayout::eGeneral; break;
 			default: ;
 			}
 
@@ -186,7 +187,7 @@ namespace Polyboid
 		}
 
 
-		inline static uint32_t ConvertToVulkanFormatToBytes(EngineGraphicsFormats format)
+		inline static uint32_t CalculateVulkanFormatToBytes(EngineGraphicsFormats format)
 		{
 			switch (format)
 			{

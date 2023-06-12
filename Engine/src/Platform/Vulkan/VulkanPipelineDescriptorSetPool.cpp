@@ -19,7 +19,7 @@ namespace Polyboid
 
 	void VulkanPipelineDescriptorSetPool::Init()
 	{
-		auto device = VkRenderAPI::GetVulkanDevice();
+		const auto device = VkRenderAPI::GetVulkanDevice();
 
 		if (m_Settings.UniformBufferCount)
 		{
@@ -36,6 +36,19 @@ namespace Polyboid
 		if (m_Settings.StorageBufferCount)
 		{
 			vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eStorageBuffer, m_Settings.UniformBufferCount };
+			m_PoolSizes.emplace_back(poolSize);
+		}
+
+		if (m_Settings.StorageBufferCount)
+		{
+			vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eStorageTexelBuffer, m_Settings.UniformBufferCount };
+			m_PoolSizes.emplace_back(poolSize);
+		}
+
+
+		if (m_Settings.UniformBufferCount)
+		{
+			vk::DescriptorPoolSize poolSize{ vk::DescriptorType::eUniformTexelBuffer, m_Settings.UniformBufferCount };
 			m_PoolSizes.emplace_back(poolSize);
 		}
 

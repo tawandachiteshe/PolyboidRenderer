@@ -201,6 +201,16 @@ namespace Polyboid
 				BindImage2D(binding, texture, set);
 			}
 
+			for (auto [binding, texture] : m_StorageTexels[set])
+			{
+				BindTexelStorageBuffer(binding, texture, set);
+			}
+
+			for (auto [binding, texture] : m_UniformTexel[set])
+			{
+				BindTexelUniformBuffer(binding, texture, set);
+			}
+
 			WriteSetResourceBindings(set);
 		}
 
@@ -428,6 +438,28 @@ namespace Polyboid
 		}
 
 		m_Image2D[setBinding][binding] = (bufferSet);
+	}
+
+	void VulkanGraphicsPipeline::BindTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& bufferSet,
+		uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteTexelUniformBuffer(binding, bufferSet);
+		}
+		
+		m_UniformTexel[setBinding][binding] = (bufferSet);
+	}
+
+	void VulkanGraphicsPipeline::BindTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& bufferSet,
+		uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteTexelStorageBuffer(binding, bufferSet);
+		}
+		
+		m_StorageTexels[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::WriteSetResourceBindings(uint32_t set)

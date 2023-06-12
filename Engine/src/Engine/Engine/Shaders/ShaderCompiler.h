@@ -9,6 +9,31 @@ namespace Polyboid
 {
 	class RenderAPI;
 
+	enum class ShaderImageType
+	{
+		SamplerBuffer,
+        ImageBuffer,
+        SamplerImage
+	};
+
+	inline ShaderImageType GlslToShaderImageType(const std::string& type)
+    {
+	    if (type == "image2D")
+	    {
+            return ShaderImageType::SamplerImage;
+	    }
+	    else if(type == "imageBuffer")
+	    {
+            return ShaderImageType::ImageBuffer;
+	    } else if (type == "samplerBuffer")
+	    {
+            return ShaderImageType::SamplerBuffer;
+	    }
+
+        return ShaderImageType::SamplerImage;
+    }
+
+
 	struct ShaderImageInfo
 	{
 
@@ -18,7 +43,7 @@ namespace Polyboid
         uint32_t Set = 0;
         uint32_t arrayLength = 1;
         std::string Name;
-
+        ShaderImageType imageType;
 
         //Vulkan only
 

@@ -7,7 +7,7 @@ layout(std430, binding = 0) buffer AgeSSBO {
 };
 
 layout(rgba8, binding = 1) uniform image2D testImage;
-layout(set = 0, binding = 2, rg8) uniform imageBuffer testImage2;
+layout(binding = 2, rg8) uniform imageBuffer testImage2;
 
 
 void main()
@@ -19,7 +19,9 @@ void main()
 
 	if(l.x < 10 || l.y < 10)
 	{
-		imageLoad(testImage2, l, uvec2(255));
+		
+		
+		//imageStore(testImage2, l, uvec4(255));
 	}
 
 

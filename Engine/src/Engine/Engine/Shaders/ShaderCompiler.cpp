@@ -212,7 +212,7 @@ namespace Polyboid
 				imageInfo.Name = image["name"].get<std::string>();
 				imageInfo.Set = image["set"].get<uint32_t>();
 				imageInfo.arrayLength = image.contains("array") ? image["array"].get<std::vector<uint32_t>>().at(0) : 1;
-
+				imageInfo.imageType = GlslToShaderImageType(image["type"].get<std::string>());
 			
 
 				info.images[imageInfo.Name] = imageInfo;
