@@ -60,6 +60,7 @@ namespace Polyboid
         virtual Ref<Framebuffer> GetFramebuffer() = 0;
         virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
         virtual void Clear(const ClearSettings& settings) = 0;
+        virtual void Resize(uint32_t width, uint32_t height) = 0;
 
         virtual ~RenderPass() = default;
 

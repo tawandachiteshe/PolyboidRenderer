@@ -58,6 +58,8 @@ namespace Polyboid
 		GameObject* m_CurrentGameObject = nullptr;
 		bool m_Playmode = false;
 		bool m_Focused = false;
+		bool m_OnResize = false;
+		glm::vec2 m_LastViewportSize = {1, 1};
 		ImGuizmo::OPERATION m_GizmoOperation = ImGuizmo::TRANSLATE;
 		ImGuizmo::MODE m_GizmoMode = ImGuizmo::LOCAL;
 

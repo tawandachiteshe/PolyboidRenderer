@@ -81,7 +81,7 @@ namespace Polyboid
 		void SubmitGraphicsWork(const std::vector<Ref<CommandBufferSet>>& commandBuffer) override;
 		void SubmitOneTimeWork(const Ref<CommandBuffer>& buffer) override;
 		uint32_t GetCurrentImageIndex() override;
-
+		void WaitForQueue() override;
 		~VulkanGraphicsBackend() override;
 	};
 

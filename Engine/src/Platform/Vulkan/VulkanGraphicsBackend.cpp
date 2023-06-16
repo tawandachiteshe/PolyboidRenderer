@@ -340,6 +340,12 @@ namespace Polyboid
 		return m_SwapchainIndex;
 	}
 
+	void VulkanGraphicsBackend::WaitForQueue()
+	{
+		const auto result = m_GraphicsQueue.waitIdle();
+		vk::resultCheck(result, "Failed to wait for queue");
+	}
+
 	VulkanGraphicsBackend::~VulkanGraphicsBackend()
 	{
 	}

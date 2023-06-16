@@ -39,6 +39,7 @@ namespace Polyboid
 		void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) override;
 		void Clear(const ClearSettings& settings) override;
 		ClearSettings GetClearSettings();
+		void Resize(uint32_t width, uint32_t height) override;
 
 		RenderPassSettings& GetRenderPassSettings() override;
 

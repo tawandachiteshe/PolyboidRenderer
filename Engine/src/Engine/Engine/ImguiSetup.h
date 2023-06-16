@@ -25,7 +25,7 @@ namespace Polyboid
 
     public:
 
-        static ImTextureID GetVulkanTextureID(const Ref<Texture2D>& texture);
+        static ImTextureID CreateVulkanTextureID(const Ref<Texture2D>& texture);
         static void FreeVulkanTextureID(const ImTextureID& texture);
 
 

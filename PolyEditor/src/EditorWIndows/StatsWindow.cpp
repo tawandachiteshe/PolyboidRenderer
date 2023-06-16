@@ -10,21 +10,21 @@ namespace Polyboid
 	{
 		m_Name = "Settings";
 		auto texture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" });
-		m_Texture = Imgui::GetVulkanTextureID(texture);
+		m_Texture = Imgui::CreateVulkanTextureID(texture);
 		const uint32_t red = 0xFF'00'00'FF;
 
 		auto redTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &red);
-		m_RedTexture = Imgui::GetVulkanTextureID(redTexture);
+		m_RedTexture = Imgui::CreateVulkanTextureID(redTexture);
 
 		const uint32_t green = 0xFF'00'FF'00;
 
 		auto greenTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &green);
-		m_GreenTexture = Imgui::GetVulkanTextureID(greenTexture);
+		m_GreenTexture = Imgui::CreateVulkanTextureID(greenTexture);
 
 		const uint32_t blue = 0xFF'FF'00'00;
 
 		auto blueTexture = Texture2D::Create({ .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .Width = 1, .Height = 1 }, &blue);
-		m_BlueTexture = Imgui::GetVulkanTextureID(blueTexture);
+		m_BlueTexture = Imgui::CreateVulkanTextureID(blueTexture);
 
 	}
 

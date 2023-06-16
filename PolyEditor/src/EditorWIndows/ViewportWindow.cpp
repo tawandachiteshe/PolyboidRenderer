@@ -21,9 +21,13 @@ namespace Polyboid
 {
 #define GetName(x) #x
 
+
+
 	ViewportWindow::ViewportWindow(const std::string& name)
 	{
+
 		m_Name = name;
+
 
 		float fov = 45.0f;
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
@@ -79,8 +83,8 @@ namespace Polyboid
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
 		RenderPassSettings renderPassSettings{};
-		renderPassSettings.Height = 600;
-		renderPassSettings.Width = 800;
+		renderPassSettings.Width = 1600;
+		renderPassSettings.Height = 900;
 		renderPassSettings.TextureAttachments = {{TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8}};
 		renderPassSettings.debugName = "Offscreen render pass";
 
@@ -170,14 +174,12 @@ namespace Polyboid
 		m_Pipeline->WriteSetResourceBindings();
 		//
 
-		m_CameraData.projection = glm::perspective(1600.f / 900.f, glm::radians(45.0f), 0.01f, 1000.0f);
-		m_CameraData.view = glm::translate(glm::mat4(1.0f), {0.0f, 0.0f, -2.0f});
 
 
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_FramebufferTextures.push_back(
-				Imgui::GetVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
+				Imgui::CreateVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
 		}
 
 
@@ -189,6 +191,7 @@ namespace Polyboid
 	ViewportWindow::~ViewportWindow()
 	{
 	}
+
 
 
 	void ViewportWindow::OnGameObjectSelected(const Event& event)
@@ -210,7 +213,28 @@ namespace Polyboid
 		const auto mainRenderTarget = RenderCommand::GetDefaultRenderTarget();
 		const auto windowSize = ImGui::GetContentRegionAvail();
 
-		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()), windowSize);
+		if(windowSize.x > 0 && windowSize.y > 0 && (windowSize.x != m_LastViewportSize.x || windowSize.y != m_LastViewportSize.y))
+		{
+			RenderCommand::WaitForSubmitQueue();
+		
+			spdlog::info("On Viewport window resize {}.x {}.y", windowSize.x, windowSize.y);
+			m_LastViewportSize = { windowSize.x, windowSize.y };
+			m_ViewportCamera->SetViewportSize(windowSize.x, windowSize.y);
+
+			m_RenderPass->Resize(windowSize.x, windowSize.y);
+			m_FrameBuffers->ReSize(windowSize.x, windowSize.y);
+			m_Pipeline->Recreate();
+
+			for (uint32_t i = 0; i < 3; ++i)
+			{
+				Imgui::FreeVulkanTextureID(m_FramebufferTextures.at(i));
+				m_FramebufferTextures[i] = Imgui::CreateVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0));
+			}
+
+		}
+		
+
+		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()), {m_LastViewportSize.x, m_LastViewportSize.y});
 
 		ImGui::End();
 
@@ -245,6 +269,8 @@ namespace Polyboid
 
 		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f });
 
+	
+
 		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
 		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
 		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
@@ -261,15 +287,15 @@ namespace Polyboid
 		//RenderCommand::FragmentShaderPushConstants(m_Pipeline, &lod, sizeof(lod));
 
 		Viewport viewport{};
-		viewport.Width = 800;
-		viewport.Height = 600;
+		viewport.Width = m_LastViewportSize.x;
+		viewport.Height = m_LastViewportSize.y;
 		viewport.MinDepth = 0.0;
 		viewport.MaxDepth = 1.0f;
 
 		RenderCommand::SetViewport(viewport);
 		Rect rect{};
-		rect.Width = 800;
-		rect.Height = 600;
+		rect.Width = m_LastViewportSize.x;
+		rect.Height = m_LastViewportSize.y;
 		RenderCommand::SetScissor(rect);
 		RenderCommand::BindVertexBuffer(m_VertexBuffer);
 		RenderCommand::BindIndexBuffer(m_IndexBuffer);

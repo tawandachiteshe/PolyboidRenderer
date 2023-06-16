@@ -163,13 +163,6 @@ namespace Polyboid
 			KomputeCommand::WaitForWork();
 			RenderCommand::AcquireImageIndex();
 
-			for (auto layer : m_Layers)
-			{
-				layer->OnUpdate(static_cast<float>(m_GameTime));
-			}
-
-
-
 			Imgui::Begin();
 			for (auto layer : m_Layers)
 			{
@@ -177,6 +170,12 @@ namespace Polyboid
 			}
 
 			Imgui::End();
+
+
+			for (auto layer : m_Layers)
+			{
+				layer->OnUpdate(static_cast<float>(m_GameTime));
+			}
 
 
 			RenderCommand::BeginFrameCommands(m_CommandList);

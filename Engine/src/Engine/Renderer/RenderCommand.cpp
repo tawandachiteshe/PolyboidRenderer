@@ -314,6 +314,11 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->SetLineWidth(lineWidth);
 	}
 
+	void RenderCommand::WaitForSubmitQueue()
+	{
+		GetGraphicsBackend()->WaitForQueue();
+	}
+
 
 	void RenderCommand::VertexShaderPushConstants(const Ref<GraphicsPipeline>& pipelineState, const void* data,
 	                                              uint32_t dataSize, uint32_t offset)

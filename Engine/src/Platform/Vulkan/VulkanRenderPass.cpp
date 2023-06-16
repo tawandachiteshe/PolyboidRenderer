@@ -217,6 +217,18 @@ namespace Polyboid
 		return m_ClearSettings;
 	}
 
+	void VulkanRenderPass::Resize(uint32_t width, uint32_t height)
+	{
+		if (width == 0 || height == 0)
+		{
+			__debugbreak();
+		}
+
+		m_Settings.Height = height;
+		m_Settings.Width = width;
+		Recreate();
+	}
+
 	RenderPassSettings& VulkanRenderPass::GetRenderPassSettings()
 	{
 		return m_Settings;
