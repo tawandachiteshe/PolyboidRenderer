@@ -293,18 +293,18 @@ namespace Polyboid
 		buffers->Get(GetCurrentFrame())->SetData(data, dataSize);
 	}
 
-	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers)
+	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers, const PipelineStage& stage)
 	{
-		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
+		GetCurrentCommandBuffer()->CopyUniformBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()), stage);
 	}
 
-	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers)
+	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers, const PipelineStage& stage)
 	{
-		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
+		GetCurrentCommandBuffer()->CopyStorageBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()), stage);
 	}
 
 	void RenderCommand::CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers,
-		const Ref<VertexBufferSet>& buffers)
+		const Ref<VertexBufferSet>& buffers, const PipelineStage& stage)
 	{
 		GetCurrentCommandBuffer()->CopyVertexBuffer(stagingBuffers->Get(GetCurrentFrame()), buffers->Get(GetCurrentFrame()));
 	}

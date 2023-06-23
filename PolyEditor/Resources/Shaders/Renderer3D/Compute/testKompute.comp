@@ -26,7 +26,7 @@ void main()
 
 		if(gl_LocalInvocationID.x % 5 == 0 || gl_LocalInvocationID.y % 5 == 0){
 
-		imageStore(testImage, l , uvec4(255, 0, 0, 1000));
+		imageStore(testImage, l , uvec4(255, 65, 78, 1000));
 
 
 		} else {

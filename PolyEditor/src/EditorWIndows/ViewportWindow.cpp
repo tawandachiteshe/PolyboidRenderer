@@ -211,7 +211,8 @@ namespace Polyboid
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
 		ImGui::Begin(m_Name.c_str());
 		const auto mainRenderTarget = RenderCommand::GetDefaultRenderTarget();
-		const auto windowSize = ImGui::GetContentRegionAvail();
+		const auto imguiWindowSize = ImGui::GetContentRegionAvail();
+		const auto windowSize = glm::uvec2(static_cast<uint32_t>(imguiWindowSize.x), static_cast<uint32_t>(imguiWindowSize.y));
 
 		if(windowSize.x > 0 && windowSize.y > 0 && (windowSize.x != m_LastViewportSize.x || windowSize.y != m_LastViewportSize.y))
 		{
@@ -247,7 +248,9 @@ namespace Polyboid
 
 	void ViewportWindow::Update(float ts)
 	{
+		
 		static float dt = 0.0;
+		float money = 1.50f;
 		if (dt > 0.01f)
 		{
 			m_ViewportCamera->OnUpdate(ts);
@@ -299,7 +302,7 @@ namespace Polyboid
 		RenderCommand::SetScissor(rect);
 		RenderCommand::BindVertexBuffer(m_VertexBuffer);
 		RenderCommand::BindIndexBuffer(m_IndexBuffer);
-		RenderCommand::DrawIndexed(6);
+		//RenderCommand::DrawIndexed(6);
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData2, sizeof(m_EntityBufferData2));
 		RenderCommand::DrawIndexed(6);
 
@@ -307,9 +310,10 @@ namespace Polyboid
 
 		RenderCommand::EndRenderPass();
 
-		RenderCommand::SetStagingBufferData(m_UniformStagingBuffers, &m_CameraData);
-		RenderCommand::SetStagingBufferData(m_StorageStagingBuffers, m_Vertices);
-		RenderCommand::SetStagingBufferData(m_StorageStagingBuffersVB, m_Vertices);
+		m_UniformStagingBuffers->SetData(&m_CameraData);
+		m_StorageStagingBuffers->SetData(m_Vertices);
+		m_StorageStagingBuffersVB->SetData(m_Vertices);
+
 		RenderCommand::CopyStagingBuffer(m_UniformStagingBuffers, m_UniformBuffers);
 		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffers, m_StorageBuffers);
 		RenderCommand::CopyStagingBuffer(m_StorageStagingBuffersVB, m_VertexBuffer);
@@ -336,11 +340,12 @@ namespace Polyboid
 		glm::mat4 pos3 = glm::translate(glm::mat4(1.0f), {0.0, 3.5f, 0.0});
 
 		static float rotation = 0.0f;
-		rotation += 10 * 0.01;
+		rotation += 10.0f * 0.01f;
 
 
 		Renderer2D::DrawLine({0.0, 0.0, 0.0}, {2.0f, 0.0, 0.0});
 		Renderer2D::DrawCube(pos2);
+		Renderer2D::DrawCube(pos3);
 		Renderer2D::DrawCube(pos3);
 		Renderer2D::DrawCircle(pos);
 		Renderer2D::DrawQuad(glm::mat4(1.0f), glm::vec4{1.2, 0.2, 0.2, 1.0f});

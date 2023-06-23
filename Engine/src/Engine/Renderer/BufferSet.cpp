@@ -136,6 +136,16 @@ namespace Polyboid
 		return CreateRef<StagingBufferSet>(size);
 	}
 
+	void StagingBufferSet::SetData(const void* data)
+	{
+		m_Buffers.at(RenderCommand::GetCurrentFrame())->SetData(data);
+	}
+
+	void StagingBufferSet::SetData(const void* data, uint32_t size)
+	{
+		m_Buffers.at(RenderCommand::GetCurrentFrame())->SetData(data, size);
+	}
+
 	Ref<StagingBuffer> StagingBufferSet::Get(uint32_t frame)
 	{
 		return m_Buffers.at(frame);

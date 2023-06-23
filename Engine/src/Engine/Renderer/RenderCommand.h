@@ -8,10 +8,12 @@
 #include <Engine/Renderer/GraphicsBackend.h>
 
 #include "BufferSet.h"
+#include "CommandBufferSet.h"
 #include "imgui.h"
 
 namespace Polyboid
 {
+	enum class PipelineStage;
 	class GraphicsBackend;
 	class FrameBufferSet;
 	class StorageBufferSet;
@@ -113,9 +115,9 @@ namespace Polyboid
         static void SetUniformBufferData(const Ref<UniformBufferSet>& buffers, const void* data, uint32_t dataSize);
         static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data);
         static void SetStagingBufferData(const Ref<StagingBufferSet>& buffers, const void* data, uint32_t dataSize);
-        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers);
-        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers);
-        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<VertexBufferSet>& buffers);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<UniformBufferSet>& buffers, const PipelineStage& stage = PipelineStage::VertexShader);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<StorageBufferSet>& buffers, const PipelineStage& stage = PipelineStage::VertexShader);
+        static void CopyStagingBuffer(const Ref<StagingBufferSet>& stagingBuffers, const Ref<VertexBufferSet>& buffers, const PipelineStage& stage = PipelineStage::VertexShader);
         static void LineWidth(float lineWidth = 1.0f);
 
         static void WaitForSubmitQueue();

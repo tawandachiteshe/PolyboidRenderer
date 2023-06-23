@@ -43,7 +43,7 @@ namespace Polyboid
 		void VulkanImageBarrier(vk::Image image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags srcAccess, vk::AccessFlags dstAccess, vk::PipelineStageFlags srcFlags, vk::PipelineStageFlags dstFlags, uint32_t mipIndex, uint32_t mipLevels = 1);
 		void VulkanGenerateMips(vk::Image image, uint32_t width, uint32_t height, uint32_t mipCount);
 
-		void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer) override;
+		void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer, const PipelineStage& stage) override;
 		void SetLineWidth(float lineWidth) override;
 
 		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const IndexBuffer* dstIndexBuffer) override;
@@ -51,8 +51,8 @@ namespace Polyboid
 		void BindIndexBuffer(const Ref<IndexBuffer>& idxBuffer) override;
 		void BindVertexBuffer(const Ref<VertexBuffer>& vtxBuffer) override;
 		void BindGraphicsPipeline(const Ref<GraphicsPipeline>& pipeline) override;
-		void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) override;
-		void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) override;
+		void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo, const PipelineStage& stage = PipelineStage::VertexShader) override;
+		void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer, const PipelineStage& stage = PipelineStage::VertexShader) override;
 
 
 		void SetViewPort(const Viewport& viewport) override;

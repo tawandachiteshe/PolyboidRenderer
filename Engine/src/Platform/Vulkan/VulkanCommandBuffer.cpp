@@ -118,7 +118,7 @@ namespace Polyboid
 	void VulkanCommandBuffer::CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer,
 		const Ref<VertexBuffer>& dstVtxBuffer)
 	{
-		CopyHostMemoryBarrier(srcVtxBuffer);
+		CopyHostMemoryBarrier(srcVtxBuffer, PipelineStage::Transfer);
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;
@@ -366,17 +366,50 @@ namespace Polyboid
 			vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eFragmentShader, 0, mipCount);
 	}
 
-	void VulkanCommandBuffer::CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer)
+	void VulkanCommandBuffer::CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer, const PipelineStage& stage)
 	{
 		vk::BufferMemoryBarrier memBarrier{};
+
+		vk::AccessFlagBits srcAccess = vk::AccessFlagBits::eHostWrite;
+		vk::AccessFlagBits dstAccess = vk::AccessFlagBits::eTransferRead;
+
+		switch (stage)
+		{
+		case PipelineStage::VertexShader: dstAccess = vk::AccessFlagBits::eShaderRead; break;
+		case PipelineStage::FragmentShader: dstAccess = vk::AccessFlagBits::eShaderRead; break;
+		case PipelineStage::ComputeShader:  dstAccess = vk::AccessFlagBits::eShaderRead; break;
+		case PipelineStage::Transfer:  dstAccess = vk::AccessFlagBits::eTransferRead; break;
+		default: ;
+		}
+
+		switch (stage)
+		{
+		case PipelineStage::VertexShader: srcAccess = vk::AccessFlagBits::eTransferWrite; break;
+		case PipelineStage::FragmentShader: srcAccess = vk::AccessFlagBits::eTransferWrite; break;
+		case PipelineStage::ComputeShader: srcAccess = vk::AccessFlagBits::eTransferWrite; break;
+		case PipelineStage::Transfer:  srcAccess = vk::AccessFlagBits::eHostWrite; break;
+		default: ;
+		}
 
 		memBarrier.setOffset(0);
 		memBarrier.size = VK_WHOLE_SIZE;
 		memBarrier.buffer = std::any_cast<vk::Buffer>(srcBuffer->GetHandle());
 		memBarrier.srcAccessMask = vk::AccessFlagBits::eHostWrite;
-		memBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+		memBarrier.dstAccessMask = dstAccess;
+		
+		vk::PipelineStageFlagBits pipeStage =  vk::PipelineStageFlagBits::eTransfer;
 
-		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, vk::PipelineStageFlagBits::eTransfer, {}, nullptr, { memBarrier }, nullptr);
+		switch (stage)
+		{
+		case PipelineStage::VertexShader: pipeStage = vk::PipelineStageFlagBits::eVertexShader; break;
+		case PipelineStage::FragmentShader: pipeStage = vk::PipelineStageFlagBits::eFragmentShader; break;
+		case PipelineStage::ComputeShader: pipeStage = vk::PipelineStageFlagBits::eComputeShader; break;
+		case PipelineStage::Transfer: pipeStage = vk::PipelineStageFlagBits::eTransfer;
+		default: ;
+		}
+
+
+		m_CommandBuffer.pipelineBarrier(vk::PipelineStageFlagBits::eHost, pipeStage, {}, nullptr, { memBarrier }, nullptr);
 	}
 
 	void VulkanCommandBuffer::SetLineWidth(float lineWidth)
@@ -388,7 +421,7 @@ namespace Polyboid
 	void VulkanCommandBuffer::CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer,
 	                                          const IndexBuffer* dstIndexBuffer)
 	{
-		CopyHostMemoryBarrier(srcIndexBuffer);
+		CopyHostMemoryBarrier(srcIndexBuffer, PipelineStage::Transfer);
 
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
@@ -409,7 +442,7 @@ namespace Polyboid
 
 	void VulkanCommandBuffer::CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer)
 	{
-		CopyHostMemoryBarrier(srcVtxBuffer);
+		CopyHostMemoryBarrier(srcVtxBuffer, PipelineStage::Transfer);
 		vk::BufferCopy copyRegion{};
 		copyRegion.dstOffset = 0;
 		copyRegion.srcOffset = 0;
@@ -454,10 +487,10 @@ namespace Polyboid
 
 #undef MemoryBarrier
 
-	void VulkanCommandBuffer::CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo)
+	void VulkanCommandBuffer::CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo, const PipelineStage& stage)
 	{
 		
-		CopyHostMemoryBarrier(srcUbo);
+		CopyHostMemoryBarrier(srcUbo, stage);
 		const auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
 		const auto dstBuffer = std::any_cast<vk::Buffer>(dstUbo->GetHandle());
 
@@ -472,9 +505,9 @@ namespace Polyboid
 	}
 
 	void VulkanCommandBuffer::CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo,
-		const Ref<StorageBuffer>& storageBuffer)
+		const Ref<StorageBuffer>& storageBuffer, const PipelineStage& stage)
 	{
-		CopyHostMemoryBarrier(srcUbo);
+		CopyHostMemoryBarrier(srcUbo, stage);
 
 		auto srcBuffer = std::any_cast<vk::Buffer>(srcUbo->GetHandle());
 		auto dstBuffer = std::any_cast<vk::Buffer>(storageBuffer->GetHandle());

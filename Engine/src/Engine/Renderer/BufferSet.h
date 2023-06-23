@@ -48,6 +48,9 @@ namespace Polyboid
 		StagingBufferSet(uint32_t size);
 		void Recreate();
 		static Ref<StagingBufferSet> Create(uint32_t size);
+		void SetData(const void* data);
+		void SetData(const void* data, uint32_t size);
+
 		Ref<StagingBuffer> Get(uint32_t frame);
 	};
 

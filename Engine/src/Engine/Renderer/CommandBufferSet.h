@@ -26,6 +26,14 @@ namespace Polyboid
 	class Swapchain;
 	class RenderPass;
 
+	enum class PipelineStage
+	{
+		VertexShader,
+		FragmentShader,
+		ComputeShader,
+		Transfer
+	};
+
 	class CommandBuffer
 	{
 	public:
@@ -43,10 +51,10 @@ namespace Polyboid
 		virtual void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const VertexBuffer* dstVtxBuffer) = 0;
 		virtual void CopyBufferToImage2D(const Ref<StagingBuffer>& stagingBuffer, const Ref<Image2D>& dstImage) = 0;
 		virtual void TransitionImageLayout(const Ref<Image2D>& src, ImageLayout newLayout, uint32_t layerCount = 1, uint32_t mipLevel = 1) = 0;
-		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo) = 0;
-		virtual void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer) = 0;
+		virtual void CopyUniformBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<UniformBuffer>& dstUbo, const PipelineStage& stage = PipelineStage::VertexShader) = 0;
+		virtual void CopyStorageBuffer(const Ref<StagingBuffer>& srcUbo, const Ref<StorageBuffer>& storageBuffer, const PipelineStage& stage = PipelineStage::VertexShader) = 0;
 
-		virtual void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer) = 0;
+		virtual void CopyHostMemoryBarrier(const Ref<StagingBuffer>& srcBuffer, const PipelineStage& stage = PipelineStage::VertexShader) = 0;
 
 		virtual void SetViewPort(const Viewport& viewport) = 0;
 		virtual void SetScissor(const Rect& rect) = 0;
