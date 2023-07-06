@@ -356,12 +356,16 @@ namespace Polyboid
 			RenderCommand::CopyStagingBuffer(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVertexBuffer);
 		}
 
-		Renderer2DCameraData data{};
-		data.view = s_RenderData.m_Renderer2DCamera->GetView();
-		data.projection = s_RenderData.m_Renderer2DCamera->GetProjection();
+		if(s_LineData.lineCount || s_CircleData.circleCount || s_QuadData.quadCount)
+		{
+			Renderer2DCameraData data{};
+			data.view = s_RenderData.m_Renderer2DCamera->GetView();
+			data.projection = s_RenderData.m_Renderer2DCamera->GetProjection();
 
-		RenderCommand::SetStagingBufferData(s_RenderData.m_CameraUBData, &data);
-		RenderCommand::CopyStagingBuffer(s_RenderData.m_CameraUBData, s_RenderData.m_CameraUB);
+			RenderCommand::SetStagingBufferData(s_RenderData.m_CameraUBData, &data);
+			RenderCommand::CopyStagingBuffer(s_RenderData.m_CameraUBData, s_RenderData.m_CameraUB);
+		}
+	
 
 
 		Reset();

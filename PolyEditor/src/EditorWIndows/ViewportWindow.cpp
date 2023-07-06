@@ -19,12 +19,63 @@
 
 namespace Polyboid
 {
-#define GetName(x) #x
 
+	struct Buffer
+	{
+		uint8_t* m_Data = nullptr;
+		size_t m_Size = 0;
+		Buffer() = default;
+		Buffer(size_t size): m_Size(size)
+		{
+			m_Data = new uint8_t[size];
+			std::memset(m_Data, 23, size);
+		}
+
+		Buffer(const Buffer& other)
+			: m_Data(other.m_Data),
+			  m_Size(other.m_Size)
+		{
+			std::memcpy(m_Data, other.m_Data, m_Size);
+			std::memset(m_Data, 1, m_Size);
+		}
+
+		Buffer(Buffer&& other) noexcept
+			: m_Data(other.m_Data),
+			  m_Size(other.m_Size)
+		{
+		}
+
+		Buffer& operator=(const Buffer& other)
+		{
+			if (this == &other)
+				return *this;
+			m_Data = new uint8_t[other.m_Size];
+			std::memcpy(m_Data, other.m_Data, other.m_Size);
+			std::memset(m_Data, 1, other.m_Size);
+			m_Size = other.m_Size;
+			return *this;
+		}
+
+		Buffer& operator=(Buffer&& other) noexcept
+		{
+			if (this == &other)
+				return *this;
+			std::memmove(m_Data, other.m_Data, other.m_Size);
+			std::memset(m_Data, 1, other.m_Size);
+			m_Size = other.m_Size;
+			return *this;
+		}
+
+		~Buffer()
+		{
+			delete m_Data;
+		}
+	};
 
 
 	ViewportWindow::ViewportWindow(const std::string& name)
 	{
+	
 
 		m_Name = name;
 
@@ -87,9 +138,9 @@ namespace Polyboid
 		renderPassSettings.Height = 900;
 		renderPassSettings.TextureAttachments = {{TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8}};
 		renderPassSettings.debugName = "Offscreen render pass";
+		renderPassSettings.IsSwapchainRenderPass = false;
 
 		m_RenderPass = RenderPass::Create(renderPassSettings);
-		m_FrameBuffers = FrameBufferSet::Create(m_RenderPass);
 
 
 		m_Vertices[0] = {{-1.0f, 1.0f, 0.0f}, {1.f, 1.f, 0.0f, 1.0f}, {0.0f, 0.0f}};
@@ -179,13 +230,13 @@ namespace Polyboid
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_FramebufferTextures.push_back(
-				Imgui::CreateVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0)));
+				Imgui::CreateVulkanTextureID(m_RenderPass->GetColorTexture(TextureAttachmentSlot::Color0, i)));
 		}
 
 
 		RenderCommand::PushCommandBufferSets({m_EditorCommandBuffer});
 
-		Renderer2D::Init(m_RenderPass);
+		
 	}
 
 	ViewportWindow::~ViewportWindow()
@@ -223,13 +274,12 @@ namespace Polyboid
 			m_ViewportCamera->SetViewportSize(windowSize.x, windowSize.y);
 
 			m_RenderPass->Resize(windowSize.x, windowSize.y);
-			m_FrameBuffers->ReSize(windowSize.x, windowSize.y);
 			m_Pipeline->Recreate();
 
 			for (uint32_t i = 0; i < 3; ++i)
 			{
 				Imgui::FreeVulkanTextureID(m_FramebufferTextures.at(i));
-				m_FramebufferTextures[i] = Imgui::CreateVulkanTextureID(m_FrameBuffers->Get(i)->GetColorAttachment(TextureAttachmentSlot::Color0));
+				m_FramebufferTextures[i] = Imgui::CreateVulkanTextureID(m_RenderPass->GetColorTexture(TextureAttachmentSlot::Color0, i));
 			}
 
 		}
@@ -250,7 +300,7 @@ namespace Polyboid
 	{
 		
 		static float dt = 0.0;
-		float money = 1.50f;
+
 		if (dt > 0.01f)
 		{
 			m_ViewportCamera->OnUpdate(ts);
@@ -283,7 +333,7 @@ namespace Polyboid
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 
 
-		RenderCommand::BeginRenderPass(m_RenderPass, m_FrameBuffers);
+		RenderCommand::BeginRenderPass(m_RenderPass);
 		RenderCommand::BindGraphicsPipeline(m_Pipeline);
 		RenderCommand::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData, sizeof(m_EntityBufferData));
@@ -306,7 +356,7 @@ namespace Polyboid
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData2, sizeof(m_EntityBufferData2));
 		RenderCommand::DrawIndexed(6);
 
-		OnRender();
+		//OnRender();
 
 		RenderCommand::EndRenderPass();
 

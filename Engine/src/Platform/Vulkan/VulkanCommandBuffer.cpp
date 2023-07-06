@@ -79,12 +79,11 @@ namespace Polyboid
 		 vk::resultCheck(result, "Failed to end command buffer");
 	}
 
-	void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer)
+	void VulkanCommandBuffer::BeginRenderPass(const Ref<RenderPass>& renderPass)
 	{
 
 		auto vkRenderpass = renderPass.As<VulkanRenderPass>();
-		auto vkFramebuffer = framebuffer.As<VulkanFramebuffer>();
-		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo(vkFramebuffer);
+		const vk::RenderPassBeginInfo renderPassInfo = vkRenderpass->GetRenderBeginInfo();
 		m_RenderPass = vkRenderpass;
 		m_CommandBuffer.beginRenderPass(renderPassInfo, vk::SubpassContents::eInline);
 		

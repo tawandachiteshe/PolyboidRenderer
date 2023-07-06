@@ -76,8 +76,7 @@ namespace Polyboid
         static void EndCommandBuffer(const Ref<CommandBuffer>& cmdBuffer);
     	static void EndCommands();
         static void AcquireImageIndex();
-        static void BeginSwapChainRenderPass();
-        static void EndSwapChainRenderPass();
+
         static Ref<CommandBuffer> GetCurrentCommandBuffer();
         static void SetCurrentCommandBuffer(uint32_t currentFrame);
         static bool IsGraphicsBackendReady();
@@ -88,9 +87,7 @@ namespace Polyboid
         static void DrawIndexed(uint32_t count, const PrimitiveType& primitive = PrimitiveType::Triangles);
         static void DrawArrays(uint32_t vertexCount, const PrimitiveType& primitive = PrimitiveType::Lines);
         static void SetPipelineState(const Ref<GraphicsPipeline>& pipelineState);
-        static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer);
-        static void BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers);
-        static void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers);
+        static void BeginRenderPass(const Ref<RenderPass>& renderPass);
         static void BeginRenderPass(const Ref<Swapchain>& swapchain);
 
         static void RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc);

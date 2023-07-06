@@ -30,7 +30,7 @@ namespace Polyboid
 		virtual void Recreate();
 		void Begin() override;
 		void End() override;
-		void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) override;
+		void BeginRenderPass(const Ref<RenderPass>& renderPass) override;
 		void EndRenderPass() override;
 		void CopyIndexBuffer(const Ref<StagingBuffer>& srcIndexBuffer, const Ref<IndexBuffer>& dstIndexBuffer) override;
 		void CopyVertexBuffer(const Ref<StagingBuffer>& srcVtxBuffer, const Ref<VertexBuffer>& dstVtxBuffer) override;

@@ -4,6 +4,7 @@
 
 namespace Polyboid
 {
+	class FrameBufferSet;
 	class VulkanFramebuffer;
 	class VkRenderAPI;
 
@@ -13,7 +14,8 @@ namespace Polyboid
 		vk::RenderPass m_RenderPass = nullptr;
 		ClearSettings m_ClearSettings;
 		RenderPassSettings m_Settings;
-		Ref <VulkanFramebuffer> m_Framebuffer = nullptr;
+		Ref <VulkanFramebuffer> m_CurrentFramebuffer = nullptr;
+		Ref<FrameBufferSet> m_FrameBufferSet;
 		Ref<Swapchain> m_Swapchain = nullptr;
 		vk::RenderPassBeginInfo m_RenderPassBeginInfo{};
 		vk::ClearColorValue m_ColorValue;
@@ -22,11 +24,10 @@ namespace Polyboid
 		const VkRenderAPI* m_Context = nullptr;
 		uint32_t m_Width = 0, m_Height = 0;
 
+
 	public:
 		vk::RenderPass GetHandle() { return m_RenderPass; }
-		void SetFramebuffer(const Ref<Framebuffer>& framebuffer) override;
-		Ref<Framebuffer> GetFramebuffer() override;
-
+	
 		VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height);
 		VulkanRenderPass(const VkRenderAPI* context, const RenderPassSettings& settings);
 		void InitSwapchain(const VkRenderAPI* context, uint32_t width, uint32_t height);
@@ -42,10 +43,14 @@ namespace Polyboid
 		void Resize(uint32_t width, uint32_t height) override;
 
 		RenderPassSettings& GetRenderPassSettings() override;
+		
+
+		Ref<Texture2D> GetColorTexture(const TextureAttachmentSlot& attachmentIndex, uint32_t frameIndex = 0) override;
+		Ref<Texture2D> GetDepthTexture(uint32_t frameIndex = 0) override;
 
 		~VulkanRenderPass() override;
 
-		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo(Ref <VulkanFramebuffer>& framebuffer);
+		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo();
 
 		friend class VulkanFramebuffer;
 		friend class VulkanCommandBuffer;

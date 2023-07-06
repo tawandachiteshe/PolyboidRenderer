@@ -57,6 +57,7 @@ namespace Polyboid
 
 		virtual void ReSize(uint32_t width, uint32_t height) =0;
 		virtual Ref<Texture2D> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
+		virtual Ref<Texture2D> GetDepthAttachment() = 0;
 		virtual std::any GetHandle() = 0;
 
 

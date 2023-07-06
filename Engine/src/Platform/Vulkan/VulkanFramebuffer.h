@@ -30,7 +30,7 @@ namespace Polyboid
 		void Destroy() override;
 
 		void SwapchainRecreate();
-		void Recreate();
+		void Recreate() override;
 
 		
 		VulkanFramebuffer(const VkRenderAPI* context, const Ref<VulkanRenderPass>& renderPass);
@@ -42,6 +42,7 @@ namespace Polyboid
 
 		~VulkanFramebuffer() override;
 		Ref<Texture2D> GetColorAttachment(TextureAttachmentSlot attachment) override;
+		Ref<Texture2D> GetDepthAttachment() override;
 
 		void ReSize(uint32_t width, uint32_t height) override;
 		std::any GetHandle() override;

@@ -21,6 +21,16 @@ namespace Polyboid
 
 	};
 
+	enum class MatTextureType
+	{
+		Normal = 0, //Mandatory
+		Diffuse, 
+		Roughness,
+		Metallic,
+		AmbientOcclussion,
+
+	};
+
 	class Material
 	{
 	public:
@@ -44,9 +54,6 @@ namespace Polyboid
 			m_Data.textures[2] = textures[2];
 			m_Data.textures[3] = textures[3];
 		}
-
-		void SetAlbedoColor(const glm::vec4& color);
-		glm::vec4& GetAlbedoColor();
 
 		void SetAlbedo(const glm::vec3& color);
 		glm::vec3& GetAlbedo();

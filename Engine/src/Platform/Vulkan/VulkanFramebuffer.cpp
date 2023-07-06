@@ -152,6 +152,11 @@ namespace Polyboid
 		return m_Textures.at(static_cast<uint32_t>(attachment)).As<Texture2D>();
 	}
 
+	Ref<Texture2D> VulkanFramebuffer::GetDepthAttachment()
+	{
+		return m_Textures.at(m_Textures.size() - 1);
+	}
+
 
 	void VulkanFramebuffer::ReSize(uint32_t width, uint32_t height)
 	{

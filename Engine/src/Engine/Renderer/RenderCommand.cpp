@@ -125,16 +125,7 @@ namespace Polyboid
 	}
 
 
-	void RenderCommand::BeginSwapChainRenderPass()
-	{
-		GetCurrentCommandBuffer()->BeginRenderPass(GetSwapChain()->GetRenderPass(),
-		                                           GetSwapChain()->GetCurrentFrameBuffer());
-	}
 
-	void RenderCommand::EndSwapChainRenderPass()
-	{
-		GetCurrentCommandBuffer()->EndRenderPass();
-	}
 
 	Ref<CommandBuffer> RenderCommand::GetCurrentCommandBuffer()
 	{
@@ -180,27 +171,18 @@ namespace Polyboid
 		GetCurrentCommandBuffer()->BindGraphicsPipeline(pipelineState);
 	}
 
-	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& buffer)
-	{
-		GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffer);
-	}
 
 
-	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const std::vector<Ref<Framebuffer>>& buffers)
+
+	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass)
 	{
-		GetCurrentCommandBuffer()->BeginRenderPass(renderPass, buffers.at(GetCurrentFrame()));
+		GetCurrentCommandBuffer()->BeginRenderPass(renderPass);
 	}
 
-	void RenderCommand::BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<FrameBufferSet>& buffers)
-	{
-		GetCurrentCommandBuffer()->BeginRenderPass(renderPass,
-			buffers->Get(GetCurrentFrame()));
-	}
 
 	void RenderCommand::BeginRenderPass(const Ref<Swapchain>& swapchain)
 	{
-		RenderCommand::BeginRenderPass(swapchain->GetRenderPass(),
-			RenderCommand::GetSwapChain()->GetFrameBuffer(GetGraphicsBackend()->GetCurrentImageIndex()));
+		RenderCommand::BeginRenderPass(swapchain->GetRenderPass());
 	}
 
 	void RenderCommand::RegisterFreeFunc(const GraphicsBackend::RenderBackendFreeFunc& freeFunc)
@@ -364,7 +346,7 @@ namespace Polyboid
 
 		GetGraphicsBackend()->Present();
 
-		const auto& maxFrames = RenderCommand::GetMaxFramesInFlight();
+		const auto& maxFrames = GetMaxFramesInFlight();
 		auto frame = GetCurrentFrame();
 		frame = (frame + 1) % maxFrames;
 		SetCurrentFrame(frame);

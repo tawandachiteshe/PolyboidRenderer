@@ -65,6 +65,7 @@ namespace Polyboid
 		Ref<Framebuffer> GetFrameBuffer(uint32_t index) override;
 
 		Ref<Framebuffer> GetCurrentFrameBuffer() override;
+
 		void SetVsync(bool vsync) override;
 		~VkSwapChain() override;
 	};

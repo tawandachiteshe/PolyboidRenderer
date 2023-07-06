@@ -41,7 +41,7 @@ namespace Polyboid
 
 		virtual void Begin() = 0;
 		virtual void End() = 0;
-		virtual void BeginRenderPass(const Ref<RenderPass>& renderPass, const Ref<Framebuffer>& framebuffer) = 0;
+		virtual void BeginRenderPass(const Ref<RenderPass>& renderPass) = 0;
 		virtual void EndRenderPass() = 0;
 		virtual void Reset() = 0;
 		virtual std::any GetHandle() = 0;

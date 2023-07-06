@@ -5,21 +5,13 @@
 #include "VkRenderAPI.h"
 #include "VkSwapChain.h"
 #include "VulkanFramebuffer.h"
+#include "Engine/Renderer/BufferSet.h"
+#include "Engine/Renderer/RenderCommand.h"
 #include "Utils/Common.h"
 #include "Utils/VulkanDevice.h"
 
 namespace Polyboid
 {
-	void VulkanRenderPass::SetFramebuffer(const Ref<Framebuffer>& framebuffer)
-	{
-		auto vkFramebuffer = framebuffer.As<VulkanFramebuffer>();
-		m_Framebuffer = vkFramebuffer;
-	}
-
-	Ref<Framebuffer> VulkanRenderPass::GetFramebuffer()
-	{
-		return m_Framebuffer.As<Framebuffer>();
-	}
 
 	VulkanRenderPass::VulkanRenderPass(const VkRenderAPI* context, uint32_t width, uint32_t height): m_Context(context), m_Width(width), m_Height(height)
 	{
@@ -172,6 +164,8 @@ namespace Polyboid
 		vk::resultCheck(render_pass_result.result, "failed to create render pass");
 		m_RenderPass = render_pass_result.value;
 
+		m_FrameBufferSet = FrameBufferSet::Create(RefPtr<RenderPass>(this));
+
 		m_ColorValue.float32[0] = m_ClearSettings.color.x;
 		m_ColorValue.float32[1] = m_ClearSettings.color.y;
 		m_ColorValue.float32[2] = m_ClearSettings.color.z;
@@ -227,6 +221,7 @@ namespace Polyboid
 		m_Settings.Height = height;
 		m_Settings.Width = width;
 		Recreate();
+		m_FrameBufferSet->ReSize(width, height);
 	}
 
 	RenderPassSettings& VulkanRenderPass::GetRenderPassSettings()
@@ -234,24 +229,42 @@ namespace Polyboid
 		return m_Settings;
 	}
 
+	Ref<Texture2D> VulkanRenderPass::GetColorTexture(const TextureAttachmentSlot& attachmentIndex, uint32_t frameIndex)
+	{
+		return  m_FrameBufferSet->Get(frameIndex)->GetColorAttachment(attachmentIndex);
+	}
+
+	Ref<Texture2D> VulkanRenderPass::GetDepthTexture(uint32_t frameIndex)
+	{
+		return m_FrameBufferSet->Get(frameIndex)->GetDepthAttachment();
+
+	}
+
 
 	VulkanRenderPass::~VulkanRenderPass()
 	{
 	}
 
-	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo(Ref<VulkanFramebuffer>& framebuffer)
+	vk::RenderPassBeginInfo VulkanRenderPass::GetRenderBeginInfo()
 	{
-		m_Framebuffer = framebuffer;
+		if (m_Settings.IsSwapchainRenderPass)
+		{
+			m_CurrentFramebuffer = RenderCommand::GetSwapChain()->GetCurrentFrameBuffer().As<VulkanFramebuffer>();
+		}
+		else
+		{
+			m_CurrentFramebuffer = m_FrameBufferSet->Get(RenderCommand::GetCurrentFrame()).As<VulkanFramebuffer>();
+		}
+
+		
 		m_RenderPassBeginInfo.sType = vk::StructureType::eRenderPassBeginInfo;
 		m_RenderPassBeginInfo.renderPass = m_RenderPass;
-		m_RenderPassBeginInfo.framebuffer = m_Framebuffer->GetFramebufferHandle();
+		m_RenderPassBeginInfo.framebuffer = m_CurrentFramebuffer->GetFramebufferHandle();
 		m_RenderPassBeginInfo.renderArea.offset = vk::Offset2D{0, 0};
 		m_RenderPassBeginInfo.renderArea.extent = vk::Extent2D{m_Settings.Width, m_Settings.Height};
 		m_RenderPassBeginInfo.clearValueCount = 2;
 		m_RenderPassBeginInfo.pClearValues = m_ClearValues.data();
 
-		vk::Framebuffer::NativeType fb = m_RenderPassBeginInfo.framebuffer;
-		//spdlog::info("Framebuffer id {}", (uint64_t)fb);
 
 		return m_RenderPassBeginInfo;
 	}
