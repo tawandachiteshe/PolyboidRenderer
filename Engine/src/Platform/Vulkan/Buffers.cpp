@@ -125,8 +125,13 @@ namespace Polyboid
 		return m_DescBufferInfo;
 	}
 
+	RenderResourceType VulkanUniformBuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::UniformBuffer;
+	}
+
 	VulkanShaderStorage::VulkanShaderStorage(const VkRenderAPI* context, uint32_t size): m_Size(size),
-		m_Context(context)
+	                                                                                     m_Context(context)
 	{
 		Init(context, m_Size);
 	}
@@ -170,6 +175,7 @@ namespace Polyboid
 
 	void VulkanShaderStorage::Recreate()
 	{
+		Destroy();
 		Init(m_Context, m_Size);
 	}
 
@@ -193,5 +199,10 @@ namespace Polyboid
 
 	VulkanShaderStorage::~VulkanShaderStorage()
 	{
+	}
+
+	RenderResourceType VulkanShaderStorage::GetRenderResourceType()
+	{
+		return RenderResourceType::StorageBuffer;
 	}
 }

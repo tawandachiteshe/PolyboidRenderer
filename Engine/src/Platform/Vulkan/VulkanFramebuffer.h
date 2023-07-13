@@ -47,6 +47,8 @@ namespace Polyboid
 		void ReSize(uint32_t width, uint32_t height) override;
 		std::any GetHandle() override;
 
+		RenderResourceType GetRenderResourceType() override;
+
 		friend class VulkanCommandBuffer;
 		friend class VulkanRenderPass;
 	};

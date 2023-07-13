@@ -38,7 +38,7 @@ namespace Polyboid
 		uint32_t GetSizeInBytes() const override;
 		std::any GetHandle() const override;
 
-		
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 }

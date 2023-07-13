@@ -111,6 +111,11 @@ namespace Polyboid
         ReadWrite
     };
 
+    enum class TextureType
+    {
+	    Texture2D,
+        Texture3D
+    };
  
     
     struct TextureSettings
@@ -146,15 +151,23 @@ namespace Polyboid
         uint32_t Width = 0;
         uint32_t Height = 0;
     };
+
+    class Texture : public RenderResource
+    {
+    public:
+        virtual std::any GetViewHandle() = 0;
+        virtual std::any GetSamplerHandle() = 0;
+        virtual TextureType GetTextureType() = 0;
+
+    };
     
-    class Texture2D : public RenderResource
+    class Texture2D : public Texture 
     {
     public:
 
         virtual void Bind(uint32_t slot = 0) = 0;
         virtual void UnBind() = 0;
-        virtual std::any GetViewHandle() = 0;
-        virtual std::any GetSamplerHandle() = 0;
+
 
 
         //Editor Only
@@ -170,7 +183,7 @@ namespace Polyboid
         static Ref<Texture2D> Create(const Ref<Image2D>& image);
     };
 
-    class Texture3D : public RenderResource
+    class Texture3D : public Texture
     {
     public:
 
@@ -178,8 +191,7 @@ namespace Polyboid
         virtual void UnBind() = 0;
 
         virtual void SetData(const void** data, uint32_t size) = 0;
-        virtual std::any GetViewHandle() = 0;
-        virtual std::any GetSamplerHandle() = 0;
+  
         static Ref<Texture3D> Create(const TextureSettings& settings, const void* data);
         virtual ~Texture3D() = default;
     

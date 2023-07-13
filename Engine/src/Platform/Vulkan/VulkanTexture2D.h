@@ -48,7 +48,10 @@ namespace Polyboid
 		std::any GetViewHandle() override;
 		std::any GetSamplerHandle() override;
 		std::any GetImGuiTexture() override;
-		
+		TextureType GetTextureType() override;
+
+		RenderResourceType GetRenderResourceType() override;
+
 		void SetData(const void* data, uint32_t size) override;
 		~VulkanTexture2D() override;
 	};

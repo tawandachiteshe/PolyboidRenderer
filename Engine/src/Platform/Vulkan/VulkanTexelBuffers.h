@@ -29,6 +29,8 @@ namespace Polyboid
 		vk::DescriptorBufferInfo GetBufferDescInfo();
 		void Destroy() override;
 		void Recreate() override;
+
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 	class VulkanTexelUniformBuffer : public TexelUniformBuffer
@@ -56,6 +58,8 @@ namespace Polyboid
 		uint32_t GetWidth() override;
 		void Destroy() override;
 		void Recreate() override;
+
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 }

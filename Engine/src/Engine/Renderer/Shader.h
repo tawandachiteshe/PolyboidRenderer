@@ -2,12 +2,15 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+
+#include "RenderResource.h"
 #include "Engine/Engine/Base.h"
 #include "Engine/Engine/Shaders/ShaderCompiler.h"
 
 
 namespace Polyboid
 {
+	enum class RenderResourceType;
 	class Texture3D;
 	class Texture2D;
 	class SamplerState;
@@ -48,7 +51,17 @@ namespace Polyboid
         return 0;
     }
 
-    
+
+
+    struct ResourceBindingInfo
+    {
+        uint32_t Set = 0;
+        uint32_t Binding = 0;
+        RenderResourceType ResourceType = RenderResourceType::None;
+
+    };
+
+    using ShaderResourceRegistry = std::unordered_map<std::string, ResourceBindingInfo>;
     
     class Shader
     {
@@ -61,8 +74,11 @@ namespace Polyboid
         virtual  void Unbind() const = 0;
         virtual ReflectionInfo GetShaderReflectionInfo() = 0;
         virtual ShaderType GetType() = 0;
+        virtual ShaderResourceRegistry& GetShaderResourceType() = 0;
+
         static  Ref<Shader> Create(const ShaderType& shader, const std::string& shaderSourcePath);
         static  Ref<Shader> Create(const ShaderBinaryAndReflectionInfo& info);
+
 
     };
 

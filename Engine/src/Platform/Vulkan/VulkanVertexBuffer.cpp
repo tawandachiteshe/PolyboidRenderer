@@ -140,6 +140,11 @@ namespace Polyboid
 		return m_Handle;
 	}
 
+	RenderResourceType VulkanVertexBuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
+
 	void VulkanVertexBuffer::Destroy()
 	{
 		VmaAllocator allocator = *m_Context->GetAllocator();

@@ -268,4 +268,9 @@ namespace Polyboid
 
 		return m_RenderPassBeginInfo;
 	}
+
+	RenderResourceType VulkanRenderPass::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
 }

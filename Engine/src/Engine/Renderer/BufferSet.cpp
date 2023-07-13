@@ -34,6 +34,15 @@ namespace Polyboid
 		return m_Buffers.at(frame);
 	}
 
+	void UniformBufferSet::Destroy()
+	{
+	}
+
+	RenderResourceType UniformBufferSet::GetRenderResourceType()
+	{
+		return RenderResourceType::UniformBuffer;
+	}
+
 
 	// Storage buffers here
 	StorageBufferSet::StorageBufferSet(uint32_t size)
@@ -60,6 +69,15 @@ namespace Polyboid
 	Ref<StorageBuffer> StorageBufferSet::Get(uint32_t frame)
 	{
 		return m_Buffers.at(frame);
+	}
+
+	void StorageBufferSet::Destroy()
+	{
+	}
+
+	RenderResourceType StorageBufferSet::GetRenderResourceType()
+	{
+		return RenderResourceType::StorageBuffer;
 	}
 
 	VertexBufferSet::VertexBufferSet(uint32_t size)

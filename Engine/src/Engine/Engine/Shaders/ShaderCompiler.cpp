@@ -189,12 +189,13 @@ namespace Polyboid
 
 			for (auto& texture : textures)
 			{
-				ShaderImageInfo shaderInfo;
+				ShaderTextureInfo shaderInfo;
 
 				shaderInfo.Binding = texture["binding"].get<uint32_t>();
 				shaderInfo.Name = texture["name"].get<std::string>();
 				shaderInfo.Set = texture["set"].get<uint32_t>();
 				shaderInfo.arrayLength = texture.contains("array") ? texture["array"].get<std::vector<uint32_t>>().at(0) : 1;
+				shaderInfo.textureType = GlslToShaderTextureType(texture["type"].get<std::string>());
 				info.textures[shaderInfo.Name] = (shaderInfo);
 			}
 		}

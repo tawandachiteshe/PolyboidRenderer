@@ -7,6 +7,7 @@
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanShader.h"
 #include "Engine/Renderer/RenderCommand.h"
+#include <ranges>
 
 namespace Polyboid
 {
@@ -21,6 +22,7 @@ namespace Polyboid
 		const auto device = VkRenderAPI::GetVulkanDevice();
 
 		m_Stages.emplace_back(m_ComputeShader->GetVulkanPipelineStageInfo());
+		m_ResourceRegistry = m_ComputeShader->GetShaderResourceType();
 
 
 		for (auto& [setIndex, writeDesc] : m_ComputeShader->GetDescWriteMap())
@@ -110,12 +112,63 @@ namespace Polyboid
 		m_Bindings.clear();
 		m_Stages.clear();
 		m_PipeDescSets.clear();
+		m_ResourceRegistry.clear();
 	}
 
 	void VulkanKomputePipeline::Recreate()
 	{
 		Destroy();
+		m_DescPool->Recreate();
 		Init();
+
+		for (const auto& binding : m_Sets | std::views::keys)
+		{
+			m_Sets[binding] = AllocateDescriptorSets(binding);
+		}
+
+		for (const auto& set : m_Sets | std::views::keys)
+		{
+			for (auto [binding, buffer] : m_UniformBufferSets[set])
+			{
+				buffer->Recreate();
+				BindUniformBufferSet(binding, buffer, set);
+			}
+
+
+			for (auto [binding, buffer] : m_StorageBufferSets[set])
+			{
+				buffer->Recreate();
+				BindStorageBufferSet(binding, buffer, set);
+			}
+
+
+			for (auto [binding, texture] : m_TextureSets[set])
+			{
+				BindTexture2D(binding, texture, set);
+			}
+
+			for (auto [binding, texture] : m_TextureSets3D[set])
+			{
+				BindTexture3D(binding, texture, set);
+			}
+
+			for (auto [binding, texture] : m_Image[set])
+			{
+				BindImage2D(binding, texture, set);
+			}
+
+			for (auto [binding, texture] : m_StorageTexel[set])
+			{
+				BindTexelStorageBuffer(binding, texture, set);
+			}
+
+			for (auto [binding, texture] : m_UniformTexel[set])
+			{
+				BindTexelUniformBuffer(binding, texture, set);
+			}
+
+			WriteSetResourceBindings(set);
+		}
 	}
 
 	vk::PipelineLayout VulkanKomputePipeline::GetPipelineLayout()
@@ -226,11 +279,56 @@ namespace Polyboid
 		m_StorageTexel[setBinding][binding] = (bufferSet);
 	}
 
+	void VulkanKomputePipeline::BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding)
+	{
+		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
+		{
+			m_Sets[setBinding].at(i)->WriteTexture3D(binding, texture);
+		}
+
+		m_TextureSets3D[setBinding][binding] = (texture);
+	}
+
 	void VulkanKomputePipeline::WriteSetResourceBindings(uint32_t set)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[set].at(i)->Commit();
+		}
+	}
+
+	RenderResourceType VulkanKomputePipeline::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
+
+	void VulkanKomputePipeline::BindResource(const std::string& name, const Ref<RenderResource>& resource)
+	{
+		const auto resourceInfo = m_ResourceRegistry.at(name);
+		switch (resourceInfo.ResourceType)
+		{
+		case RenderResourceType::Image: BindImage2D(resourceInfo.Binding, resource.As<Image2D>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::TexelStorageBuffer: BindTexelStorageBuffer(
+			resourceInfo.Binding, resource.As<TexelStorageBuffer>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::TexelUniformBuffer: BindTexelUniformBuffer(
+			resourceInfo.Binding, resource.As<TexelUniformBuffer>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::Texture2D: BindTexture2D(resourceInfo.Binding, resource.As<Texture2D>(),
+			resourceInfo.Set);
+			break;
+		case RenderResourceType::Texture3D: BindTexture3D(resourceInfo.Binding, resource.As<Texture3D>(),
+			resourceInfo.Set);
+			break;
+		case RenderResourceType::StorageBuffer: BindStorageBufferSet(resourceInfo.Binding,
+			resource.As<StorageBufferSet>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::UniformBuffer: BindUniformBufferSet(resourceInfo.Binding,
+			resource.As<UniformBufferSet>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::None: __debugbreak();
+			break;
 		}
 	}
 

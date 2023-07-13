@@ -7,10 +7,10 @@
 
 namespace Polyboid
 {
-	VulkanShader::VulkanShader(const VkRenderAPI* context, ShaderBinaryAndReflectionInfo info): m_Context(context), m_ShaderInfo(
-		std::move(info))
+	VulkanShader::VulkanShader(const VkRenderAPI* context, ShaderBinaryAndReflectionInfo info): m_Context(context),
+		m_ShaderInfo(
+			std::move(info))
 	{
-
 		auto device = context->GetDevice()->GetVulkanDevice();
 
 		vk::ShaderModuleCreateInfo createInfo;
@@ -28,13 +28,23 @@ namespace Polyboid
 
 		switch (static_cast<ShaderType>(m_ShaderInfo.type))
 		{
-		case ShaderType::Vertex: shaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex; break;
-		case ShaderType::Fragment: shaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment; break;
-		case ShaderType::Compute: shaderStageInfo.stage = vk::ShaderStageFlagBits::eCompute; break;
-		case ShaderType::None: __debugbreak(); break;
+		case ShaderType::Vertex: shaderStageInfo.stage = vk::ShaderStageFlagBits::eVertex;
+			break;
+		case ShaderType::Fragment: shaderStageInfo.stage = vk::ShaderStageFlagBits::eFragment;
+			break;
+		case ShaderType::Compute: shaderStageInfo.stage = vk::ShaderStageFlagBits::eCompute;
+			break;
+		case ShaderType::None: __debugbreak();
+			break;
 		}
-		
+
 		m_ShaderStateInfo = shaderStageInfo;
+
+		if (static_cast<ShaderType>(m_ShaderInfo.type) == ShaderType::Compute)
+		{
+			int a = 1;
+			
+		}
 
 		const auto& ubos = m_ShaderInfo.reflectionInfo.ubos;
 		const auto& ssbos = m_ShaderInfo.reflectionInfo.ssbos;
@@ -53,13 +63,12 @@ namespace Polyboid
 			m_PushConstantRanges.emplace_back(pushConstant);
 
 			//pushConstant.size = constantInfo.Name;
-			
 		}
 
 		for (const auto& ubo : ubos)
 		{
 			auto& bufferInfo = ubo.second;
-			
+
 			vk::DescriptorSetLayoutBinding binding{};
 			binding.descriptorType = vk::DescriptorType::eUniformBuffer;
 			binding.descriptorCount = 1;
@@ -74,9 +83,15 @@ namespace Polyboid
 			write.dstBinding = bufferInfo.Binding;
 			write.descriptorType = binding.descriptorType;
 
-			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
-			
 
+			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
+
+			ResourceBindingInfo bindingInfo;
+			bindingInfo.Binding = binding.binding;
+			bindingInfo.Set = bufferInfo.Set;
+			bindingInfo.ResourceType = RenderResourceType::UniformBuffer;
+
+			m_ResourceBindingInfo[bufferInfo.Name] = bindingInfo;
 			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
 		}
 
@@ -100,7 +115,14 @@ namespace Polyboid
 			write.descriptorType = binding.descriptorType;
 
 			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
-		
+
+			ResourceBindingInfo bindingInfo;
+			bindingInfo.Binding = binding.binding;
+			bindingInfo.Set = bufferInfo.Set;
+			bindingInfo.ResourceType = RenderResourceType::StorageBuffer;
+
+			m_ResourceBindingInfo[bufferInfo.Name] = bindingInfo;
+
 			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
 		}
 
@@ -124,6 +146,21 @@ namespace Polyboid
 
 			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
 
+			ResourceBindingInfo bindingInfo;
+			bindingInfo.Binding = binding.binding;
+			bindingInfo.Set = bufferInfo.Set;
+
+			switch (bufferInfo.textureType)
+			{
+			case ShaderTextureType::Texture2D: bindingInfo.ResourceType = RenderResourceType::Texture2D;
+				break;
+			case ShaderTextureType::Texture3D: bindingInfo.ResourceType = RenderResourceType::Texture3D;
+				break;
+			}
+
+
+			m_ResourceBindingInfo[bufferInfo.Name] = bindingInfo;
+
 			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
 		}
 
@@ -132,16 +169,23 @@ namespace Polyboid
 		{
 			auto& bufferInfo = image.second;
 			vk::DescriptorSetLayoutBinding binding{};
+			RenderResourceType resourceType = RenderResourceType::Image;
 
 			switch (bufferInfo.imageType)
 			{
-			case ShaderImageType::SamplerBuffer: binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer; break;
-			case ShaderImageType::ImageBuffer: binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer; break;
-			case ShaderImageType::SamplerImage: binding.descriptorType = vk::DescriptorType::eStorageImage; break;
+			case ShaderImageType::SamplerBuffer: binding.descriptorType = vk::DescriptorType::eUniformTexelBuffer;
+				resourceType = RenderResourceType::TexelUniformBuffer;
+				break;
+			case ShaderImageType::ImageBuffer: binding.descriptorType = vk::DescriptorType::eStorageTexelBuffer;
+				resourceType = RenderResourceType::TexelStorageBuffer;
+				break;
+			case ShaderImageType::SamplerImage: binding.descriptorType = vk::DescriptorType::eStorageImage;
+				resourceType = RenderResourceType::Image;
+				break;
 			default: binding.descriptorType = vk::DescriptorType::eSampledImage;
 			}
 
-			
+
 			binding.descriptorCount = bufferInfo.arrayLength;
 			binding.stageFlags = m_ShaderStateInfo.stage;
 			binding.binding = bufferInfo.Binding;
@@ -155,11 +199,14 @@ namespace Polyboid
 			write.descriptorType = binding.descriptorType;
 
 			m_DescWriteSet[bufferInfo.Set][binding.binding] = write;
+			ResourceBindingInfo bindingInfo;
+			bindingInfo.Binding = binding.binding;
+			bindingInfo.Binding = bufferInfo.Binding;
+			bindingInfo.ResourceType = resourceType;
 
+			m_ResourceBindingInfo[bufferInfo.Name] = bindingInfo;
 			m_ShaderBindings[bufferInfo.Set].emplace_back(binding);
 		}
-
-
 	}
 
 
@@ -167,7 +214,6 @@ namespace Polyboid
 	{
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
 		device.destroyShaderModule(m_ShaderModule);
-
 	}
 
 	vk::PipelineShaderStageCreateInfo VulkanShader::GetVulkanPipelineStageInfo()
@@ -188,6 +234,11 @@ namespace Polyboid
 	DescWriteMap VulkanShader::GetDescWriteMap()
 	{
 		return m_DescWriteSet;
+	}
+
+	ShaderResourceRegistry& VulkanShader::GetShaderResourceType()
+	{
+		return m_ResourceBindingInfo;
 	}
 
 	VulkanShader::~VulkanShader()

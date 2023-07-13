@@ -31,6 +31,7 @@ namespace Polyboid
 		Ref<IndexBuffer> GetIndexBuffer() override;
 		void Recreate() override;
 		void Destroy() override;
+		RenderResourceType GetRenderResourceType() override;
 
 		virtual vk::PipelineVertexInputStateCreateInfo GetVulkanInfo();
 

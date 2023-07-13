@@ -23,15 +23,17 @@ namespace Polyboid
 		VulkanUniformBuffer(const VkRenderAPI* context, uint32_t size, uint32_t slot = 0);
 
 		void Init(const VkRenderAPI* context, uint32_t size);
-		void Recreate();
+		void Recreate() override;
+		void Destroy() override;
 
 		void SetData(const void* data, uint32_t size, uint32_t offset) override;
 		uint32_t GetBindingSlot() override;
 		uint32_t GetDataSize() override;
-		virtual void Destroy();
+	
 		std::any GetHandle() override;
 		virtual  vk::DescriptorBufferInfo GetVulkanDescBuffer();
 
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 
@@ -47,14 +49,15 @@ namespace Polyboid
 	public:
 		VulkanShaderStorage(const VkRenderAPI* context, uint32_t size);
 		void Init(const VkRenderAPI* context, uint32_t size);
-		void Recreate();
+		void Recreate() override;
+		void Destroy() override;
 		void Bind(uint32_t slot) const override;
 		void Unbind() const override;
 		void SetData(const void* data, uint32_t sizeData, uint32_t offset) override;
-		virtual void Destroy();
 		std::any GetHandle() override;
 		virtual vk::DescriptorBufferInfo GetVulkanDescBuffer();
 		~VulkanShaderStorage() override;
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 

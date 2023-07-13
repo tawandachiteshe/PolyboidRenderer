@@ -35,6 +35,8 @@ namespace Polyboid
 		uint32_t GetHeight() override;
 		uint32_t GetWidth() override;
 		~VulkanImage2D() override;
+
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 }

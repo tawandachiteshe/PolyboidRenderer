@@ -7,6 +7,7 @@
 
 namespace Polyboid
 {
+	class Texture3D;
 	class TexelStorageBuffer;
 	class TexelUniformBuffer;
 	class Image2D;
@@ -32,12 +33,15 @@ namespace Polyboid
 			uint32_t setBinding) = 0;
 		virtual void BindTexture2D(uint32_t binding, const Ref<Texture2D>& bufferSet, uint32_t setBinding) = 0;
 
+		virtual void BindTexture3D(uint32_t binding, const Ref<Texture3D>& texture, uint32_t setBinding) = 0;
+
 		virtual void BindImage2D(uint32_t binding, const Ref<Image2D>& bufferSet, uint32_t setBinding) = 0;
 
 		virtual void BindTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& bufferSet, uint32_t setBinding) = 0;
 		virtual void BindTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& bufferSet, uint32_t setBinding) = 0;
 
 		virtual void WriteSetResourceBindings(uint32_t set) = 0;
+		virtual void BindResource(const std::string& name, const Ref<RenderResource>& resource) = 0;
 
 		static Ref<KomputePipeline> Create();
 	};

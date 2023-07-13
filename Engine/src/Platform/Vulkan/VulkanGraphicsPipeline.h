@@ -35,6 +35,7 @@ namespace Polyboid
 		VulkanMultiSampleState m_MultiSampleState;
 		Ref<VulkanVertexBufferArray> m_VertexInput;
 		Ref<VulkanRenderPass> m_RenderPass = nullptr;
+		ShaderResourceRegistry m_ResourceRegistry;
 
 		vk::PrimitiveTopology m_Topology = vk::PrimitiveTopology::eTriangleList;
 
@@ -50,7 +51,7 @@ namespace Polyboid
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Texture3D>>> m_TextureSets3D;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<Image2D>>> m_Image2D;
 
-		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<TexelUniformBuffer>>> m_UniformTexel;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<TexelUniformBuffer>>> m_UniformTexel ;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<TexelStorageBuffer>>> m_StorageTexels;
 
 
@@ -115,9 +116,12 @@ namespace Polyboid
 
 		void WriteSetResourceBindings(uint32_t set) override;
 
+		void BindResource(const std::string& name, const Ref<RenderResource>& resource) override;
+
+
 		void Destroy() override;
 
-
+		RenderResourceType GetRenderResourceType() override;
 
 		std::any GetHandle() override;
 	};

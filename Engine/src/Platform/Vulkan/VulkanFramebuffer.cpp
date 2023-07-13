@@ -175,4 +175,9 @@ namespace Polyboid
 	{
 		return m_FrameBuffer;
 	}
+
+	RenderResourceType VulkanFramebuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
 }

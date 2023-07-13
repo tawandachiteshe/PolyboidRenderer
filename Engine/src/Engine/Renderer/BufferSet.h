@@ -9,24 +9,28 @@ namespace Polyboid
 	class RenderPass;
 	class Framebuffer;
 
-	class UniformBufferSet
+	class UniformBufferSet : public RenderResource
 	{
 		std::vector<Ref<UniformBuffer>> m_Buffers;
 	public:
 		UniformBufferSet(uint32_t size);
-		void Recreate();
+		void Recreate() override;
 		static Ref<UniformBufferSet> Create(uint32_t size);
 		Ref<UniformBuffer> Get(uint32_t frame);
+		void Destroy() override;
+		RenderResourceType GetRenderResourceType() override;
 	};
 
-	class StorageBufferSet
+	class StorageBufferSet : public RenderResource
 	{
 		std::vector<Ref<StorageBuffer>> m_Buffers;
 	public:
 		StorageBufferSet(uint32_t size);
-		void Recreate();
+		void Recreate() override;
 		static Ref<StorageBufferSet> Create(uint32_t size);
 		Ref<StorageBuffer> Get(uint32_t frame);
+		void Destroy() override;
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 	class VertexBufferSet

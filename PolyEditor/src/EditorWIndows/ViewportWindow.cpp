@@ -19,12 +19,12 @@
 
 namespace Polyboid
 {
-
 	struct Buffer
 	{
 		uint8_t* m_Data = nullptr;
 		size_t m_Size = 0;
 		Buffer() = default;
+
 		Buffer(size_t size): m_Size(size)
 		{
 			m_Data = new uint8_t[size];
@@ -75,15 +75,16 @@ namespace Polyboid
 
 	ViewportWindow::ViewportWindow(const std::string& name)
 	{
-	
-
 		m_Name = name;
 
 
 		float fov = 45.0f;
 		m_ViewportCamera = CreateRef<EditorCamera>(fov, 1.777, 0.1f, 2000.0f);
 
-		TextureSettings textureSettings = { .sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling, .path = "Assets/Textures/pic.jpg" };
+		TextureSettings textureSettings = {
+			.sizedFormat = EngineGraphicsFormats::RGBA8, .usage = ImageUsage::Sampling,
+			.path = "Assets/Textures/pic.jpg"
+		};
 		textureSettings.mipCount = 10;
 		textureSettings.generateMips = true;
 
@@ -107,29 +108,19 @@ namespace Polyboid
 		m_KomputeCommandBuffer = CommandBufferSet::Create({3, CommandType::ManyTime});
 		m_AgeBuffer = StorageBufferSet::Create(sizeof(uint32_t) * 100);
 
+
 		m_RefComputePipeline = KomputePipeline::Create();
 		m_RefComputePipeline->SetComputeShader(ShaderRegistry::Load("Renderer3D/Compute/testKompute.comp"));
 		m_RefComputePipeline->Bake();
 
 		m_RefComputePipeline->AllocateDescriptorSets(0);
-		m_RefComputePipeline->BindStorageBufferSet(0, m_AgeBuffer, 0);
-		m_RefComputePipeline->BindImage2D(1, m_Image2D, 0);
-		m_RefComputePipeline->BindTexelStorageBuffer(2, storageTexture, 0);
+		m_RefComputePipeline->BindResource("AgeSSBO", m_AgeBuffer);
+		m_RefComputePipeline->BindResource("testImage", m_Image2D);
+		m_RefComputePipeline->BindResource("testImage2", storageTexture);
 		m_RefComputePipeline->WriteSetResourceBindings(0);
 
-		KomputeCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
+		RenderCommand::PushCommandBufferSet(m_KomputeCommandBuffer);
 
-		
-
-		for (uint32_t i = 0; i < 3; ++i)
-		{
-			KomputeCommand::BeginCommands(m_KomputeCommandBuffer, i);
-			KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
-			KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
-			KomputeCommand::Dispatch({100, 100, 1});
-			KomputeCommand::EndCommands();
-			KomputeCommand::ComputeOneTime({m_KomputeCommandBuffer}, i);
-		}
 
 
 		const auto skyboxShaders = ShaderRegistry::LoadGraphicsShaders("Renderer3D/skybox");
@@ -177,13 +168,15 @@ namespace Polyboid
 		};
 
 		auto greenTexture = Texture2D::Create({
-			                                    .sizedFormat = EngineGraphicsFormats::RGBA8,
-			                                    .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
+			                                      .sizedFormat = EngineGraphicsFormats::RGBA8,
+			                                      .usage = ImageUsage::Sampling, .Width = 1, .Height = 1,
 
-		                                    }, &green);
+		                                      }, &green);
 
-		TextureSettings greenTexture3dSettings{ .sizedFormat = EngineGraphicsFormats::RGBA8,
-			.usage = ImageUsage::Sampling, .Width = 2, .Height = 2 };
+		TextureSettings greenTexture3dSettings{
+			.sizedFormat = EngineGraphicsFormats::RGBA8,
+			.usage = ImageUsage::Sampling, .Width = 2, .Height = 2
+		};
 
 		greenTexture3dSettings.generateMips = true;
 		greenTexture3dSettings.mipCount = 2;
@@ -216,15 +209,14 @@ namespace Polyboid
 		m_StorageStagingBuffersVB = StagingBufferSet::Create(sizeof(m_Vertices));
 
 		m_Pipeline->AllocateDescriptorSets();
-		m_Pipeline->BindUniformBufferSet(0, m_UniformBuffers);
-		m_Pipeline->BindStorageBufferSet(1, m_StorageBuffers);
-		m_Pipeline->BindTexture2D(2, texture);
-		m_Pipeline->BindStorageBufferSet(3, m_AgeBuffer);
-		m_Pipeline->BindTexture3D(4, greenTexture3D);
-		m_Pipeline->BindTexture2D(5, m_ImageTexture);
+		m_Pipeline->BindResource("CameraBuffer", m_UniformBuffers);
+		m_Pipeline->BindResource("Ages", m_StorageBuffers);
+		m_Pipeline->BindResource("skybox", texture);
+		m_Pipeline->BindResource("Vertices", m_AgeBuffer);
+		m_Pipeline->BindResource("skyboxCube", greenTexture3D);
+		m_Pipeline->BindResource("computeImage", m_ImageTexture);
 		m_Pipeline->WriteSetResourceBindings();
 		//
-
 
 
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
@@ -235,14 +227,11 @@ namespace Polyboid
 
 
 		RenderCommand::PushCommandBufferSets({m_EditorCommandBuffer});
-
-		
 	}
 
 	ViewportWindow::~ViewportWindow()
 	{
 	}
-
 
 
 	void ViewportWindow::OnGameObjectSelected(const Event& event)
@@ -263,29 +252,33 @@ namespace Polyboid
 		ImGui::Begin(m_Name.c_str());
 		const auto mainRenderTarget = RenderCommand::GetDefaultRenderTarget();
 		const auto imguiWindowSize = ImGui::GetContentRegionAvail();
-		const auto windowSize = glm::uvec2(static_cast<uint32_t>(imguiWindowSize.x), static_cast<uint32_t>(imguiWindowSize.y));
+		const auto windowSize = glm::uvec2(static_cast<uint32_t>(imguiWindowSize.x),
+		                                   static_cast<uint32_t>(imguiWindowSize.y));
 
-		if(windowSize.x > 0 && windowSize.y > 0 && (windowSize.x != m_LastViewportSize.x || windowSize.y != m_LastViewportSize.y))
+		if (windowSize.x > 0 && windowSize.y > 0 && (windowSize.x != m_LastViewportSize.x || windowSize.y !=
+			m_LastViewportSize.y))
 		{
 			RenderCommand::WaitForSubmitQueue();
-		
+
 			spdlog::info("On Viewport window resize {}.x {}.y", windowSize.x, windowSize.y);
-			m_LastViewportSize = { windowSize.x, windowSize.y };
+			m_LastViewportSize = {windowSize.x, windowSize.y};
 			m_ViewportCamera->SetViewportSize(windowSize.x, windowSize.y);
 
 			m_RenderPass->Resize(windowSize.x, windowSize.y);
 			m_Pipeline->Recreate();
+			m_RefComputePipeline->Recreate();
 
 			for (uint32_t i = 0; i < 3; ++i)
 			{
 				Imgui::FreeVulkanTextureID(m_FramebufferTextures.at(i));
-				m_FramebufferTextures[i] = Imgui::CreateVulkanTextureID(m_RenderPass->GetColorTexture(TextureAttachmentSlot::Color0, i));
+				m_FramebufferTextures[i] = Imgui::CreateVulkanTextureID(
+					m_RenderPass->GetColorTexture(TextureAttachmentSlot::Color0, i));
 			}
-
 		}
-		
 
-		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()), {m_LastViewportSize.x, m_LastViewportSize.y});
+
+		ImGui::Image(m_FramebufferTextures.at(RenderCommand::GetCurrentFrame()),
+		             {m_LastViewportSize.x, m_LastViewportSize.y});
 
 		ImGui::End();
 
@@ -298,7 +291,6 @@ namespace Polyboid
 
 	void ViewportWindow::Update(float ts)
 	{
-		
 		static float dt = 0.0;
 
 		if (dt > 0.01f)
@@ -320,16 +312,15 @@ namespace Polyboid
 		                                                             {0, 0.0f, 1.0}) * glm::scale(
 			glm::mat4(1.0f), {3.2, 3.2, 3.2});
 
-		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), { 0.0, 0.5f, 0.0f });
+		m_EntityBufferData2.transform = glm::translate(glm::mat4(1.0f), {0.0, 0.5f, 0.0f});
 
-	
-
+		
 		KomputeCommand::BeginFrameCommands(m_KomputeCommandBuffer);
 		KomputeCommand::BindKomputePipeline(m_RefComputePipeline);
 		KomputeCommand::BindDescriptorSet(m_RefComputePipeline->GetDescriptorSets(0));
 		KomputeCommand::Dispatch({ 100, 100, 1 });
 		KomputeCommand::EndFrameCommands();
-
+		
 		RenderCommand::BeginFrameCommands(m_EditorCommandBuffer);
 
 
@@ -337,7 +328,6 @@ namespace Polyboid
 		RenderCommand::BindGraphicsPipeline(m_Pipeline);
 		RenderCommand::BindGraphicsDescriptorSets(0, m_Pipeline->GetDescriptorSets(0));
 		RenderCommand::VertexShaderPushConstants(m_Pipeline, &m_EntityBufferData, sizeof(m_EntityBufferData));
-		//RenderCommand::FragmentShaderPushConstants(m_Pipeline, &lod, sizeof(lod));
 
 		Viewport viewport{};
 		viewport.Width = m_LastViewportSize.x;

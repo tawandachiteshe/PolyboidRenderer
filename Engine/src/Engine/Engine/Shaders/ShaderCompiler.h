@@ -16,6 +16,12 @@ namespace Polyboid
         SamplerImage
 	};
 
+	enum class ShaderTextureType
+	{
+		Texture2D,
+        Texture3D //These area sampler cubes technically
+	};
+
 	inline ShaderImageType GlslToShaderImageType(const std::string& type)
     {
 	    if (type == "image2D")
@@ -32,6 +38,21 @@ namespace Polyboid
 
         return ShaderImageType::SamplerImage;
     }
+
+    inline ShaderTextureType GlslToShaderTextureType(const std::string& type)
+    {
+        if (type == "sampler2D")
+        {
+            return ShaderTextureType::Texture2D;
+        }
+        else if (type == "samplerCube")
+        {
+            return ShaderTextureType::Texture3D;
+        }
+
+        return ShaderTextureType::Texture2D;
+    }
+
 
 
 	struct ShaderImageInfo
@@ -50,6 +71,25 @@ namespace Polyboid
 
 
 	};
+
+
+    struct ShaderTextureInfo
+    {
+
+        //TODO: Add format converter SHaderImageInfoType thing;
+
+        uint32_t Binding = 0;
+        uint32_t Set = 0;
+        uint32_t arrayLength = 1;
+        std::string Name;
+        ShaderTextureType textureType;
+
+        //Vulkan only
+
+
+
+    };
+
 
 	struct PushConstantInfo
     {
@@ -84,7 +124,7 @@ namespace Polyboid
     struct ReflectionInfo
     {
         std::map<std::string, ShaderImageInfo> images;
-        std::map<std::string, ShaderImageInfo> textures;
+        std::map<std::string, ShaderTextureInfo> textures;
         std::map<std::string, ShaderStorageInfo> ssbos;
         std::map<std::string, UniformBufferInfo> ubos;
         std::map<std::string, PushConstantInfo> pushConstants;

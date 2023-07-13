@@ -92,6 +92,11 @@ namespace Polyboid
 		Init(m_Settings);
 	}
 
+	RenderResourceType VulkanTexelStorageBuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::TexelStorageBuffer;
+	}
+
 
 	///////////////////////////////////////////////////////// UNIFORM BUFFER: ////////////////////////////////////////////////////////////////
 
@@ -175,5 +180,10 @@ namespace Polyboid
 	{
 		Destroy();
 		Init(m_Settings);
+	}
+
+	RenderResourceType VulkanTexelUniformBuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::TexelUniformBuffer;
 	}
 }

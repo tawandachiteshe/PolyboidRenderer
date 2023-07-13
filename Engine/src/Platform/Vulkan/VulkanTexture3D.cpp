@@ -265,4 +265,14 @@ namespace Polyboid
 	{
 		return m_ImageDescriptorInfo;
 	}
+
+	TextureType VulkanTexture3D::GetTextureType()
+	{
+		return TextureType::Texture3D;
+	}
+
+	RenderResourceType VulkanTexture3D::GetRenderResourceType()
+	{
+		return RenderResourceType::Texture3D;
+	}
 }

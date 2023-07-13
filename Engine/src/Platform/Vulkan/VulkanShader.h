@@ -13,6 +13,8 @@ namespace Polyboid
 
 	using DescWriteMap = std::map<uint32_t, std::map<uint32_t, vk::WriteDescriptorSet>>;
 
+
+
 	class VulkanShader : public Shader
 	{
 	private:
@@ -24,6 +26,7 @@ namespace Polyboid
 		std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> m_ShaderBindings;
 		std::vector<vk::PushConstantRange> m_PushConstantRanges;
 		DescWriteMap m_DescWriteSet;
+		std::unordered_map<std::string, ResourceBindingInfo> m_ResourceBindingInfo;
 
 		//
 		// std::map<std::string, Ref<VulkanUniformBuffer>> m_UniformBuffers;
@@ -41,7 +44,7 @@ namespace Polyboid
 		virtual std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> GetVulkanDescriptorBindings();
 		virtual std::vector<vk::PushConstantRange> GetPushContantRange();
 		virtual DescWriteMap GetDescWriteMap();
-
+		ShaderResourceRegistry& GetShaderResourceType() override;
 
 		~VulkanShader() override;
 		void Bind() const override;

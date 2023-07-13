@@ -29,6 +29,7 @@ namespace Polyboid
 		CommandListSettings& GetSettings() override;
 		Ref<CommandBuffer> GetCommandBufferAt(uint32_t index) override;
 		~VulkanCommandBufferSet() override;
+		RenderResourceType GetRenderResourceType() override;
 
 		void Destroy() override;
 

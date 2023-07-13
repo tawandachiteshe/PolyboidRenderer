@@ -364,6 +364,16 @@ namespace Polyboid
 		return (ImTextureID)m_ImguiDS;
 	}
 
+	TextureType VulkanTexture2D::GetTextureType()
+	{
+		return TextureType::Texture2D;
+	}
+
+	RenderResourceType VulkanTexture2D::GetRenderResourceType()
+	{
+		return RenderResourceType::Texture2D;
+	}
+
 
 	void VulkanTexture2D::SetData(const void* data, uint32_t size)
 	{

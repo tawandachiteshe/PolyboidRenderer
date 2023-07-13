@@ -52,6 +52,8 @@ namespace Polyboid
 
 		virtual  vk::RenderPassBeginInfo GetRenderBeginInfo();
 
+		RenderResourceType GetRenderResourceType() override;
+
 		friend class VulkanFramebuffer;
 		friend class VulkanCommandBuffer;
 	};

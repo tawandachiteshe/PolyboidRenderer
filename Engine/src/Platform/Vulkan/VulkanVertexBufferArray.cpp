@@ -138,6 +138,11 @@ namespace Polyboid
 	{
 	}
 
+	RenderResourceType VulkanVertexBufferArray::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
+
 	vk::PipelineVertexInputStateCreateInfo VulkanVertexBufferArray::GetVulkanInfo()
 	{
 		return m_VertexInputInfo;

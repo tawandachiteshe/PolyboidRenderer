@@ -187,4 +187,9 @@ namespace Polyboid
 		
 		spdlog::info("Reloaded hahha");
 	}
+
+	RenderResourceType VulkanImage2D::GetRenderResourceType()
+	{
+		return RenderResourceType::Image;
+	}
 }

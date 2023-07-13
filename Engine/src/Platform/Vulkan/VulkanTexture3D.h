@@ -28,6 +28,9 @@ namespace Polyboid
 		std::any GetViewHandle() override;
 		std::any GetSamplerHandle() override;
 		vk::DescriptorImageInfo GetVulkanDescriptorImageInfo();
+		TextureType GetTextureType() override;
+
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 }

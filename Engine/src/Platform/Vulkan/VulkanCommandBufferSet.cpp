@@ -82,6 +82,11 @@ namespace Polyboid
 		
 	}
 
+	RenderResourceType VulkanCommandBufferSet::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
+
 	void VulkanCommandBufferSet::Destroy()
 	{
 		const auto device = VkRenderAPI::GetVulkanDevice();

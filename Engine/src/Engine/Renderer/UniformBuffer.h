@@ -2,12 +2,13 @@
 #include <any>
 #include <cstdint>
 
+#include "RenderResource.h"
 #include "Engine/Engine/Base.h"
 
 
 namespace Polyboid {
 	
-	class UniformBuffer
+	class UniformBuffer : public RenderResource
 	{
 	public:
 		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;

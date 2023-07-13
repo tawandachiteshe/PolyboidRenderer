@@ -61,4 +61,9 @@ namespace Polyboid
 	{
 		return m_Buffer;
 	}
+
+	RenderResourceType VulkanStagingBuffer::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
+	}
 }

@@ -31,6 +31,8 @@ namespace Polyboid
 		void Destroy() override;
 		uint32_t GetSizeInBytes() override;
 		std::any GetHandle() override;
+
+		RenderResourceType GetRenderResourceType() override;
 	};
 
 }

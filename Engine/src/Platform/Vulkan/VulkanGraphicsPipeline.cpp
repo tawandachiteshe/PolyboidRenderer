@@ -15,23 +15,31 @@
 
 namespace Polyboid
 {
-
-
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const VkRenderAPI* context): m_Context(context)
 	{
-
-		m_DescPool = CreateRef<VulkanPipelineDescriptorSetPool>(context, DescriptorSetPoolSettings{ RenderCommand::GetMaxFramesInFlight() });
+		m_DescPool = CreateRef<VulkanPipelineDescriptorSetPool>(
+			context, DescriptorSetPoolSettings{RenderCommand::GetMaxFramesInFlight()});
 	}
 
 	void VulkanGraphicsPipeline::Bake()
 	{
-	
-
-		auto vulkanVtxShader = m_Shaders.at(ShaderType::Vertex).As<VulkanShader>(); 
+		auto vulkanVtxShader = m_Shaders.at(ShaderType::Vertex).As<VulkanShader>();
 		auto vulkanFragShader = m_Shaders.at(ShaderType::Fragment).As<VulkanShader>();
 
 		m_Stages.emplace_back(vulkanVtxShader->GetVulkanPipelineStageInfo());
 		m_Stages.emplace_back(vulkanFragShader->GetVulkanPipelineStageInfo());
+
+		if (!vulkanFragShader->GetShaderResourceType().empty())
+		{
+			m_ResourceRegistry.insert(vulkanFragShader->GetShaderResourceType().begin(),
+			                          vulkanFragShader->GetShaderResourceType().end());
+		}
+
+		if (!vulkanVtxShader->GetShaderResourceType().empty())
+		{
+			m_ResourceRegistry.insert(vulkanVtxShader->GetShaderResourceType().begin(),
+			                          vulkanVtxShader->GetShaderResourceType().end());
+		}
 
 
 		for (auto& [setIndex, writeDesc] : vulkanVtxShader->GetDescWriteMap())
@@ -56,7 +64,6 @@ namespace Polyboid
 		}
 
 
-
 		if (!vulkanVtxShader->GetVulkanDescriptorBindings().empty())
 		{
 			const auto vtxShaderBindings = vulkanVtxShader->GetVulkanDescriptorBindings();
@@ -66,7 +73,6 @@ namespace Polyboid
 			{
 				m_Bindings[setIndex].insert(m_Bindings[setIndex].end(), binding.begin(), binding.end());
 			}
-
 		}
 
 		if (!vulkanFragShader->GetVulkanDescriptorBindings().empty())
@@ -77,11 +83,9 @@ namespace Polyboid
 			{
 				m_Bindings[setIndex].insert(m_Bindings[setIndex].end(), binding.begin(), binding.end());
 			}
-
 		}
 
 		Init();
-
 	}
 
 	void VulkanGraphicsPipeline::Init()
@@ -100,9 +104,6 @@ namespace Polyboid
 			m_SetIndexWithLayout[set] = descLayout;
 			m_DescriptorSetLayouts.emplace_back(descLayout);
 		}
-
-	
-
 
 
 		vk::PipelineLayoutCreateInfo pipelineCreateInfo{};
@@ -154,14 +155,13 @@ namespace Polyboid
 
 		m_Pipeline = gfxPipeline;
 		m_PipelineLayout = pipelineLayout;
-		
 	}
 
 	void VulkanGraphicsPipeline::Recreate()
 	{
 		Destroy();
 		m_RenderPass->Recreate();
-	//	m_VertexInput->Recreate();
+		//	m_VertexInput->Recreate();
 		m_DescPool->Recreate();
 		Bake();
 
@@ -213,21 +213,28 @@ namespace Polyboid
 
 			WriteSetResourceBindings(set);
 		}
-
 	}
 
 	void VulkanGraphicsPipeline::SetGeometryTopology(const PrimitiveType& primitiveType)
 	{
 		switch (primitiveType)
 		{
-		case PrimitiveType::Points: m_Topology = vk::PrimitiveTopology::ePointList; break;
-		case PrimitiveType::Lines: m_Topology = vk::PrimitiveTopology::eLineList; break;
-		case PrimitiveType::LineLoop:  m_Topology = vk::PrimitiveTopology::eLineStrip; break;
-		case PrimitiveType::LineStrip:  m_Topology = vk::PrimitiveTopology::eLineStrip; break;
-		case PrimitiveType::Triangles:  m_Topology = vk::PrimitiveTopology::eTriangleList; break;
-		case PrimitiveType::TriangleStrip:  m_Topology = vk::PrimitiveTopology::eTriangleStrip; break;
-		case PrimitiveType::TriangleFan:  m_Topology = vk::PrimitiveTopology::eTriangleFan; break;
-		case PrimitiveType::Patches:  m_Topology = vk::PrimitiveTopology::ePatchList; break;
+		case PrimitiveType::Points: m_Topology = vk::PrimitiveTopology::ePointList;
+			break;
+		case PrimitiveType::Lines: m_Topology = vk::PrimitiveTopology::eLineList;
+			break;
+		case PrimitiveType::LineLoop: m_Topology = vk::PrimitiveTopology::eLineStrip;
+			break;
+		case PrimitiveType::LineStrip: m_Topology = vk::PrimitiveTopology::eLineStrip;
+			break;
+		case PrimitiveType::Triangles: m_Topology = vk::PrimitiveTopology::eTriangleList;
+			break;
+		case PrimitiveType::TriangleStrip: m_Topology = vk::PrimitiveTopology::eTriangleStrip;
+			break;
+		case PrimitiveType::TriangleFan: m_Topology = vk::PrimitiveTopology::eTriangleFan;
+			break;
+		case PrimitiveType::Patches: m_Topology = vk::PrimitiveTopology::ePatchList;
+			break;
 		default: ;
 		}
 	}
@@ -240,8 +247,6 @@ namespace Polyboid
 		}
 
 		m_Shaders[type] = shader;
-	
-		
 	}
 
 	void VulkanGraphicsPipeline::SetShader(const Ref<Shader>& shader)
@@ -286,7 +291,7 @@ namespace Polyboid
 
 	void VulkanGraphicsPipeline::SetRenderPass(const Ref<RenderPass>& renderPass)
 	{
-		m_RenderPass = renderPass.As<VulkanRenderPass>(); 
+		m_RenderPass = renderPass.As<VulkanRenderPass>();
 	}
 
 	Ref<RenderPass> VulkanGraphicsPipeline::GetRenderPass()
@@ -360,17 +365,17 @@ namespace Polyboid
 		allocateInfo.descriptorPool = m_DescPool->GetVulkanHandle();
 		allocateInfo.descriptorSetCount = m_DescPool->GetDescPoolSettings().ImageCount; //PER each frame
 
-		vk::DescriptorSetLayout vulkanLayouts[] = { vulkanLayout, vulkanLayout, vulkanLayout};
+		vk::DescriptorSetLayout vulkanLayouts[] = {vulkanLayout, vulkanLayout, vulkanLayout};
 		allocateInfo.pSetLayouts = vulkanLayouts;
 
 		auto [allocResult, allocSets] = device.allocateDescriptorSets(allocateInfo);
 		vk::resultCheck(allocResult, "Failed to create Desc Sets");
 
-		
 
 		for (auto set : allocSets)
 		{
-			auto descSet = CreateRef<VulkanPipelineDescriptorSet>(set, m_PipelineLayout, m_DescWriteMap[setBinding]).As<PipelineDescriptorSet>();
+			auto descSet = CreateRef<VulkanPipelineDescriptorSet>(set, m_PipelineLayout, m_DescWriteMap.at(setBinding)).As<
+				PipelineDescriptorSet>();
 			m_PipeDescSets.push_back(descSet);
 		}
 
@@ -378,10 +383,8 @@ namespace Polyboid
 
 
 		return m_Sets.at(setBinding);
-
 	}
 
-	
 
 	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::GetDescriptorSets(uint32_t set)
 	{
@@ -389,7 +392,7 @@ namespace Polyboid
 	}
 
 	void VulkanGraphicsPipeline::BindUniformBufferSet(uint32_t binding, const Ref<UniformBufferSet>& bufferSet,
-		uint32_t setBinding)
+	                                                  uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
@@ -400,7 +403,7 @@ namespace Polyboid
 	}
 
 	void VulkanGraphicsPipeline::BindStorageBufferSet(uint32_t binding, const Ref<StorageBufferSet>& bufferSet,
-		uint32_t setBinding)
+	                                                  uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
@@ -441,24 +444,24 @@ namespace Polyboid
 	}
 
 	void VulkanGraphicsPipeline::BindTexelUniformBuffer(uint32_t binding, const Ref<TexelUniformBuffer>& bufferSet,
-		uint32_t setBinding)
+	                                                    uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[setBinding].at(i)->WriteTexelUniformBuffer(binding, bufferSet);
 		}
-		
+
 		m_UniformTexel[setBinding][binding] = (bufferSet);
 	}
 
 	void VulkanGraphicsPipeline::BindTexelStorageBuffer(uint32_t binding, const Ref<TexelStorageBuffer>& bufferSet,
-		uint32_t setBinding)
+	                                                    uint32_t setBinding)
 	{
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[setBinding].at(i)->WriteTexelStorageBuffer(binding, bufferSet);
 		}
-		
+
 		m_StorageTexels[setBinding][binding] = (bufferSet);
 	}
 
@@ -467,6 +470,36 @@ namespace Polyboid
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
 			m_Sets[set].at(i)->Commit();
+		}
+	}
+
+	void VulkanGraphicsPipeline::BindResource(const std::string& name, const Ref<RenderResource>& resource)
+	{
+		const auto resourceInfo = m_ResourceRegistry.at(name);
+		switch (resourceInfo.ResourceType)
+		{
+		case RenderResourceType::Image: BindImage2D(resourceInfo.Binding, resource.As<Image2D>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::TexelStorageBuffer: BindTexelStorageBuffer(
+				resourceInfo.Binding, resource.As<TexelStorageBuffer>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::TexelUniformBuffer: BindTexelUniformBuffer(
+				resourceInfo.Binding, resource.As<TexelUniformBuffer>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::Texture2D: BindTexture2D(resourceInfo.Binding, resource.As<Texture2D>(),
+		                                                  resourceInfo.Set);
+			break;
+		case RenderResourceType::Texture3D: BindTexture3D(resourceInfo.Binding, resource.As<Texture3D>(),
+		                                                  resourceInfo.Set);
+			break;
+		case RenderResourceType::StorageBuffer: BindStorageBufferSet(resourceInfo.Binding,
+		                                                             resource.As<StorageBufferSet>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::UniformBuffer: BindUniformBufferSet(resourceInfo.Binding,
+		                                                             resource.As<UniformBufferSet>(), resourceInfo.Set);
+			break;
+		case RenderResourceType::None: __debugbreak();
+			break;
 		}
 	}
 
@@ -488,7 +521,12 @@ namespace Polyboid
 		m_Bindings.clear();
 		m_Stages.clear();
 		m_PipeDescSets.clear();
-		
+		m_ResourceRegistry.clear();
+	}
+
+	RenderResourceType VulkanGraphicsPipeline::GetRenderResourceType()
+	{
+		return RenderResourceType::None;
 	}
 
 	std::any VulkanGraphicsPipeline::GetHandle()
