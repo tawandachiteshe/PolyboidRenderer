@@ -68,6 +68,7 @@ namespace Polyboid
 		void ReSize(uint32_t width, uint32_t height);
 		static Ref<FrameBufferSet> Create(const Ref<RenderPass>& renderPass);
 		Ref<Framebuffer> Get(uint32_t frame);
+		~FrameBufferSet();
 	};
 
 }

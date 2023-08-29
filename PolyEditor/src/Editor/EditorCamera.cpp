@@ -11,10 +11,18 @@
 namespace Polyboid 
 {
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
-		: m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip),
-	Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip))
+		: Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip)), m_FOV(fov),
+		  m_AspectRatio(aspectRatio), m_NearClip(nearClip),
+		  m_FarClip(farClip)
 	{
 		UpdateView();
+	}
+
+	void EditorCamera::SetViewportSize(float width, float height)
+	{
+		m_ViewportHeight = height;
+		m_ViewportWidth = width;
+		UpdateProjection();
 	}
 
 	void EditorCamera::UpdateProjection()

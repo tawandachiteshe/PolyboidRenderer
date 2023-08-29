@@ -21,6 +21,7 @@
 #include "Engine/Renderer/PipelineDescriptorSetPool.h"
 #include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/KomputeCommand.h"
+#include "Engine/Renderer/Renderer3D.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
@@ -83,6 +84,7 @@ namespace Polyboid
 		KomputeCommand::Init();
 		ShaderRegistry::Init(m_RenderAPI);
 		Imgui::Init(m_MainWindow->GetNativeWindow());
+		Renderer3D::Init(settings.WindowWidth, settings.WindowHeight);
 	}
 
 	Application::~Application()
@@ -152,7 +154,7 @@ namespace Polyboid
 			m_MainWindow->PollEvents();
 
 			const double currentFrame = glfwGetTime();
-			double m_GameTime = currentFrame - m_LastFrameTime;
+			const double m_GameTime = currentFrame - m_LastFrameTime;
 			m_LastFrameTime = currentFrame;
 
 			if (!RenderCommand::IsGraphicsBackendReady())

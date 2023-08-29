@@ -20,11 +20,11 @@ layout (std140, set = 0, binding = 0) uniform PerSceneData {
 	
 };
 
+layout(push_constant) uniform PerObject {
 
-layout (std140, set = 0, binding = 1) uniform PerObjectData {
-    
-	uniform mat4 transform;
-	
+	mat4 transform;
+	mat4 padding;
+
 };
 
 

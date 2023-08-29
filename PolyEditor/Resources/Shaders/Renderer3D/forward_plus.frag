@@ -18,16 +18,18 @@ struct Material {
 
 };
 
-layout (std140, set = 0, binding = 2) uniform PerObjectData {
+/*
+layout (std140, set = 0, binding = 2) uniform MaterialData {
     
 	uniform Material material;
 	
 };
+*/
 
 
 
 void main() {
 
-	oColor = vec4(material.Color, 1);
+	oColor = vec4(1);//vec4(material.Color, 1);
 	
 }

@@ -358,7 +358,7 @@ namespace Polyboid
 
 	std::vector<Ref<PipelineDescriptorSet>> VulkanGraphicsPipeline::AllocateDescriptorSets(uint32_t setBinding)
 	{
-		auto device = m_Context->GetDevice()->GetVulkanDevice();
+		const auto device = m_Context->GetDevice()->GetVulkanDevice();
 
 		vk::DescriptorSetLayout vulkanLayout = m_SetIndexWithLayout[setBinding];
 		vk::DescriptorSetAllocateInfo allocateInfo{};

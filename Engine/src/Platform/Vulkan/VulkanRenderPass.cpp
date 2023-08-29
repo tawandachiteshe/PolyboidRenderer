@@ -108,7 +108,7 @@ namespace Polyboid
 	{
 		vk::Device device = (*context->GetDevice());
 
-		std::array<vk::SubpassDependency, 2> dependencies = {
+		m_Dependencies = {
 		vk::SubpassDependency()  // Image layout transition
 		.setSrcSubpass(VK_SUBPASS_EXTERNAL)
 		.setDstSubpass(0)
@@ -129,7 +129,7 @@ namespace Polyboid
 
 
 
-		std::array<vk::AttachmentDescription, 2> const attachments = {
+		m_Attachments = {
 			vk::AttachmentDescription()
 				.setFormat(vk::Format::eR8G8B8A8Unorm)
 				.setSamples(vk::SampleCountFlagBits::e1)
@@ -150,20 +150,22 @@ namespace Polyboid
 				.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal)
 		};
 
-		auto const color_reference = vk::AttachmentReference().setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-		auto const depth_reference = vk::AttachmentReference().setAttachment(1).setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+		m_AttachmentRefs.push_back(vk::AttachmentReference().setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal));
+		m_AttachmentRefs.push_back(vk::AttachmentReference().setAttachment(1).setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal));
 
-		auto const subpass = vk::SubpassDescription()
+		m_Subpass = vk::SubpassDescription()
 			.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics)
-			.setColorAttachments(color_reference)
-			.setPDepthStencilAttachment(&depth_reference);
+			.setColorAttachments(m_AttachmentRefs.at(0))
+			.setPDepthStencilAttachment(&m_AttachmentRefs.at(1));
+
+		m_RenderpassCreateInfo = vk::RenderPassCreateInfo().setAttachments(m_Attachments).setSubpasses(m_Subpass).setDependencies(m_Dependencies);
 
 
-		const auto render_pass_result = device.createRenderPass(
-			vk::RenderPassCreateInfo().setAttachments(attachments).setSubpasses(subpass).setDependencies(dependencies));
+		const auto render_pass_result = device.createRenderPass(m_RenderpassCreateInfo);
 		vk::resultCheck(render_pass_result.result, "failed to create render pass");
 		m_RenderPass = render_pass_result.value;
 
+		//TODO: this makes memory leak c++ beginner haha
 		m_FrameBufferSet = FrameBufferSet::Create(RefPtr<RenderPass>(this));
 
 		m_ColorValue.float32[0] = m_ClearSettings.color.x;
@@ -180,8 +182,12 @@ namespace Polyboid
 
 	void VulkanRenderPass::Recreate()
 	{
+		const vk::Device device = VkRenderAPI::GetVulkanDevice();
 		Destroy();
-		Init(m_Context, m_Settings);
+		const auto render_pass_result = device.createRenderPass(m_RenderpassCreateInfo);
+		vk::resultCheck(render_pass_result.result, "failed to create render pass");
+		m_RenderPass = render_pass_result.value;
+		m_FrameBufferSet->Recreate();
 	}
 
 	void VulkanRenderPass::Destroy()

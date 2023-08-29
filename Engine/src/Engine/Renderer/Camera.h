@@ -18,6 +18,7 @@ namespace Polyboid
 		virtual const glm::vec3& GetPosition() const { return m_Position; }
 
 		glm::mat4 GetViewProjection() const { return m_Projection * m_ViewMatrix; }
+		virtual  void SetViewportSize(float width, float height) = 0;
 	protected:
 		glm::mat4 m_Projection = glm::mat4(1.0f);
 		glm::mat4 m_ViewMatrix = glm::mat4(1.0f);

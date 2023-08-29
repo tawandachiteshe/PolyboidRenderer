@@ -20,17 +20,8 @@ namespace Polyboid
 		glm::vec2 uv;
 	};
 
-	struct CameraBufferData
-	{
-		glm::mat4 projection;
-		glm::mat4 view;
-	};
 
-	struct EntityBufferData
-	{
-		glm::mat4 transform;
-		glm::mat4 padding;
-	};
+
 
 	class EditorLayer : public Layer
 	{

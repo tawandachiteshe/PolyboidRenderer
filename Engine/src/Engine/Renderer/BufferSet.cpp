@@ -190,4 +190,9 @@ namespace Polyboid
 	{
 		return m_Buffers.at(frame);
 	}
+
+	FrameBufferSet::~FrameBufferSet()
+	{
+
+	}
 }

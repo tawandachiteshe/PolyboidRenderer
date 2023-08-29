@@ -36,7 +36,7 @@ namespace Polyboid
 		inline float GetDistance() const { return m_Distance; }
 		inline void SetDistance(float distance) { m_Distance = distance; }
 
-		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
+		
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 
@@ -68,13 +68,16 @@ namespace Polyboid
 		float m_Pitch = 0.0f, m_Yaw = 0.0f;
 
 		float m_ViewportWidth = 1280, m_ViewportHeight = 720;
+
+
 	
 
 
 	public:
 		EditorCamera() = default;
 		EditorCamera(float fov, float aspectRatio, float nearClip, float farClip);
-
+		~EditorCamera() override = default;
+		void SetViewportSize(float width, float height) override;
 	};
 
 }

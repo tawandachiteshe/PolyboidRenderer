@@ -2,8 +2,11 @@
 #include "Renderer3D.h"
 
 #include "BufferSet.h"
+#include "GraphicsPipeline.h"
+#include "RenderCommand.h"
 #include "Renderer2D.h"
 #include "RenderPass.h"
+#include "VertexBufferArray.h"
 #include "Engine/Engine/Application.h"
 
 
@@ -24,38 +27,177 @@ namespace Polyboid
 		return { vertShader, fragShader };
 	}
 
-	void Renderer3D::Init()
+	void Renderer3D::Init(uint32_t width, uint32_t height)
 	{
+		//Init render pass
 		RenderPassSettings renderPassSettings{};
-		renderPassSettings.Width = Application::Get().GetAppSettings().WindowWidth;
-		renderPassSettings.Height = Application::Get().GetAppSettings().WindowHeight;
+		renderPassSettings.Width = width;
+		renderPassSettings.Height = height;
 		renderPassSettings.TextureAttachments = { {TextureAttachmentSlot::Color0, EngineGraphicsFormats::RGBA8} };
 		renderPassSettings.debugName = "Offscreen render pass";
+		renderPassSettings.IsSwapchainRenderPass = false;
 
+		s_Storage->m_ViewportSize = { renderPassSettings.Width, renderPassSettings.Height };
 		s_Storage->m_CompositeRenderPass = RenderPass::Create(renderPassSettings);
 		s_Storage->m_FrameBuffers = FrameBufferSet::Create(s_Storage->m_CompositeRenderPass);
 
+
+		//Render commands
+		s_Storage->m_CommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		RenderCommand::PushCommandBufferSets({ s_Storage->m_CommandBuffer });
+
 		Renderer2D::Init(s_Storage->m_CompositeRenderPass);
+
+		//Load 3d renderer shaders
+		const auto forwardRendererShader = LoadShader("forward_plus");
+
+		//Vertex Buffer layout definition: NOTE: this is forward declaration. Design flow
+		auto vb = VertexBufferSet::Create(1);
+		vb->SetLayout({
+			{ShaderDataType::Float3, "aPosition"},
+			{ShaderDataType::Float4, "aNormal"},
+			{ShaderDataType::Float2, "aUV"}
+			});
+		auto vtxArray = VertexBufferArray::Create();
+		vtxArray->AddVertexBufferSet(vb);
+
+		s_Storage->m_MainGraphicsPipeline = GraphicsPipeline::Create();
+		s_Storage->m_MainGraphicsPipeline->SetGraphicsShaders(forwardRendererShader);
+		s_Storage->m_MainGraphicsPipeline->SetVertexArray(vtxArray);
+		s_Storage->m_MainGraphicsPipeline->SetRenderPass(s_Storage->m_CompositeRenderPass);
+		s_Storage->m_MainGraphicsPipeline->Bake();
+
+
+
+
+
+		//Buffers scene related buffers etc. Lights, Camera and other stuff
+		s_Storage->m_CameraStagingBuffer = StagingBufferSet::Create(sizeof(CameraBufferData));
+		s_Storage->m_CameraUniformBuffer = UniformBufferSet::Create(sizeof(CameraBufferData));
+
+
+		//Bind resources and write them
+		s_Storage->m_MainGraphicsPipeline->AllocateDescriptorSets();
+		s_Storage->m_MainGraphicsPipeline->BindResource("PerSceneData", s_Storage->m_CameraUniformBuffer);
+		s_Storage->m_MainGraphicsPipeline->WriteSetResourceBindings();
+
+
 	}
+
+
 
 	void Renderer3D::BeginScene(const Ref<Camera>& camera)
 	{
+		s_Storage->m_CurrentSceneCamera = camera;
+
+		s_Storage->m_CameraBuffer.view = camera->GetView();
+		s_Storage->m_CameraBuffer.projection = camera->GetProjection();
+
+		s_Storage->m_CameraStagingBuffer->SetData(&s_Storage->m_CameraBuffer);
+
+		RenderCommand::BeginFrameCommands(s_Storage->m_CommandBuffer);
+		RenderCommand::BeginRenderPass(s_Storage->m_CompositeRenderPass);
+
+		RenderCommand::BindGraphicsPipeline(s_Storage->m_MainGraphicsPipeline);
+		RenderCommand::BindGraphicsDescriptorSets(0, (s_Storage->m_MainGraphicsPipeline->GetDescriptorSets(0)));
+
+
+
 	}
 
-	void Renderer3D::SubmitMesh(const Ref<VertexBufferArray>& vertexBufferArray)
+	
+	void Renderer3D::EndScene()
 	{
+
+		RenderCommand::EndRenderPass();
+
+		s_Storage->m_CameraStagingBuffer->SetData(&s_Storage->m_CameraBuffer);
+
+		RenderCommand::CopyStagingBuffer(s_Storage->m_CameraStagingBuffer, s_Storage->m_CameraUniformBuffer);
+
+		Renderer2D::UploadDataToGpu();
+
+		RenderCommand::EndFrameCommands();
+
+	}
+
+	void Renderer3D::DrawMesh(const Ref<VertexBufferSet>& vertexBufferSet, const Ref<IndexBuffer>& indexBuffer, const glm::mat4& transform)
+	{
+
+		EntityBufferData data{};
+		data.transform = transform;
+
+		RenderCommand::VertexShaderPushConstants(s_Storage->m_MainGraphicsPipeline, &data, sizeof(data));
+
+		RenderCommand::BindVertexBuffer(vertexBufferSet);
+		RenderCommand::BindIndexBuffer(indexBuffer);
+		RenderCommand::DrawIndexed(indexBuffer->GetCount());
+	}
+
+	void Renderer3D::DrawMesh(const Ref<VertexBuffer>& vertexBufferArray, const Ref<IndexBuffer>& indexBuffer,
+		const glm::mat4& transform)
+	{
+		EntityBufferData data{};
+		data.transform = transform;
+
+		RenderCommand::VertexShaderPushConstants(s_Storage->m_MainGraphicsPipeline, &data, sizeof(data));
+
+		RenderCommand::BindVertexBuffer(vertexBufferArray);
+		RenderCommand::BindIndexBuffer(indexBuffer);
+		RenderCommand::DrawIndexed(indexBuffer->GetCount());
 	}
 
 	void Renderer3D::SubmitLights()
 	{
 	}
 
-	void Renderer3D::EndScene()
+	void Renderer3D::Clear(const glm::vec4& color)
 	{
+		RenderCommand::Clear({ color });
 	}
 
-	RefPtr<Texture2D> Renderer3D::GetCompositeTexture(const TextureAttachmentSlot& slot)
+
+	void Renderer3D::ReSize(const glm::uvec2& size)
 	{
-		return s_Storage->m_CompositeRenderPass->GetColorTexture(slot);
+		if (s_Storage->m_CurrentSceneCamera.Get())
+		{
+			RenderCommand::WaitForSubmitQueue();
+			s_Storage->m_CurrentSceneCamera->SetViewportSize(static_cast<float>(size.x), static_cast<float>(size.y));
+			s_Storage->m_CompositeRenderPass->Resize(size.x, size.y);
+			s_Storage->m_MainGraphicsPipeline->Recreate();
+			s_Storage->m_ViewportSize = size;
+		}
+	
+
+	}
+
+	void Renderer3D::SetViewport(const glm::vec2& viewportSize)
+	{
+		Viewport viewport{};
+		viewport.Width = viewportSize.x;
+		viewport.Height = viewportSize.y;
+		viewport.MinDepth = 0.0;
+		viewport.MaxDepth = 1.0f;
+
+		RenderCommand::SetViewport(viewport);
+		Rect rect{};
+		rect.Width = viewportSize.x;
+		rect.Height = viewportSize.y;
+		RenderCommand::SetScissor(rect);
+	}
+
+	RefPtr<Texture2D> Renderer3D::GetCompositeTexture(const TextureAttachmentSlot& slot, uint32_t frameIndex)
+	{
+		return s_Storage->m_CompositeRenderPass->GetColorTexture(slot, frameIndex);
+	}
+
+	RefPtr<Texture2D> Renderer3D::GetCurrentCompositeTexture(const TextureAttachmentSlot& slot)
+	{
+		return s_Storage->m_CompositeRenderPass->GetColorTexture(slot, RenderCommand::GetCurrentFrame());
+	}
+
+	void Renderer3D::Shutdown()
+	{
+		Renderer2D::Shutdown();
 	}
 }

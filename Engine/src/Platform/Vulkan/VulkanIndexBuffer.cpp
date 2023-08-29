@@ -99,7 +99,7 @@ namespace Polyboid
 
 	uint32_t VulkanIndexBuffer::GetCount() const
 	{
-		return 0;
+		return m_Count;
 	}
 
 	uint32_t VulkanIndexBuffer::GetSizeInBytes() const

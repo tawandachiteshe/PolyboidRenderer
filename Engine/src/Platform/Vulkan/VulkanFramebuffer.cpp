@@ -140,6 +140,12 @@ namespace Polyboid
 
 	VulkanFramebuffer::~VulkanFramebuffer()
 	{
+		// if (m_FrameBuffer)
+		// {
+		// 	Destroy();
+		// 	m_FrameBuffer = VK_NULL_HANDLE;
+		// }
+	
 	}
 
 	Ref<Texture2D> VulkanFramebuffer::GetColorAttachment(TextureAttachmentSlot attachment)

@@ -23,6 +23,11 @@ namespace Polyboid
 		std::array<vk::ClearValue, 2> m_ClearValues;
 		const VkRenderAPI* m_Context = nullptr;
 		uint32_t m_Width = 0, m_Height = 0;
+		std::array<vk::AttachmentDescription, 2> m_Attachments;
+		std::array<vk::SubpassDependency, 2> m_Dependencies;
+		vk::SubpassDescription m_Subpass;
+		std::vector<vk::AttachmentReference> m_AttachmentRefs;
+		vk::RenderPassCreateInfo m_RenderpassCreateInfo;
 
 
 	public:
