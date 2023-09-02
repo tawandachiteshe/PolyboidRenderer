@@ -3,6 +3,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "VulkanMaterial.h"
 #include "VulkanPipelineDescriptorSet.h"
 #include "VulkanPipelineDescriptorSetPool.h"
 #include "VulkanRenderPass.h"
@@ -170,6 +171,11 @@ namespace Polyboid
 			m_Sets[binding] = AllocateDescriptorSets(binding);
 		}
 
+		for (const auto& name : m_MatLib | std::views::keys)
+		{
+			m_MatLib.at(name)->Recreate();
+		}
+
 		for (const auto& set : m_Sets | std::views::keys)
 		{
 			for (auto [binding, buffer] : m_UniformBufferSets[set])
@@ -213,6 +219,18 @@ namespace Polyboid
 
 			WriteSetResourceBindings(set);
 		}
+	}
+
+	Ref<Material> VulkanGraphicsPipeline::CreateMaterial(const std::string& name)
+	{
+
+
+
+		auto material = CreateRef<VulkanMaterial>(this, name);
+		m_MatLib[name] = material;
+
+		return m_MatLib.at(name);
+
 	}
 
 	void VulkanGraphicsPipeline::SetGeometryTopology(const PrimitiveType& primitiveType)
@@ -374,12 +392,13 @@ namespace Polyboid
 
 		for (auto set : allocSets)
 		{
+			
 			auto descSet = CreateRef<VulkanPipelineDescriptorSet>(set, m_PipelineLayout, m_DescWriteMap.at(setBinding)).As<
 				PipelineDescriptorSet>();
-			m_PipeDescSets.push_back(descSet);
+			m_PipeDescSets[setBinding].push_back(descSet);
 		}
 
-		m_Sets[setBinding] = m_PipeDescSets;
+		m_Sets[setBinding] = m_PipeDescSets[setBinding];
 
 
 		return m_Sets.at(setBinding);
@@ -507,6 +526,7 @@ namespace Polyboid
 	void VulkanGraphicsPipeline::Destroy()
 	{
 		auto device = m_Context->GetDevice()->GetVulkanDevice();
+
 
 		for (auto& layout : m_DescriptorSetLayouts)
 		{

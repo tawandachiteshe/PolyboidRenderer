@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	class Material;
 	class TexelStorageBuffer;
 	class TexelUniformBuffer;
 	enum class PrimitiveType;
@@ -30,6 +31,8 @@ namespace Polyboid
         virtual void SetShader(const Ref<Shader>& shader) = 0;
         virtual Ref<Shader> GetShader( const ShaderType& type ) const = 0;
         [[nodiscard]] virtual const ShaderMap& GetShaders() const = 0;
+
+        virtual Ref<Material> CreateMaterial(const std::string& name) = 0;
 
         virtual void SetGraphicsShaders(const GraphicsShaders& shaders) = 0;
 

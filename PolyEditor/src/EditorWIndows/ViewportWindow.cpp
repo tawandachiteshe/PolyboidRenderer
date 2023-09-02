@@ -10,6 +10,7 @@
 #include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/KomputeCommand.h"
 #include "Engine/Renderer/KomputePipeline.h"
+#include "Engine/Renderer/Material.h"
 #include "Engine/Renderer/RenderCommand.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "Engine/Renderer/Renderer3D.h"
@@ -94,6 +95,8 @@ namespace Polyboid
 
 		m_VertexBuffer = VertexBuffer::Create(m_Vertices, sizeof(m_Vertices));
 		m_IndexBuffer = IndexBuffer::Create(indices, 6);
+		m_RedMaterial = Renderer3D::CreateMaterial("Red");
+		m_BlueMaterial = Renderer3D::CreateMaterial("Blue");
 
 		for (uint32_t i = 0; i < RenderCommand::GetMaxFramesInFlight(); ++i)
 		{
@@ -182,11 +185,16 @@ namespace Polyboid
 		                                                             {0, 0.0f, 1.0}) * glm::scale(
 			glm::mat4(1.0f), {3.2, 3.2, 3.2});
 
+		const auto tranform2 = glm::mat4(1.0f) * glm::translate(glm::mat4(1.0f), glm::vec3(0, 2.0f, -2));
+
 		Renderer3D::BeginScene(m_ViewportCamera);
 
 		Renderer3D::Clear(glm::vec4{ .2f });
 		Renderer3D::SetViewport(m_LastViewportSize);
-		Renderer3D::DrawMesh(m_VertexBuffer, m_IndexBuffer, tranform);
+		m_RedMaterial->SetColor({ 1, 0, 0 });
+		Renderer3D::DrawMesh(m_VertexBuffer, m_IndexBuffer, tranform, m_RedMaterial);
+		m_BlueMaterial->SetColor({ 0, 1, 0 });
+		Renderer3D::DrawMesh(m_VertexBuffer, m_IndexBuffer, tranform2, m_BlueMaterial);
 
 		OnRender();
 		Renderer3D::EndScene();
@@ -204,7 +212,6 @@ namespace Polyboid
 	{
 		//spdlog::info("Mouse x: {} y: {}", Input::GetMouseX(), Input::GetMouseY());
 
-		Renderer2D::BeginDraw(m_ViewportCamera);
 
 		glm::mat4 pos = glm::translate(glm::mat4(1.0f), {0.0, 1.5f, 0.0});
 		glm::mat4 pos2 = glm::translate(glm::mat4(1.0f), {0.0, 2.5f, 0.0});
@@ -224,6 +231,5 @@ namespace Polyboid
 		Renderer2D::DrawRotatedQuad({0.0, 2.5f, 0.0}, rotation);
 
 
-		Renderer2D::EndDraw();
 	}
 }

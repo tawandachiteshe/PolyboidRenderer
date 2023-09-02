@@ -12,10 +12,10 @@ layout (location = 0) out vec4 oColor;
 
 
 
-struct Material {
 
+layout (std140, set = 1, binding = 0) uniform Material {
+    
 	vec3 Color;
-
 };
 
 /*
@@ -30,6 +30,6 @@ layout (std140, set = 0, binding = 2) uniform MaterialData {
 
 void main() {
 
-	oColor = vec4(1);//vec4(material.Color, 1);
+	oColor = vec4(Color, 1);//vec4(material.Color, 1);
 	
 }

@@ -11,10 +11,14 @@
 
 namespace Polyboid
 {
+	class VulkanMaterial;
+
 	class VulkanGraphicsPipeline : public GraphicsPipeline
 	{
 
 	private:
+
+		std::map<std::string, Ref<VulkanMaterial>> m_MatLib;
 
 
 		ShaderMap m_Shaders;
@@ -43,7 +47,8 @@ namespace Polyboid
 		std::map<uint32_t, vk::DescriptorSetLayout> m_SetIndexWithLayout;
 		std::vector<vk::PushConstantRange> m_PushConstantRanges;
 		Ref<VulkanPipelineDescriptorSetPool> m_DescPool;
-		std::vector<Ref<PipelineDescriptorSet>> m_PipeDescSets;
+		std::map<uint32_t, std::vector<Ref<PipelineDescriptorSet>>> m_PipeDescSets;
+		std::vector<std::vector<Ref<PipelineDescriptorSet>>> m_MaterialSets;
 
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<UniformBufferSet>>> m_UniformBufferSets;
 		std::unordered_map<uint32_t, std::unordered_map<uint32_t, Ref<StorageBufferSet>>> m_StorageBufferSets;
@@ -61,6 +66,8 @@ namespace Polyboid
 		void Bake() override;
 		void Init();
 		void Recreate() override;
+
+		Ref<Material> CreateMaterial(const std::string& name) override;
 
 		void SetGeometryTopology(const PrimitiveType& primitiveType) override;
 		void SetShader(const ShaderType& type, const Ref<Shader>& shader) override;
@@ -124,6 +131,8 @@ namespace Polyboid
 		RenderResourceType GetRenderResourceType() override;
 
 		std::any GetHandle() override;
+
+		friend class VulkanMaterial;
 	};
 
 	

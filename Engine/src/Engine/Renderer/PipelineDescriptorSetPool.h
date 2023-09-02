@@ -14,11 +14,11 @@ namespace Polyboid
 		uint32_t CombinedSamplerCount = ImageCount;
 		uint32_t UniformBufferCount = ImageCount;
 		uint32_t StorageBufferCount = ImageCount;
-
+		uint32_t DescriptorCount = 1000;
 		DescriptorSetPoolSettings() = default;
 
 
-		DescriptorSetPoolSettings(uint32_t imageCount, uint32_t descriptorCount = 100): ImageCount(imageCount)
+		DescriptorSetPoolSettings(uint32_t imageCount, uint32_t descriptorCount = 1000): ImageCount(imageCount), DescriptorCount(descriptorCount)
 		{
 
 			if (descriptorCount == 0)

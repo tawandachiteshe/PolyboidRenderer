@@ -14,6 +14,7 @@
 
 namespace Polyboid
 {
+	class Material;
 	class MouseScrollEvent;
 	class GameObject;
 	class EditorCamera;
@@ -36,6 +37,8 @@ namespace Polyboid
 		Ref<IndexBuffer> m_IndexBuffer;
 		Vertex m_Vertices[4];
 		Vertex m_VerticesBuffer[4];
+		Ref<Material> m_RedMaterial;
+		Ref<Material> m_BlueMaterial;
 
 		
 		float m_Rotation;

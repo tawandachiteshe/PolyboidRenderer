@@ -56,7 +56,7 @@ namespace Polyboid
 
 		vk::DescriptorPoolCreateInfo createInfo{};
 		//createInfo.flags = vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind;
-		createInfo.maxSets = 10;
+		createInfo.maxSets = m_Settings.DescriptorCount;
 		//createInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
 		createInfo.pPoolSizes = m_PoolSizes.data();
 		createInfo.poolSizeCount = static_cast<uint32_t>(m_PoolSizes.size());

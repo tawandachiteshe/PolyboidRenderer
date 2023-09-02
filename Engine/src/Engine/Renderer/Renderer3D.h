@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	class Material;
 	class VertexBuffer;
 	class StagingBufferSet;
 	class UniformBufferSet;
@@ -47,6 +48,10 @@ namespace Polyboid
 		CameraBufferData m_CameraBuffer;
 		Ref<UniformBufferSet> m_CameraUniformBuffer;
 		Ref<StagingBufferSet> m_CameraStagingBuffer;
+
+		//Material Data
+		std::vector<Ref<Material>> m_CurrentMaterials;
+
 	
 
 		Renderer3DStorage() = default;
@@ -67,7 +72,7 @@ namespace Polyboid
 
 		static void BeginScene(const Ref<Camera>& camera);
 		static void DrawMesh(const Ref<VertexBufferSet>& vertexBufferArray, const Ref<IndexBuffer>& indexBuffer, const glm::mat4& transform);
-		static void DrawMesh(const Ref<VertexBuffer>& vertexBufferArray, const Ref<IndexBuffer>& indexBuffer, const glm::mat4& transform);
+		static void DrawMesh(const Ref<VertexBuffer>& vertexBufferArray, const Ref<IndexBuffer>& indexBuffer, const glm::mat4& transform, const Ref<Material>& material);
 		static void SubmitLights();
 		static void Clear(const glm::vec4& color);
 		static void EndScene();
@@ -76,7 +81,7 @@ namespace Polyboid
 		static RefPtr<Texture2D> GetCompositeTexture(const TextureAttachmentSlot& slot, uint32_t frameIndex = 0);
 		static  RefPtr<Texture2D> GetCurrentCompositeTexture(const TextureAttachmentSlot& slot);
 		static void Shutdown();
-
+		static Ref<Material> CreateMaterial(const std::string& name);
 	};
 
 }

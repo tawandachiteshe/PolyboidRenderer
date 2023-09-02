@@ -3,6 +3,7 @@
 
 #include "BufferSet.h"
 #include "GraphicsPipeline.h"
+#include "Material.h"
 #include "RenderCommand.h"
 #include "Renderer2D.h"
 #include "RenderPass.h"
@@ -76,11 +77,13 @@ namespace Polyboid
 		s_Storage->m_CameraUniformBuffer = UniformBufferSet::Create(sizeof(CameraBufferData));
 
 
-		//Bind resources and write them
+		//Bind resources and write them. Camera resourses and desc set 0
 		s_Storage->m_MainGraphicsPipeline->AllocateDescriptorSets();
 		s_Storage->m_MainGraphicsPipeline->BindResource("PerSceneData", s_Storage->m_CameraUniformBuffer);
 		s_Storage->m_MainGraphicsPipeline->WriteSetResourceBindings();
 
+		//Desc 1 material info
+		s_Storage->m_MainGraphicsPipeline->AllocateDescriptorSets(1);
 
 	}
 
@@ -100,7 +103,10 @@ namespace Polyboid
 
 		RenderCommand::BindGraphicsPipeline(s_Storage->m_MainGraphicsPipeline);
 		RenderCommand::BindGraphicsDescriptorSets(0, (s_Storage->m_MainGraphicsPipeline->GetDescriptorSets(0)));
+		//RenderCommand::BindGraphicsDescriptorSets(1, (s_Storage->m_MainGraphicsPipeline->GetDescriptorSets(1)));
 
+
+		Renderer2D::BeginDraw(camera);
 
 
 	}
@@ -109,15 +115,25 @@ namespace Polyboid
 	void Renderer3D::EndScene()
 	{
 
+		Renderer2D::EndDraw();
 		RenderCommand::EndRenderPass();
 
 		s_Storage->m_CameraStagingBuffer->SetData(&s_Storage->m_CameraBuffer);
 
 		RenderCommand::CopyStagingBuffer(s_Storage->m_CameraStagingBuffer, s_Storage->m_CameraUniformBuffer);
 
+		for (const auto& material : s_Storage->m_CurrentMaterials)
+		{
+			material->UploadMaterial();
+		}
+
+		
+
 		Renderer2D::UploadDataToGpu();
 
 		RenderCommand::EndFrameCommands();
+
+		s_Storage->m_CurrentMaterials.clear();
 
 	}
 
@@ -127,6 +143,7 @@ namespace Polyboid
 		EntityBufferData data{};
 		data.transform = transform;
 
+
 		RenderCommand::VertexShaderPushConstants(s_Storage->m_MainGraphicsPipeline, &data, sizeof(data));
 
 		RenderCommand::BindVertexBuffer(vertexBufferSet);
@@ -135,10 +152,14 @@ namespace Polyboid
 	}
 
 	void Renderer3D::DrawMesh(const Ref<VertexBuffer>& vertexBufferArray, const Ref<IndexBuffer>& indexBuffer,
-		const glm::mat4& transform)
+		const glm::mat4& transform, const Ref<Material>& material)
 	{
 		EntityBufferData data{};
 		data.transform = transform;
+
+		s_Storage->m_CurrentMaterials.push_back(material);
+
+		RenderCommand::BindGraphicsDescriptorSets(1, material->GetDescSets());
 
 		RenderCommand::VertexShaderPushConstants(s_Storage->m_MainGraphicsPipeline, &data, sizeof(data));
 
@@ -199,5 +220,10 @@ namespace Polyboid
 	void Renderer3D::Shutdown()
 	{
 		Renderer2D::Shutdown();
+	}
+
+	Ref<Material> Renderer3D::CreateMaterial(const std::string& name)
+	{
+		return s_Storage->m_MainGraphicsPipeline->CreateMaterial(name);
 	}
 }

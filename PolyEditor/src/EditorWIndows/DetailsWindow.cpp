@@ -5,7 +5,6 @@
 #include "Engine/Engine/ECS/Components.h"
 #include "Engine/Engine/Events/EventDispatcher.h"
 #include "Engine/Engine/Scripting/ScriptingEngine.h"
-#include "Engine/Renderer/MaterialLibrary.h"
 #include "glm/gtc/type_ptr.hpp"
 
 namespace Polyboid
