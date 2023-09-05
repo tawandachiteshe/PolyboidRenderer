@@ -35,6 +35,10 @@ namespace Polyboid
 
 		Ref<VertexBuffer> m_VertexBuffer;
 		Ref<IndexBuffer> m_IndexBuffer;
+
+		Ref<VertexBuffer> m_VertexBuffer2;
+		Ref<IndexBuffer> m_IndexBuffer2;
+
 		Vertex m_Vertices[4];
 		Vertex m_VerticesBuffer[4];
 		Ref<Material> m_RedMaterial;

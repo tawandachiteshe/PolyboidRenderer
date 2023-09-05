@@ -85,6 +85,8 @@ namespace Polyboid
 		//Desc 1 material info
 		s_Storage->m_MainGraphicsPipeline->AllocateDescriptorSets(1);
 
+		s_Storage->m_CurrentMaterials.reserve(100);
+
 	}
 
 

@@ -93,8 +93,13 @@ namespace Polyboid
 			1, 2, 3 // Triangle 2
 		};
 
+
 		m_VertexBuffer = VertexBuffer::Create(m_Vertices, sizeof(m_Vertices));
 		m_IndexBuffer = IndexBuffer::Create(indices, 6);
+
+		m_VertexBuffer2 = VertexBuffer::Create(m_Vertices, sizeof(m_Vertices));
+		m_IndexBuffer2 = IndexBuffer::Create(indices, 3);
+
 		m_RedMaterial = Renderer3D::CreateMaterial("Red");
 		m_BlueMaterial = Renderer3D::CreateMaterial("Blue");
 
@@ -194,7 +199,7 @@ namespace Polyboid
 		m_RedMaterial->SetColor({ 1, 0, 0 });
 		Renderer3D::DrawMesh(m_VertexBuffer, m_IndexBuffer, tranform, m_RedMaterial);
 		m_BlueMaterial->SetColor({ 0, 1, 0 });
-		Renderer3D::DrawMesh(m_VertexBuffer, m_IndexBuffer, tranform2, m_BlueMaterial);
+		Renderer3D::DrawMesh(m_VertexBuffer2, m_IndexBuffer2, tranform2, m_BlueMaterial);
 
 		OnRender();
 		Renderer3D::EndScene();
