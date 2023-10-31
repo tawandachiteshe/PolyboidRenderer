@@ -61,11 +61,14 @@ namespace Polyboid
 
 		static Application& Get() { return *s_Instance; }
 		ApplicationSettings& GetAppSettings() { return m_Settings; }
-		RenderAPI* GetRenderAPI() const { return  m_RenderAPI; }
+		RenderAPI* GetRenderAPI() { return  m_RenderAPI; }
 
 	protected:
 		Unique<Window> m_MainWindow = nullptr;
 		RenderAPI* m_RenderAPI = nullptr;
+
+		Ref<CommandBufferSet> m_MainSwapChainCommandBuffer = nullptr;
+
 		bool m_CanStartRendering = false;
 
 		ApplicationSettings m_Settings;
@@ -84,7 +87,7 @@ namespace Polyboid
 		std::atomic_bool m_ShouldRender = true;
 
 		double m_LastFrameTime = 0.0;
-		Ref<CommandBufferSet> m_CommandList = nullptr;
+
 
 	private:
 		static Application* s_Instance;

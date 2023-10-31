@@ -3,7 +3,6 @@
 #include "RenderAPI.h"
 #include "Shader.h"
 #include "Engine/Engine/Base.h"
-#include "Engine/Engine/MeshImporter/MeshImporter.h"
 #include <Engine/Renderer/RenderPass.h>
 #include <Engine/Renderer/GraphicsBackend.h>
 

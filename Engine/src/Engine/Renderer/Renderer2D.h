@@ -2,7 +2,7 @@
 #include "Camera3D.h"
 #include "Engine/Engine/Base.h"
 #include "Engine/Engine/Math/AABB.h"
-#include "Engine/Engine/Registry/ShaderRegistry.h"
+#include "Engine/Engine/ShaderRegistry/ShaderRegistry.h"
 #include "Engine/Renderer/Shader.h"
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"

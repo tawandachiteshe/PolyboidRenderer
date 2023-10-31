@@ -4,6 +4,7 @@
 #include "shaderc/shaderc.hpp"
 #include <filesystem>
 #include <map>
+#include <unordered_map>
 
 namespace Polyboid
 {
@@ -28,15 +29,18 @@ namespace Polyboid
 	    {
             return ShaderImageType::SamplerImage;
 	    }
-	    else if(type == "imageBuffer")
+
+		if(type == "imageBuffer")
 	    {
-            return ShaderImageType::ImageBuffer;
-	    } else if (type == "samplerBuffer")
-	    {
-            return ShaderImageType::SamplerBuffer;
+		    return ShaderImageType::ImageBuffer;
 	    }
 
-        return ShaderImageType::SamplerImage;
+		if (type == "samplerBuffer")
+	    {
+		    return ShaderImageType::SamplerBuffer;
+	    }
+
+	    return ShaderImageType::SamplerImage;
     }
 
     inline ShaderTextureType GlslToShaderTextureType(const std::string& type)
@@ -45,9 +49,10 @@ namespace Polyboid
         {
             return ShaderTextureType::Texture2D;
         }
-        else if (type == "samplerCube")
+
+		if (type == "samplerCube")
         {
-            return ShaderTextureType::Texture3D;
+	        return ShaderTextureType::Texture3D;
         }
 
         return ShaderTextureType::Texture2D;
@@ -141,7 +146,8 @@ namespace Polyboid
         std::vector<uint32_t> Spirv;
         ReflectionInfo reflectionInfo;
 
-	};
+
+    };
 
     class ShaderCompiler
     {

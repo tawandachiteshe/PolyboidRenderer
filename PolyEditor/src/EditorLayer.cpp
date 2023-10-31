@@ -1,11 +1,6 @@
 #include "EditorLayer.h"
 #include <imgui.h>
 
-#include "EditorWIndows/ContentBrowserWindow.h"
-#include "EditorWIndows/DetailsWindow.h"
-#include "EditorWIndows/ViewportWindow.h"
-#include "EditorWIndows/WorldOutlinerWindow.h"
-#include "EditorWIndows/GameObjectPlacer.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Events/EventDispatcher.h"
 #include <map>
@@ -15,16 +10,8 @@
 #include <commdlg.h>
 
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <filesystem>
-#include <GLFW/glfw3.h>
-#include <GLFW/glfw3native.h>
-
-#include "Editor/Editor.h"
-#include "EditorWIndows/StatsWindow.h"
 #include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/RenderPass.h"
-#include "Engine/Renderer/VertexBufferArray.h"
+#include "Windows/OutlineWindow.h"
 
 namespace Polyboid
 {
@@ -224,11 +211,6 @@ namespace Polyboid
 		ImGui::End();
 	}
 
-	void EditorLayer::AddWindow(EditorWindow* window)
-	{
-		m_Windows.emplace_back(window);
-	}
-
 
 	EditorLayer::EditorLayer(const std::string& name)
 	{
@@ -240,48 +222,23 @@ namespace Polyboid
 		//offscreenBuffers->Recreate();
 
 
-
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		AddWindow(new ViewportWindow("Viewport"));
-		AddWindow(new WorldOutlinerWindow("World outliner"));
-		AddWindow(new ContentBrowserWindow("Content Browser"));
-		AddWindow(new GameObjectPlacer("GameObject placer"));
-		AddWindow(new DetailsWindow("Details"));
-		AddWindow(new StatsWindow());
-	}
 
-	static float rotation = 0.0f;
+		m_CurrentWorld = World::Create("Untitled");
+
+		m_OutlineWindow = Ref(new OutlineWindow(m_CurrentWorld));
+
+
+	}
 
 	void EditorLayer::OnUpdate(float dt)
 	{
 
-	
 
-		if (m_PlayMode)
-		{
-			//m_World->OnUpdate(dt);
-		}
 
-		for (auto window : m_Windows)
-		{
-			window->Update(dt);
-		}
-	}
-
-	void EditorLayer::OnEditorEnterPlayMode(const Event& event)
-	{
-		spdlog::info("Entered Playmode");
-
-		//m_World->OnBeginPlay();
-	}
-
-	void EditorLayer::OnEditorExitPlayMode(const Event& event)
-	{
-		spdlog::info("Exited Playmode");
-		//m_World->OnEndPlay();
 	}
 
 
@@ -289,28 +246,26 @@ namespace Polyboid
 	{
 		bool initDockSpace = true;
 		EditorDockSpaceUI(&initDockSpace);
+		m_OutlineWindow->RenderUi();
 
 
-		for (const auto window : m_Windows)
-		{
-			window->RenderImgui();
-			static auto open = false;
-		}
+		//ViewPort
+		ImGui::Begin("Viewport");
+
+		ImGui::End();
+
+
+
+	
 	}
 
 	void EditorLayer::OnRender()
 	{
-		for (const auto window : m_Windows)
-		{
-			window->OnRender();
-		}
+		
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		for (const auto window : m_Windows)
-		{
-			window->OnEvent(event);
-		}
+		
 	}
 }

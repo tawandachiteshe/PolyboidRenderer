@@ -49,11 +49,11 @@ namespace Polyboid
 		{
 			return ShaderType::Vertex;
 		}
-		else if (shaderExt == ".frag")
+		if (shaderExt == ".frag")
 		{
 			return ShaderType::Fragment;
 		}
-		else if (shaderExt == ".comp")
+		if (shaderExt == ".comp")
 		{
 			return ShaderType::Compute;
 		}
@@ -74,7 +74,7 @@ namespace Polyboid
 		}
 
 		//TODO: make this in more robust
-		m_Options.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
+		m_Options.SetOptimizationLevel(shaderc_optimization_level_zero);
 		//only for vulkan
 		//options.SetTargetSpirv(shaderc_targe)
 		m_Options.SetGenerateDebugInfo();
@@ -97,6 +97,7 @@ namespace Polyboid
 
 		auto shaderFileExt = path.extension().string();
 		const auto parentPath = path.parent_path();
+		const auto shaderPath = parentPath.string();
 
 		auto engineShaderType = GetEngineShaderType(shaderFileExt);
 
@@ -111,7 +112,7 @@ namespace Polyboid
 		shaderc::PreprocessedSourceCompilationResult preResults;
 		executor.async([&]()
 		{
-			preResults = compiler.PreprocessGlsl(contents, GetShaderKindFromExt(shaderFileExt), path.string().c_str(),
+			preResults = compiler.PreprocessGlsl(contents, GetShaderKindFromExt(shaderFileExt), shaderPath.c_str(),
 			                                     options);
 		}).wait();
 
@@ -316,7 +317,7 @@ namespace Polyboid
 
 		tf::Task task = taskflow.for_each(filePaths.begin(), filePaths.end(), [&](std::string& file)
 		{
-			auto info = Compile(file, directoryPath.generic_string());
+			const auto info = Compile(file, directoryPath.generic_string());
 			infos[file] = info;
 		});
 
@@ -371,7 +372,6 @@ namespace Polyboid
 
 	ShaderCompiler::ShaderBinaryMap ShaderCompiler::LoadFromDump(const std::filesystem::path& cachePath)
 	{
-
 
 		tf::Executor executor;
 		tf::Taskflow taskflow;
@@ -428,7 +428,7 @@ namespace Polyboid
 		auto bytes = reinterpret_cast<const char*>(spirv.data());
 		std::string stringBytes;
 		stringBytes.resize(spirv.size() * sizeof(uint32_t));
-		std::memcpy(&stringBytes[0], bytes, spirv.size() * sizeof(uint32_t));
+		std::memcpy(stringBytes.data(), bytes, spirv.size() * sizeof(uint32_t));
 
 		
 		return "tawanda";

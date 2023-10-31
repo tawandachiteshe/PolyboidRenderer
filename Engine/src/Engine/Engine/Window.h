@@ -89,7 +89,7 @@ namespace Polyboid
         virtual uint32_t GetHeight() = 0;
         virtual void PollEvents() = 0;
         
-        static Unique<Window> Create(const WindowSettings& settings);
+        static std::unique_ptr<Window> Create(const WindowSettings& settings);
         virtual ~Window() = default;
     };
 

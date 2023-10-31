@@ -1,3 +1,5 @@
+#include "boidpch.h"
+
 #include "EditorCamera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -5,7 +7,6 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Engine/Engine/Input.h"
-#include "Engine/Engine/Events/EventDispatcher.h"
 #include "Engine/Engine/Events/MouseEvents.h"
 
 namespace Polyboid 

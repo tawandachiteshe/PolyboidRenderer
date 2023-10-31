@@ -5,31 +5,21 @@
 #include "Application.h"
 #include <spdlog/spdlog.h>
 
-#include "Engine.h"
 #include "Engine/Renderer/RenderCommand.h"
-#include "Engine/Renderer/Swapchain.h"
 
 #include "ImguiSetup.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
 #include "imgui.h"
 #include "imgui_impl_vulkan.h"
-#include "Engine/Renderer/Buffer.h"
-#include "Engine/Renderer/BufferSet.h"
 #include "Engine/Renderer/CommandBufferSet.h"
-#include "Engine/Renderer/PipelineDescriptorSet.h"
-#include "Engine/Renderer/PipelineDescriptorSetPool.h"
-#include "Engine/Renderer/GraphicsPipeline.h"
 #include "Engine/Renderer/KomputeCommand.h"
 #include "Engine/Renderer/Renderer3D.h"
 #include "Engine/Renderer/RenderPass.h"
-#include "Engine/Renderer/UniformBuffer.h"
 #include "Engine/Renderer/VertexBufferArray.h"
 #include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
-#include "Platform/Vulkan/VulkanGraphicsPipeline.h"
-#include "Registry/ShaderRegistry.h"
 #include "Utils/SmartPtr.h"
 
 
@@ -40,7 +30,7 @@ namespace Polyboid
 
 	Application::Application(const ApplicationSettings& settings) : m_Settings(settings)
 	{
-		OPTICK_EVENT("Polyboid App init");
+		OPTICK_EVENT("Polyboid App init")
 		spdlog::info("App init");
 
 		Init(settings);
@@ -51,7 +41,7 @@ namespace Polyboid
 
 	Application::Application()
 	{
-		OPTICK_EVENT("Polyboid App init");
+		OPTICK_EVENT("Polyboid App init")
 		spdlog::info("App init");
 
 		Init(m_Settings);
@@ -84,7 +74,11 @@ namespace Polyboid
 		KomputeCommand::Init();
 		ShaderRegistry::Init(m_RenderAPI);
 		Imgui::Init(m_MainWindow->GetNativeWindow());
-		Renderer3D::Init(settings.WindowWidth, settings.WindowHeight);
+
+
+		m_MainSwapChainCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		RenderCommand::PushCommandBufferSets({ m_MainSwapChainCommandBuffer });
+
 	}
 
 	Application::~Application()
@@ -128,26 +122,13 @@ namespace Polyboid
 	{
 		Imgui::ShutDown();
 		//m_RenderAPI->Destroy();
-		EngineMemoryManager::FreeMem(m_RenderAPI);
-		spdlog::info("Allocation Count: {}", EngineMemoryManager::GetAllocationCount());
-		spdlog::info("Free Count: {}", EngineMemoryManager::GetFreeCount());
-		spdlog::warn("Memory not freed {}",
-		             EngineMemoryManager::GetAllocationCount() - EngineMemoryManager::GetFreeCount());
+
 	}
 
 	void Application::Run()
 	{
-		OPTICK_THREAD("Main Thread")
 
-		Engine::Init();
-
-		m_CommandList = CommandBufferSet::Create({3, CommandType::ManyTime});
-
-
-		RenderCommand::PushCommandBufferSets({ m_CommandList });
-
-
-		static float rotation = 0;
+		
 
 		while (m_Running)
 		{
@@ -155,45 +136,46 @@ namespace Polyboid
 
 			const double currentFrame = glfwGetTime();
 			const double m_GameTime = currentFrame - m_LastFrameTime;
-			m_LastFrameTime = currentFrame;
+
 
 			if (!RenderCommand::IsGraphicsBackendReady())
 			{
 				continue;
 			}
 
-			KomputeCommand::WaitForWork();
 			RenderCommand::AcquireImageIndex();
 
 			Imgui::Begin();
-			for (auto layer : m_Layers)
+			for (const auto layer : m_Layers)
 			{
 				layer->OnImguiRender();
 			}
-
+			
 			Imgui::End();
 
-
-			for (auto layer : m_Layers)
+			for (const auto layer : m_Layers)
 			{
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
 
-			RenderCommand::BeginFrameCommands(m_CommandList);
+			RenderCommand::BeginFrameCommands(m_MainSwapChainCommandBuffer);
 			RenderCommand::BeginRenderPass(RenderCommand::GetSwapChain());
-			RenderCommand::Clear(ClearSettings{{0.2, 0.2, 0.2, 1.0f}});
 
+			RenderCommand::Clear(ClearSettings{ {0.2, 0.2, 0.2, 1.0f} });
+			
 			Imgui::SubmitToCommandBuffer(RenderCommand::GetCurrentCommandBuffer());
-
+			
 			RenderCommand::EndRenderPass();
 			RenderCommand::EndFrameCommands();
 
-			KomputeCommand::WaitAndCompute();
+
 			RenderCommand::WaitAndRender();
 			RenderCommand::PresentImage();
+
+
+			m_LastFrameTime = currentFrame;
 		}
 
-		int a = 2000;
 	}
 }

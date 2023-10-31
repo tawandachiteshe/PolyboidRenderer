@@ -17,7 +17,6 @@
 #include "RasterizerState.h"
 #include "RenderCommand.h"
 #include "VertexBufferArray.h"
-#include "Engine/Engine/Registry/ShaderRegistry.h"
 
 
 namespace Polyboid

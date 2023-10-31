@@ -18,6 +18,9 @@ namespace Polyboid
 	class RenderPass;
 	class GraphicsPipeline;
 
+
+	//Graphics Queue it submits work
+
 	class GraphicsBackend
 	{
 	public:

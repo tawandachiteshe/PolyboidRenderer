@@ -16,6 +16,11 @@ namespace Polyboid
     template<typename T>
     using Unique = std::unique_ptr<T>;
 
+    template<typename T, typename... Args>
+    RefPtr<T> CreateRef(Args&&... args) {
+        return RefPtr<T>(new T(std::forward<Args>(args)...));
+    }
+
 	// Credit the cherno Hazel
 #define BIND_EVENT(fn) [this](auto&&... args) -> decltype(auto) { return this->fn(std::forward<decltype(args)>(args)...); }
 

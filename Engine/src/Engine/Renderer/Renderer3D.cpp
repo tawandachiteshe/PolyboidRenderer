@@ -52,7 +52,7 @@ namespace Polyboid
 		//Load 3d renderer shaders
 		const auto forwardRendererShader = LoadShader("forward_plus");
 
-		//Vertex Buffer layout definition: NOTE: this is forward declaration. Design flow
+		//Vertex Buffer layout definition: NOTE: this is forward declaration. Design flaw
 		auto vb = VertexBufferSet::Create(1);
 		vb->SetLayout({
 			{ShaderDataType::Float3, "aPosition"},

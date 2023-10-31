@@ -2,12 +2,13 @@
 #include "Shader.h"
 #include <map>
 
-#include "RenderPass.h"
-#include "Engine/Engine/Registry/ShaderRegistry.h"
+#include "Engine/Engine/ShaderRegistry/ShaderRegistry.h"
 
 
 namespace Polyboid
 {
+	class Image2D;
+	class RenderPass;
 	class Material;
 	class TexelStorageBuffer;
 	class TexelUniformBuffer;

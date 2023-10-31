@@ -1,8 +1,8 @@
 #pragma once
 #include <spdlog/spdlog.h>
 
+#include "Base.h"
 #include "Debug/Timer.h"
-#include "MeshImporter/MeshImporter.h"
 #include "Utils/CubeMapFace.hpp"
 
 namespace Polyboid

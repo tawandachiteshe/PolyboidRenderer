@@ -3,7 +3,7 @@
 
 #include "Framebuffer.h"
 #include "Engine/Engine/Base.h"
-#include "Engine/Engine/Registry/ShaderRegistry.h"
+#include "Engine/Engine/ShaderRegistry/ShaderRegistry.h"
 
 
 namespace Polyboid

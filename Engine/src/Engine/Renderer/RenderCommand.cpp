@@ -10,15 +10,10 @@
 #include "Framebuffer.h"
 #include "GraphicsPipeline.h"
 #include "RenderAPI.h"
-#include "GraphicsSyncObjects.h"
 #include "RenderPass.h"
-#include "SyncObjects.h"
 #include "UniformBuffer.h"
 #include "Engine/Engine/Application.h"
-#include "Engine/Engine/Engine.h"
-#include "Platform/Vulkan/VkRenderAPI.h"
 #include "Platform/Vulkan/VulkanGraphicsBackend.h"
-#include "Platform/Vulkan/Utils/VulkanDevice.h"
 
 
 namespace Polyboid
@@ -44,7 +39,7 @@ namespace Polyboid
 		SwapchainSettings settings{};
 		settings.Width = appSettings.WindowWidth;
 		settings.Height = appSettings.WindowHeight;
-		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8ISrgb;
+		settings.SwapchainFormat = EngineGraphicsFormats::BGRA8U;
 
 		s_Data->m_Swapchain = Swapchain::Create(settings);
 
@@ -337,7 +332,15 @@ namespace Polyboid
 
 	void RenderCommand::WaitAndRender()
 	{
-		GetGraphicsBackend()->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
+
+		const auto& commandList = s_Data->m_CurrentCommandLists;
+
+		if (!commandList.empty())
+		{
+			GetGraphicsBackend()->SubmitGraphicsWork(s_Data->m_CurrentCommandLists);
+		}
+
+		
 	
 	}
 

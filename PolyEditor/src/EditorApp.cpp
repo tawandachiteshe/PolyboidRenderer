@@ -6,8 +6,6 @@
 #include "EditorLayer.h"
 
 
-#define debugBreak() asm { int 3 }
-
 
 namespace Polyboid
 {
