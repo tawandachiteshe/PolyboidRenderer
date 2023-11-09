@@ -2,31 +2,31 @@
 
 
 #include "Shader.h"
-#include "Texture.h"
+#include "Texture2D.h"
+#include "RenderResource.h"
 
 
 namespace Polyboid
 {
 	enum class IndexDataType;
 
-    class ShaderStorageBuffer
+    class StorageBuffer : public RenderResource
     {
     public:
         virtual void Bind(uint32_t slot = 0) const = 0;
         virtual void Unbind() const = 0;
         virtual void SetData(const void* data, uint32_t sizeData, uint32_t offset = 0) = 0;
-        
-        virtual ~ShaderStorageBuffer() = default;
+        virtual std::any GetHandle() = 0;
+        static Ref<StorageBuffer> Create(uint32_t size);
     };
 
 
     
-    class TextureBuffer
+    class TextureBuffer : public RenderResource
     {
     public:
         virtual void Bind(uint32_t slot = 0, uint32_t bufferSlot = 0) const = 0;
         virtual void Unbind() const = 0;
-        virtual ~TextureBuffer() = default;
     };
     
 
@@ -60,6 +60,7 @@ namespace Polyboid
             case ShaderDataType::Int3:    return 3;
             case ShaderDataType::Int4:    return 4;
             case ShaderDataType::Bool:    return 1;
+            default: return 0;
             }
             
             return 0;
@@ -102,10 +103,10 @@ namespace Polyboid
         
     };
     
-    class VertexBuffer
+    class VertexBuffer : public RenderResource
     {
     public:
-        virtual ~VertexBuffer() = default;
+
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
@@ -114,19 +115,40 @@ namespace Polyboid
 
         virtual const BufferLayout& GetLayout() const = 0;
         virtual void SetLayout(const BufferLayout& layout) = 0;
+
+        virtual uint32_t GetSizeInBytes() const = 0;
+        virtual std::any GetHandle() const = 0;
+
+        static Ref<VertexBuffer> Create(const void* data, uint32_t size);
+        static Ref<VertexBuffer> Create(uint32_t size);
     };
 
-    class IndexBuffer
+    class IndexBuffer : public RenderResource
     {
     public:
         virtual ~IndexBuffer() = default;
 
         virtual void Bind() const = 0;
         virtual void Unbind() const = 0;
+        virtual uint32_t GetSizeInBytes() const = 0;
+        virtual std::any GetHandle() const = 0;
 
         virtual IndexDataType GetIndexDataType() = 0;
         virtual uint32_t GetCount() const = 0;
 
         static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
     };
+
+    class StagingBuffer : public RenderResource
+    {
+    public:
+        virtual void SetData(const void* data) = 0;
+        virtual void SetData(const void* data, uint32_t size) = 0;
+        virtual uint32_t GetSizeInBytes() = 0;
+        virtual std::any GetHandle() = 0;
+ 
+        static Ref<StagingBuffer> Create(uint32_t size);
+
+    };
+
 }

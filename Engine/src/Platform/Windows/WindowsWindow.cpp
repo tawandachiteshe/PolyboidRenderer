@@ -1,8 +1,11 @@
 ﻿#include "boidpch.h"
 #include "WindowsWindow.h"
 
-#include "Engine/Engine/Events/WindowEvent.h"
+#include <spdlog/spdlog.h>
 
+#include "Engine/Engine/Events/MouseEvents.h"
+#include "Engine/Engine/Events/WindowEvent.h"
+#include <GLFW/glfw3.h>
 
 namespace Polyboid
 {
@@ -23,11 +26,19 @@ namespace Polyboid
                 __debugbreak();
             }
         }
-        
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+        if (settings.NoApi)
+        {
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        }
+        else
+        {
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        }
+  
 
         if (settings.IsVisible)
         {
@@ -67,9 +78,38 @@ namespace Polyboid
         glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* window)
         {
             auto& data = GetWindowData(window);
-            const WindowCloseEvent windowClose;
+        	WindowCloseEvent windowClose;
             data.EventCallback(windowClose);
         });
+
+        glfwSetScrollCallback(m_Handle, [](GLFWwindow* window, double xoffset, double yoffsets)
+        {
+        	auto& data = GetWindowData(window);
+      
+        	MouseScrollEvent event(static_cast<float>(yoffsets));
+            data.EventCallback(event);
+
+        });
+
+        glfwSetWindowSizeCallback(m_Handle, [](GLFWwindow* window, int width, int height)
+        {
+                auto& data = GetWindowData(window);
+
+		        WindowResizeEvent event(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+		        data.EventCallback(event);
+        });
+
+        glfwSetWindowMaximizeCallback(m_Handle, [](GLFWwindow* window, int maximazed)
+            {
+	            if (maximazed)
+	            {
+                    spdlog::info("Window Maximized");
+	            }
+	            else
+	            {
+                    spdlog::info("Window minimized");
+	            }
+            });
         
     }
 

@@ -2,7 +2,7 @@
 project "PolyEditor"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 
     targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
@@ -29,6 +29,11 @@ project "PolyEditor"
 
     }
 
+    defines 
+    {
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE",
+    }
+
     dependson
     {
         "PolyboidManaged"
@@ -42,17 +47,7 @@ project "PolyEditor"
     filter "configurations:Debug"
         defines { "DEBUG" }
         symbols "On"
-        postbuildcommands {
-            "{COPY} %{wks.location}/Engine/Vendor/assimp/bin/assimp-vc143-mt.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/Optick/lib/x64/debug/OptickCore.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/shaderc/shaderc_shared.dll %{cfg.targetdir}"
-        }
 
     filter "configurations:Release"
         defines { "NDEBUG" }
         optimize "On"
-        postbuildcommands {
-            "{COPY} %{wks.location}/Engine/Vendor/assimp/bin/assimp-vc143-mt.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/Optick/lib/x64/release/OptickCore.dll %{cfg.targetdir}",
-            "{COPY} %{wks.location}/Engine/Vendor/shaderc/shaderc_shared.dll %{cfg.targetdir}"
-        }

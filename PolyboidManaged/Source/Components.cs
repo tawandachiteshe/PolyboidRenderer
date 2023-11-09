@@ -9,13 +9,12 @@ namespace Polyboid
 
     public class Component
     {
-        public ulong uuid;
+        public ulong uuid = 0u;
     }
 
     public class Transform : Component
     {
-        private Vector3 _position;
-
+      
         public Vector3 Position
         {
             get

@@ -6,15 +6,13 @@
 #include "EditorLayer.h"
 
 
-#define debugBreak() asm { int 3 }
-
 
 namespace Polyboid
 {
 
 	EditorApp::EditorApp()
 	{
-        AddLayer(new EditorLayer("EditorLayer"));
+        AddLayer(EngineMemoryManager::AllocateMem<EditorLayer>("EditorLayer"));
 	}
 
 
@@ -22,10 +20,7 @@ namespace Polyboid
 	Application* CreateApplication()
 	{
 		ApplicationSettings settings;
-
-		ALLOC_APP(EditorApp, app)
-
-
+		CREATE_APPLICATION(EditorApp, app)
 		return app;
 	}
 }

@@ -72,7 +72,7 @@ namespace Polyboid
         StencilOp StencilFail = StencilOp::Keep;
         StencilOp StencilPassDepthFail = StencilOp::Keep;
         StencilOp StencilDepthPass = StencilOp::Keep;
-        StencilFunction stencilFunction = StencilFunction::Always;
+        StencilFunction stencilFunction = StencilFunction::LessThanOrEqual;
     };
 
     struct StencilMode

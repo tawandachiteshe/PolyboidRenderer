@@ -13,24 +13,15 @@
 #include "spirv_cross/spirv_cross.hpp"
 #include "spirv_cross/spirv_reflect.hpp"
 #include "nlohmann/json.hpp"
-#include "hashpp/hashpp.h"
+#include <struct_pack/struct_pack.hpp>
 
-#include <pods/pods.h>
-#include <pods/msgpack.h>
-#include <pods/streams.h>
-#include "msgpack.hpp"
+#include "Engine/Renderer/RenderAPI.h"
 
 namespace Polyboid
 {
-	struct ShaderCacheInfo
-	{
-		std::vector<uint32_t> Spirv;
 
 
-		PODS_SERIALIZABLE(
-			PODS_MDR(Spirv)
-		)
-	};
+	Ref<ShaderCompiler::ShaderCompilerData> ShaderCompiler::s_Data = nullptr;
 
 	shaderc_shader_kind GetShaderKindFromExt(const std::string& shaderExt)
 	{
@@ -58,11 +49,11 @@ namespace Polyboid
 		{
 			return ShaderType::Vertex;
 		}
-		else if (shaderExt == ".frag")
+		if (shaderExt == ".frag")
 		{
 			return ShaderType::Fragment;
 		}
-		else if (shaderExt == ".comp")
+		if (shaderExt == ".comp")
 		{
 			return ShaderType::Compute;
 		}
@@ -71,12 +62,42 @@ namespace Polyboid
 	}
 
 
-	ShaderBinaryAndInfo ShaderCompiler::Compile(const std::filesystem::path& path, const std::string& rootPath)
+	ShaderCompiler::ShaderCompilerData::ShaderCompilerData(const RenderAPI* context, const std::string& includePath): m_Context(context), m_IncludePath(includePath)
+	{
+		switch (const auto renderAPI = context->GetRenderAPIType())
+		{
+		case RenderAPIType::Opengl: SetupOpenGL(); break;
+		case RenderAPIType::Vulkan: SetupVulkan();  break;
+		case RenderAPIType::Metal: break;
+		case RenderAPIType::Dx11: break;
+		case RenderAPIType::Dx12: break;
+		}
+
+		//TODO: make this in more robust
+		m_Options.SetOptimizationLevel(shaderc_optimization_level_zero);
+		//only for vulkan
+		//options.SetTargetSpirv(shaderc_targe)
+		m_Options.SetGenerateDebugInfo();
+
+		std::unique_ptr<shaderc::CompileOptions::IncluderInterface> includer = std::make_unique<
+			ShadercIncluder>(includePath);
+		m_Options.SetIncluder(std::move(includer));
+
+	}
+
+	void ShaderCompiler::Init(const RenderAPI* context, const std::string& includePath)
+	{
+		static auto data = CreateRef<ShaderCompilerData>(context, includePath);
+		s_Data = data;
+	}
+
+	ShaderBinaryAndReflectionInfo ShaderCompiler::Compile(const std::filesystem::path& path, const std::string& rootPath)
 	{
 		tf::Executor executor;
 
 		auto shaderFileExt = path.extension().string();
 		const auto parentPath = path.parent_path();
+		const auto shaderPath = parentPath.string();
 
 		auto engineShaderType = GetEngineShaderType(shaderFileExt);
 
@@ -84,33 +105,14 @@ namespace Polyboid
 		std::string contents((std::istreambuf_iterator<char>(shaderFile)),
 		                     std::istreambuf_iterator<char>());
 
-		//Render API here for shader stuff
+		auto& compiler = s_Data->m_Compiler;
+		auto& options = s_Data->m_Options;
 
-		shaderc::Compiler compiler;
-		shaderc::CompileOptions options;
-
-		//TODO: Make this an option
-		//options.SetSourceLanguage(shaderc_source_language::shaderc_source_language_hlsl);
-
-		//For now i support only opengl
-		//TODO: make this api agnostic
-		options.SetTargetEnvironment(shaderc_target_env::shaderc_target_env_opengl, 0);
-
-		//TODO: make this in more robust
-		options.SetOptimizationLevel(shaderc_optimization_level::shaderc_optimization_level_zero);
-		//only for vulkan
-		//options.SetTargetSpirv(shaderc_targe)
-		options.SetGenerateDebugInfo();
-
-
-		std::unique_ptr<shaderc::CompileOptions::IncluderInterface> includer = std::make_unique<
-			ShadercIncluder>(rootPath);
-		options.SetIncluder(std::move(includer));
 
 		shaderc::PreprocessedSourceCompilationResult preResults;
 		executor.async([&]()
 		{
-			preResults = compiler.PreprocessGlsl(contents, GetShaderKindFromExt(shaderFileExt), path.string().c_str(),
+			preResults = compiler.PreprocessGlsl(contents, GetShaderKindFromExt(shaderFileExt), shaderPath.c_str(),
 			                                     options);
 		}).wait();
 
@@ -151,7 +153,7 @@ namespace Polyboid
 			}
 		}
 
-		ShaderBinaryAndInfo info;
+		ShaderBinaryAndReflectionInfo info;
 
 		if (!shaderSpv.empty())
 		{
@@ -164,13 +166,14 @@ namespace Polyboid
 			auto res = reflection.get_shader_resources();
 			auto reflectionJson = reflection.compile();
 
+
 			//Reflect(reflectionJson, info);
 			info.shaderReflect = reflectionJson;
 			info.spirvChecksum = SpirvCheckSum(shaderSpv);
 
 			Reflect(reflectionJson, info.reflectionInfo);
 
-			//auto allDumpData = reflectionJson.dump(4);
+		
 		}
 
 		return info;
@@ -178,7 +181,26 @@ namespace Polyboid
 
 	void ShaderCompiler::Reflect(const std::string& shaderReflectJson, ReflectionInfo& info)
 	{
+
 		auto reflectionJson = nlohmann::json::parse(shaderReflectJson);
+
+		if (reflectionJson.contains("textures"))
+		{
+			auto textures = reflectionJson["textures"];
+
+			for (auto& texture : textures)
+			{
+				ShaderTextureInfo shaderInfo;
+
+				shaderInfo.Binding = texture["binding"].get<uint32_t>();
+				shaderInfo.Name = texture["name"].get<std::string>();
+				shaderInfo.Set = texture["set"].get<uint32_t>();
+				shaderInfo.arrayLength = texture.contains("array") ? texture["array"].get<std::vector<uint32_t>>().at(0) : 1;
+				shaderInfo.textureType = GlslToShaderTextureType(texture["type"].get<std::string>());
+				info.textures[shaderInfo.Name] = (shaderInfo);
+			}
+		}
+
 
 		if (reflectionJson.contains("images"))
 		{
@@ -191,30 +213,33 @@ namespace Polyboid
 				imageInfo.Binding = image["binding"].get<uint32_t>();
 				imageInfo.Name = image["name"].get<std::string>();
 				imageInfo.Set = image["set"].get<uint32_t>();
+				imageInfo.arrayLength = image.contains("array") ? image["array"].get<std::vector<uint32_t>>().at(0) : 1;
+				imageInfo.imageType = GlslToShaderImageType(image["type"].get<std::string>());
+			
 
 				info.images[imageInfo.Name] = imageInfo;
 			}
 		}
 
 
-
-
-		if (reflectionJson.contains("textures"))
+		if (reflectionJson.contains("push_constants"))
 		{
-			auto textures = reflectionJson["textures"];
+			auto constants = reflectionJson["push_constants"];
 
-			for (auto& texture : textures)
+			for (auto& pushContants : constants)
 			{
-				ShaderImageInfo shaderInfo;
+				//TODO: add format
+				PushConstantInfo pushConstantInfo;
+				pushConstantInfo.Name = pushContants["name"].get<std::string>();
 
-				shaderInfo.Binding = texture["binding"].get<uint32_t>();
-				shaderInfo.Name = texture["name"].get<std::string>();
-				shaderInfo.Set = texture["set"].get<uint32_t>();
-
-				info.textures[shaderInfo.Name] = (shaderInfo);
+				info.pushConstants[pushConstantInfo.Name] = pushConstantInfo;
 			}
 		}
 
+
+
+
+	
 		if (reflectionJson.contains("ubos"))
 		{
 			auto ubos = reflectionJson["ubos"];
@@ -262,14 +287,14 @@ namespace Polyboid
 	}
 
 
-	std::unordered_map<std::string, ShaderBinaryAndInfo> ShaderCompiler::CompileShadersFromPath(
+	std::unordered_map<std::string, ShaderBinaryAndReflectionInfo> ShaderCompiler::CompileShadersFromPath(
 		const std::filesystem::path& directoryPath)
 	{
 		tf::Executor executor;
 		tf::Taskflow taskflow("Compile Shaders");
 
 		Timer t;
-		static std::vector<ShaderBinaryAndInfo> shaderResults;
+		static std::vector<ShaderBinaryAndReflectionInfo> shaderResults;
 
 		std::vector<std::string> filePaths;
 		std::filesystem::recursive_directory_iterator files(directoryPath);
@@ -286,13 +311,13 @@ namespace Polyboid
 		}
 
 	
-		std::unordered_map<std::string, ShaderBinaryAndInfo> infos;
+		std::unordered_map<std::string, ShaderBinaryAndReflectionInfo> infos;
 		infos.reserve(filePaths.size());
 		shaderResults.resize(filePaths.size());
 
 		tf::Task task = taskflow.for_each(filePaths.begin(), filePaths.end(), [&](std::string& file)
 		{
-			auto info = Compile(file, directoryPath.generic_string());
+			const auto info = Compile(file, directoryPath.generic_string());
 			infos[file] = info;
 		});
 
@@ -304,39 +329,37 @@ namespace Polyboid
 		return infos;
 	}
 
-	bool ShaderCompiler::Dump(const std::unordered_map<std::string, ShaderBinaryAndInfo>& shaderBinaries,
+	bool ShaderCompiler::Dump(const std::unordered_map<std::string, ShaderBinaryAndReflectionInfo>& shaderBinaries,
 	                          const std::filesystem::path& cachePath)
 	{
 		tf::Executor executor;
 		tf::Taskflow taskflow;
 
 		Timer t;
+		std::mutex mapMutex;
 
 
 		if (std::filesystem::exists(cachePath))
 		{
-			taskflow.for_each(shaderBinaries.cbegin(), shaderBinaries.cend(), [&](const auto& entry)
-			{
-				auto& [path, shaderInfo] = entry;
-				std::filesystem::path fileSystemPath = path;
-				auto filename = fileSystemPath.stem();
-				auto fileExt = fileSystemPath.extension();
-				auto cacheExtension = ".spv";
-
-				auto cacheFilePath = (cachePath / (filename.string() + cacheExtension + fileExt.string())).
-					generic_string();
-
-				std::ofstream outStream(cacheFilePath, std::ios::binary | std::ios::out);
-				pods::OutputStream out(outStream);
-
-				
-				pods::MsgPackSerializer<decltype(out)> serializer(out);
-				if (serializer.save(shaderInfo) == pods::Error::NoError)
+			taskflow.for_each(shaderBinaries.cbegin(), shaderBinaries.cend(), [&](const std::pair<std::string, ShaderBinaryAndReflectionInfo>& entry)
 				{
-				}
+					std::scoped_lock lock(mapMutex);
+					auto& [path, shaderInfo] = entry;
+					std::filesystem::path fileSystemPath = path;
+					auto filename = fileSystemPath.stem();
+					auto fileExt = fileSystemPath.extension();
+					auto cacheExtension = ".spv";
 
+					auto cacheFilePath = (cachePath / (filename.string() + cacheExtension + fileExt.string())).
+						generic_string();
 
-				outStream.close();
+					
+
+					std::ofstream outStream(cacheFilePath, std::ios::binary | std::ios::out);
+
+					struct_pack::serialize_to(outStream, shaderInfo);
+
+					outStream.close();
 			});
 		}
 
@@ -350,11 +373,11 @@ namespace Polyboid
 	ShaderCompiler::ShaderBinaryMap ShaderCompiler::LoadFromDump(const std::filesystem::path& cachePath)
 	{
 
-
 		tf::Executor executor;
 		tf::Taskflow taskflow;
 
 		Timer t;
+
 		std::vector<std::string> cacheFilePaths;
 		for (auto& entry : std::filesystem::directory_iterator(cachePath))
 		{
@@ -365,24 +388,30 @@ namespace Polyboid
 		shaderMap.reserve(cacheFilePaths.size());
 
 		taskflow.for_each(cacheFilePaths.begin(), cacheFilePaths.end(), [&](std::string& file)
-		{
+			{
+
 
 			std::filesystem::path fileSystemPath = file;
-			ShaderBinaryAndInfo binaryInfo;
+			
 
 			std::ifstream buffer(file, std::ios::binary | std::ios::in);
+			std::vector<char> contents((std::istreambuf_iterator<char>(buffer)),
+				std::istreambuf_iterator<char>());
 
 
-			pods::InputStream in(buffer);
-			pods::MsgPackDeserializer<decltype(in)> deserializer(in);
+			ShaderBinaryAndReflectionInfo binaryInfo;
+			auto result = struct_pack::deserialize_to(binaryInfo, contents);
 
-			auto error = deserializer.load(binaryInfo);
-
-			if (error == pods::Error::NoError)
+			if (result == struct_pack::errc::ok)
 			{
 				shaderMap[binaryInfo.filePath] = binaryInfo;
 			}
+			else
+			{
+				spdlog::critical("Error failed to load file: {}", file);
+			}
 
+			
 			buffer.close();
 			
 		});
@@ -399,9 +428,9 @@ namespace Polyboid
 		auto bytes = reinterpret_cast<const char*>(spirv.data());
 		std::string stringBytes;
 		stringBytes.resize(spirv.size() * sizeof(uint32_t));
-		std::memcpy(&stringBytes[0], bytes, spirv.size() * sizeof(uint32_t));
+		std::memcpy(stringBytes.data(), bytes, spirv.size() * sizeof(uint32_t));
 
-		auto md5 = hashpp::MD::MD5();
-		return md5.getHash(stringBytes);
+		
+		return "tawanda";
 	}
 }

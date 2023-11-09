@@ -1,29 +1,36 @@
 ﻿#include "boidpch.h"
 
 
+//#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include "Application.h"
 #include <spdlog/spdlog.h>
 
-#include "Engine.h"
-#include "Engine/Renderer/Renderer.h"
-#include "Engine/Renderer/Swapchain.h"
+#include "Engine/Renderer/RenderCommand.h"
 
 #include "ImguiSetup.h"
 #include "Engine/Renderer/Renderer2D.h"
 #include "EntryPoint.h"
-#include "Engine/Renderer/CommandList/RenderCommand.h"
+#include "imgui.h"
+#include "imgui_impl_vulkan.h"
+#include "Engine/Renderer/CommandBufferSet.h"
+#include "Engine/Renderer/KomputeCommand.h"
+#include "Engine/Renderer/Renderer3D.h"
+#include "Engine/Renderer/RenderPass.h"
+#include "Engine/Renderer/VertexBufferArray.h"
 #include "Events/EventDispatcher.h"
 #include "Events/WindowEvent.h"
 #include "GLFW/glfw3.h"
+#include "Utils/SmartPtr.h"
 
 
 namespace Polyboid
 {
+	class VkRenderAPI;
 	Application* Application::s_Instance = nullptr;
 
 	Application::Application(const ApplicationSettings& settings) : m_Settings(settings)
 	{
-		OPTICK_EVENT("Polyboid App init");
+		OPTICK_EVENT("Polyboid App init")
 		spdlog::info("App init");
 
 		Init(settings);
@@ -31,9 +38,10 @@ namespace Polyboid
 		s_Instance = this;
 	}
 
+
 	Application::Application()
 	{
-		OPTICK_EVENT("Polyboid App init");
+		OPTICK_EVENT("Polyboid App init")
 		spdlog::info("App init");
 
 		Init(m_Settings);
@@ -49,25 +57,28 @@ namespace Polyboid
 		                                  settings.WindowWidth,
 		                                  settings.WindowHeight,
 		                                  settings.ApplicationName);
+		mainWindowSettings.NoApi = true;
 
 		m_MainWindow = Window::Create(mainWindowSettings);
 
-		WindowSettings gameWindowSettings(false,
-		                                  settings.WindowWidth,
-		                                  settings.WindowHeight,
-		                                  settings.ApplicationName);
-		gameWindowSettings.IsVisible = false;
-		gameWindowSettings.WindowShareHandle = m_MainWindow->GetNativeWindow();
-
-		m_GameWindow = Window::Create(gameWindowSettings);
 
 		m_Running = true;
 
 		//multiple overides maybe but is it efficieant and maintainable;;
 		m_MainWindow->SetEventCallback(BIND_EVENT(Application::OnEvent));
-		m_GameWindow->SetEventCallback([](const Event& event)
-		{
-		});
+
+		const auto nativeWindow = m_MainWindow->GetNativeWindow();
+		m_RenderAPI = RenderAPI::Create(RenderAPIType::Vulkan, nativeWindow);
+
+		RenderCommand::Init(m_RenderAPI, m_Settings);
+		KomputeCommand::Init();
+		ShaderRegistry::Init(m_RenderAPI);
+		Imgui::Init(m_MainWindow->GetNativeWindow());
+
+
+		m_MainSwapChainCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });
+		RenderCommand::PushCommandBufferSets({ m_MainSwapChainCommandBuffer });
+
 	}
 
 	Application::~Application()
@@ -76,22 +87,30 @@ namespace Polyboid
 	}
 
 
-	void Application::OnEvent(const Event& event)
+	void Application::OnEvent(Event& event)
 	{
 		EventDispatcher dispatcher(event);
+
 		dispatcher.Bind<WindowCloseEvent>(BIND_EVENT(Application::OnWindowsCloseEvent));
 		dispatcher.Bind<WindowResizeEvent>(BIND_EVENT(Application::OnWindowResizeEvent));
+
+		for (const auto& layer : m_Layers)
+		{
+			layer->OnEvent(event);
+		}
 	}
 
-	void Application::OnWindowResizeEvent(const WindowResizeEvent& event)
+	void Application::OnWindowResizeEvent(WindowResizeEvent& event)
 	{
 		m_Settings.WindowHeight = event.GetHeight();
 		m_Settings.WindowWidth = event.GetWidth();
+		RenderCommand::Resize(m_Settings.WindowWidth, m_Settings.WindowHeight);
 	}
 
-	void Application::OnWindowsCloseEvent(const WindowCloseEvent& event)
+	void Application::OnWindowsCloseEvent(WindowCloseEvent& event)
 	{
 		m_Running = false;
+		spdlog::info("Window close event: {}", (uint32_t)event.GetType());
 	}
 
 	void Application::AddLayer(Layer* layer)
@@ -101,82 +120,62 @@ namespace Polyboid
 
 	void Application::ShutDown()
 	{
+		Imgui::ShutDown();
+		//m_RenderAPI->Destroy();
+
 	}
 
 	void Application::Run()
 	{
-		OPTICK_THREAD("Main Thread")
-		m_RenderThread = std::thread([&]()
-		{
-			Render();
-		});
 
-		Engine::Init();
-
+		
 
 		while (m_Running)
 		{
-			OPTICK_FRAME("Main Frame")
+			m_MainWindow->PollEvents();
 
 			const double currentFrame = glfwGetTime();
-			double m_GameTime = currentFrame - m_LastFrameTime;
-			m_LastFrameTime = currentFrame;
+			const double m_GameTime = currentFrame - m_LastFrameTime;
 
 
-			// update here.....
-			for (auto layer : m_Layers)
+			if (!RenderCommand::IsGraphicsBackendReady())
+			{
+				continue;
+			}
+
+			RenderCommand::AcquireImageIndex();
+
+			Imgui::Begin();
+			for (const auto layer : m_Layers)
+			{
+				layer->OnImguiRender();
+			}
+			
+			Imgui::End();
+
+			for (const auto layer : m_Layers)
 			{
 				layer->OnUpdate(static_cast<float>(m_GameTime));
 			}
 
 
-			m_GameWindow->PollEvents();
+			RenderCommand::BeginFrameCommands(m_MainSwapChainCommandBuffer);
+			RenderCommand::BeginRenderPass(RenderCommand::GetSwapChain());
+
+			RenderCommand::Clear(ClearSettings{ {0.2, 0.2, 0.2, 1.0f} });
+			
+			Imgui::SubmitToCommandBuffer(RenderCommand::GetCurrentCommandBuffer());
+			
+			RenderCommand::EndRenderPass();
+			RenderCommand::EndFrameCommands();
+
+
+			RenderCommand::WaitAndRender();
+			RenderCommand::PresentImage();
+
+
+			m_LastFrameTime = currentFrame;
 		}
 
-		m_RenderThread.join();
-	}
-
-	void Application::Render()
-	{
-		OPTICK_THREAD("Render Thread")
-
-		const auto nativeWindow = m_MainWindow->GetNativeWindow();
-		m_RenderAPI = RenderAPI::Create(RenderAPIType::Opengl, nativeWindow);
-		const auto swapChain = m_RenderAPI->CreateSwapChain(nativeWindow);
-		swapChain->SetVsync(true);
-		RenderCommand::Init(m_RenderAPI);
-
-		Imgui::Init(nativeWindow);
-		Engine::InitRenderer(m_RenderAPI);
-
-
-		while (m_Running)
-		{
-			OPTICK_FRAME("Render Frame")
-
-			for (const auto layer : m_Layers)
-			{
-				layer->OnRender();
-			}
-
-
-			Renderer::WaitAndRender();
-
-			Imgui::Begin();
-
-			//imgui here....
-			for (const auto layer : m_Layers)
-			{
-				layer->OnImguiRender();
-			}
-
-			Imgui::End();
-
-
-			swapChain->SwapBuffers();
-			m_MainWindow->PollEvents();
-		}
-
-		Imgui::ShutDown();
 	}
 }

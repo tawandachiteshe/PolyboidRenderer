@@ -1,8 +1,8 @@
 #pragma once
 #include <spdlog/spdlog.h>
 
+#include "Base.h"
 #include "Debug/Timer.h"
-#include "MeshImporter/MeshImporter.h"
 #include "Utils/CubeMapFace.hpp"
 
 namespace Polyboid
@@ -193,7 +193,7 @@ namespace Polyboid
 				m_Faces.emplace_back(s.ReadArray<uint8_t>((h.resolution* h.resolution* h.channels), offset + i));
 			}
 
-			auto map = std::make_shared<CubeMapFace<uint8_t>>(m_Faces, h.resolution, h.channels);
+			auto map = CreateRef<CubeMapFace<uint8_t>>(m_Faces, h.resolution, h.channels);
 
 			return map;
 		}

@@ -1,5 +1,4 @@
 #pragma once
-#include "glad/glad.h"
 
 namespace Polyboid
 {
@@ -16,10 +15,23 @@ namespace Polyboid
 // #define GL_CLIPPING_INPUT_PRIMITIVES 0x82F6
 // #define GL_CLIPPING_OUTPUT_PRIMITIVES 0x82F7
 
+enum class QueryType
+{
+	SamplesPassed,
+	AnySamplesPassed,
+	PrimitivesGenerated,
+	TransformFeedbackPrimitivesWritten,
+	TimeElapsed,
+	Timestamp
+};
 
 	class GPUQuery
 	{
-		
+	public:
+		virtual uint64_t GetResult() = 0;
+		virtual void Begin() = 0;
+		virtual void End() = 0;
+		virtual ~GPUQuery() = default;
 	};
 }
 

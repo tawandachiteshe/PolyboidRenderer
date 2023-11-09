@@ -1,0 +1,42 @@
+#version 460
+
+layout(local_size_x = 4, local_size_y = 4, local_size_z = 1) in;
+
+layout(std430, binding = 0) buffer AgeSSBO {
+   uint ages[100];
+};
+
+layout(rgba8, binding = 1) uniform image2D testImage;
+layout(binding = 2, rg8) uniform imageBuffer testImage2;
+
+
+void main()
+{
+	
+	ages[gl_GlobalInvocationID.x] = gl_WorkGroupID.x;
+
+	ivec2 l = ivec2(gl_GlobalInvocationID.xy);
+
+	if(l.x < 10 || l.y < 10)
+	{
+		imageStore(testImage2, int(l.x), uvec4(255));
+	}
+
+	if(gl_WorkGroupID.x % 2 == 0 || gl_WorkGroupID.y % 2 == 0) {
+
+		if(gl_LocalInvocationID.x % 5 == 0 || gl_LocalInvocationID.y % 5 == 0){
+
+		imageStore(testImage, l , uvec4(255, 65, 78, 1000));
+
+
+		} else {
+		imageStore(testImage, l , uvec4(255, 0, 100, 1000));
+		}
+		
+	} else {
+		imageStore(testImage, l , uvec4(0, 255, 0, 255));
+	}
+
+	
+	
+}

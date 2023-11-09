@@ -24,7 +24,7 @@ struct Vertex {
 };
 
 
-layout(std430, binding = 0) readonly buffer Vertices {
+layout(std430, binding = 1) readonly buffer Vertices {
   Vertex in_Vertices[];
 };
 
@@ -48,7 +48,7 @@ void main() {
 
 	//mat4(mat3(view))
 
-	gl_Position = projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexID), 1.0f);
+	gl_Position = projection * mat4(mat3(view)) * vec4(getPosition(gl_VertexIndex), 1.0f);
 
-	vPosition = getPosition(gl_VertexID);
+	vPosition = getPosition(gl_VertexIndex);
 }

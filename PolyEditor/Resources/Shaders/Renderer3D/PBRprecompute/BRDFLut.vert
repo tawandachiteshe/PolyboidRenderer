@@ -1,4 +1,4 @@
-#version 450 core
+#version 450
 
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec4 aNormal;
@@ -21,7 +21,7 @@ struct Vertex {
 };
 
 
-layout(std430, binding = 0) readonly buffer Vertices {
+layout(std430, binding = 1) readonly buffer Vertices {
   Vertex in_Vertices[];
 };
 
@@ -45,6 +45,6 @@ void main() {
 
 	//mat4(mat3(view))
 
-	gl_Position = vec4(getPosition(gl_VertexID), 1.0f);
-	vs_out.vUV = getUV(gl_VertexID);
+	gl_Position = vec4(getPosition(gl_VertexIndex), 1.0f);
+	vs_out.vUV = getUV(gl_VertexIndex);
 }

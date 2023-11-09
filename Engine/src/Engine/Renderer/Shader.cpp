@@ -3,47 +3,22 @@
 #include "Shader.h"
 
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 #include "Engine/Engine/Application.h"
 #include "Engine/Engine/Base.h"
-#include "Platform/Opengl/GLShader.h"
 
 
 namespace Polyboid
 {
-    Ref<Shader> Shader::Create(const ShaderType& shader, const std::string& shaderSoucePath)
-    {
-
-        auto renderApi = Application::Get().GetRenderAPI()->GetRenderAPIType();
-
-        switch (renderApi)
-        {
-        case RenderAPIType::Opengl: return  std::make_shared<GLShader>(shader, shaderSoucePath);
-        case RenderAPIType::Vulkan: 
-        case RenderAPIType::Metal: 
-        case RenderAPIType::Dx11: 
-        case RenderAPIType::Dx12: 
-            return nullptr;
-        }
-
+	Ref<Shader> Shader::Create(const ShaderType& shader, const std::string& shaderSourcePath)
+	{
         return nullptr;
-    }
+	}
 
-    Ref<Shader> Shader::Create(const ShaderBinaryAndInfo& info)
+    Ref<Shader> Shader::Create(const ShaderBinaryAndReflectionInfo& info)
     {
-        auto& renderApi = Application::Get().GetRenderAPI();
-        auto renderApiType = renderApi->GetRenderAPIType();
+        const auto renderApi = RenderAPI::Get();
 
-        switch (renderApiType)
-        {
-        case RenderAPIType::Opengl: return  std::make_shared<GLShader>(info);
-        case RenderAPIType::Vulkan:
-        case RenderAPIType::Metal:
-        case RenderAPIType::Dx11:
-        case RenderAPIType::Dx12:
-            return nullptr;
-        }
-
-        return nullptr;
+        return renderApi->CreateShader(info);
     }
 }

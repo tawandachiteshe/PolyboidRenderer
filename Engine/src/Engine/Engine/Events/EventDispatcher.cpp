@@ -5,7 +5,7 @@
 
 namespace Polyboid
 {
-    EventDispatcher::EventDispatcher(const Event& event): m_Event(event)
+    EventDispatcher::EventDispatcher(Event& event): m_Event(event)
     {
         m_Type = event.GetType();
     }

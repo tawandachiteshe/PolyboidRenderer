@@ -1,7 +1,7 @@
 project "Engine"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++20"
 	staticruntime "off"
 
     pchheader "boidpch.h"
@@ -16,22 +16,19 @@ project "Engine"
     {
         "src",
         "Vendor/spdlog/include",
-        "Vendor/msgpack/include",
         "Vendor/glfw/include",
         "Vendor/stb/include",
         "Vendor/glad/include",
         "Vendor/assimp/include",
         "Vendor/Optick/include",
-        "Vendor/hashpp/include",
         "Vendor/mono/include",
         "Vendor/entt",
         "Vendor/imgui/src",
         "Vendor/json/include",
-        "Vendor/siglot/include",
         "Vendor/taskflow",
         "Vendor/file_watcher",
         "%{VULKAN_SDK}/Include",
-        "Vendor/pods/include",
+        "Vendor/yalantinglibs/include",
     }
 
     dependson
@@ -42,15 +39,14 @@ project "Engine"
     defines
 	{
 		"_CRT_SECURE_NO_WARNINGS",
+        "VULKAN_HPP_NO_EXCEPTIONS",
 		"GLFW_INCLUDE_NONE",
-        "PODS_BIG_ENDIAN",
-        "MSGPACK_NO_BOOST"
+        "GLM_FORCE_DEPTH_ZERO_TO_ONE"
 	}
 
     links
     {
         "GLFW",
-        "glad",
         "imgui",
         "Vendor/assimp/bin/assimp.lib",
         "Vendor/mono/lib/libmono-static-sgen.lib",
@@ -70,7 +66,7 @@ project "Engine"
     }
 
     filter "configurations:Debug"
-       defines { "DEBUG" }
+       defines { "DEBUG", "POLY_DEBUG" }
        symbols "On"
 
        links
@@ -81,7 +77,10 @@ project "Engine"
            "%{VULKAN_SDK}/Lib/glslangd.lib",
            "%{VULKAN_SDK}/Lib/SPIRV-Toolsd.lib",
            "%{VULKAN_SDK}/Lib/spirv-cross-reflectd.lib",
+           "%{VULKAN_SDK}/Lib/vulkan-1.lib",
+           "%{VULKAN_SDK}/Lib/VkLayer_utils.lib",
            "Vendor/Optick/lib/x64/debug/OptickCore.lib"
+          
        }
  
     filter "configurations:Release"
@@ -96,5 +95,8 @@ project "Engine"
            "%{VULKAN_SDK}/Lib/glslang.lib",
            "%{VULKAN_SDK}/Lib/SPIRV-Tools.lib",
            "%{VULKAN_SDK}/Lib/spirv-cross-reflect.lib",
+           "%{VULKAN_SDK}/Lib/vulkan-1.lib",
+           "%{VULKAN_SDK}/Lib/VkLayer_utils.lib",
            "Vendor/Optick/lib/x64/Release/OptickCore.lib"
+        
        }

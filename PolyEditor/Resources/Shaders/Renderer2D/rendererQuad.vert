@@ -1,4 +1,4 @@
-#version 450 core
+#version 450
 
 
 
@@ -11,9 +11,14 @@ layout (std140, binding = 0) uniform CameraBuffer {
     
 	uniform mat4 projection;
     uniform mat4 view;
-	uniform vec3 pos;
+//	uniform vec3 pos;
 };
 
+
+layout(push_constant) uniform uPushConstant {
+  float time;
+  mat4 transform;
+} pc;
 
 
 layout(location = 0) out VS_OUT {

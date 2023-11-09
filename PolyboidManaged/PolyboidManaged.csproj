@@ -21,7 +21,8 @@
     <OutputPath>..\PolyEditor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\PolyEditor\Resources\Scripts\Intermediates\Debug\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -33,7 +34,8 @@
     <OutputPath>..\PolyEditor\Resources\Scripts\</OutputPath>
     <BaseIntermediateOutputPath>..\PolyEditor\Resources\Scripts\Intermediates\Release\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
-    <DefineConstants></DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -49,6 +51,7 @@
     <Compile Include="Source\KeyCodes.cs" />
     <Compile Include="Source\Tawanda.cs" />
     <Compile Include="Source\TestClass.cs" />
+    <Compile Include="Source\TestScript.cs" />
     <Compile Include="Source\Vector3.cs" />
   </ItemGroup>
   <ItemGroup>

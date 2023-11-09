@@ -1,0 +1,39 @@
+[submodule "yalantinglibs"]
+	path = Engine/Vendor/yalantinglibs
+	url = https://github.com/alibaba/yalantinglibs
+[submodule "Engine/Vendor/msdf-atlas-gen"]
+	path = Engine/Vendor/msdf-atlas-gen
+	url = https://github.com/Chlumsky/msdf-atlas-gen.git
+[submodule "Engine/Vendor/GLFW"]
+	path = Engine/Vendor/GLFW
+	url = https://github.com/tawandachiteshe/glfw.git
+[submodule "Engine/Vendor/entt"]
+	path = Engine/Vendor/entt
+	url = https://github.com/tawandachiteshe/entt.git
+[submodule "Engine/Vendor/glm"]
+	path = Engine/Vendor/glm
+	url = https://github.com/tawandachiteshe/glm.git
+[submodule "Engine/Vendor/file_watcher"]
+	path = Engine/Vendor/file_watcher
+	url = https://github.com/tawandachiteshe/file_watcher.git
+[submodule "Engine/Vendor/mono"]
+	path = Engine/Vendor/mono
+	url = https://github.com/tawandachiteshe/mono.git
+[submodule "Engine/Vendor/imgui"]
+	path = Engine/Vendor/imgui
+	url = https://github.com/tawandachiteshe/imgui.git
+[submodule "Engine/Vendor/stb"]
+	path = Engine/Vendor/stb
+	url = https://github.com/tawandachiteshe/stb.git
+[submodule "Engine/Vendor/taskflow"]
+	path = Engine/Vendor/taskflow
+	url = https://github.com/tawandachiteshe/taskflow.git
+[submodule "Engine/Vendor/json"]
+	path = Engine/Vendor/json
+	url = https://github.com/tawandachiteshe/json.git
+[submodule "Engine/Vendor/glfw"]
+	path = Engine/Vendor/glfw
+	url = https://github.com/tawandachiteshe/GLFW.git
+[submodule "Engine/Vendor/spdlog"]
+	path = Engine/Vendor/spdlog
+	url = https://github.com/gabime/spdlog.git

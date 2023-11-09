@@ -13,6 +13,7 @@ namespace Polyboid
         uint32_t Width = 0;
         uint32_t Height = 0;
         bool IsVisible = true;
+        bool NoApi = false;
         std::any WindowShareHandle;
         std::string WindowTitle;
 
@@ -88,7 +89,7 @@ namespace Polyboid
         virtual uint32_t GetHeight() = 0;
         virtual void PollEvents() = 0;
         
-        static Unique<Window> Create(const WindowSettings& settings);
+        static std::unique_ptr<Window> Create(const WindowSettings& settings);
         virtual ~Window() = default;
     };
 

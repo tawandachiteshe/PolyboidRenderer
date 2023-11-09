@@ -3,13 +3,14 @@
 #include <memory>
 
 #include "Framebuffer.h"
-#include "Renderbuffer.h"
+#include "Texture2D.h"
 #include "Engine/Engine/Base.h"
 
 namespace Polyboid 
 {
+	class RenderPass;
 	struct ClearSettings;
-	class Texture;
+	class Texture2D;
 	
 	
 	enum class TextureAttachmentSlot
@@ -34,29 +35,33 @@ namespace Polyboid
 		DepthStencil
 	};
 
+	struct TextureAttachment
+	{
+		TextureAttachmentSlot slot;
+		EngineGraphicsFormats format;
+	};
+
 	struct FramebufferSettings
 	{
-		std::vector<TextureAttachmentSlot> attachmentSlots;
+		std::vector<TextureAttachment> attachmentSlots;
+		bool IsSwapChainUsage = true;
 		uint32_t width = 0;
 		uint32_t height = 0;
 	};
 	
-	class Framebuffer
+	class Framebuffer : public RenderResource
 	{
 	public:
 
-		virtual void AttachRenderbuffer(const Ref<Renderbuffer>& renderbuffer, const TextureAttachmentSlot& slot) = 0;
-
-		virtual void AttachTexture(const Ref<Texture>& texture, const TextureAttachmentSlot& slot) = 0;
-
-		virtual void AttachTexture3D(const Ref<Texture3D>& texture, const TextureAttachmentSlot& slot) = 0;
-
 		virtual ~Framebuffer() = default;
-		
-		virtual void Clear(TextureAttachmentSlot attachment, const ClearSettings& settings) = 0;
-		virtual void Clear(const ClearSettings& settings) = 0;
 
-		static  Ref<Framebuffer> Create(const FramebufferSettings& settings);
+		virtual void ReSize(uint32_t width, uint32_t height) =0;
+		virtual Ref<Texture2D> GetColorAttachment(TextureAttachmentSlot attachment) = 0;
+		virtual Ref<Texture2D> GetDepthAttachment() = 0;
+		virtual std::any GetHandle() = 0;
+
+
+		static  Ref<Framebuffer> Create(const Ref<RenderPass>& renderPass);
 		
 	};
 

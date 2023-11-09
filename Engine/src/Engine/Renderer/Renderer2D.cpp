@@ -1,6 +1,9 @@
 #include "boidpch.h"
 
 #include "Renderer2D.h"
+
+#include <mutex>
+
 #include "RenderAPI.h"
 #include "imgui.h"
 #include <glm/glm.hpp>
@@ -10,11 +13,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "FrustumCulling.h"
-#include "PipelineState.h"
-#include "Renderer.h"
+#include "GraphicsPipeline.h"
+#include "RasterizerState.h"
+#include "RenderCommand.h"
 #include "VertexBufferArray.h"
-#include "CommandList/RenderCommand.h"
-#include "Engine/Engine/Registry/ShaderRegistry.h"
 
 
 namespace Polyboid
@@ -27,8 +29,8 @@ namespace Polyboid
 		uint32_t quadsIndicesCount = 6;
 
 		Ref<VertexBufferArray> QuadVertexBufferArray;
-		Ref<VertexBuffer> QuadVertexBuffer;
-		Render2DShaderType shaders;
+		Ref<VertexBufferSet> QuadVertexBuffer;
+		Ref<StagingBufferSet> QuadVerticesBuffer;
 
 		uint32_t quadCount = 0;
 		uint32_t quadOffset = 0;
@@ -43,6 +45,8 @@ namespace Polyboid
 
 		std::vector<QuadVertex> QuadVerticesData;
 		uint32_t quadIndexCount = 0;
+
+		Ref<GraphicsPipeline> QuadPipelineState;
 	};
 
 	struct LineData
@@ -50,8 +54,8 @@ namespace Polyboid
 		uint32_t LinesVertsCount = 2;
 
 		Ref<VertexBufferArray> LineVertexBufferArray;
-		Ref<VertexBuffer> LineVertexBuffer;
-		Render2DShaderType shaders;
+		Ref<VertexBufferSet> LineVertexBuffer;
+		Ref<StagingBufferSet> LineVerticesBuffer;
 
 		uint32_t lineCount = 0;
 		uint32_t lineOffset = 0;
@@ -62,6 +66,8 @@ namespace Polyboid
 		LineVertex lineVerts[4];
 
 		uint32_t LineIndexCount = 0;
+
+		Ref<GraphicsPipeline> LinePipelineState;
 	};
 
 	struct CircleData
@@ -70,8 +76,8 @@ namespace Polyboid
 		uint32_t quadsIndicesCount = 6;
 
 		Ref<VertexBufferArray> CircleVertexBufferArray;
-		Ref<VertexBuffer> CircleVertexBuffer;
-		Render2DShaderType shaders;
+		Ref<VertexBufferSet> CircleVertexBuffer;
+		Ref<StagingBufferSet> CircleVerticesBuffer;
 
 		uint32_t circleCount = 0;
 		uint32_t circleOffset = 0;
@@ -85,14 +91,21 @@ namespace Polyboid
 
 
 		std::vector<CircleVertex> CircleVerticesData;
+		Ref<GraphicsPipeline> CirclePipelineState;
 
 		uint32_t circleIndexCount = 0;
 	};
 
 	struct Renderer2DData
 	{
-		Ref<UniformBuffer> m_CameraUB;
-		Ref<RenderAPI> m_Context;
+		Ref<UniformBufferSet> m_CameraUB;
+		Ref<StagingBufferSet> m_CameraUBData;
+		Ref<Camera> m_Renderer2DCamera;
+		std::mutex m_CameraDataMutex;
+		Ref<RenderPass> m_RenderPass;
+		Ref<CommandBufferSet> m_UploadCommands;
+
+		Renderer2D::Renderer2DCameraData* m_CameraData = new Renderer2D::Renderer2DCameraData;
 	};
 
 	static Renderer2DData s_RenderData;
@@ -102,16 +115,15 @@ namespace Polyboid
 
 	void Renderer2D::PrepareQuads()
 	{
-		const auto& context = s_RenderData.m_Context;
-
-		s_QuadData.QuadVertexBufferArray = context->CreateVertexBufferArray();
+		s_QuadData.QuadVertexBufferArray = VertexBufferArray::Create();
 
 		uint32_t vtxSize = s_QuadData.vtxSize;
 		uint32_t idxSize = s_QuadData.idxSize;
 
 		auto vertBytesSize = static_cast<uint32_t>(vtxSize * sizeof(QuadVertex));
 
-		s_QuadData.QuadVertexBuffer = context->CreateVertexBuffer(vertBytesSize);
+		s_QuadData.QuadVertexBuffer = VertexBufferSet::Create(vertBytesSize);
+		s_QuadData.QuadVerticesBuffer = StagingBufferSet::Create(vertBytesSize);
 		s_QuadData.QuadVerticesData = std::vector<QuadVertex>(vtxSize);
 		auto* quadIndices = new uint32_t[idxSize];
 
@@ -131,8 +143,7 @@ namespace Polyboid
 
 
 		s_QuadData.QuadVertexBufferArray->Bind();
-		const Ref<IndexBuffer> indexBuffer = context->CreateIndexBuffer(IndexDataType::UnsignedInt, idxSize,
-		                                                                quadIndices);
+		const Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(quadIndices, idxSize);
 		delete[] quadIndices;
 
 		s_QuadData.QuadVertexBuffer->SetLayout({
@@ -141,7 +152,7 @@ namespace Polyboid
 			{ShaderDataType::Float2, "aUV"}
 		});
 
-		s_QuadData.QuadVertexBufferArray->AddVertexBuffer(s_QuadData.QuadVertexBuffer);
+		s_QuadData.QuadVertexBufferArray->AddVertexBufferSet(s_QuadData.QuadVertexBuffer);
 		s_QuadData.QuadVertexBufferArray->SetIndexBuffer(indexBuffer);
 
 
@@ -150,19 +161,26 @@ namespace Polyboid
 		s_QuadData.quadVerts[2] = {{0.5f, 0.5f, 0.0f,}, {1.0f, 1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}};
 		s_QuadData.quadVerts[3] = {{-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, {0.0f, 1.0f}};
 
-		s_QuadData.shaders = LoadShader("rendererQuad");
+		s_QuadData.QuadPipelineState = GraphicsPipeline::Create();
+		s_QuadData.QuadPipelineState->SetGraphicsShaders(LoadShader("rendererQuad"));
+		s_QuadData.QuadPipelineState->SetRenderPass(s_RenderData.m_RenderPass);
+		s_QuadData.QuadPipelineState->SetVertexArray(s_QuadData.QuadVertexBufferArray);
+		s_QuadData.QuadPipelineState->Bake();
+		s_QuadData.QuadPipelineState->AllocateDescriptorSets();
+		s_QuadData.QuadPipelineState->BindUniformBufferSet(0, s_RenderData.m_CameraUB);
+		s_QuadData.QuadPipelineState->WriteSetResourceBindings();
 	}
 
 
 	void Renderer2D::PrepareCircles()
 	{
-		auto& context = s_RenderData.m_Context;
-		s_CircleData.CircleVertexBufferArray = context->CreateVertexBufferArray();
+		s_CircleData.CircleVertexBufferArray = VertexBufferArray::Create();
 
 		const uint32_t vtxSize = s_CircleData.vtxSize;
 		const uint32_t idxSize = s_CircleData.idxSize;
 
-		s_CircleData.CircleVertexBuffer = context->CreateVertexBuffer(vtxSize * sizeof(CircleVertex));
+		s_CircleData.CircleVertexBuffer = VertexBufferSet::Create(vtxSize * sizeof(CircleVertex));
+		s_CircleData.CircleVerticesBuffer = StagingBufferSet::Create(vtxSize * sizeof(CircleVertex));
 		s_CircleData.CircleVerticesData = std::vector<CircleVertex>(vtxSize);
 		auto* quadIndices = new uint32_t[idxSize];
 
@@ -183,10 +201,8 @@ namespace Polyboid
 		}
 
 
-
 		s_CircleData.CircleVertexBufferArray->Bind();
-		const Ref<IndexBuffer> indexBuffer = context->CreateIndexBuffer(IndexDataType::UnsignedInt, idxSize,
-		                                                                quadIndices);
+		const Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(quadIndices, idxSize);
 		delete[] quadIndices;
 
 
@@ -199,7 +215,7 @@ namespace Polyboid
 
 		});
 
-		s_CircleData.CircleVertexBufferArray->AddVertexBuffer(s_CircleData.CircleVertexBuffer);
+		s_CircleData.CircleVertexBufferArray->AddVertexBufferSet(s_CircleData.CircleVertexBuffer);
 		s_CircleData.CircleVertexBufferArray->SetIndexBuffer(indexBuffer);
 
 
@@ -208,18 +224,27 @@ namespace Polyboid
 		s_CircleData.circleVerts[2] = {{0.5f, 0.5f, 0.0f}, {0.5f, 0.5f, 0.0f,}, {1.0f, 1.0f, 1.0f, 1.0f}, 0.0f, 1.0f};
 		s_CircleData.circleVerts[3] = {{-0.5f, 0.5f, 0.0f}, {-0.5f, 0.5f, 0.0f}, {1.0f, 1.0f, 1.0f, 1.0f}, 1.0f, 1.0f};
 
-		s_CircleData.shaders = LoadShader("rendererCircle");
+
+		s_CircleData.CirclePipelineState = GraphicsPipeline::Create();
+		s_CircleData.CirclePipelineState->SetGraphicsShaders(LoadShader("rendererCircle"));
+		s_CircleData.CirclePipelineState->SetRenderPass(s_RenderData.m_RenderPass);
+		s_CircleData.CirclePipelineState->SetVertexArray(s_CircleData.CircleVertexBufferArray);
+		s_CircleData.CirclePipelineState->Bake();
+
+		s_CircleData.CirclePipelineState->AllocateDescriptorSets();
+		s_CircleData.CirclePipelineState->BindUniformBufferSet(0, s_RenderData.m_CameraUB);
+		s_CircleData.CirclePipelineState->WriteSetResourceBindings();
 	}
 
 	void Renderer2D::PrepareLines()
 	{
-		auto& context = s_RenderData.m_Context;
-		s_LineData.LineVertexBufferArray = context->CreateVertexBufferArray();
+		s_LineData.LineVertexBufferArray = VertexBufferArray::Create();
 
 		const uint32_t vtxSize = s_LineData.vtxSize;
 
-		s_LineData.LineVertexBuffer = context->CreateVertexBuffer(vtxSize * sizeof(LineVertex));
+		s_LineData.LineVertexBuffer = VertexBufferSet::Create(vtxSize * sizeof(LineVertex));
 		s_LineData.LineVerticesData = std::vector<LineVertex>(vtxSize);
+		s_LineData.LineVerticesBuffer = StagingBufferSet::Create(vtxSize * sizeof(LineVertex));
 
 		s_LineData.LineVertexBufferArray->Bind();
 
@@ -228,40 +253,43 @@ namespace Polyboid
 			{ShaderDataType::Float4, "aColor"},
 		});
 
-		s_LineData.LineVertexBufferArray->AddVertexBuffer(s_LineData.LineVertexBuffer);
-
-
-		s_LineData.shaders = LoadShader("rendererLine");
+		s_LineData.LineVertexBufferArray->AddVertexBufferSet(s_LineData.LineVertexBuffer);
 
 
 		s_LineData.lineVerts[0] = {{0.5f, 0.5f, 0.0f}, glm::vec4{1.0f}};
 		s_LineData.lineVerts[1] = {{0.5f, -0.5f, 0.0f}, glm::vec4{1.0f}};
 		s_LineData.lineVerts[2] = {{-0.5f, -0.5f, 0.0f}, glm::vec4{1.0f}};
 		s_LineData.lineVerts[3] = {{-0.5f, 0.5f, 0.0f}, glm::vec4{1.0f}};
+
+		s_LineData.LinePipelineState = GraphicsPipeline::Create();
+		s_LineData.LinePipelineState->SetGraphicsShaders(LoadShader("rendererLine"));
+		s_LineData.LinePipelineState->SetRenderPass(s_RenderData.m_RenderPass);
+		s_LineData.LinePipelineState->SetVertexArray(s_LineData.LineVertexBufferArray);
+		s_LineData.LinePipelineState->SetGeometryTopology(PrimitiveType::Lines);
+		s_LineData.LinePipelineState->GetRasterizerState().SetLineWidth(2.0f);
+		s_LineData.LinePipelineState->Bake();
+
+		s_LineData.LinePipelineState->AllocateDescriptorSets();
+		s_LineData.LinePipelineState->BindUniformBufferSet(0, s_RenderData.m_CameraUB);
+		s_LineData.LinePipelineState->WriteSetResourceBindings();
 	}
 
 	void Renderer2D::PrepareQuadsForRendering()
 	{
 		if (s_QuadData.quadCount)
 		{
-			uint32_t vertexSize = sizeof(QuadVertex) * s_QuadData.quadOffset;
-			s_QuadData.QuadVertexBuffer->SetData(s_QuadData.QuadVerticesData.data(), vertexSize);
+			auto pipeLine = s_QuadData.QuadPipelineState;
 
-			auto pipeLine = Renderer::GetDefaultPipeline();
 
-			auto& [vert, frag] = s_QuadData.shaders;
-
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
-
-			pipeLine->SetShader(vert);
-			pipeLine->SetShader(frag);
 			const auto count = s_QuadData.quadIndexCount;
-			s_QuadData.QuadVertexBufferArray->SetIndexCount(count);
-			pipeLine->SetVertexArray(s_QuadData.QuadVertexBufferArray);
 
-			Renderer::SetPipelineState(pipeLine);
+			RenderCommand::BindGraphicsPipeline(pipeLine);
+			RenderCommand::BindGraphicsDescriptorSets(0, pipeLine->GetDescriptorSets(0));
+			RenderCommand::BindVertexBuffer(s_QuadData.QuadVertexBuffer);
+			RenderCommand::BindIndexBuffer(s_QuadData.QuadVertexBufferArray->GetIndexBuffer());
 
-			Renderer::DrawIndexed(count);
+
+			RenderCommand::DrawIndexed(count);
 		}
 	}
 
@@ -270,31 +298,17 @@ namespace Polyboid
 	{
 		if (s_CircleData.circleCount)
 		{
-			auto pipeLine = Renderer::GetDefaultPipeline();
+			auto pipeLine = s_CircleData.CirclePipelineState;
 
-			const uint32_t vertexSize = sizeof(CircleVertex) * s_CircleData.circleOffset;
-			s_CircleData.CircleVertexBuffer->SetData(s_CircleData.CircleVerticesData.data(), vertexSize);
-
-			auto& [vert, frag] = s_CircleData.shaders;
-
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
-
-			pipeLine->SetShader(vert);
-			pipeLine->SetShader(frag);
-
-			//s_CircleData.shader->Bind();
 			const auto count = s_CircleData.circleIndexCount;
-			s_CircleData.CircleVertexBufferArray->SetIndexCount(count);
-			pipeLine->SetVertexArray(s_CircleData.CircleVertexBufferArray);
+			RenderCommand::BindGraphicsDescriptorSets(0, pipeLine->GetDescriptorSets(0));
 
-			Renderer::SetPipelineState(pipeLine);
-			Renderer::DrawIndexed(count);
+			RenderCommand::BindGraphicsPipeline(pipeLine);
+			RenderCommand::BindVertexBuffer(s_CircleData.CircleVertexBuffer);
+			RenderCommand::BindIndexBuffer(s_CircleData.CircleVertexBufferArray->GetIndexBuffer());
 
-			//s_CircleData.CircleVertexBufferArray->GetIndexBuffer()->Bind();
 
-			// glDisable(GL_CULL_FACE);
-			// RenderAPI::DrawIndexed(count, 4);
-			// glEnable(GL_CULL_FACE);
+			RenderCommand::DrawIndexed(count);
 		}
 	}
 
@@ -302,32 +316,63 @@ namespace Polyboid
 	{
 		if (s_LineData.lineCount)
 		{
-			auto pipeLine = Renderer::GetDefaultPipeline();
-			auto& [vert, frag] = s_CircleData.shaders;
+			auto pipeLine = s_LineData.LinePipelineState;
 
-			vert->SetUniformBuffer("CameraBuffer", s_RenderData.m_CameraUB);
 
-			pipeLine->SetShader(vert);
-			pipeLine->SetShader(frag);
+			RenderCommand::BindGraphicsPipeline(pipeLine);
+			RenderCommand::BindGraphicsDescriptorSets(0, pipeLine->GetDescriptorSets(0));
+			RenderCommand::LineWidth(2.0);
+			RenderCommand::BindVertexBuffer(s_LineData.LineVertexBuffer);
 
-			s_LineData.LineVertexBufferArray->Bind();
-			const uint32_t vertexSize = sizeof(LineVertex) * s_LineData.lineOffset;
-			s_LineData.LineVertexBuffer->SetData(s_LineData.LineVerticesData.data(), vertexSize);
-			pipeLine->SetVertexArray(s_LineData.LineVertexBufferArray);
-
-			pipeLine->SetVertexArray(s_LineData.LineVertexBufferArray);
-
-			Renderer::SetPipelineState(pipeLine);
-			Renderer::DrawArrays(s_LineData.LineIndexCount);
-			// glDisable(GL_CULL_FACE);
-			// RenderAPI::DrawLines(s_LineData.lineCount);
-			// glEnable(GL_CULL_FACE);
+			RenderCommand::DrawArrays(s_LineData.lineCount);
 		}
 	}
 
-	Render2DShaderType Renderer2D::LoadShader(const std::string& shaderName)
+	void Renderer2D::UploadDataToGpu()
 	{
-		const std::string shaderPath = "Resources/Shaders/Renderer2D/";
+		if (s_LineData.lineCount)
+		{
+			const uint32_t vertexSize = sizeof(LineVertex) * s_LineData.lineOffset;
+			RenderCommand::SetStagingBufferData(s_LineData.LineVerticesBuffer, s_LineData.LineVerticesData.data(),
+			                                    vertexSize);
+			RenderCommand::CopyStagingBuffer(s_LineData.LineVerticesBuffer, s_LineData.LineVertexBuffer);
+		}
+
+		if (s_CircleData.circleCount)
+		{
+			const uint32_t vertexSize = sizeof(CircleVertex) * s_CircleData.circleOffset;
+			RenderCommand::SetStagingBufferData(s_CircleData.CircleVerticesBuffer,
+			                                    s_CircleData.CircleVerticesData.data(), vertexSize);
+			RenderCommand::CopyStagingBuffer(s_CircleData.CircleVerticesBuffer, s_CircleData.CircleVertexBuffer);
+		}
+
+		if (s_QuadData.quadCount)
+		{
+			uint32_t vertexSize = sizeof(QuadVertex) * s_QuadData.quadOffset;
+			//s_QuadData.QuadVertexBuffer->SetData(s_QuadData.QuadVerticesData.data(), vertexSize);
+			RenderCommand::SetStagingBufferData(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVerticesData.data(),
+			                                    vertexSize);
+			RenderCommand::CopyStagingBuffer(s_QuadData.QuadVerticesBuffer, s_QuadData.QuadVertexBuffer);
+		}
+
+		if(s_LineData.lineCount || s_CircleData.circleCount || s_QuadData.quadCount)
+		{
+			Renderer2DCameraData data{};
+			data.view = s_RenderData.m_Renderer2DCamera->GetView();
+			data.projection = s_RenderData.m_Renderer2DCamera->GetProjection();
+
+			RenderCommand::SetStagingBufferData(s_RenderData.m_CameraUBData, &data);
+			RenderCommand::CopyStagingBuffer(s_RenderData.m_CameraUBData, s_RenderData.m_CameraUB);
+		}
+	
+
+
+		Reset();
+	}
+
+	GraphicsShaders Renderer2D::LoadShader(const std::string& shaderName)
+	{
+		const std::string shaderPath = "Renderer2D/";
 		const auto shaderLoadVert = shaderPath + shaderName + ".vert";
 		const auto shaderLoadFrag = shaderPath + shaderName + ".frag";
 
@@ -338,9 +383,11 @@ namespace Polyboid
 	}
 
 
-	void Renderer2D::Init(const Ref<RenderAPI>& context)
+	void Renderer2D::Init(const Ref<RenderPass>& renderPass)
 	{
-		s_RenderData.m_Context = context;
+		s_RenderData.m_RenderPass = renderPass;
+		s_RenderData.m_CameraUB = UniformBufferSet::Create(sizeof(Renderer2DCameraData));
+		s_RenderData.m_CameraUBData = StagingBufferSet::Create(sizeof(Renderer2DCameraData));
 
 		PrepareQuads();
 		PrepareCircles();
@@ -348,15 +395,11 @@ namespace Polyboid
 
 
 		//temp solution
-		s_RenderData.m_CameraUB = context->CreateUniformBuffer((sizeof(glm::mat4) * 2) + sizeof(glm::vec3), 0);
 	}
 
 	void Renderer2D::BeginDraw(const Ref<Camera>& camera)
 	{
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetProjection()), sizeof(glm::mat4));
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetView()), sizeof(glm::mat4), 64);
-		s_RenderData.m_CameraUB->SetData(glm::value_ptr(camera->GetPosition()), sizeof(glm::vec3), 128);
-
+		s_RenderData.m_Renderer2DCamera = camera;
 		//s_RenderData.m_CameraUB->Bind(0);
 	}
 
@@ -366,17 +409,9 @@ namespace Polyboid
 
 	void Renderer2D::EndDraw()
 	{
-		Renderer::BeginDefaultRenderPass();
-		Renderer::ClearDefaultRenderTarget({{0.2f, 0.2f, 0.2f, 1.0f}});
-
 		PrepareQuadsForRendering();
 		PrepareCircleForRendering();
 		PrepareLineForRendering();
-
-		Renderer::EndDefaultRenderPass();
-
-
-		Reset();
 	}
 
 
@@ -409,6 +444,7 @@ namespace Polyboid
 
 	void Renderer2D::Shutdown()
 	{
+		delete s_RenderData.m_CameraData;
 		if (!s_QuadData.QuadVerticesData.empty())
 		{
 			s_QuadData.QuadVerticesData.clear();
@@ -507,8 +543,8 @@ namespace Polyboid
 		positions[15] = {1.0f, 1.0f, 1.0f};
 
 
-		for (size_t i = 0; i < 16; i++)
-			positions[i] = transform * glm::vec4(positions[i], 1.0);
+		for (auto& position : positions)
+			position = transform * glm::vec4(position, 1.0);
 
 
 		DrawLine(positions[0], positions[1], color);

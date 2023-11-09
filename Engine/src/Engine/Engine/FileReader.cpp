@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <ios>
 
 
 
@@ -23,7 +24,8 @@ namespace Polyboid
             in.close();
             return contents;
         }
-        
+
+        return "";
     }
 
     std::string FileReader::ReadString(const std::string& Path)
