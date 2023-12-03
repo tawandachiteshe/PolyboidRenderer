@@ -18,6 +18,9 @@ namespace Polyboid
 	{
 	public:
 		OutlineWindow(const Ref<World>& world);
+		OutlineWindow() = default;
+		OutlineWindow(const OutlineWindow& window) = default;
+		GameObject& GetSelectedGameObject();
 
 		void RenderOutliner();
 		void RenderGameObjectProperties();
@@ -62,5 +65,6 @@ namespace Polyboid
 
 	private:
 		static void DrawVector(const std::string& name, glm::vec3& value);
+
 	};
 }

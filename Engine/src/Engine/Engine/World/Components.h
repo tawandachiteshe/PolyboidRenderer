@@ -45,6 +45,31 @@ namespace Polyboid
                 * glm::scale(glm::mat4(1.0f), Scale);
         }
 
+        [[nodiscard]]
+        glm::mat4 GetTransform()
+        {
+            const glm::mat4 rotation = glm::toMat4(glm::quat(Rotation));
+
+            return glm::translate(glm::mat4(1.0f), Position)
+                * rotation
+                * glm::scale(glm::mat4(1.0f), Scale);
+        }
+
     };
+
+    enum class ShapeType
+    {
+	    QUAD
+    };
+
+
+    struct ShapeComponent
+    {
+
+        ShapeType Type = ShapeType::QUAD;
+        glm::vec4 Color{1.0f};
+
+    };
+
 
 }

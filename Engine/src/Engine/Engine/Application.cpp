@@ -74,6 +74,7 @@ namespace Polyboid
 		KomputeCommand::Init();
 		ShaderRegistry::Init(m_RenderAPI);
 		Imgui::Init(m_MainWindow->GetNativeWindow());
+		Renderer3D::Init(settings.WindowWidth, settings.WindowHeight);
 
 
 		m_MainSwapChainCommandBuffer = CommandBufferSet::Create({ 3, CommandType::ManyTime });

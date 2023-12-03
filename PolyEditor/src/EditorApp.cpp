@@ -1,5 +1,7 @@
 #include "EditorApp.h"
 
+#include <spdlog/spdlog.h>
+
 
 #include "imgui.h"
 #include "Engine/Engine/Application.h"
@@ -12,7 +14,9 @@ namespace Polyboid
 
 	EditorApp::EditorApp()
 	{
-        AddLayer(EngineMemoryManager::AllocateMem<EditorLayer>("EditorLayer"));
+		
+
+       AddLayer(EngineMemoryManager::AllocateMem<EditorLayer>("EditorLayer"));
 	}
 
 
@@ -20,7 +24,13 @@ namespace Polyboid
 	Application* CreateApplication()
 	{
 		ApplicationSettings settings;
+
+
 		CREATE_APPLICATION(EditorApp, app)
+
+		
+
+
 		return app;
 	}
 }

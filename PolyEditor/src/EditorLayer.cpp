@@ -8,9 +8,17 @@
 //temp solution temp
 #include <Windows.h>
 #include <commdlg.h>
+#include <glm/gtc/type_ptr.hpp>
 
 
+#include "imgui_internal.h"
+#include "Engine/Engine/EditorCamera.h"
+#include "Engine/Engine/ImguiSetup.h"
+#include "Engine/Engine/Math/Math.h"
+#include "Engine/Engine/World/Components.h"
 #include "Engine/Renderer/RenderCommand.h"
+#include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/Renderer3D.h"
 #include "Windows/OutlineWindow.h"
 
 namespace Polyboid
@@ -211,10 +219,30 @@ namespace Polyboid
 		ImGui::End();
 	}
 
+	void EditorLayer::BuildRenderImage()
+	{
+		m_RenderViewportImage.clear();
+
+		for (uint32_t imageIndex = 0; imageIndex < RenderCommand::GetMaxFramesInFlight(); ++imageIndex)
+		{
+			auto renderTexture = Imgui::CreateVulkanTextureID(Renderer3D::GetCompositeTexture(TextureAttachmentSlot::Color0, imageIndex));
+			m_RenderViewportImage.push_back(renderTexture);
+		}
+
+	}
+
+	ImTextureID EditorLayer::GetViewportImageRender() const
+	{
+		return m_RenderViewportImage.at(RenderCommand::GetCurrentFrame());
+	}
+
 
 	EditorLayer::EditorLayer(const std::string& name)
 	{
 		//float fov, float aspectRatio, float nearClip, float farClip
+
+		m_EditorCamera = CreateRef<EditorCamera>(45.0f, 1600.0f / 900.0f, 0.01f, 1000.0f);
+
 
 		m_Name = name;
 
@@ -229,15 +257,26 @@ namespace Polyboid
 
 		m_CurrentWorld = World::Create("Untitled");
 
-		m_OutlineWindow = Ref(new OutlineWindow(m_CurrentWorld));
+		m_OutlineWindow = CreateRef<OutlineWindow>(m_CurrentWorld);
 
-
+		BuildRenderImage();
 	}
 
 	void EditorLayer::OnUpdate(float dt)
 	{
 
+		m_EditorCamera->OnUpdate(dt);
 
+		Renderer3D::BeginScene(m_EditorCamera);
+
+		m_CurrentWorld->OnRender(m_EditorCamera);
+
+		Renderer2D::BeginDraw(m_EditorCamera);
+		Renderer3D::SetViewport({ 1600, 900 });
+		Renderer2D::DrawCube(glm::mat4(1.0f));
+		Renderer2D::EndDraw();
+
+		Renderer3D::EndScene();
 
 	}
 
@@ -248,10 +287,70 @@ namespace Polyboid
 		EditorDockSpaceUI(&initDockSpace);
 		m_OutlineWindow->RenderUi();
 
+		static ImGuiWindowFlags gizmoWindowFlags = 0;
+	
+		auto open = true;
 
 		//ViewPort
-		ImGui::Begin("Viewport");
+		ImGui::Begin("Viewport", &open, gizmoWindowFlags);
 
+		const auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		const auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		const auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
+
+		ImGuizmo::SetDrawlist();
+		ImGuizmo::SetOrthographic(false);
+		ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
+
+
+		const auto contentRegion = ImGui::GetContentRegionAvail();
+		const auto pos = ImGui::GetWindowPos();
+		const auto windowSize = ImGui::GetWindowSize();
+
+		const auto renderTexture = GetViewportImageRender();
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
+
+		// ImGuizmo::SetRect(pos.x, pos.y, windowSize.x, windowSize.y);
+
+
+		const auto cameraView = glm::value_ptr(m_EditorCamera->GetViewMatrix());
+		const auto cameraProjection = glm::value_ptr(m_EditorCamera->GetProjection());
+
+
+		auto& selectedGameObject = m_OutlineWindow->GetSelectedGameObject();
+
+		if (selectedGameObject.IsValid())
+		{
+			auto& transform = selectedGameObject.GetTransform();
+
+			auto mat = transform.GetTransform();
+
+			ImGuizmo::Manipulate(cameraView, cameraProjection, m_GizmoOp, m_GizmoMode, glm::value_ptr(mat));
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 pos, scale;
+				glm::quat rot;
+				Math::DecomposeMatrix(pos, scale, rot, mat);
+
+				transform.Scale = scale;
+				transform.Position = pos;
+				transform.Rotation = glm::eulerAngles(rot);
+
+			}
+
+		}
+	
+
+		
+
+
+		ImGui::Image(renderTexture, contentRegion);
 		ImGui::End();
 
 
@@ -266,6 +365,7 @@ namespace Polyboid
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		
+		EventDispatcher dispatcher(event);
+		dispatcher.Bind<MouseScrollEvent>(BIND_EVENT(m_EditorCamera->OnMouseScroll));
 	}
 }

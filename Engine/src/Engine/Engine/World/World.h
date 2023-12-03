@@ -6,6 +6,7 @@
 
 namespace Polyboid
 {
+	class Camera;
 
 	class GameObject;
 
@@ -13,13 +14,18 @@ namespace Polyboid
 	{
 	public:
 		entt::registry m_Registry;
+		Ref<Camera> m_CurrentCamera;
 
 	public:
 		World(std::string name);
 
 		static Ref<World> Create(const std::string& name);
 
+		void Update(float ts);
+
 		GameObject CreateGameObject(const std::string& name);
+
+		void OnRender(const Ref<Camera>& camera);
 
 
 	private:

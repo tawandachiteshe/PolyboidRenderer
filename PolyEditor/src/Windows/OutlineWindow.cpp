@@ -16,6 +16,11 @@ namespace Polyboid
 		m_CurrentSelected = {};
 	}
 
+	GameObject& OutlineWindow::GetSelectedGameObject()
+	{
+		return m_CurrentSelected;
+	}
+
 	void OutlineWindow::RenderOutliner()
 	{
 		ImGui::Begin("Outliner");
@@ -26,9 +31,9 @@ namespace Polyboid
 		if (ImGui::TreeNode("World"))
 		{
 			m_World->m_Registry.each([&](entt::entity entity)
-				{
-					DrawGameObjectText(entity);
-				});
+			{
+				DrawGameObjectText(entity);
+			});
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -37,29 +42,47 @@ namespace Polyboid
 	void OutlineWindow::RenderGameObjectProperties()
 	{
 		ImGui::Begin("Properties");
-		
 
-		DrawComponent<TransformComponent>("Transform",[&](auto& component)
+		if (m_CurrentSelected.IsValid())
 		{
-			DrawTransformComponent(component);
-		});
+			if (ImGui::Button("Add Component"))
+			{
+				ImGui::OpenPopup("Add_component_context");
+			}
+
+			if (ImGui::BeginPopupContextItem("Add_component_context", 0))
+			{
+				if(ImGui::Selectable("Shape Component"))
+				{
+					m_CurrentSelected.AddComponent<ShapeComponent>();
+				}
+
+				ImGui::EndPopup();
+				
+			}
+			
+
+			DrawComponent<TransformComponent>("Transform", [&](auto& component)
+			{
+				DrawTransformComponent(component);
+			});
+		}
+
 
 		ImGui::End();
 	}
 
 	void OutlineWindow::RenderUi()
 	{
-		bool show = true;
+		bool show = false;
 
-		ImGui::ShowDemoWindow(&show);
+		// ImGui::ShowDemoWindow(&show);
 		RenderOutliner();
 		RenderGameObjectProperties();
-
 	}
 
 	void OutlineWindow::DrawGameObjectText(entt::entity entity)
 	{
-
 		GameObject gameObject(entity, m_World.Get());
 		const auto gameObjectString = gameObject.GetName();
 		const auto gameObjectName = gameObjectString.c_str();
@@ -108,7 +131,6 @@ namespace Polyboid
 
 	void OutlineWindow::DrawTransformComponent(TransformComponent& transform)
 	{
-
 		DrawVector("Position", transform.Position);
 		ImGui::Separator();
 		ImGui::Spacing();
@@ -120,11 +142,9 @@ namespace Polyboid
 		transform.Rotation = glm::radians(rotation);
 	}
 
-	
 
 	void OutlineWindow::DrawVector(const std::string& name, glm::vec3& value)
 	{
-
 		const auto width = ImGui::GetContentRegionAvail().x;
 		const auto itemWidth = width / 3;
 
@@ -138,14 +158,14 @@ namespace Polyboid
 		ImGui::SetNextItemWidth(itemWidth);
 
 
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, { .98f, 0.24f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, {.98f, 0.24f, 0.3f, 1.0f});
 		ImGui::DragFloat("X", &value.x);
 		ImGui::PopStyleColor();
 
 		ImGui::TableSetColumnIndex(1);
 		ImGui::SetNextItemWidth(itemWidth);
 
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, { 0.1f, 0.85f, 0.33f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, {0.1f, 0.85f, 0.33f, 1.0f});
 		ImGui::DragFloat("Y", &value.y);
 		ImGui::PopStyleColor();
 
@@ -153,11 +173,10 @@ namespace Polyboid
 		ImGui::TableSetColumnIndex(2);
 		ImGui::SetNextItemWidth(itemWidth);
 
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, { 0.1f, 0.45f, 0.90f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, {0.1f, 0.45f, 0.90f, 1.0f});
 		ImGui::DragFloat("Z", &value.z);
 		ImGui::PopStyleColor();
 
 		ImGui::EndTable();
-
 	}
 }

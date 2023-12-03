@@ -8,6 +8,7 @@
 
 namespace Polyboid
 {
+	struct TransformComponent;
 
 	class GameObject
 	{
@@ -37,6 +38,8 @@ namespace Polyboid
 		GameObject() = default;
 		GameObject(entt::entity entityId, World* world);
 		GameObject(const GameObject& other) = default;
+
+		TransformComponent& GetTransform();
 
 		bool IsValid();
 

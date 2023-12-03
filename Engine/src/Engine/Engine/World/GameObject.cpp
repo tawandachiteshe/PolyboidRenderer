@@ -8,6 +8,12 @@ namespace Polyboid
 {
 	GameObject::GameObject(entt::entity entityId, World* world): m_World(world), m_Entity(entityId)
 	{
+		auto name = "Tawnada";
+	}
+
+	TransformComponent& GameObject::GetTransform()
+	{
+		return GetComponent<TransformComponent>();
 	}
 
 	bool GameObject::IsValid()
