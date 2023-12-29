@@ -34,30 +34,6 @@ namespace Polyboid
 	class VkRenderAPI : public RenderAPI
 	{
 	private:
-		std::vector<Ref<VkSwapChain>> m_Swapchains;
-		std::vector<Ref<VulkanRenderPass>> m_RenderPasses;
-		std::vector<Ref<VulkanFramebuffer>> m_Framebuffers;
-		std::vector<Ref<VulkanCommandBufferSet>> m_CommandLists;
-		std::vector<Ref<VulkanTexture2D>> m_Textures2D;
-		std::vector<Ref<VulkanTexture3D>> m_Textures3D;
-		std::vector<Ref<VulkanIndexBuffer>> m_IndexBuffers;
-		std::vector<Ref<VulkanVertexBuffer>> m_VertexBuffers;
-		std::vector<Ref<VulkanFence>> m_Fences;
-		std::vector<Ref<VulkanSemaphore>> m_Semaphores;
-		std::vector<Ref<VulkanImage2D>> m_Image2Ds;
-		std::vector<Ref<VulkanShader>> m_VulkanShaders;
-		std::vector<Ref<VulkanGraphicsPipeline>> m_GraphicsPipelines;
-		std::vector<Ref<VulkanKomputePipeline>> m_KomputePipelines;
-		std::vector<Ref<VulkanPipelineDescriptorSetPool>> m_DescPools;
-		std::vector<Ref<VulkanShaderStorage>> m_StorageBuffers;
-		std::vector<Ref<VulkanUniformBuffer>> m_UniformBuffers;
-		std::vector<Ref<VulkanStagingBuffer>> m_StagingBuffers;
-		std::vector<vk::CommandBuffer> m_CommandBuffersBatching;
-		std::vector<Ref<VulkanTexelStorageBuffer>> m_TexelStorageBuffers;
-		std::vector<Ref<VulkanTexelUniformBuffer>> m_TexelUniformBuffers;
-		std::vector<Ref<VulkanSamplerState>> m_Samplers;
-
-	private:
 		Ref<VkInstance> m_Instance;
 		Ref<VkDebugMessenger> m_Messenger;
 		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
