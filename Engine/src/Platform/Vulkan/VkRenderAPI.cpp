@@ -93,7 +93,6 @@ namespace Polyboid
 		m_Device = CreateRef<VulkanDevice>(m_PhysicalDevice);
 		m_Allocator = CreateRef<VulkanAllocatorInstance>(this);
 
-		m_CommandBuffersBatching.reserve(10);
 
 	}
 
@@ -112,8 +111,6 @@ namespace Polyboid
 	Ref<Framebuffer> VkRenderAPI::CreateFrameBuffer(const Ref<RenderPass>& renderPass)
 	{
 		auto framebuffer = ALLOC_API(VulkanFramebuffer, this, renderPass.As<VulkanRenderPass>());
-
-		m_Framebuffers.push_back(framebuffer);
 
 		return framebuffer.As<Framebuffer>();
 	}
