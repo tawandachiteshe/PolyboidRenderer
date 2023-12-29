@@ -138,7 +138,6 @@ namespace Polyboid
 	Ref<Texture3D> VkRenderAPI::CreateTexture3D(const void* data, const TextureSettings& settings)
 	{
 		auto texture = ALLOC_API(VulkanTexture3D, data, settings);
-		m_Textures3D.push_back(texture);
 
 		return texture;
 	}
@@ -146,7 +145,7 @@ namespace Polyboid
 	Ref<SamplerState> VkRenderAPI::CreateSampler(const SamplerSettings& settings)
 	{
 		auto sampler = ALLOC_API(VulkanSamplerState, this, settings);
-		m_Samplers.push_back(sampler);
+
 		return sampler.As<SamplerState>();
 	}
 
@@ -159,14 +158,14 @@ namespace Polyboid
 	Ref<UniformBuffer> VkRenderAPI::CreateUniformBuffer(uint32_t size, uint32_t binding)
 	{
 		auto buffer = ALLOC_API(VulkanUniformBuffer, this, size, binding);
-		m_UniformBuffers.emplace_back(buffer);
+
 		return buffer.As<UniformBuffer>();
 	}
 
 	Ref<StorageBuffer> VkRenderAPI::CreateStorageBuffer(uint32_t size)
 	{
 		auto buffer = ALLOC_API(VulkanShaderStorage,this, size);
-		m_StorageBuffers.emplace_back(buffer);
+
 		return buffer.As<StorageBuffer>();
 	}
 
@@ -175,7 +174,6 @@ namespace Polyboid
 	{
 
 		auto indexBuffer = ALLOC_API(VulkanIndexBuffer, this, type, data, count);
-		m_IndexBuffers.push_back(indexBuffer);
 
 
 		return indexBuffer.As<IndexBuffer>();
@@ -185,7 +183,6 @@ namespace Polyboid
 	{
 
 		auto vertexBuffer = ALLOC_API(VulkanVertexBuffer, this, data, dataSize);
-		m_VertexBuffers.push_back(vertexBuffer);
 
 
 		return vertexBuffer.As<VertexBuffer>();
@@ -195,7 +192,6 @@ namespace Polyboid
 	{
 
 		auto vertexBuffer = ALLOC_API(VulkanVertexBuffer, this, dataSize);
-		m_VertexBuffers.push_back(vertexBuffer);
 
 		return vertexBuffer.As<VertexBuffer>();
 	}
@@ -212,29 +208,24 @@ namespace Polyboid
 	{
 		auto vulkanCommandList = ALLOC_API(VulkanCommandBufferSet, this, settings);
 
-		m_CommandLists.push_back(vulkanCommandList);
-
 		return vulkanCommandList.As<CommandBufferSet>();
 	}
 
 	Ref<StagingBuffer> VkRenderAPI::CreateStagingBuffer(uint32_t size)
 	{
 		auto buffer = ALLOC_API(VulkanStagingBuffer, this, size);
-		m_StagingBuffers.emplace_back(buffer);
 		return buffer.As<StagingBuffer>();
 	}
 
 	Ref<TexelStorageBuffer> VkRenderAPI::CreateTexelStorageBuffer(const TexelBufferSettings& settings)
 	{
 		auto buffer = ALLOC_API(VulkanTexelStorageBuffer, settings);
-		m_TexelStorageBuffers.push_back(buffer);
 		return buffer.As<TexelStorageBuffer>();
 	}
 
 	Ref<TexelUniformBuffer> VkRenderAPI::CreateTexelUniformBuffer(const TexelBufferSettings& settings)
 	{
 		auto buffer = ALLOC_API(VulkanTexelUniformBuffer, settings);
-		m_TexelUniformBuffers.push_back(buffer);
 		return buffer.As<TexelUniformBuffer>();
 	}
 
@@ -242,7 +233,6 @@ namespace Polyboid
 	{
 		auto graphicsPipeline = ALLOC_API(VulkanGraphicsPipeline, this);
 
-		m_GraphicsPipelines.push_back(graphicsPipeline);
 
 		return graphicsPipeline.As<GraphicsPipeline>();
 	}
@@ -250,7 +240,7 @@ namespace Polyboid
 	Ref<KomputePipeline> VkRenderAPI::CreateKomputePipeline()
 	{
 		auto komputePipeline = ALLOC_API(VulkanKomputePipeline);
-		m_KomputePipelines.push_back(komputePipeline);
+
 
 		return komputePipeline;
 	}
@@ -258,7 +248,7 @@ namespace Polyboid
 	Ref<Swapchain> VkRenderAPI::CreateSwapChain(const SwapchainSettings& settings)
 	{
 		auto swapchain = ALLOC_API(VkSwapChain, this, settings);
-		m_Swapchains.push_back(swapchain);
+		
 
 		return swapchain.As<Swapchain>();
 	}
@@ -267,16 +257,12 @@ namespace Polyboid
 	{
 		auto renderPass = ALLOC_API(VulkanRenderPass, this, settings);
 
-		m_RenderPasses.push_back(renderPass);
-
 		return renderPass.As<RenderPass>();
 	}
 
 	Ref<Fence> VkRenderAPI::CreateGraphicsFence()
 	{
 		auto fence = ALLOC_API(VulkanFence, this);
-
-		m_Fences.push_back(fence);
 
 		return fence.As<Fence>();
 
@@ -286,8 +272,6 @@ namespace Polyboid
 	{
 
 		auto semaphore = ALLOC_API(VulkanSemaphore, this);
-		m_Semaphores.push_back(semaphore);
-
 	
 		return semaphore.As<Semaphore>();
 	}
@@ -295,7 +279,7 @@ namespace Polyboid
 	Ref<Image2D> VkRenderAPI::CreateImage2D(const ImageSettings& imageSettings)
 	{
 		auto image2D = ALLOC_API(VulkanImage2D, this, imageSettings);
-		m_Image2Ds.push_back(image2D);
+
 
 		return image2D.As<Image2D>();
 	}
@@ -303,14 +287,12 @@ namespace Polyboid
 	Ref<Shader> VkRenderAPI::CreateShader(const ShaderBinaryAndReflectionInfo& info)
 	{
 		auto shader = ALLOC_API(VulkanShader, this, info);
-		m_VulkanShaders.push_back(shader);
 		return shader.As<Shader>();
 	}
 
 	Ref<PipelineDescriptorSetPool> VkRenderAPI::CreateDescriptorSetPool(const DescriptorSetPoolSettings& settings)
 	{
 		auto pool = ALLOC_API(VulkanPipelineDescriptorSetPool, this, settings);
-		m_DescPools.emplace_back(pool);
 		return pool.As<PipelineDescriptorSetPool>();
 	}
 
@@ -321,139 +303,6 @@ namespace Polyboid
 		vk::Device device = (*m_Device);
 		vk::Result result = device.waitIdle();
 		vk::resultCheck(result, "Device failed to wait for idle");
-
-
-		for (const auto& swapchain : m_Swapchains)
-		{
-			swapchain->Destroy(device);
-		}
-
-	
-
-		for (const auto& renderPass : m_RenderPasses)
-		{
-			renderPass->Destroy();
-		}
-
-		for (auto& fence : m_Fences)
-		{
-			fence->Destroy();
-		}
-
-		for (auto& semaphore : m_Semaphores)
-		{
-			semaphore->Destroy();
-		}
-
-		for (auto& image : m_Image2Ds)
-		{
-			image->Destroy();
-		}
-
-		for (const auto& vtx : m_VertexBuffers)
-		{
-			vtx->Destroy();
-		}
-
-		for (const auto& kompute : m_KomputePipelines)
-		{
-			kompute->Destroy();
-		}
-
-		// for (const auto& texture : m_Textures2D)
-		// {
-		// 	texture->Destroy();
-		// }
-
-		for (const auto& texture : m_Textures3D)
-		{
-			texture->Destroy();
-		}
-
-		for (const auto& idx : m_IndexBuffers)
-		{
-			idx->Destroy();
-		}
-
-		for (const auto& framebuffer : m_Framebuffers)
-		{
-			framebuffer->Destroy();
-		}
-
-
-		for (const auto& buffer : m_UniformBuffers)
-		{
-			buffer->Destroy();
-		}
-
-		for (const auto& buffer : m_StorageBuffers)
-		{
-			buffer->Destroy();
-		}
-
-		for (const auto& buffer : m_StagingBuffers)
-		{
-			buffer->Destroy();
-		}
-
-
-		for (const auto& buffer : m_TexelStorageBuffers)
-		{
-			buffer->Destroy();
-		}
-
-		for (const auto& buffer : m_TexelUniformBuffers)
-		{
-			buffer->Destroy();
-		}
-
-
-
-		for (const auto& pool : m_DescPools)
-		{
-			pool->Destroy();
-		}
-
-		for (const auto& pipelines : m_GraphicsPipelines)
-		{
-			pipelines->Destroy();
-
-		}
-
-		for (auto& shader : m_VulkanShaders)
-		{
-			shader->Destroy();
-		}
-
-		for (auto& sampler : m_Samplers)
-		{
-			sampler->Destroy();
-		}
-
-		for (const auto& command : m_CommandLists)
-		{
-			command->Destroy();
-		}
-
-		m_TexelUniformBuffers.clear();
-		m_TexelStorageBuffers.clear();
-		m_Swapchains.clear();
-		m_RenderPasses.clear();
-		m_Framebuffers.clear();
-		m_CommandLists.clear();
-		m_Textures2D.clear();
-		m_IndexBuffers.clear();
-		m_VertexBuffers.clear();
-		m_Fences.clear();
-		m_Semaphores.clear();
-		m_Image2Ds.clear();
-		m_VulkanShaders.clear();
-		m_GraphicsPipelines.clear();
-		m_DescPools.clear();
-		m_StorageBuffers.clear();
-		m_UniformBuffers.clear();
-		m_StagingBuffers.clear();
-		m_CommandBuffersBatching.clear();
 
 
 		result = device.waitIdle();
