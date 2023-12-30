@@ -17,6 +17,9 @@ namespace Polyboid
 {
 	void VulkanImage2D::Init(const VkRenderAPI* context, const ImageSettings& imageSettings)
 	{
+
+		Destroy();
+
 		vk::Device device = (*context->GetDevice());
 		VmaAllocator allocator = (*context->GetAllocator());
 
@@ -131,7 +134,7 @@ namespace Polyboid
 
 	void VulkanImage2D::Recreate()
 	{
-		Destroy();
+		
 		Init(m_Context, m_Settings);
 	}
 
@@ -152,6 +155,7 @@ namespace Polyboid
 
 	void VulkanImage2D::Destroy()
 	{
+		
 		if (m_Image != vk::Image(nullptr) && m_ImageMemory != nullptr)
 		{
 			vk::Device device = (*m_Context->GetDevice());

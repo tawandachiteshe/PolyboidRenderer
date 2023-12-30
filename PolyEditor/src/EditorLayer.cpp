@@ -221,7 +221,15 @@ namespace Polyboid
 
 	void EditorLayer::BuildRenderImage()
 	{
+
+		for (const auto& renderImage : m_RenderViewportImage)
+		{
+			Imgui::FreeVulkanTextureID(renderImage);
+		}
+
 		m_RenderViewportImage.clear();
+
+		
 
 		for (uint32_t imageIndex = 0; imageIndex < RenderCommand::GetMaxFramesInFlight(); ++imageIndex)
 		{
@@ -230,6 +238,8 @@ namespace Polyboid
 		}
 
 	}
+
+
 
 	ImTextureID EditorLayer::GetViewportImageRender() const
 	{
@@ -272,7 +282,7 @@ namespace Polyboid
 		m_CurrentWorld->OnRender(m_EditorCamera);
 
 		Renderer2D::BeginDraw(m_EditorCamera);
-		Renderer3D::SetViewport({ 1600, 900 });
+		Renderer3D::SetViewport(m_LastViewportSize);
 		Renderer2D::DrawCube(glm::mat4(1.0f));
 		Renderer2D::EndDraw();
 
@@ -307,8 +317,29 @@ namespace Polyboid
 
 
 		const auto contentRegion = ImGui::GetContentRegionAvail();
-		const auto pos = ImGui::GetWindowPos();
 		const auto windowSize = ImGui::GetWindowSize();
+
+		const glm::uvec2 viewportSize{ contentRegion.x, contentRegion.y };
+		spdlog::info("{} {}", windowSize.x, windowSize.y);
+
+		if (viewportSize != m_LastViewportSize || m_FirstResize && viewportSize != glm::uvec2(0))
+		{
+
+			spdlog::info("{} {}", m_LastViewportSize.x, m_LastViewportSize.y);
+			
+
+			m_LastViewportSize = viewportSize;
+			Renderer3D::ReSize(m_LastViewportSize);
+			BuildRenderImage();
+
+			m_FirstResize = false;
+
+			
+
+		}
+
+
+
 
 		const auto renderTexture = GetViewportImageRender();
 

@@ -18,7 +18,7 @@ namespace Polyboid
 		EngineGraphicsFormats m_Format = EngineGraphicsFormats::BGRA8;
 		const VkRenderAPI* m_Context = nullptr;
 		ImageSettings m_Settings;
-		VmaAllocation m_ImageMemory;
+		VmaAllocation m_ImageMemory{};
 		vk::DescriptorImageInfo m_ImageDescInfo{};
 
 	public:
