@@ -4,6 +4,7 @@
 #include "Components.h"
 #include "GameObject.h"
 #include "Engine/Renderer/Renderer2D.h"
+#include "Engine/Renderer/Renderer3D.h"
 
 
 namespace Polyboid

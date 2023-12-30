@@ -3,13 +3,11 @@
 
 namespace Polyboid
 {
-
-	//own data
-
-	class Mesh
+	class Asset
 	{
 	public:
 
 	};
 
 }
+
